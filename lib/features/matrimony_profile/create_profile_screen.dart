@@ -87,6 +87,16 @@ class _CreateMatrimonyProfileScreenState
 
     // Success → Home
     if (response["success"] == true) {
+      final isCreate = widget.existingProfile == null;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isCreate 
+            ? '✅ Profile create यशस्वी!'
+            : '✅ Profile update यशस्वी!'),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
       Navigator.pushReplacementNamed(context, "/home");
     }
     // Failure → show backend error
@@ -151,10 +161,19 @@ class _CreateMatrimonyProfileScreenState
                 );
 
                 if (pickedDate != null) {
-                  _dobController.text =
+                  final dateStr =
                   "${pickedDate.year.toString().padLeft(4, '0')}-"
                       "${pickedDate.month.toString().padLeft(2, '0')}-"
                       "${pickedDate.day.toString().padLeft(2, '0')}";
+                  _dobController.text = dateStr;
+                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('✅ Date select केले: $dateStr'),
+                      backgroundColor: Colors.green,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
                 }
               },
             ),

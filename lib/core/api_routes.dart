@@ -4,4 +4,5 @@ class ApiRoutes {
   static const String register = '/register';
 
   static const String matrimonyProfile = '/matrimony-profile';
+  static const String matrimonyProfilePhoto = '/matrimony-profile/photo';
 }

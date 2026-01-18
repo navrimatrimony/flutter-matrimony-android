@@ -1,0 +1,9 @@
+  INFO  Routes cached successfully.  
+
+PS E:\LaravelProjects\laravel-matrimony> php artisan route:list --path=matrimony-profile/photo
+
+  POST       api/matrimony-profile/photo generated::uUHYnBK0VK5oZA9m › Api\Matrimony…
+
+                                                                   Showing [1] routes  
+
+PS E:\LaravelProjects\laravel-matrimony> 

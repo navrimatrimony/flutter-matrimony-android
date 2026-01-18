@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../home/home_screen.dart';
 import '../../core/api_client.dart';
 import '../auth/register_screen.dart';
 
@@ -29,24 +28,58 @@ class _LoginScreenState extends State<LoginScreen> {
       password: passwordController.text,
     );
 
+    if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('✅ Login यशस्वी! Welcome back...'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      final profileResult = await ApiClient.getMyProfile();
+      final statusCode = profileResult['statusCode'];
+
+      if (statusCode == 404) {
+        setState(() {
+          isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('ℹ️ Profile सापडली नाही. Profile create करा...'),
+            backgroundColor: Colors.blue,
+            duration: Duration(seconds: 2),
+          ),
+        );
+        Navigator.pushReplacementNamed(context, '/create-profile');
+        return;
+      }
+
+      if (statusCode == 200 && profileResult['success'] == true) {
+        setState(() {
+          isLoading = false;
+        });
+        Navigator.pushReplacementNamed(context, '/home');
+        return;
+      }
+
+      setState(() {
+        isLoading = false;
+        errorMessage = profileResult['message'] ??
+            'Profile check failed. Please try again.';
+      });
+      return;
+    }
+
 
     setState(() {
       isLoading = false;
     });
 
-    if (result['success'] == true) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
-        ),
-      );
-    } else {
-      setState(() {
-        errorMessage =
-            result['message'] ?? 'Login failed. Check email or password.';
-      });
-    }
+    setState(() {
+      errorMessage =
+          result['message'] ?? 'Login failed. Check email or password.';
+    });
 
   }
 

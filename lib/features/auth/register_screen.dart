@@ -113,7 +113,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 if (result['message'] != null &&
                     result['message'].toString().toLowerCase().contains('success')) {
-
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('✅ Registration यशस्वी! Profile create करा...'),
+                      backgroundColor: Colors.green,
+                      duration: Duration(seconds: 2),
+                    ),
+                  );
                   Navigator.pushReplacementNamed(context, '/create-profile');
 
 

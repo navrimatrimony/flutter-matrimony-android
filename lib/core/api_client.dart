@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'api_routes.dart';
 
@@ -23,9 +24,15 @@ class ApiClient {
       },
     );
 
-    final data = jsonDecode(response.body);
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
 
-    if (data['success'] == true) {
+    if (response.statusCode == 200 && data['success'] == true) {
       currentUserProfile = data['profile'];
     }
 
@@ -155,5 +162,76 @@ class ApiClient {
     return data;
   }
 
+  // 📷 UPLOAD PROFILE PHOTO (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> uploadProfilePhoto(File imageFile) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.matrimonyProfilePhoto,
+    );
+
+    // Debug print - Upload start
+    print('=== UPLOAD PHOTO DEBUG ===');
+    print('URL: $url');
+    print('Token exists: ${authToken != null}');
+    print('Token preview: ${authToken?.substring(0, 20)}...');
+    print('File Path: ${imageFile.path}');
+    print('File exists: ${await imageFile.exists()}');
+    print('Current Profile: ${currentUserProfile != null ? "Exists" : "Null"}');
+    if (currentUserProfile != null) {
+      print('Profile ID: ${currentUserProfile!['id'] ?? "N/A"}');
+    }
+    print('========================');
+
+    final request = http.MultipartRequest('POST', url);
+    request.headers['Accept'] = 'application/json';
+    request.headers['Authorization'] = 'Bearer $authToken';
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'profile_photo',
+        imageFile.path,
+      ),
+    );
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    // Debug print - Response received
+    print('=== UPLOAD PHOTO RESPONSE ===');
+    print('Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+    print('Response Headers: ${response.headers}');
+    print('============================');
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      final uploadData = data['data'] as Map<String, dynamic>?;
+      if (uploadData != null) {
+        currentUserProfile ??= <String, dynamic>{};
+        currentUserProfile!['profile_photo'] = uploadData['profile_photo'];
+        if (uploadData['url'] != null) {
+          currentUserProfile!['profile_photo_url'] = uploadData['url'];
+        }
+      }
+    }
+
+    return data;
+  }
+
+  // 🚪 LOGOUT - Clear in-memory auth state
+  static void logout() {
+    authToken = null;
+    currentUserProfile = null;
+  }
 
 }
