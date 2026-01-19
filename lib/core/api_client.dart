@@ -6,6 +6,7 @@ import 'api_routes.dart';
 class ApiClient {
   static String? authToken;
   static Map<String, dynamic>? currentUserProfile;
+  static Set<int> sentInterestProfileIds = {};
 // 👤 GET LOGGED-IN USER PROFILE
   static Future<Map<String, dynamic>> getMyProfile() async {
     if (authToken == null) {
@@ -228,10 +229,305 @@ class ApiClient {
     return data;
   }
 
+  // 📋 GET PROFILE LIST (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> getProfileList() async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.matrimonyProfiles,
+    );
+
+    // >>>>> DEBUG: REQUEST INFO <<<<<
+    print('=== GET PROFILE LIST - REQUEST ===');
+    print('Full URL: $url');
+    print('Base URL: ${ApiRoutes.baseUrl}');
+    print('Endpoint: ${ApiRoutes.matrimonyProfiles}');
+    print('Token exists: ${authToken != null}');
+    print('Token preview: ${authToken?.substring(0, authToken!.length > 20 ? 20 : authToken!.length)}...');
+    print('==================================');
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    // >>>>> DEBUG: RESPONSE INFO <<<<<
+    print('=== GET PROFILE LIST - RESPONSE ===');
+    print('HTTP Status Code: ${response.statusCode}');
+    print('Response Body Length: ${response.body.length}');
+    print('Raw Response Body: ${response.body}');
+    print('Parsed Data Keys: ${data.keys.toList()}');
+    print('Has "success" key: ${data.containsKey('success')}');
+    print('success value: ${data['success']}');
+    print('success type: ${data['success']?.runtimeType}');
+    print('Has "profiles" key: ${data.containsKey('profiles')}');
+    print('profiles value: ${data['profiles']}');
+    print('profiles type: ${data['profiles']?.runtimeType}');
+    if (data['profiles'] is List) {
+      print('profiles is List: YES');
+      print('profiles length: ${(data['profiles'] as List).length}');
+    } else {
+      print('profiles is List: NO');
+    }
+    print('Has "data" key: ${data.containsKey('data')}');
+    print('data value: ${data['data']}');
+    print('Has "message" key: ${data.containsKey('message')}');
+    print('message value: ${data['message']}');
+    print('Return statusCode: ${data['statusCode']}');
+    print('===================================');
+
+    return data;
+  }
+
+  // 👤 GET PROFILE DETAIL BY ID (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> getProfileDetail(int profileId) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      '${ApiRoutes.baseUrl}${ApiRoutes.matrimonyProfiles}/$profileId',
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    return data;
+  }
+
   // 🚪 LOGOUT - Clear in-memory auth state
   static void logout() {
     authToken = null;
     currentUserProfile = null;
+    sentInterestProfileIds.clear();
+  }
+
+  // 💌 SEND INTEREST (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> sendInterest(int receiverProfileId) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.interests,
+    );
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: jsonEncode({
+        'receiver_profile_id': receiverProfileId,
+      }),
+    );
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    // Track profileId if interest was sent successfully or already exists
+    if (data['statusCode'] == 200 || data['statusCode'] == 409) {
+      sentInterestProfileIds.add(receiverProfileId);
+    }
+
+    return data;
+  }
+
+  // 📤 GET SENT INTERESTS (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> getSentInterests() async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.interestsSent,
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    // Populate sentInterestProfileIds from the response
+    if (response.statusCode == 200 && data['success'] == true && data['data'] != null) {
+      final responseData = data['data'] as Map<String, dynamic>;
+      final sentList = responseData['sent'] as List?;
+      if (sentList != null) {
+        sentInterestProfileIds.clear();
+        for (final interest in sentList) {
+          final interestMap = interest as Map<String, dynamic>;
+          final receiverProfile = interestMap['receiver_profile'] as Map<String, dynamic>?;
+          if (receiverProfile != null) {
+            final receiverProfileId = receiverProfile['id'] as int?;
+            if (receiverProfileId != null) {
+              sentInterestProfileIds.add(receiverProfileId);
+            }
+          }
+        }
+      }
+    }
+
+    return data;
+  }
+
+  // 📥 GET RECEIVED INTERESTS (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> getReceivedInterests() async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.interestsReceived,
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    return data;
+  }
+
+  // ✅ ACCEPT INTEREST (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> acceptInterest(int interestId) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      '${ApiRoutes.baseUrl}${ApiRoutes.interests}/$interestId/accept',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    return data;
+  }
+
+  // ❌ REJECT INTEREST (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> rejectInterest(int interestId) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      '${ApiRoutes.baseUrl}${ApiRoutes.interests}/$interestId/reject',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    return data;
+  }
+
+  // 🔙 WITHDRAW INTEREST (AUTH REQUIRED)
+  static Future<Map<String, dynamic>> withdrawInterest(int interestId) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      '${ApiRoutes.baseUrl}${ApiRoutes.interests}/$interestId/withdraw',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    Map<String, dynamic> data;
+    try {
+      data = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+
+    return data;
   }
 
 }

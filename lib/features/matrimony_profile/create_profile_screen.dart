@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // API call साठी आपली custom client
 import '../../core/api_client.dart';
+import '../photo/photo_upload_screen.dart';
 
 /// ===============================
 /// CREATE MATRIMONY PROFILE SCREEN
@@ -85,7 +86,7 @@ class _CreateMatrimonyProfileScreenState
       _loading = false;
     });
 
-    // Success → Home
+    // Success → Photo Upload Screen
     if (response["success"] == true) {
       final isCreate = widget.existingProfile == null;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,7 +98,12 @@ class _CreateMatrimonyProfileScreenState
           duration: const Duration(seconds: 2),
         ),
       );
-      Navigator.pushReplacementNamed(context, "/home");
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const PhotoUploadScreen(),
+        ),
+      );
     }
     // Failure → show backend error
     else {

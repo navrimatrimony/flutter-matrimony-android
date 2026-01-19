@@ -929,6 +929,116 @@ Next Day Prerequisite:
 
 Laravel profile list API verified
 ------------------------------------------------------------
+Date      : 2026-01-18
+Day       : Day 9
+Status    : ☑️ Completed
+------------------------------------------------------------
+आज काय शिकलो:
+
+1) Flutter Home screen वर profile list दाखवण्यासाठी backend मध्ये dedicated
+   GET /api/matrimony-profiles API असणे किती critical आहे हे end-to-end debug करून शिकलो.
+
+2) “List API आहे पण Detail API नाही” हा design gap Flutter मध्ये profile click
+   केल्यावर 404 देतो हे समजलं; त्यामुळे GET /api/matrimony-profiles/{id}
+   हा route backend मध्ये explicit add करणे आवश्यक आहे हे practically clear झालं.
+
+3) Flutter मध्ये loading state (_isLoading) आणि setState() चुकल्यास
+   UI silently break होते; success path मध्येही setState अनिवार्य आहे
+   हे real bug मधून शिकलो.
+
+4) Profile photo handling मध्ये Flutter/Laravel दोष नसून
+   जुने (legacy) uploads – space असलेले filenames, corrupt images,
+   2016–2021 काळातील uploads – हे actual root cause असू शकतात
+   हे database + filesystem proof ने समजलं.
+
+5) “New uploads future-safe, old data broken” हा production reality accept करून
+   default avatar fallback हा correct engineering decision आहे
+   हे maturity level ला समजलं.
+
+------------------------------------------------------------
+आज अडचण काय आली (असल्यास):
+
+• Backend मध्ये सुरुवातीला GET /api/matrimony-profiles route missing होता,
+  त्यामुळे Home screen वर profile list 404 येत होती.
+• Profile detail API (/api/matrimony-profiles/{id}) route नसल्यामुळे
+  profile card click केल्यावर detail screen ‘Profile not found’ दाखवत होता.
+• काही जुन्या profiles चे photos दिसत नव्हते, पण same folder मधले
+  नवीन photos नीट दिसत होते — त्यामुळे confusion वाढला.
+
+------------------------------------------------------------
+Decision / Note (important):
+
+• Profile Browse (list) आणि Profile Detail (by id) हे दोन independent APIs
+  backend मध्ये explicit define करणे SSOT म्हणून lock केले.
+• Legacy (old) profile photos broken असतील तर OPTION A — Ignore
+  हा conscious, documented decision घेतला.
+• Flutter side वर default avatar fallback कायम ठेवण्याचा निर्णय घेतला.
+• New uploads pipeline clean असल्यामुळे future मध्ये हा photo issue येणार नाही
+  याची खात्री केली.
+
+------------------------------------------------------------
+Date      : 2026-01-19
+Day       : Day 10
+Status    : ☑️ Completed
+
+आज काय शिकलो (Day 10 Learnings):
+
+1) Web-based Laravel features Flutter मध्ये direct copy न करता
+   API-first आणि UX-first पद्धतीने कसे implement करायचे ते शिकलो.
+
+2) Interest system end-to-end कसा build करायचा हे शिकलो:
+   - Send Interest
+   - Sent / Received Interests
+   - Accept / Reject / Withdraw
+   - Ownership आणि status-based rules (pending / accepted / rejected)
+
+3) Backend API ready असताना Flutter मध्ये
+   state management कसे हाताळायचे (local state + in-memory cache) हे शिकलो.
+
+4) UX bug आणि feature bug यामधील फरक समजला:
+   - Backend बरोबर असूनही UX incomplete असू शकतो
+   - Flutter-side polish ने production quality कशी वाढते
+
+5) Navigation flow कसा logically design करायचा हे शिकलो:
+   - Create Profile → Photo Upload → Dashboard
+   - Explicit navigation (pushReplacement) का महत्त्वाची आहे
+
+6) Dashboard म्हणजे काय हे practically समजले:
+   - Dashboard = central hub
+   - Search / Browse हा dashboard मधील एक option असतो
+   - Auto-browse UX योग्य नाही
+
+7) मोठा screen (HomeScreen) safely refactor करून
+   वेगळे screens (Dashboard vs Browse Profiles) कसे वेगळे करायचे ते शिकलो.
+
+8) Existing APIs वापरून Flutter मध्ये
+   dashboard statistics (counts, pending/accepted/rejected)
+   कसे calculate आणि display करायचे ते शिकलो
+   (backend बदल न करता).
+
+9) SSOT discipline कसा पाळायचा ते शिकलो:
+   - अंदाज न घेता Cursor scan वापरणे
+   - एकावेळी एकच fix करणे
+   - Backend, API, Flutter boundaries clear ठेवणे
+
+10) Phase-1 MVP म्हणजे काय याची स्पष्ट समज आली:
+    - Feature completeness
+    - Correct UX flow
+    - Dashboard visibility
+    - Production-ready navigation
+
+Decision / Note (Important):
+
+• Flutter Matrimony App Phase-1 (MVP) Day 10 ला
+  functional, UX-wise आणि architectural दृष्टीने complete झाला.
+• Backend न बदलता Flutter-side polish ने real app feel मिळतो.
+• पुढील Phase (AI / filters / monetization) साठी strong base तयार झाला.
+
+Next Phase:
+
+• Phase 2 Planning (Advanced Search / AI Matching / Business Logic)
+  किंवा
+• Release Preparation (APK, testing, Play Store readiness)
 
 
 ------------------------------------------------------------

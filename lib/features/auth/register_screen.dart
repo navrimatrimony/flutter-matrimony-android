@@ -39,7 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             // Gender
             DropdownButtonFormField<String>(
-              value: selectedGender,
+              initialValue: selectedGender,
               items: const [
                 DropdownMenuItem(
                   value: 'male',

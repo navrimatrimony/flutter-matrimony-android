@@ -144,7 +144,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             child: CircleAvatar(
               radius: 80,
               backgroundColor: Colors.grey.shade300,
-              backgroundImage: (photoUrl != null) ? NetworkImage(photoUrl as String) : null,
+              backgroundImage: (photoUrl != null) ? NetworkImage(photoUrl) : null,
               child: (photoUrl == null)
                   ? const Icon(Icons.person, size: 80, color: Colors.grey)
                   : null,

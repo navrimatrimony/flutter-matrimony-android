@@ -72,7 +72,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
       });
 
       _showSuccessMessage(
-        '✅ Photo यशस्वीरित्या select केले!\n📁 File: ${pickedFile.name}\n💾 Size: ${fileSizeMB} MB',
+        '✅ Photo यशस्वीरित्या select केले!\n📁 File: ${pickedFile.name}\n💾 Size: $fileSizeMB MB',
       );
     } catch (e) {
       _showErrorMessage(
@@ -172,7 +172,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         // 1.5 seconds नंतर home screen वर navigate करा
         Future.delayed(const Duration(milliseconds: 1500), () {
           if (mounted) {
-            Navigator.pop(context); // Photo upload screen close करा (home वर येईल)
+            Navigator.pushReplacementNamed(context, "/home");
           }
         });
       } else {
