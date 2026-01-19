@@ -230,20 +230,44 @@ class ApiClient {
   }
 
   // 📋 GET PROFILE LIST (AUTH REQUIRED)
-  static Future<Map<String, dynamic>> getProfileList() async {
+  // Optional search filters: age_from, age_to, caste, location
+  static Future<Map<String, dynamic>> getProfileList({
+    int? ageFrom,
+    int? ageTo,
+    String? caste,
+    String? location,
+  }) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
     }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.matrimonyProfiles,
-    );
+    // Build query parameters dynamically (only include non-null values)
+    final queryParams = <String, String>{};
+    if (ageFrom != null) {
+      queryParams['age_from'] = ageFrom.toString();
+    }
+    if (ageTo != null) {
+      queryParams['age_to'] = ageTo.toString();
+    }
+    if (caste != null && caste.isNotEmpty) {
+      queryParams['caste'] = caste;
+    }
+    if (location != null && location.isNotEmpty) {
+      queryParams['location'] = location;
+    }
+
+    // Build URL with query parameters
+    final baseUrl = ApiRoutes.baseUrl + ApiRoutes.matrimonyProfiles;
+    final url = queryParams.isEmpty
+        ? Uri.parse(baseUrl)
+        : Uri.parse(baseUrl).replace(queryParameters: queryParams);
 
     // >>>>> DEBUG: REQUEST INFO <<<<<
     print('=== GET PROFILE LIST - REQUEST ===');
     print('Full URL: $url');
     print('Base URL: ${ApiRoutes.baseUrl}');
     print('Endpoint: ${ApiRoutes.matrimonyProfiles}');
+    print('Query Parameters: $queryParams');
     print('Token exists: ${authToken != null}');
     print('Token preview: ${authToken?.substring(0, authToken!.length > 20 ? 20 : authToken!.length)}...');
     print('==================================');
