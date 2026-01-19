@@ -3,6 +3,10 @@ import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/create_profile_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
+
+// RouteObserver for RouteAware lifecycle management
+final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
+
 void main() {
   runApp(const MyApp());
 }
@@ -17,6 +21,7 @@ class MyApp extends StatelessWidget {
 
       initialRoute: '/login',
 
+      navigatorObservers: [routeObserver],
 
       routes: {
         '/login': (context) => const LoginScreen(),

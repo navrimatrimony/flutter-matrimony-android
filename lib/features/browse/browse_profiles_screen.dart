@@ -18,6 +18,14 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   bool _isLoading = true;
   String? _errorMessage;
 
+  // ========================================
+  // SEARCH / FILTER UI CONTROLLERS (SSOT v2.5)
+  // ========================================
+  final TextEditingController _ageFromController = TextEditingController();
+  final TextEditingController _ageToController = TextEditingController();
+  final TextEditingController _casteController = TextEditingController();
+  final TextEditingController _locationController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -25,7 +33,21 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     _fetchProfileList();
   }
 
-  Future<void> _fetchProfileList() async {
+  @override
+  void dispose() {
+    _ageFromController.dispose();
+    _ageToController.dispose();
+    _casteController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchProfileList({
+    int? ageFrom,
+    int? ageTo,
+    String? caste,
+    String? location,
+  }) async {
     print('🔥 _fetchProfileList STARTED');
     setState(() {
       _isLoading = true;
@@ -33,7 +55,12 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     });
 
     try {
-      final response = await ApiClient.getProfileList();
+      final response = await ApiClient.getProfileList(
+        ageFrom: ageFrom,
+        ageTo: ageTo,
+        caste: caste,
+        location: location,
+      );
       if (!mounted) return;
 
       // >>>>> DEBUG: RESPONSE PROCESSING <<<<<
@@ -142,7 +169,128 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         title: const Text('Browse Profiles'),
         automaticallyImplyLeading: true,
       ),
-      body: _buildProfileListBody(),
+      body: Column(
+        children: [
+          // ========================================
+          // SEARCH / FILTER UI (SSOT v2.5)
+          // ========================================
+          _buildSearchFilterUI(),
+          // Profile List Body
+          Expanded(
+            child: _buildProfileListBody(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Build Search/Filter UI form (SSOT v2.5)
+  Widget _buildSearchFilterUI() {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border(
+          bottom: BorderSide(color: Colors.grey.shade300),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Age From
+          TextField(
+            controller: _ageFromController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'Age From',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Age To
+          TextField(
+            controller: _ageToController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              hintText: 'Age To',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Caste
+          TextField(
+            controller: _casteController,
+            decoration: const InputDecoration(
+              hintText: 'Caste',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+          const SizedBox(height: 12),
+          // Location
+          TextField(
+            controller: _locationController,
+            decoration: const InputDecoration(
+              hintText: 'Location',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Search Button
+          ElevatedButton(
+            onPressed: _handleSearch,
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+            child: const Text('Search'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Handle Search button tap
+  void _handleSearch() {
+    // Read values from fields and convert empty strings to null
+    final ageFromText = _ageFromController.text.trim();
+    final ageToText = _ageToController.text.trim();
+    final casteText = _casteController.text.trim();
+    final locationText = _locationController.text.trim();
+
+    int? ageFrom;
+    int? ageTo;
+    String? caste;
+    String? location;
+
+    // Parse age_from
+    if (ageFromText.isNotEmpty) {
+      ageFrom = int.tryParse(ageFromText);
+    }
+
+    // Parse age_to
+    if (ageToText.isNotEmpty) {
+      ageTo = int.tryParse(ageToText);
+    }
+
+    // Set caste (null if empty)
+    if (casteText.isNotEmpty) {
+      caste = casteText;
+    }
+
+    // Set location (null if empty)
+    if (locationText.isNotEmpty) {
+      location = locationText;
+    }
+
+    // Call API with filters
+    _fetchProfileList(
+      ageFrom: ageFrom,
+      ageTo: ageTo,
+      caste: caste,
+      location: location,
     );
   }
 

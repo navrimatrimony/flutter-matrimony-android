@@ -6,6 +6,7 @@ import '../interests/received_interests_screen.dart';
 import '../browse/browse_profiles_screen.dart';
 import '../../core/api_client.dart';
 import '../../core/api_routes.dart';
+import '../../main.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,7 +15,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with RouteAware {
   // Interest statistics state
   bool _isLoadingStats = true;
   String? _statsError;
@@ -34,6 +35,31 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _fetchInterestStatistics();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Subscribe to route observer for RouteAware lifecycle
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
+  void dispose() {
+    // Unsubscribe from route observer
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  // Called when returning to this route (after Navigator.pop)
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    // Refresh interest statistics when dashboard becomes visible again
     _fetchInterestStatistics();
   }
 
