@@ -1,11 +1,11 @@
 {
-    "name": "flutter_matrimony_android",
-    "short_name": "flutter_matrimony_android",
+    "name": "नवरी मिळे नवऱ्याला",
+    "short_name": "नवरी मिळे नवऱ्याला",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Matrimonial Platform - Find Your Perfect Match",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

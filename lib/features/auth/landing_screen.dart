@@ -49,6 +49,49 @@ class LandingScreen extends StatelessWidget {
           SafeArea(
             child: Column(
               children: [
+                // Brand Logo and Name at top
+                Padding(
+                  padding: const EdgeInsets.only(top: 40.0),
+                  child: Column(
+                    children: [
+                      // Brand Logo Image
+                      Image.asset(
+                        'assets/images/brand_logo.png',
+                        height: 120,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback: Show brand name as text if logo not found
+                          return Column(
+                            children: [
+                              const Icon(
+                                Icons.favorite,
+                                size: 60,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'नवरी मिळे नवऱ्याला',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  shadows: [
+                                    Shadow(
+                                      offset: const Offset(2, 2),
+                                      blurRadius: 4,
+                                      color: Colors.black.withOpacity(0.8),
+                                    ),
+                                  ],
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
                 // Spacer to push content down
                 const Spacer(),
                 // Trust-oriented messaging text

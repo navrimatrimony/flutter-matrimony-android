@@ -189,25 +189,40 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  // Brand Logo Only (no text to prevent overflow)
+                  Image.asset(
+                    'assets/images/brand_logo.png',
+                    height: 40,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback: Show icon if logo not found
+                      return const Icon(
+                        Icons.favorite,
+                        size: 40,
+                        color: Colors.white,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 12),
                   // Profile Photo
                   CircleAvatar(
-                    radius: 42,
+                    radius: 38,
                     backgroundColor: Colors.white,
                     backgroundImage: photoUrl != null
                         ? NetworkImage(photoUrl)
                         : null,
                     child: photoUrl == null
-                        ? const Icon(Icons.person, size: 42, color: Colors.grey)
+                        ? const Icon(Icons.person, size: 38, color: Colors.grey)
                         : null,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   // Full Name
                   Flexible(
                     child: Text(
                       profile?['full_name']?.toString() ?? 'User',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 22,
+                        fontSize: 20,
                         fontWeight: FontWeight.w600,
                         letterSpacing: 0.5,
                       ),
@@ -215,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 4),
                   // Email (if available in profile, else show placeholder)
                   Flexible(
                     child: Text(
