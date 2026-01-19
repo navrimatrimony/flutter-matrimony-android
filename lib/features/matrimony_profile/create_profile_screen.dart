@@ -131,12 +131,10 @@ class _CreateMatrimonyProfileScreenState
         ),
       ),
 
-        body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-
         child: Column(
           children: [
-
             // -------------------------
             // Full Name
             // -------------------------
@@ -225,15 +223,19 @@ class _CreateMatrimonyProfileScreenState
             // -------------------------
             // Submit Button
             // -------------------------
-            ElevatedButton(
-              onPressed: _loading ? null : _submitProfile,
-              child: _loading
-                  ? const CircularProgressIndicator()
-                  : Text(widget.existingProfile == null
-                  ? "Create Profile"
-                  : "Update Profile"),
-
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _submitProfile,
+                child: _loading
+                    ? const CircularProgressIndicator()
+                    : Text(widget.existingProfile == null
+                    ? "Create Profile"
+                    : "Update Profile"),
+              ),
             ),
+            // Extra padding at bottom for keyboard
+            SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
           ],
         ),
       ),

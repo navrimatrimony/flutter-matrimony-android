@@ -187,6 +187,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Profile Photo
                   CircleAvatar(
@@ -201,25 +202,32 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   const SizedBox(height: 16),
                   // Full Name
-                  Text(
-                    profile?['full_name']?.toString() ?? 'User',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.5,
+                  Flexible(
+                    child: Text(
+                      profile?['full_name']?.toString() ?? 'User',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   const SizedBox(height: 6),
                   // Email (if available in profile, else show placeholder)
-                  Text(
-                    profile?['email']?.toString() ?? 'Email not available',
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
+                  Flexible(
+                    child: Text(
+                      profile?['email']?.toString() ?? 'Email not available',
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 14,
+                        fontWeight: FontWeight.normal,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),

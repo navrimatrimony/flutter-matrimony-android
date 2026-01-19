@@ -247,24 +247,19 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final photoUrl = _constructPhotoUrl(_profile);
     final age = _calculateAge(_profile!['date_of_birth']?.toString());
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
-        children: [
-          // Profile Photo
-          Center(
-            child: CircleAvatar(
-              radius: 80,
-              backgroundColor: Colors.grey.shade300,
-              backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-              child: photoUrl == null
-                  ? const Icon(Icons.person, size: 80, color: Colors.grey)
-                  : null,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // All 7 profile fields
+    return ListView(
+      children: [
+        // ========================================
+        // HERO PROFILE PHOTO WITH OVERLAY (UI-ONLY CHANGE)
+        // ========================================
+        _buildHeroPhoto(photoUrl, _profile!['full_name'], age),
+        
+        // Profile Details Section
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // All 7 profile fields
           _buildProfileDetail('नाव', _profile!['full_name']),
           _buildProfileDetail('जन्मतारीख', _profile!['date_of_birth']),
           if (age != null)
@@ -273,41 +268,112 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           _buildProfileDetail('शिक्षण', _profile!['education']),
           _buildProfileDetail('ठिकाण', _profile!['location']),
 
-          // Send Interest Button
-          if (_shouldShowSendInterestButton())
-            Padding(
-              padding: const EdgeInsets.only(top: 24, bottom: 16),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: (_isInterestAlreadySent() || _isSendingInterest) ? null : _sendInterest,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    backgroundColor: Theme.of(context).primaryColor,
-                    foregroundColor: Colors.white,
-                  ).copyWith(
-                    // Apply disabled style when interest is already sent
-                    backgroundColor: _isInterestAlreadySent() && !_isSendingInterest
-                        ? MaterialStateProperty.all(Colors.grey.shade400)
-                        : null,
+              // Send Interest Button
+              if (_shouldShowSendInterestButton())
+                Padding(
+                  padding: const EdgeInsets.only(top: 24, bottom: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (_isInterestAlreadySent() || _isSendingInterest) ? null : _sendInterest,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                      ).copyWith(
+                        // Apply disabled style when interest is already sent
+                        backgroundColor: _isInterestAlreadySent() && !_isSendingInterest
+                            ? MaterialStateProperty.all(Colors.grey.shade400)
+                            : null,
+                      ),
+                      child: _isSendingInterest
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : Text(
+                              _isInterestAlreadySent() ? 'Interest Sent ✓' : 'Send Interest',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
                   ),
-                  child: _isSendingInterest
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        )
-                      : Text(
-                          _isInterestAlreadySent() ? 'Interest Sent ✓' : 'Send Interest',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
                 ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Build Hero Photo with Overlay Text (UI-ONLY)
+  Widget _buildHeroPhoto(String? photoUrl, dynamic fullName, int? age) {
+    return Container(
+      width: double.infinity,
+      height: 300, // Large height for dominant visual
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        image: photoUrl != null
+            ? DecorationImage(
+                image: NetworkImage(photoUrl),
+                fit: BoxFit.cover,
+                onError: (exception, stackTrace) {
+                  // Handle image load error silently
+                },
+              )
+            : null,
+      ),
+      child: Stack(
+        children: [
+          // Dark gradient overlay for text readability
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.7),
+                ],
+              ),
+            ),
+          ),
+          // Overlay text: Full Name and Age
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 24,
+            child: Text(
+              age != null
+                  ? '${fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही'}, $age'
+                  : fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                shadows: [
+                  Shadow(
+                    offset: Offset(1, 1),
+                    blurRadius: 3,
+                    color: Colors.black54,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Fallback icon if no photo
+          if (photoUrl == null)
+            const Center(
+              child: Icon(
+                Icons.person,
+                size: 120,
+                color: Colors.grey,
               ),
             ),
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/create_profile_screen.dart';
@@ -19,11 +20,12 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      initialRoute: '/login',
+      initialRoute: '/landing',
 
       navigatorObservers: [routeObserver],
 
       routes: {
+        '/landing': (context) => const LandingScreen(),
         '/login': (context) => const LoginScreen(),
         '/home': (context) => HomeScreen(),
         '/create-profile': (context) => const CreateMatrimonyProfileScreen(),
