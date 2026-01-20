@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../matrimony_profile/create_profile_screen.dart';
 import '../photo/photo_upload_screen.dart';
@@ -175,78 +176,80 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         automaticallyImplyLeading: true,
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
           children: [
-            // Drawer Header
-            DrawerHeader(
-              decoration: BoxDecoration(
+            // Drawer Header - Custom Container with blurred background effect
+            SafeArea(
+              bottom: false,
+              child: Container(
+                height: 190,
+                width: double.infinity,
                 color: Theme.of(context).primaryColor,
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Brand Logo Only (no text to prevent overflow)
-                  Image.asset(
-                    'assets/images/brand_logo.png',
-                    height: 40,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      // Fallback: Show icon if logo not found
-                      return const Icon(
-                        Icons.favorite,
-                        size: 40,
-                        color: Colors.white,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  // Profile Photo
-                  CircleAvatar(
-                    radius: 38,
-                    backgroundColor: Colors.white,
-                    backgroundImage: photoUrl != null
-                        ? NetworkImage(photoUrl)
-                        : null,
-                    child: photoUrl == null
-                        ? const Icon(Icons.person, size: 38, color: Colors.grey)
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  // Full Name
-                  Flexible(
-                    child: Text(
-                      profile?['full_name']?.toString() ?? 'User',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
+                child: photoUrl != null
+                    // If user image exists: Show HERO with blurred background
+                    ? Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // Background layer: Blurred image (fills empty space)
+                          ImageFiltered(
+                            imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            child: Image.network(
+                              photoUrl!,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fallback: solid color if image fails
+                                return Container(
+                                  color: Theme.of(context).primaryColor,
+                                );
+                              },
+                            ),
+                          ),
+                          // Foreground layer: Clear image (full photo, no crop)
+                          Center(
+                            child: Image.network(
+                              photoUrl!,
+                              fit: BoxFit.contain,
+                              errorBuilder: (context, error, stackTrace) {
+                                // Fallback to brand logo if image fails to load
+                                return Image.asset(
+                                  'assets/images/brand_logo.png',
+                                  height: 190,
+                                  fit: BoxFit.contain,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Icon(
+                                      Icons.favorite,
+                                      size: 60,
+                                      color: Colors.white,
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      )
+                    // If user image does NOT exist: Show brand logo as HERO
+                    : Image.asset(
+                        'assets/images/brand_logo.png',
+                        height: 190,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(
+                            child: Icon(
+                              Icons.favorite,
+                              size: 60,
+                              color: Colors.white,
+                            ),
+                          );
+                        },
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  // Email (if available in profile, else show placeholder)
-                  Flexible(
-                    child: Text(
-                      profile?['email']?.toString() ?? 'Email not available',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                        fontWeight: FontWeight.normal,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
               ),
             ),
+            // Drawer Body - Menu Items
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
             // Menu Items
             ListTile(
               leading: const Icon(Icons.home),
@@ -385,6 +388,29 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 ApiClient.logout();
                 Navigator.pushReplacementNamed(context, '/login');
               },
+            ),
+                ],
+              ),
+            ),
+            // Drawer Footer - Brand Logo (decorative)
+            SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                alignment: Alignment.center,
+                child: Image.asset(
+                  'assets/images/brand_logo.png',
+                  height: 36,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Icon(
+                      Icons.favorite,
+                      size: 36,
+                      color: Colors.grey,
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),

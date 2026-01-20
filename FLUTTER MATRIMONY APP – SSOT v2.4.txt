@@ -1042,6 +1042,44 @@ Next Phase:
 
 
 ------------------------------------------------------------
+🧾 DAY 11 SUMMARY (COPY–PASTE READY — SSOT FORMAT)
+Date : 2026-01-19
+Day : Day 11
+Status : ☑️ Completed
+
+आज काय केलं / शिकलो (actual work):
+
+Flutter app मध्ये Landing / Welcome screen hero image सह add केली आणि app entry /landing वर shift केला
+
+Real brand “नवरी मिळे नवऱ्याला” लागू केलं — demo branding (Sathi / placeholder logo) पूर्णपणे remove केली
+
+Android launcher साठी custom app icon तयार करून सर्व mipmap-* folders मध्ये replace केला
+
+Yellow–black overflow errors (Create Profile, Drawer Header) UI-only fixes ने permanently remove केले
+
+Android build failure चे root cause समजलं — res/mipmap-* मध्ये .md file असल्यामुळे Gradle fail होतं
+
+PowerShell मध्ये git commands साठी Linux-style \ चालत नाही; single-line / backtick वापर अनिवार्य हे clear झालं
+
+आज अडचण काय आली (असल्यास):
+• mipmap-xxxhdpi folder मध्ये .md file असल्यामुळे assembleDebug build fail झाला
+• PowerShell मध्ये multi-line git add \ command मुळे fatal error आला
+
+Decision / Note (important):
+• Android res/ folders मध्ये फक्त .png / .xml files ठेवायचे — documentation कधीही नाही
+• Production feel साठी branding (name + logo + launcher icon) Phase 1 चाच भाग आहे, optional नाही
+• Git push करण्याआधी app launch + icon verify हा mandatory gate आहे
+
+------------------------------------------------------------
+
+
+------------------------------------------------------------
+
+
+------------------------------------------------------------
+
+
+------------------------------------------------------------
 
 
 ------------------------------------------------------------

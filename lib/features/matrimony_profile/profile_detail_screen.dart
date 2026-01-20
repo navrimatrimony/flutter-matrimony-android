@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
 import '../../core/api_routes.dart';
@@ -248,11 +249,50 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final age = _calculateAge(_profile!['date_of_birth']?.toString());
 
     return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
       children: [
         // ========================================
-        // HERO PROFILE PHOTO WITH OVERLAY (UI-ONLY CHANGE)
+        // HERO PROFILE PHOTO WITH OVERLAY
         // ========================================
         _buildHeroPhoto(photoUrl, _profile!['full_name'], age),
+        
+        // Send Interest Button (immediately below hero, always visible)
+        if (_shouldShowSendInterestButton())
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 8.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: (_isInterestAlreadySent() || _isSendingInterest) ? null : _sendInterest,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: Theme.of(context).primaryColor,
+                  foregroundColor: Colors.white,
+                ).copyWith(
+                  // Apply disabled style when interest is already sent
+                  backgroundColor: _isInterestAlreadySent() && !_isSendingInterest
+                      ? MaterialStateProperty.all(Colors.grey.shade400)
+                      : null,
+                ),
+                child: _isSendingInterest
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : Text(
+                        _isInterestAlreadySent() ? 'Interest Sent ✓' : 'Send Interest',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+          ),
         
         // Profile Details Section
         Padding(
@@ -260,51 +300,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           child: Column(
             children: [
               // All 7 profile fields
-          _buildProfileDetail('नाव', _profile!['full_name']),
-          _buildProfileDetail('जन्मतारीख', _profile!['date_of_birth']),
-          if (age != null)
-            _buildProfileDetail('वय', '$age वर्षे'),
-          _buildProfileDetail('जात', _profile!['caste']),
-          _buildProfileDetail('शिक्षण', _profile!['education']),
-          _buildProfileDetail('ठिकाण', _profile!['location']),
-
-              // Send Interest Button
-              if (_shouldShowSendInterestButton())
-                Padding(
-                  padding: const EdgeInsets.only(top: 24, bottom: 16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: (_isInterestAlreadySent() || _isSendingInterest) ? null : _sendInterest,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                      ).copyWith(
-                        // Apply disabled style when interest is already sent
-                        backgroundColor: _isInterestAlreadySent() && !_isSendingInterest
-                            ? MaterialStateProperty.all(Colors.grey.shade400)
-                            : null,
-                      ),
-                      child: _isSendingInterest
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : Text(
-                              _isInterestAlreadySent() ? 'Interest Sent ✓' : 'Send Interest',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
+              _buildProfileDetail('नाव', _profile!['full_name']),
+              _buildProfileDetail('जन्मतारीख', _profile!['date_of_birth']),
+              if (age != null)
+                _buildProfileDetail('वय', '$age वर्षे'),
+              _buildProfileDetail('जात', _profile!['caste']),
+              _buildProfileDetail('शिक्षण', _profile!['education']),
+              _buildProfileDetail('ठिकाण', _profile!['location']),
             ],
           ),
         ),
@@ -312,72 +314,160 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  // Build Hero Photo with Overlay Text (UI-ONLY)
+  // Build Hero Photo with Overlay Text (Unified Design: Blurred Background + Clear Foreground)
   Widget _buildHeroPhoto(String? photoUrl, dynamic fullName, int? age) {
     return Container(
       width: double.infinity,
-      height: 300, // Large height for dominant visual
-      decoration: BoxDecoration(
-        color: Colors.grey.shade300,
-        image: photoUrl != null
-            ? DecorationImage(
-                image: NetworkImage(photoUrl),
-                fit: BoxFit.cover,
-                onError: (exception, stackTrace) {
-                  // Handle image load error silently
-                },
-              )
-            : null,
-      ),
-      child: Stack(
-        children: [
-          // Dark gradient overlay for text readability
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Colors.black.withOpacity(0.7),
-                ],
-              ),
-            ),
-          ),
-          // Overlay text: Full Name and Age
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24,
-            child: Text(
-              age != null
-                  ? '${fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही'}, $age'
-                  : fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                shadows: [
-                  Shadow(
-                    offset: Offset(1, 1),
-                    blurRadius: 3,
-                    color: Colors.black54,
+      height: 300, // Large height for dominant visual (280-320px range)
+      color: Colors.grey.shade300,
+      child: photoUrl != null
+          // If profile image exists: Show HERO with blurred background
+          ? Stack(
+              fit: StackFit.expand,
+              clipBehavior: Clip.hardEdge,
+              children: [
+                // Background layer: Blurred image (fills empty space)
+                ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  child: Image.network(
+                    photoUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback: solid color if image fails
+                      return Container(
+                        color: Colors.grey.shade300,
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+                // Slight dark overlay for contrast (optional)
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.3),
+                      ],
+                    ),
+                  ),
+                ),
+                // Foreground layer: Clear image (full photo, no crop)
+                Center(
+                  child: Image.network(
+                    photoUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      // Fallback to brand logo if image fails to load
+                      return Image.asset(
+                        'assets/images/brand_logo.png',
+                        height: 200,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Icon(
+                            Icons.person,
+                            size: 120,
+                            color: Colors.white,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                // Dark gradient overlay for text readability (bottom)
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.7),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                // Overlay text: Full Name and Age
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 24,
+                  child: Text(
+                    age != null
+                        ? '${fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही'}, $age'
+                        : fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1, 1),
+                          blurRadius: 3,
+                          color: Colors.black54,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          // If profile image does NOT exist: Show fallback
+          : Stack(
+              children: [
+                // Dark gradient overlay for text readability
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.7),
+                      ],
+                    ),
+                  ),
+                ),
+                // Overlay text: Full Name and Age
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 24,
+                  child: Text(
+                    age != null
+                        ? '${fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही'}, $age'
+                        : fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          offset: Offset(1, 1),
+                          blurRadius: 3,
+                          color: Colors.black54,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                // Fallback icon if no photo
+                const Center(
+                  child: Icon(
+                    Icons.person,
+                    size: 120,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
             ),
-          ),
-          // Fallback icon if no photo
-          if (photoUrl == null)
-            const Center(
-              child: Icon(
-                Icons.person,
-                size: 120,
-                color: Colors.grey,
-              ),
-            ),
-        ],
-      ),
     );
   }
 

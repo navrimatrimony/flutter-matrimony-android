@@ -335,6 +335,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     return RefreshIndicator(
       onRefresh: _fetchProfileList,
       child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16.0),
         itemCount: _profiles.length,
         itemBuilder: (context, index) {
