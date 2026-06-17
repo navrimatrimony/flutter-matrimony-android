@@ -157,9 +157,111 @@ class ApiClient {
 
     final response = await http.get(
       url,
+      headers: {'Accept': 'application/json'},
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      return _safeMapList(decoded);
+    } catch (_) {
+      return <Map<String, dynamic>>[];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getReligions() async {
+    if (authToken == null) {
+      throw Exception('Auth token missing');
+    }
+
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.religions);
+
+    final response = await http.get(
+      url,
       headers: {
         'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
       },
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      return _safeMapList(decoded);
+    } catch (_) {
+      return <Map<String, dynamic>>[];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getCastes({
+    required int religionId,
+  }) async {
+    if (authToken == null) {
+      throw Exception('Auth token missing');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.castes,
+    ).replace(queryParameters: {'religion_id': religionId.toString()});
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      return _safeMapList(decoded);
+    } catch (_) {
+      return <Map<String, dynamic>>[];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> searchSubCastes({
+    required int casteId,
+    required String query,
+  }) async {
+    if (authToken == null) {
+      throw Exception('Auth token missing');
+    }
+
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.length < 2) return <Map<String, dynamic>>[];
+
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.subCastes).replace(
+      queryParameters: {'caste_id': casteId.toString(), 'q': trimmedQuery},
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      return _safeMapList(decoded);
+    } catch (_) {
+      return <Map<String, dynamic>>[];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> searchEducationDegrees(
+    String query,
+  ) async {
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) return <Map<String, dynamic>>[];
+
+    final url = Uri.parse(
+      ApiRoutes.rootApiBaseUrl + ApiRoutes.educationDegreeSearch,
+    ).replace(queryParameters: {'q': trimmedQuery});
+
+    final response = await http.get(
+      url,
+      headers: {'Accept': 'application/json'},
     );
 
     try {
@@ -206,10 +308,7 @@ class ApiClient {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({
-        'email': email,
-        'password': password,
-      }),
+      body: jsonEncode({'email': email, 'password': password}),
     );
 
     final data = _decodeResponse(response);
@@ -338,10 +437,7 @@ class ApiClient {
     request.headers['Authorization'] = 'Bearer $authToken';
 
     request.files.add(
-      await http.MultipartFile.fromPath(
-        'profile_photo',
-        imageFile.path,
-      ),
+      await http.MultipartFile.fromPath('profile_photo', imageFile.path),
     );
 
     final streamedResponse = await request.send();
@@ -429,7 +525,9 @@ class ApiClient {
     sentInterestProfileIds.clear();
   }
 
-  static Future<Map<String, dynamic>> sendInterest(int receiverProfileId) async {
+  static Future<Map<String, dynamic>> sendInterest(
+    int receiverProfileId,
+  ) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
     }
@@ -443,9 +541,7 @@ class ApiClient {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $authToken',
       },
-      body: jsonEncode({
-        'receiver_profile_id': receiverProfileId,
-      }),
+      body: jsonEncode({'receiver_profile_id': receiverProfileId}),
     );
 
     final data = _decodeResponse(response);

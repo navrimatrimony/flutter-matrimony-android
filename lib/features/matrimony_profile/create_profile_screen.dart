@@ -6,10 +6,7 @@ import '../photo/photo_upload_screen.dart';
 class CreateMatrimonyProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? existingProfile;
 
-  const CreateMatrimonyProfileScreen({
-    super.key,
-    this.existingProfile,
-  });
+  const CreateMatrimonyProfileScreen({super.key, this.existingProfile});
 
   @override
   State<CreateMatrimonyProfileScreen> createState() =>
@@ -20,21 +17,103 @@ class _CreateMatrimonyProfileScreenState
     extends State<CreateMatrimonyProfileScreen> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _religionController = TextEditingController();
   final TextEditingController _casteController = TextEditingController();
+  final TextEditingController _subCasteController = TextEditingController();
   final TextEditingController _educationController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
 
   bool _loading = false;
+  bool _religionsLoading = false;
+  bool _castesLoading = false;
+  bool _subCasteSearching = false;
+  bool _educationSearching = false;
   bool _locationSearching = false;
+
+  int? _selectedReligionId;
+  int? _selectedCasteId;
+  int? _selectedSubCasteId;
   int? _selectedLocationId;
+
+  String? _selectedReligionLabel;
+  String? _selectedCasteLabel;
+  String? _selectedSubCasteLabel;
+  String? _selectedEducationText;
   String? _selectedLocationLabel;
+
+  int _subCasteSearchRequest = 0;
+  int _educationSearchRequest = 0;
   int _locationSearchRequest = 0;
+
+  List<Map<String, dynamic>> _religions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _religionSuggestions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _castes = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _casteSuggestions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _subCasteSuggestions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _educationSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
 
   @override
   void initState() {
     super.initState();
     _prefillExistingProfile();
+    _loadReligions();
+  }
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _dobController.dispose();
+    _religionController.dispose();
+    _casteController.dispose();
+    _subCasteController.dispose();
+    _educationController.dispose();
+    _locationController.dispose();
+    super.dispose();
+  }
+
+  int? _readInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  String _optionLabel(Map<String, dynamic> row, String fallbackPrefix) {
+    for (final key in ['label', 'name', 'display_label', 'label_en']) {
+      final value = row[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+
+    final id = _readInt(row['id']);
+    return id != null ? '$fallbackPrefix ID: $id' : fallbackPrefix;
+  }
+
+  List<Map<String, dynamic>> _filterOptions(
+    List<Map<String, dynamic>> rows,
+    String query,
+  ) {
+    final normalizedQuery = query.trim().toLowerCase();
+    if (normalizedQuery.isEmpty) return rows.take(20).toList();
+
+    return rows
+        .where((row) {
+          return ['label', 'name', 'display_label', 'label_en', 'label_mr'].any(
+            (key) {
+              final value = row[key]?.toString().toLowerCase();
+              return value != null && value.contains(normalizedQuery);
+            },
+          );
+        })
+        .take(20)
+        .toList();
+  }
+
+  String? _firstText(Map<String, dynamic> profile, List<String> keys) {
+    for (final key in keys) {
+      final value = profile[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) return value;
+    }
+    return null;
   }
 
   void _prefillExistingProfile() {
@@ -42,17 +121,43 @@ class _CreateMatrimonyProfileScreenState
     if (profile == null) return;
 
     _fullNameController.text = profile['full_name']?.toString() ?? '';
-    _casteController.text = profile['caste']?.toString() ?? '';
-    _educationController.text =
-        ApiClient.profileEducationLabel(profile) ?? '';
+    _educationController.text = ApiClient.profileEducationLabel(profile) ?? '';
+    _selectedEducationText = _educationController.text.trim().isNotEmpty
+        ? _educationController.text.trim()
+        : null;
     _dobController.text = profile['date_of_birth']?.toString() ?? '';
 
-    final locationId = profile['location_id'];
-    if (locationId is int) {
-      _selectedLocationId = locationId;
-    } else {
-      _selectedLocationId = int.tryParse(locationId?.toString() ?? '');
+    _selectedReligionId = _readInt(profile['religion_id']);
+    _selectedCasteId = _readInt(profile['caste_id']);
+    _selectedSubCasteId = _readInt(profile['sub_caste_id']);
+
+    if (_selectedReligionId != null) {
+      _selectedReligionLabel =
+          _firstText(profile, ['religion_label', 'religion_name']) ??
+          'Selected religion ID: $_selectedReligionId';
+      _religionController.text = _selectedReligionLabel!;
     }
+
+    if (_selectedCasteId != null) {
+      _selectedCasteLabel =
+          _firstText(profile, ['caste_label', 'caste_name', 'caste']) ??
+          'Selected caste ID: $_selectedCasteId';
+      _casteController.text = _selectedCasteLabel!;
+    } else {
+      final casteText = profile['caste']?.toString().trim();
+      if (casteText != null && casteText.isNotEmpty) {
+        _casteController.text = casteText;
+      }
+    }
+
+    if (_selectedSubCasteId != null) {
+      _selectedSubCasteLabel =
+          _firstText(profile, ['sub_caste_label', 'subcaste_label']) ??
+          'Selected sub-caste ID: $_selectedSubCasteId';
+      _subCasteController.text = _selectedSubCasteLabel!;
+    }
+
+    _selectedLocationId = _readInt(profile['location_id']);
 
     final locationLabel = ApiClient.profileLocationLabel(profile);
     if (locationLabel != null) {
@@ -62,6 +167,227 @@ class _CreateMatrimonyProfileScreenState
       _selectedLocationLabel = 'Location ID: $_selectedLocationId';
       _locationController.text = _selectedLocationLabel!;
     }
+  }
+
+  Future<void> _loadReligions() async {
+    setState(() {
+      _religionsLoading = true;
+    });
+
+    final results = await ApiClient.getReligions();
+    if (!mounted) return;
+
+    setState(() {
+      _religions = results;
+      _religionSuggestions = <Map<String, dynamic>>[];
+      _religionsLoading = false;
+    });
+
+    if (_selectedReligionId != null) {
+      final selected = results.where(
+        (row) => _readInt(row['id']) == _selectedReligionId,
+      );
+      if (selected.isNotEmpty) {
+        final label = _optionLabel(selected.first, 'Religion');
+        _selectedReligionLabel = label;
+        _religionController.text = label;
+      }
+      await _loadCastes(_selectedReligionId!, preserveSelection: true);
+    }
+  }
+
+  Future<void> _loadCastes(
+    int religionId, {
+    bool preserveSelection = false,
+  }) async {
+    setState(() {
+      _castesLoading = true;
+      _casteSuggestions = <Map<String, dynamic>>[];
+    });
+
+    final results = await ApiClient.getCastes(religionId: religionId);
+    if (!mounted) return;
+
+    setState(() {
+      _castes = results;
+      _castesLoading = false;
+    });
+
+    if (preserveSelection && _selectedCasteId != null) {
+      final selected = results.where(
+        (row) => _readInt(row['id']) == _selectedCasteId,
+      );
+      if (selected.isNotEmpty) {
+        final label = _optionLabel(selected.first, 'Caste');
+        setState(() {
+          _selectedCasteLabel = label;
+          _casteController.text = label;
+        });
+      }
+    }
+  }
+
+  void _onReligionChanged(String query) {
+    if (_selectedReligionLabel == null || query != _selectedReligionLabel) {
+      _selectedReligionId = null;
+      _selectedReligionLabel = null;
+      _selectedCasteId = null;
+      _selectedCasteLabel = null;
+      _selectedSubCasteId = null;
+      _selectedSubCasteLabel = null;
+      _castes = <Map<String, dynamic>>[];
+      _casteController.clear();
+      _subCasteController.clear();
+    }
+
+    setState(() {
+      _religionSuggestions = _filterOptions(_religions, query);
+    });
+  }
+
+  Future<void> _selectReligion(Map<String, dynamic> religion) async {
+    final id = _readInt(religion['id']);
+    if (id == null) return;
+
+    final label = _optionLabel(religion, 'Religion');
+    setState(() {
+      _selectedReligionId = id;
+      _selectedReligionLabel = label;
+      _religionController.text = label;
+      _religionSuggestions = <Map<String, dynamic>>[];
+      _selectedCasteId = null;
+      _selectedCasteLabel = null;
+      _selectedSubCasteId = null;
+      _selectedSubCasteLabel = null;
+      _casteController.clear();
+      _subCasteController.clear();
+      _subCasteSuggestions = <Map<String, dynamic>>[];
+    });
+
+    await _loadCastes(id);
+  }
+
+  void _onCasteChanged(String query) {
+    if (_selectedCasteLabel == null || query != _selectedCasteLabel) {
+      _selectedCasteId = null;
+      _selectedCasteLabel = null;
+      _selectedSubCasteId = null;
+      _selectedSubCasteLabel = null;
+      _subCasteController.clear();
+    }
+
+    setState(() {
+      _casteSuggestions = _filterOptions(_castes, query);
+    });
+  }
+
+  void _selectCaste(Map<String, dynamic> caste) {
+    final id = _readInt(caste['id']);
+    if (id == null) return;
+
+    final label = _optionLabel(caste, 'Caste');
+    setState(() {
+      _selectedCasteId = id;
+      _selectedCasteLabel = label;
+      _casteController.text = label;
+      _casteSuggestions = <Map<String, dynamic>>[];
+      _selectedSubCasteId = null;
+      _selectedSubCasteLabel = null;
+      _subCasteController.clear();
+      _subCasteSuggestions = <Map<String, dynamic>>[];
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  Future<void> _searchSubCastes(String query) async {
+    final casteId = _selectedCasteId;
+    final requestId = ++_subCasteSearchRequest;
+    final trimmedQuery = query.trim();
+
+    if (_selectedSubCasteLabel == null ||
+        trimmedQuery != _selectedSubCasteLabel) {
+      _selectedSubCasteId = null;
+      _selectedSubCasteLabel = null;
+    }
+
+    if (casteId == null || trimmedQuery.length < 2) {
+      setState(() {
+        _subCasteSearching = false;
+        _subCasteSuggestions = <Map<String, dynamic>>[];
+      });
+      return;
+    }
+
+    setState(() {
+      _subCasteSearching = true;
+    });
+
+    final results = await ApiClient.searchSubCastes(
+      casteId: casteId,
+      query: trimmedQuery,
+    );
+    if (!mounted || requestId != _subCasteSearchRequest) return;
+
+    setState(() {
+      _subCasteSuggestions = results;
+      _subCasteSearching = false;
+    });
+  }
+
+  void _selectSubCaste(Map<String, dynamic> subCaste) {
+    final id = _readInt(subCaste['id']);
+    if (id == null) return;
+
+    final label = _optionLabel(subCaste, 'Sub-caste');
+    setState(() {
+      _selectedSubCasteId = id;
+      _selectedSubCasteLabel = label;
+      _subCasteController.text = label;
+      _subCasteSuggestions = <Map<String, dynamic>>[];
+      _subCasteSearching = false;
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  Future<void> _searchEducation(String query) async {
+    final requestId = ++_educationSearchRequest;
+    final trimmedQuery = query.trim();
+
+    if (_selectedEducationText == null ||
+        trimmedQuery != _selectedEducationText) {
+      _selectedEducationText = null;
+    }
+
+    if (trimmedQuery.length < 2) {
+      setState(() {
+        _educationSearching = false;
+        _educationSuggestions = <Map<String, dynamic>>[];
+      });
+      return;
+    }
+
+    setState(() {
+      _educationSearching = true;
+    });
+
+    final results = await ApiClient.searchEducationDegrees(trimmedQuery);
+    if (!mounted || requestId != _educationSearchRequest) return;
+
+    setState(() {
+      _educationSuggestions = results;
+      _educationSearching = false;
+    });
+  }
+
+  void _selectEducation(Map<String, dynamic> education) {
+    final label = _optionLabel(education, 'Education');
+    setState(() {
+      _selectedEducationText = label;
+      _educationController.text = label;
+      _educationSuggestions = <Map<String, dynamic>>[];
+      _educationSearching = false;
+    });
+    FocusScope.of(context).unfocus();
   }
 
   Future<void> _searchLocations(String query) async {
@@ -110,13 +436,34 @@ class _CreateMatrimonyProfileScreenState
     FocusScope.of(context).unfocus();
   }
 
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   Future<void> _submitProfile() async {
+    final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
+        ? _selectedCasteLabel!.trim()
+        : _casteController.text.trim();
+    final educationText = _selectedEducationText?.trim().isNotEmpty == true
+        ? _selectedEducationText!.trim()
+        : _educationController.text.trim();
+
+    if (_selectedReligionId == null) {
+      _showMessage('कृपया suggestions मधून religion निवडा.');
+      return;
+    }
+    if (_selectedCasteId == null || casteLabel.isEmpty) {
+      _showMessage('कृपया suggestions मधून caste निवडा.');
+      return;
+    }
     if (_selectedLocationId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('कृपया suggestions मधून location निवडा.'),
-        ),
-      );
+      _showMessage('कृपया suggestions मधून location निवडा.');
+      return;
+    }
+    if (educationText.isEmpty) {
+      _showMessage('कृपया education भरा किंवा suggestion निवडा.');
       return;
     }
 
@@ -124,13 +471,19 @@ class _CreateMatrimonyProfileScreenState
       _loading = true;
     });
 
-    final payload = {
+    final payload = <String, dynamic>{
       'full_name': _fullNameController.text.trim(),
       'date_of_birth': _dobController.text.trim(),
-      'caste': _casteController.text.trim(),
-      'highest_education': _educationController.text.trim(),
+      'religion_id': _selectedReligionId,
+      'caste_id': _selectedCasteId,
+      'caste': casteLabel,
+      'highest_education': educationText,
       'location_id': _selectedLocationId,
     };
+
+    if (_selectedSubCasteId != null) {
+      payload['sub_caste_id'] = _selectedSubCasteId;
+    }
 
     final response = widget.existingProfile == null
         ? await ApiClient.createMatrimonyProfile(payload)
@@ -147,9 +500,7 @@ class _CreateMatrimonyProfileScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isCreate
-                ? '✅ Profile create यशस्वी!'
-                : '✅ Profile update यशस्वी!',
+            isCreate ? 'Profile create यशस्वी!' : 'Profile update यशस्वी!',
           ),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),
@@ -157,19 +508,54 @@ class _CreateMatrimonyProfileScreenState
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(
-          builder: (_) => const PhotoUploadScreen(),
-        ),
+        MaterialPageRoute(builder: (_) => const PhotoUploadScreen()),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            response['message']?.toString() ?? 'Profile save failed',
-          ),
-        ),
+      _showMessage(response['message']?.toString() ?? 'Profile save failed');
+    }
+  }
+
+  Widget _buildOptionSuggestions({
+    required List<Map<String, dynamic>> suggestions,
+    required String fallbackPrefix,
+    required void Function(Map<String, dynamic>) onSelect,
+    bool loading = false,
+  }) {
+    if (loading) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: LinearProgressIndicator(),
       );
     }
+
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      constraints: const BoxConstraints(maxHeight: 180),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: ListView.builder(
+        shrinkWrap: true,
+        itemCount: suggestions.length,
+        itemBuilder: (context, index) {
+          final item = suggestions[index];
+          final label = _optionLabel(item, fallbackPrefix);
+          final subtitle = item['category']?.toString().trim();
+
+          return ListTile(
+            dense: true,
+            title: Text(label),
+            subtitle: subtitle != null && subtitle.isNotEmpty
+                ? Text(subtitle)
+                : null,
+            onTap: () => onSelect(item),
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildLocationSuggestions() {
@@ -180,9 +566,7 @@ class _CreateMatrimonyProfileScreenState
       );
     }
 
-    if (_locationSuggestions.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (_locationSuggestions.isEmpty) return const SizedBox.shrink();
 
     return Container(
       margin: const EdgeInsets.only(top: 8),
@@ -202,9 +586,8 @@ class _CreateMatrimonyProfileScreenState
           return ListTile(
             dense: true,
             title: Text(label),
-            subtitle: hierarchy != null &&
-                    hierarchy.isNotEmpty &&
-                    hierarchy != label
+            subtitle:
+                hierarchy != null && hierarchy.isNotEmpty && hierarchy != label
                 ? Text(hierarchy)
                 : null,
             onTap: () => _selectLocation(location),
@@ -216,6 +599,8 @@ class _CreateMatrimonyProfileScreenState
 
   @override
   Widget build(BuildContext context) {
+    final subCasteEnabled = _selectedCasteId != null;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -228,9 +613,7 @@ class _CreateMatrimonyProfileScreenState
           children: [
             TextField(
               controller: _fullNameController,
-              decoration: const InputDecoration(
-                labelText: 'Full Name',
-              ),
+              decoration: const InputDecoration(labelText: 'Full Name'),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -256,7 +639,7 @@ class _CreateMatrimonyProfileScreenState
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('✅ Date select केले: $dateStr'),
+                      content: Text('Date select केले: $dateStr'),
                       backgroundColor: Colors.green,
                       duration: const Duration(seconds: 2),
                     ),
@@ -266,24 +649,68 @@ class _CreateMatrimonyProfileScreenState
             ),
             const SizedBox(height: 12),
             TextField(
+              controller: _religionController,
+              decoration: const InputDecoration(labelText: 'Religion'),
+              onChanged: _onReligionChanged,
+              onTap: () => _onReligionChanged(_religionController.text),
+            ),
+            _buildOptionSuggestions(
+              suggestions: _religionSuggestions,
+              fallbackPrefix: 'Religion',
+              onSelect: _selectReligion,
+              loading: _religionsLoading,
+            ),
+            const SizedBox(height: 12),
+            TextField(
               controller: _casteController,
-              decoration: const InputDecoration(
+              enabled: _selectedReligionId != null && !_castesLoading,
+              decoration: InputDecoration(
                 labelText: 'Caste',
+                hintText: _selectedReligionId == null
+                    ? 'Select religion first'
+                    : null,
               ),
+              onChanged: _onCasteChanged,
+              onTap: () => _onCasteChanged(_casteController.text),
+            ),
+            _buildOptionSuggestions(
+              suggestions: _casteSuggestions,
+              fallbackPrefix: 'Caste',
+              onSelect: _selectCaste,
+              loading: _castesLoading,
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _subCasteController,
+              enabled: subCasteEnabled,
+              decoration: InputDecoration(
+                labelText: 'Sub-caste (Optional)',
+                hintText: subCasteEnabled ? null : 'Select caste first',
+              ),
+              onChanged: _searchSubCastes,
+            ),
+            _buildOptionSuggestions(
+              suggestions: _subCasteSuggestions,
+              fallbackPrefix: 'Sub-caste',
+              onSelect: _selectSubCaste,
+              loading: _subCasteSearching,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _educationController,
-              decoration: const InputDecoration(
-                labelText: 'Education',
-              ),
+              decoration: const InputDecoration(labelText: 'Education'),
+              onChanged: _searchEducation,
+            ),
+            _buildOptionSuggestions(
+              suggestions: _educationSuggestions,
+              fallbackPrefix: 'Education',
+              onSelect: _selectEducation,
+              loading: _educationSearching,
             ),
             const SizedBox(height: 12),
             TextField(
               controller: _locationController,
-              decoration: const InputDecoration(
-                labelText: 'Location',
-              ),
+              decoration: const InputDecoration(labelText: 'Location'),
               onChanged: _searchLocations,
             ),
             _buildLocationSuggestions(),

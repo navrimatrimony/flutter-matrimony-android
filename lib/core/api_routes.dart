@@ -4,11 +4,15 @@ class ApiRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String locationSearch = '/location/search';
+  static const String educationDegreeSearch = '/education-degrees/search';
 
   // Matrimony Profile
   static const String matrimonyProfile = '/matrimony-profile';
   static const String matrimonyProfilePhoto = '/matrimony-profile/photo';
   static const String matrimonyProfiles = '/matrimony-profiles'; // For listing
+  static const String religions = '/religions';
+  static const String castes = '/castes';
+  static const String subCastes = '/sub-castes';
 
   // Interests
   static const String interests = '/interests';
