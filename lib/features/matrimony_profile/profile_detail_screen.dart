@@ -8,10 +8,7 @@ import '../../core/api_client.dart';
 class ProfileDetailScreen extends StatefulWidget {
   final int profileId;
 
-  const ProfileDetailScreen({
-    super.key,
-    required this.profileId,
-  });
+  const ProfileDetailScreen({super.key, required this.profileId});
 
   @override
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
@@ -81,7 +78,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       final dob = DateTime.parse(dateOfBirth);
       final now = DateTime.now();
       int age = now.year - dob.year;
-      if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+      if (now.month < dob.month ||
+          (now.month == dob.month && now.day < dob.day)) {
         age--;
       }
       return age;
@@ -143,7 +141,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         setState(() {
           _isSendingInterest = false;
         });
-        final errorMessage = response['message'] ?? 'Interest send करता आला नाही.';
+        final errorMessage =
+            response['message'] ?? 'Interest send करता आला नाही.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ $errorMessage'),
@@ -178,7 +177,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     // Must not be viewing own profile
     final currentUserProfileId = ApiClient.currentUserProfile?['id'];
     final viewingProfileId = _profile!['id'];
-    if (currentUserProfileId != null && currentUserProfileId == viewingProfileId) {
+    if (currentUserProfileId != null &&
+        currentUserProfileId == viewingProfileId) {
       return false;
     }
 
@@ -187,15 +187,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   // Check if interest is already sent
   bool _isInterestAlreadySent() {
-    return ApiClient.sentInterestProfileIds.contains(widget.profileId) || _interestSent;
+    return ApiClient.sentInterestProfileIds.contains(widget.profileId) ||
+        _interestSent;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('प्रोफाइल'),
-      ),
+      appBar: AppBar(title: const Text('प्रोफाइल')),
       body: _buildBody(),
     );
   }
@@ -234,7 +233,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         // HERO PROFILE PHOTO WITH OVERLAY
         // ========================================
         _buildHeroPhoto(photoUrl, _profile!['full_name'], age),
-        
+
         // Send Interest Button (immediately below hero, always visible)
         if (_shouldShowSendInterestButton())
           Padding(
@@ -242,28 +241,36 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: (_isInterestAlreadySent() || _isSendingInterest) ? null : _sendInterest,
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  backgroundColor: Theme.of(context).primaryColor,
-                  foregroundColor: Colors.white,
-                ).copyWith(
-                  // Apply disabled style when interest is already sent
-                  backgroundColor: _isInterestAlreadySent() && !_isSendingInterest
-                      ? MaterialStateProperty.all(Colors.grey.shade400)
-                      : null,
-                ),
+                onPressed: (_isInterestAlreadySent() || _isSendingInterest)
+                    ? null
+                    : _sendInterest,
+                style:
+                    ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: Theme.of(context).primaryColor,
+                      foregroundColor: Colors.white,
+                    ).copyWith(
+                      // Apply disabled style when interest is already sent
+                      backgroundColor:
+                          _isInterestAlreadySent() && !_isSendingInterest
+                          ? WidgetStateProperty.all(Colors.grey.shade400)
+                          : null,
+                    ),
                 child: _isSendingInterest
                     ? const SizedBox(
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.white,
+                          ),
                         ),
                       )
                     : Text(
-                        _isInterestAlreadySent() ? 'Interest Sent ✓' : 'Send Interest',
+                        _isInterestAlreadySent()
+                            ? 'Interest Sent ✓'
+                            : 'Send Interest',
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -272,7 +279,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
             ),
           ),
-        
+
         // Profile Details Section
         Padding(
           padding: const EdgeInsets.all(16.0),
@@ -281,8 +288,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               // All 7 profile fields
               _buildProfileDetail('नाव', _profile!['full_name']),
               _buildProfileDetail('जन्मतारीख', _profile!['date_of_birth']),
-              if (age != null)
-                _buildProfileDetail('वय', '$age वर्षे'),
+              if (age != null) _buildProfileDetail('वय', '$age वर्षे'),
               _buildProfileDetail('जात', _profile!['caste']),
               _buildProfileDetail('शिक्षण', education),
               _buildProfileDetail('ठिकाण', location),
@@ -313,9 +319,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       // Fallback: solid color if image fails
-                      return Container(
-                        color: Colors.grey.shade300,
-                      );
+                      return Container(color: Colors.grey.shade300);
                     },
                   ),
                 ),
@@ -327,7 +331,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.3),
+                        Colors.black.withValues(alpha: 0.3),
                       ],
                     ),
                   ),
@@ -367,7 +371,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withValues(alpha: 0.7),
                         ],
                       ),
                     ),
@@ -381,7 +385,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   child: Text(
                     age != null
                         ? '${fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही'}, $age'
-                        : fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही',
+                        : fullName?.toString().toUpperCase() ??
+                              'नाव उपलब्ध नाही',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -409,7 +414,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       end: Alignment.bottomCenter,
                       colors: [
                         Colors.transparent,
-                        Colors.black.withOpacity(0.7),
+                        Colors.black.withValues(alpha: 0.7),
                       ],
                     ),
                   ),
@@ -422,7 +427,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   child: Text(
                     age != null
                         ? '${fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही'}, $age'
-                        : fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही',
+                        : fullName?.toString().toUpperCase() ??
+                              'नाव उपलब्ध नाही',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 28,
@@ -439,11 +445,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 ),
                 // Fallback icon if no photo
                 const Center(
-                  child: Icon(
-                    Icons.person,
-                    size: 120,
-                    color: Colors.grey,
-                  ),
+                  child: Icon(Icons.person, size: 120, color: Colors.grey),
                 ),
               ],
             ),

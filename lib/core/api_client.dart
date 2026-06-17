@@ -447,11 +447,11 @@ class ApiClient {
     if (response.statusCode == 200 && data['success'] == true) {
       final uploadData = data['data'];
       if (uploadData is Map) {
-        currentUserProfile ??= <String, dynamic>{};
-        currentUserProfile!['profile_photo'] = uploadData['profile_photo'];
-        final photoUrl = resolveProfilePhotoUrl(currentUserProfile);
+        final profile = currentUserProfile ??= <String, dynamic>{};
+        profile['profile_photo'] = uploadData['profile_photo'];
+        final photoUrl = resolveProfilePhotoUrl(profile);
         if (photoUrl != null) {
-          currentUserProfile!['profile_photo_url'] = photoUrl;
+          profile['profile_photo_url'] = photoUrl;
         }
       }
     }

@@ -149,6 +149,8 @@ class _CreateMatrimonyProfileScreenState
     });
   }
 
+  bool get _canAddTypedEducation => _educationController.text.trim().isNotEmpty;
+
   void _addTypedEducation() {
     _addEducationChip(_educationController.text);
     FocusScope.of(context).unfocus();
@@ -193,14 +195,14 @@ class _CreateMatrimonyProfileScreenState
       _selectedReligionLabel =
           _firstText(profile, ['religion_label', 'religion_name']) ??
           'Selected religion ID: $_selectedReligionId';
-      _religionController.text = _selectedReligionLabel!;
+      _religionController.text = _selectedReligionLabel ?? '';
     }
 
     if (_selectedCasteId != null) {
       _selectedCasteLabel =
           _firstText(profile, ['caste_label', 'caste_name', 'caste']) ??
           'Selected caste ID: $_selectedCasteId';
-      _casteController.text = _selectedCasteLabel!;
+      _casteController.text = _selectedCasteLabel ?? '';
     } else {
       final casteText = profile['caste']?.toString().trim();
       if (casteText != null && casteText.isNotEmpty) {
@@ -212,7 +214,7 @@ class _CreateMatrimonyProfileScreenState
       _selectedSubCasteLabel =
           _firstText(profile, ['sub_caste_label', 'subcaste_label']) ??
           'Selected sub-caste ID: $_selectedSubCasteId';
-      _subCasteController.text = _selectedSubCasteLabel!;
+      _subCasteController.text = _selectedSubCasteLabel ?? '';
     }
 
     _selectedLocationId = _readInt(profile['location_id']);
@@ -223,7 +225,7 @@ class _CreateMatrimonyProfileScreenState
       _locationController.text = locationLabel;
     } else if (_selectedLocationId != null) {
       _selectedLocationLabel = 'Location ID: $_selectedLocationId';
-      _locationController.text = _selectedLocationLabel!;
+      _locationController.text = _selectedLocationLabel ?? '';
     }
   }
 
@@ -241,16 +243,17 @@ class _CreateMatrimonyProfileScreenState
       _religionsLoading = false;
     });
 
-    if (_selectedReligionId != null) {
+    final selectedReligionId = _selectedReligionId;
+    if (selectedReligionId != null) {
       final selected = results.where(
-        (row) => _readInt(row['id']) == _selectedReligionId,
+        (row) => _readInt(row['id']) == selectedReligionId,
       );
       if (selected.isNotEmpty) {
         final label = _optionLabel(selected.first, 'Religion');
         _selectedReligionLabel = label;
         _religionController.text = label;
       }
-      await _loadCastes(_selectedReligionId!, preserveSelection: true);
+      await _loadCastes(selectedReligionId, preserveSelection: true);
     }
   }
 
@@ -491,8 +494,10 @@ class _CreateMatrimonyProfileScreenState
   }
 
   Future<void> _submitProfile() async {
-    final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
-        ? _selectedCasteLabel!.trim()
+    final selectedCasteLabel = _selectedCasteLabel?.trim();
+    final casteLabel =
+        selectedCasteLabel != null && selectedCasteLabel.isNotEmpty
+        ? selectedCasteLabel
         : _casteController.text.trim();
     final educationText = _educationSubmitText();
 
@@ -605,22 +610,116 @@ class _CreateMatrimonyProfileScreenState
   }
 
   Widget _buildEducationChips() {
-    if (_selectedEducations.isEmpty) return const SizedBox.shrink();
+    if (_selectedEducations.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            'Select suggestions or add typed education.',
+            style: TextStyle(color: Colors.grey, fontSize: 12),
+          ),
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 6,
-          children: _selectedEducations.map((education) {
-            return InputChip(
-              label: Text(education),
-              onDeleted: () => _removeEducationChip(education),
-            );
-          }).toList(),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.blue.shade50,
+          border: Border.all(color: Colors.blue.shade100),
+          borderRadius: BorderRadius.circular(8),
         ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Selected education (${_selectedEducations.length})',
+              style: TextStyle(
+                color: Colors.blue.shade800,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: _selectedEducations.map((education) {
+                return InputChip(
+                  label: Text(education),
+                  deleteIcon: const Icon(Icons.close, size: 18),
+                  onDeleted: () => _removeEducationChip(education),
+                  backgroundColor: Colors.white,
+                  side: BorderSide(color: Colors.blue.shade200),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEducationSuggestions() {
+    final query = _educationController.text.trim();
+
+    if (_educationSearching) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: LinearProgressIndicator(),
+      );
+    }
+
+    if (_educationSuggestions.isEmpty) {
+      if (query.length < 2) return const SizedBox.shrink();
+
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            'No suggestion found. Tap + to add "$query".',
+            style: TextStyle(color: Colors.grey.shade700),
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      constraints: const BoxConstraints(maxHeight: 220),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListView.separated(
+        shrinkWrap: true,
+        itemCount: _educationSuggestions.length,
+        separatorBuilder: (context, index) => const Divider(height: 1),
+        itemBuilder: (context, index) {
+          final education = _educationSuggestions[index];
+          final label = _optionLabel(education, 'Education');
+          final alreadySelected = _hasEducationChip(label);
+
+          return ListTile(
+            dense: true,
+            leading: Icon(
+              alreadySelected ? Icons.check_circle : Icons.school_outlined,
+              color: alreadySelected ? Colors.green : null,
+            ),
+            title: Text(label),
+            trailing: alreadySelected ? const Text('Added') : null,
+            onTap: alreadySelected ? null : () => _selectEducation(education),
+          );
+        },
       ),
     );
   }
@@ -698,6 +797,8 @@ class _CreateMatrimonyProfileScreenState
                 );
 
                 if (pickedDate != null) {
+                  if (!context.mounted) return;
+
                   final dateStr =
                       "${pickedDate.year.toString().padLeft(4, '0')}-"
                       "${pickedDate.month.toString().padLeft(2, '0')}-"
@@ -770,19 +871,14 @@ class _CreateMatrimonyProfileScreenState
                 suffixIcon: IconButton(
                   tooltip: 'Add education',
                   icon: const Icon(Icons.add),
-                  onPressed: _addTypedEducation,
+                  onPressed: _canAddTypedEducation ? _addTypedEducation : null,
                 ),
               ),
               onChanged: _searchEducation,
               onSubmitted: (_) => _addTypedEducation(),
             ),
             _buildEducationChips(),
-            _buildOptionSuggestions(
-              suggestions: _educationSuggestions,
-              fallbackPrefix: 'Education',
-              onSelect: _selectEducation,
-              loading: _educationSearching,
-            ),
+            _buildEducationSuggestions(),
             const SizedBox(height: 12),
             TextField(
               controller: _locationController,

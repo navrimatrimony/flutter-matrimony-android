@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/api_client.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -12,130 +13,131 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
   bool isLoading = false;
   String errorMessage = '';
-
   String selectedGender = 'male';
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _register() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    final result = await ApiClient.register(
+      name: nameController.text,
+      email: emailController.text,
+      password: passwordController.text,
+      passwordConfirmation: passwordController.text,
+      gender: selectedGender,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      isLoading = false;
+    });
+
+    if (result.containsKey('token') && result['token'] != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registration यशस्वी! Profile create करा...'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      Navigator.pushReplacementNamed(context, '/create-profile');
+      return;
+    }
+
+    setState(() {
+      errorMessage = result['message']?.toString() ?? 'Registration failed';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Name
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Full Name',
+      appBar: AppBar(title: const Text('Register')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            16 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: nameController,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(labelText: 'Full Name'),
               ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Gender
-            DropdownButtonFormField<String>(
-              initialValue: selectedGender,
-              items: const [
-                DropdownMenuItem(
-                  value: 'male',
-                  child: Text('Male'),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                initialValue: selectedGender,
+                items: const [
+                  DropdownMenuItem(value: 'male', child: Text('Male')),
+                  DropdownMenuItem(value: 'female', child: Text('Female')),
+                ],
+                onChanged: isLoading
+                    ? null
+                    : (value) {
+                        if (value == null) return;
+                        setState(() {
+                          selectedGender = value;
+                        });
+                      },
+                decoration: const InputDecoration(labelText: 'Gender'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(labelText: 'Email'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) {
+                  if (!isLoading) _register();
+                },
+                decoration: const InputDecoration(labelText: 'Password'),
+              ),
+              const SizedBox(height: 16),
+              if (errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    errorMessage,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
-                DropdownMenuItem(
-                  value: 'female',
-                  child: Text('Female'),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  selectedGender = value!;
-                });
-              },
-              decoration: const InputDecoration(
-                labelText: 'Gender',
+              ElevatedButton(
+                onPressed: isLoading ? null : _register,
+                child: isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Register'),
               ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Email
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // Password
-            TextField(
-              controller: passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            if (errorMessage.isNotEmpty)
-              Text(
-                errorMessage,
-                style: const TextStyle(color: Colors.red),
-              ),
-
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () async {
-                setState(() {
-                  isLoading = true;
-                  errorMessage = '';
-                });
-
-                final result = await ApiClient.register(
-                  name: nameController.text,
-                  email: emailController.text,
-                  password: passwordController.text,
-                  passwordConfirmation: passwordController.text,
-                  gender: selectedGender,
-                );
-
-
-
-                setState(() {
-                  isLoading = false;
-                });
-
-                // Check if registration was successful (token present)
-                if (result.containsKey('token') && result['token'] != null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('✅ Registration यशस्वी! Profile create करा...'),
-                      backgroundColor: Colors.green,
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                  Navigator.pushReplacementNamed(context, '/create-profile');
-                } else {
-                  setState(() {
-                    errorMessage = result['message'] ?? 'Registration failed';
-                  });
-                }
-
-
-
-              },
-              child: isLoading
-                  ? const CircularProgressIndicator()
-                  : const Text('Register'),
-            ),
-
-          ],
+            ],
+          ),
         ),
       ),
     );

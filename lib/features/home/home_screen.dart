@@ -19,13 +19,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   // Interest statistics state
   bool _isLoadingStats = true;
   String? _statsError;
-  
+
   // Sent interests counts
   int _sentTotal = 0;
   int _sentPending = 0;
   int _sentAccepted = 0;
   int _sentRejected = 0;
-  
+
   // Received interests counts
   int _receivedTotal = 0;
   int _receivedPending = 0;
@@ -73,22 +73,24 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       // Fetch both sent and received interests in parallel
       final sentResponse = ApiClient.getSentInterests();
       final receivedResponse = ApiClient.getReceivedInterests();
-      
+
       final results = await Future.wait([sentResponse, receivedResponse]);
       if (!mounted) return;
 
-      final sentData = results[0] as Map<String, dynamic>;
-      final receivedData = results[1] as Map<String, dynamic>;
+      final sentData = results[0];
+      final receivedData = results[1];
 
       // Process sent interests
-      if (sentData['statusCode'] == 200 && sentData['success'] == true && sentData['data'] != null) {
+      if (sentData['statusCode'] == 200 &&
+          sentData['success'] == true &&
+          sentData['data'] != null) {
         final data = sentData['data'] as Map<String, dynamic>;
         final sentList = data['sent'] as List? ?? [];
-        
+
         int pending = 0;
         int accepted = 0;
         int rejected = 0;
-        
+
         for (final interest in sentList) {
           final interestMap = interest as Map<String, dynamic>;
           final status = interestMap['status']?.toString().toLowerCase();
@@ -100,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             rejected++;
           }
         }
-        
+
         _sentTotal = sentList.length;
         _sentPending = pending;
         _sentAccepted = accepted;
@@ -108,14 +110,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       }
 
       // Process received interests
-      if (receivedData['statusCode'] == 200 && receivedData['success'] == true && receivedData['data'] != null) {
+      if (receivedData['statusCode'] == 200 &&
+          receivedData['success'] == true &&
+          receivedData['data'] != null) {
         final data = receivedData['data'] as Map<String, dynamic>;
         final receivedList = data['received'] as List? ?? [];
-        
+
         int pending = 0;
         int accepted = 0;
         int rejected = 0;
-        
+
         for (final interest in receivedList) {
           final interestMap = interest as Map<String, dynamic>;
           final status = interestMap['status']?.toString().toLowerCase();
@@ -127,7 +131,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             rejected++;
           }
         }
-        
+
         _receivedTotal = receivedList.length;
         _receivedPending = pending;
         _receivedAccepted = accepted;
@@ -176,9 +180,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                         children: [
                           // Background layer: Blurred image (fills empty space)
                           ImageFiltered(
-                            imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                            imageFilter: ImageFilter.blur(
+                              sigmaX: 10,
+                              sigmaY: 10,
+                            ),
                             child: Image.network(
-                              photoUrl!,
+                              photoUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) {
                                 // Fallback: solid color if image fails
@@ -191,7 +198,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           // Foreground layer: Clear image (full photo, no crop)
                           Center(
                             child: Image.network(
-                              photoUrl!,
+                              photoUrl,
                               fit: BoxFit.contain,
                               errorBuilder: (context, error, stackTrace) {
                                 // Fallback to brand logo if image fails to load
@@ -234,145 +241,169 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               child: ListView(
                 padding: EdgeInsets.zero,
                 children: [
-            // Menu Items
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text(
-                'Dashboard',
-                style: TextStyle(fontWeight: FontWeight.w500),
-              ),
-              selected: true,
-              selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.search),
-              title: const Text('Browse Profiles'),
-              dense: false,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const BrowseProfilesScreen(),
+                  // Menu Items
+                  ListTile(
+                    leading: const Icon(Icons.home),
+                    title: const Text(
+                      'Dashboard',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
+                    selected: true,
+                    selectedTileColor: Theme.of(
+                      context,
+                    ).primaryColor.withValues(alpha: 0.1),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                    },
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text('माझे प्रोफाइल'),
-              dense: false,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.pushNamed(context, '/view-profile');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit Profile'),
-              dense: false,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              onTap: () async {
-                Navigator.pop(context); // Close drawer
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('📡 Profile load करत आहे...'),
-                    backgroundColor: Colors.blue,
-                    duration: Duration(seconds: 1),
+                  ListTile(
+                    leading: const Icon(Icons.search),
+                    title: const Text('Browse Profiles'),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BrowseProfilesScreen(),
+                        ),
+                      );
+                    },
                   ),
-                );
-                
-                await ApiClient.getMyProfile();
+                  ListTile(
+                    leading: const Icon(Icons.person),
+                    title: const Text('माझे प्रोफाइल'),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamed(context, '/view-profile');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.edit),
+                    title: const Text('Edit Profile'),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () async {
+                      Navigator.pop(context); // Close drawer
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✅ Profile load केले. Edit करण्यासाठी ready आहे...'),
-                    backgroundColor: Colors.green,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('📡 Profile load करत आहे...'),
+                          backgroundColor: Colors.blue,
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
 
-                if (context.mounted) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => CreateMatrimonyProfileScreen(
-                        existingProfile: ApiClient.currentUserProfile,
+                      await ApiClient.getMyProfile();
+                      if (!context.mounted) return;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            '✅ Profile load केले. Edit करण्यासाठी ready आहे...',
+                          ),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CreateMatrimonyProfileScreen(
+                            existingProfile: ApiClient.currentUserProfile,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.photo_camera),
+                    title: const Text('Upload Photo'),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PhotoUploadScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.send),
+                    title: const Text('Sent Interests'),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SentInterestsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.inbox),
+                    title: const Text('Received Interests'),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ReceivedInterestsScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.logout, color: Colors.red),
+                    title: const Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  );
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_camera),
-              title: const Text('Upload Photo'),
-              dense: false,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const PhotoUploadScreen(),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      ApiClient.logout();
+                      Navigator.pushReplacementNamed(context, '/login');
+                    },
                   ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.send),
-              title: const Text('Sent Interests'),
-              dense: false,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const SentInterestsScreen(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.inbox),
-              title: const Text('Received Interests'),
-              dense: false,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ReceivedInterestsScreen(),
-                  ),
-                );
-              },
-            ),
-            const Divider(height: 1),
-            ListTile(
-              leading: const Icon(Icons.logout, color: Colors.red),
-              title: const Text(
-                'Logout',
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              dense: false,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              onTap: () {
-                Navigator.pop(context); // Close drawer
-                ApiClient.logout();
-                Navigator.pushReplacementNamed(context, '/login');
-              },
-            ),
                 ],
               ),
             ),
@@ -414,17 +445,17 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           // Welcome message
           Text(
             'Welcome to Matrimony App',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             'Choose an action to get started',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade600,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -439,9 +470,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const BrowseProfilesScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const BrowseProfilesScreen()),
               );
             },
           ),
@@ -454,9 +483,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const SentInterestsScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const SentInterestsScreen()),
               );
             },
           ),
@@ -510,7 +537,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withOpacity(0.1),
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -542,10 +569,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ],
                 ),
               ),
-              Icon(
-                Icons.chevron_right,
-                color: Colors.grey.shade400,
-              ),
+              Icon(Icons.chevron_right, color: Colors.grey.shade400),
             ],
           ),
         ),
@@ -560,9 +584,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       children: [
         Text(
           'Interest Statistics',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 16),
         // Sent Interests Stats Card
@@ -578,9 +602,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const SentInterestsScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const SentInterestsScreen()),
             );
           },
         ),
@@ -636,7 +658,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.1),
+                      color: color.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(icon, color: color, size: 24),
@@ -684,16 +706,32 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 Row(
                   children: [
                     Expanded(
-                      child: _buildStatItem('Total', total.toString(), Colors.grey.shade700),
+                      child: _buildStatItem(
+                        'Total',
+                        total.toString(),
+                        Colors.grey.shade700,
+                      ),
                     ),
                     Expanded(
-                      child: _buildStatItem('Pending', pending.toString(), Colors.orange),
+                      child: _buildStatItem(
+                        'Pending',
+                        pending.toString(),
+                        Colors.orange,
+                      ),
                     ),
                     Expanded(
-                      child: _buildStatItem('Accepted', accepted.toString(), Colors.green),
+                      child: _buildStatItem(
+                        'Accepted',
+                        accepted.toString(),
+                        Colors.green,
+                      ),
                     ),
                     Expanded(
-                      child: _buildStatItem('Rejected', rejected.toString(), Colors.red),
+                      child: _buildStatItem(
+                        'Rejected',
+                        rejected.toString(),
+                        Colors.red,
+                      ),
                     ),
                   ],
                 ),
@@ -719,10 +757,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
         ),
       ],
     );

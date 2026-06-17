@@ -39,8 +39,8 @@ class LandingScreen extends StatelessWidget {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withOpacity(0.3),
-                  Colors.black.withOpacity(0.7),
+                  Colors.black.withValues(alpha: 0.3),
+                  Colors.black.withValues(alpha: 0.7),
                 ],
               ),
             ),
@@ -79,7 +79,9 @@ class LandingScreen extends StatelessWidget {
                                     Shadow(
                                       offset: const Offset(2, 2),
                                       blurRadius: 4,
-                                      color: Colors.black.withOpacity(0.8),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.8,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -109,7 +111,7 @@ class LandingScreen extends StatelessWidget {
                             Shadow(
                               offset: const Offset(2, 2),
                               blurRadius: 4,
-                              color: Colors.black.withOpacity(0.8),
+                              color: Colors.black.withValues(alpha: 0.8),
                             ),
                           ],
                         ),
@@ -126,7 +128,7 @@ class LandingScreen extends StatelessWidget {
                             Shadow(
                               offset: const Offset(1, 1),
                               blurRadius: 3,
-                              color: Colors.black.withOpacity(0.8),
+                              color: Colors.black.withValues(alpha: 0.8),
                             ),
                           ],
                         ),
@@ -185,7 +187,10 @@ class LandingScreen extends StatelessWidget {
                           },
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: const BorderSide(color: Colors.white, width: 2),
+                            side: const BorderSide(
+                              color: Colors.white,
+                              width: 2,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),

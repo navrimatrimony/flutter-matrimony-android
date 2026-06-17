@@ -92,6 +92,8 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
     // आधी प्रोफाइल तपासा
     try {
       final profileCheck = await ApiClient.getMyProfile();
+      if (!mounted) return;
+
       final profileStatusCode = profileCheck['statusCode'];
 
       if (profileStatusCode == 404 || profileCheck['success'] != true) {
