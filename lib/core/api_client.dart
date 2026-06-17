@@ -1,21 +1,78 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
+
 import 'api_routes.dart';
 
 class ApiClient {
   static String? authToken;
   static Map<String, dynamic>? currentUserProfile;
   static Set<int> sentInterestProfileIds = {};
-// 👤 GET LOGGED-IN USER PROFILE
+
+  static const String _profilePhotoBaseUrl =
+      'https://freelovemarriage.com/storage/matrimony_photos';
+
+  static Map<String, dynamic> _decodeResponse(http.Response response) {
+    Map<String, dynamic> data;
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is Map<String, dynamic>) {
+        data = decoded;
+      } else if (decoded is Map) {
+        data = Map<String, dynamic>.from(decoded);
+      } else {
+        data = <String, dynamic>{};
+      }
+    } catch (_) {
+      data = <String, dynamic>{};
+    }
+    data['statusCode'] = response.statusCode;
+    return data;
+  }
+
+  static String? resolveProfilePhotoUrl(Map<String, dynamic>? profile) {
+    if (profile == null) return null;
+
+    for (final key in ['profile_photo_url', 'url', 'photo_url']) {
+      final value = profile[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    var filename = profile['profile_photo']?.toString().trim();
+    if (filename == null || filename.isEmpty) return null;
+
+    filename = filename.replaceAll('\\', '/').replaceFirst(RegExp(r'^/+'), '');
+    if (filename.startsWith('http://') || filename.startsWith('https://')) {
+      return filename;
+    }
+    if (filename.startsWith('pending/')) {
+      return null;
+    }
+
+    for (final prefix in [
+      'storage/matrimony_photos/',
+      'uploads/matrimony_photos/',
+      'matrimony_photos/',
+    ]) {
+      if (filename.startsWith(prefix)) {
+        filename = filename.substring(prefix.length);
+      }
+    }
+
+    if (filename.isEmpty) return null;
+
+    return Uri.encodeFull('$_profilePhotoBaseUrl/$filename');
+  }
+
   static Future<Map<String, dynamic>> getMyProfile() async {
     if (authToken == null) {
       throw Exception('Auth token missing');
     }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile,
-    );
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile);
 
     final response = await http.get(
       url,
@@ -25,22 +82,15 @@ class ApiClient {
       },
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
+    final data = _decodeResponse(response);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      currentUserProfile = data['profile'];
+      currentUserProfile = data['profile'] as Map<String, dynamic>?;
     }
 
     return data;
   }
 
-  // 🔐 LOGIN
   static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
@@ -58,24 +108,31 @@ class ApiClient {
         'password': password,
       }),
     );
-    print("LOGIN STATUS CODE => ${response.statusCode}");
-    print("LOGIN RAW BODY => ${response.body}");
 
-    final data = jsonDecode(response.body);
-    authToken = data['token'];
+    final data = _decodeResponse(response);
+
+    if (response.statusCode != 200) {
+      data['message'] ??= 'Login failed: HTTP ${response.statusCode}';
+      return data;
+    }
+
+    final token = data['token']?.toString();
+    if (token != null && token.isNotEmpty) {
+      authToken = token;
+      return data;
+    }
+
+    data['message'] ??= 'Login failed: No token received';
     return data;
-
   }
 
-  // 📝 REGISTER
   static Future<Map<String, dynamic>> register({
     required String name,
     required String email,
     required String password,
     required String passwordConfirmation,
     required String gender,
-  })
-  async {
+  }) async {
     final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.register);
 
     final response = await http.post(
@@ -90,27 +147,34 @@ class ApiClient {
         'password': password,
         'password_confirmation': passwordConfirmation,
         'gender': gender,
-
       }),
     );
 
-    final data = jsonDecode(response.body);
-    authToken = data['token'];
+    final data = _decodeResponse(response);
+
+    if (response.statusCode != 200) {
+      data['message'] ??= 'Registration failed: HTTP ${response.statusCode}';
+      return data;
+    }
+
+    final token = data['token']?.toString();
+    if (token != null && token.isNotEmpty) {
+      authToken = token;
+      return data;
+    }
+
+    data['message'] ??= 'Registration failed: No token received';
     return data;
-
   }
-// 🧾 CREATE MATRIMONY PROFILE (AUTH REQUIRED)
-  static Future<Map<String, dynamic>> createMatrimonyProfile(
-      Map<String, dynamic> body,
-      ) async {
 
+  static Future<Map<String, dynamic>> createMatrimonyProfile(
+    Map<String, dynamic> body,
+  ) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
     }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile,
-    );
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile);
 
     final response = await http.post(
       url,
@@ -122,27 +186,23 @@ class ApiClient {
       body: jsonEncode(body),
     );
 
-    final data = jsonDecode(response.body);
+    final data = _decodeResponse(response);
 
     if (data['success'] == true) {
-      currentUserProfile = data['profile'];
+      currentUserProfile = data['profile'] as Map<String, dynamic>?;
     }
 
     return data;
-
   }
 
-// ✏️ UPDATE MATRIMONY PROFILE (AUTH REQUIRED)
   static Future<Map<String, dynamic>> updateMatrimonyProfile(
-      Map<String, dynamic> body,
-      ) async {
+    Map<String, dynamic> body,
+  ) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
     }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile,
-    );
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile);
 
     final response = await http.put(
       url,
@@ -154,37 +214,21 @@ class ApiClient {
       body: jsonEncode(body),
     );
 
-    final data = jsonDecode(response.body);
+    final data = _decodeResponse(response);
 
     if (data['success'] == true) {
-      currentUserProfile = data['profile'];
+      currentUserProfile = data['profile'] as Map<String, dynamic>?;
     }
 
     return data;
   }
 
-  // 📷 UPLOAD PROFILE PHOTO (AUTH REQUIRED)
   static Future<Map<String, dynamic>> uploadProfilePhoto(File imageFile) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
     }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.matrimonyProfilePhoto,
-    );
-
-    // Debug print - Upload start
-    print('=== UPLOAD PHOTO DEBUG ===');
-    print('URL: $url');
-    print('Token exists: ${authToken != null}');
-    print('Token preview: ${authToken?.substring(0, 20)}...');
-    print('File Path: ${imageFile.path}');
-    print('File exists: ${await imageFile.exists()}');
-    print('Current Profile: ${currentUserProfile != null ? "Exists" : "Null"}');
-    if (currentUserProfile != null) {
-      print('Profile ID: ${currentUserProfile!['id'] ?? "N/A"}');
-    }
-    print('========================');
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.matrimonyProfilePhoto);
 
     final request = http.MultipartRequest('POST', url);
     request.headers['Accept'] = 'application/json';
@@ -199,29 +243,16 @@ class ApiClient {
 
     final streamedResponse = await request.send();
     final response = await http.Response.fromStream(streamedResponse);
-
-    // Debug print - Response received
-    print('=== UPLOAD PHOTO RESPONSE ===');
-    print('Status Code: ${response.statusCode}');
-    print('Response Body: ${response.body}');
-    print('Response Headers: ${response.headers}');
-    print('============================');
-
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
+    final data = _decodeResponse(response);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      final uploadData = data['data'] as Map<String, dynamic>?;
-      if (uploadData != null) {
+      final uploadData = data['data'];
+      if (uploadData is Map) {
         currentUserProfile ??= <String, dynamic>{};
         currentUserProfile!['profile_photo'] = uploadData['profile_photo'];
-        if (uploadData['url'] != null) {
-          currentUserProfile!['profile_photo_url'] = uploadData['url'];
+        final photoUrl = resolveProfilePhotoUrl(currentUserProfile);
+        if (photoUrl != null) {
+          currentUserProfile!['profile_photo_url'] = photoUrl;
         }
       }
     }
@@ -229,8 +260,6 @@ class ApiClient {
     return data;
   }
 
-  // 📋 GET PROFILE LIST (AUTH REQUIRED)
-  // Optional search filters: age_from, age_to, caste, location
   static Future<Map<String, dynamic>> getProfileList({
     int? ageFrom,
     int? ageTo,
@@ -241,7 +270,6 @@ class ApiClient {
       throw Exception('Auth token is missing. User not logged in.');
     }
 
-    // Build query parameters dynamically (only include non-null values)
     final queryParams = <String, String>{};
     if (ageFrom != null) {
       queryParams['age_from'] = ageFrom.toString();
@@ -256,21 +284,10 @@ class ApiClient {
       queryParams['location'] = location;
     }
 
-    // Build URL with query parameters
     final baseUrl = ApiRoutes.baseUrl + ApiRoutes.matrimonyProfiles;
     final url = queryParams.isEmpty
         ? Uri.parse(baseUrl)
         : Uri.parse(baseUrl).replace(queryParameters: queryParams);
-
-    // >>>>> DEBUG: REQUEST INFO <<<<<
-    print('=== GET PROFILE LIST - REQUEST ===');
-    print('Full URL: $url');
-    print('Base URL: ${ApiRoutes.baseUrl}');
-    print('Endpoint: ${ApiRoutes.matrimonyProfiles}');
-    print('Query Parameters: $queryParams');
-    print('Token exists: ${authToken != null}');
-    print('Token preview: ${authToken?.substring(0, authToken!.length > 20 ? 20 : authToken!.length)}...');
-    print('==================================');
 
     final response = await http.get(
       url,
@@ -280,43 +297,9 @@ class ApiClient {
       },
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
-
-    // >>>>> DEBUG: RESPONSE INFO <<<<<
-    print('=== GET PROFILE LIST - RESPONSE ===');
-    print('HTTP Status Code: ${response.statusCode}');
-    print('Response Body Length: ${response.body.length}');
-    print('Raw Response Body: ${response.body}');
-    print('Parsed Data Keys: ${data.keys.toList()}');
-    print('Has "success" key: ${data.containsKey('success')}');
-    print('success value: ${data['success']}');
-    print('success type: ${data['success']?.runtimeType}');
-    print('Has "profiles" key: ${data.containsKey('profiles')}');
-    print('profiles value: ${data['profiles']}');
-    print('profiles type: ${data['profiles']?.runtimeType}');
-    if (data['profiles'] is List) {
-      print('profiles is List: YES');
-      print('profiles length: ${(data['profiles'] as List).length}');
-    } else {
-      print('profiles is List: NO');
-    }
-    print('Has "data" key: ${data.containsKey('data')}');
-    print('data value: ${data['data']}');
-    print('Has "message" key: ${data.containsKey('message')}');
-    print('message value: ${data['message']}');
-    print('Return statusCode: ${data['statusCode']}');
-    print('===================================');
-
-    return data;
+    return _decodeResponse(response);
   }
 
-  // 👤 GET PROFILE DETAIL BY ID (AUTH REQUIRED)
   static Future<Map<String, dynamic>> getProfileDetail(int profileId) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
@@ -334,33 +317,21 @@ class ApiClient {
       },
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
-
-    return data;
+    return _decodeResponse(response);
   }
 
-  // 🚪 LOGOUT - Clear in-memory auth state
   static void logout() {
     authToken = null;
     currentUserProfile = null;
     sentInterestProfileIds.clear();
   }
 
-  // 💌 SEND INTEREST (AUTH REQUIRED)
   static Future<Map<String, dynamic>> sendInterest(int receiverProfileId) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
     }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.interests,
-    );
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.interests);
 
     final response = await http.post(
       url,
@@ -374,15 +345,8 @@ class ApiClient {
       }),
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
+    final data = _decodeResponse(response);
 
-    // Track profileId if interest was sent successfully or already exists
     if (data['statusCode'] == 200 || data['statusCode'] == 409) {
       sentInterestProfileIds.add(receiverProfileId);
     }
@@ -390,15 +354,12 @@ class ApiClient {
     return data;
   }
 
-  // 📤 GET SENT INTERESTS (AUTH REQUIRED)
   static Future<Map<String, dynamic>> getSentInterests() async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
     }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.interestsSent,
-    );
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.interestsSent);
 
     final response = await http.get(
       url,
@@ -408,28 +369,22 @@ class ApiClient {
       },
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
+    final data = _decodeResponse(response);
 
-    // Populate sentInterestProfileIds from the response
-    if (response.statusCode == 200 && data['success'] == true && data['data'] != null) {
+    if (response.statusCode == 200 &&
+        data['success'] == true &&
+        data['data'] != null) {
       final responseData = data['data'] as Map<String, dynamic>;
       final sentList = responseData['sent'] as List?;
       if (sentList != null) {
         sentInterestProfileIds.clear();
         for (final interest in sentList) {
           final interestMap = interest as Map<String, dynamic>;
-          final receiverProfile = interestMap['receiver_profile'] as Map<String, dynamic>?;
-          if (receiverProfile != null) {
-            final receiverProfileId = receiverProfile['id'] as int?;
-            if (receiverProfileId != null) {
-              sentInterestProfileIds.add(receiverProfileId);
-            }
+          final receiverProfile =
+              interestMap['receiver_profile'] as Map<String, dynamic>?;
+          final receiverProfileId = receiverProfile?['id'] as int?;
+          if (receiverProfileId != null) {
+            sentInterestProfileIds.add(receiverProfileId);
           }
         }
       }
@@ -438,15 +393,12 @@ class ApiClient {
     return data;
   }
 
-  // 📥 GET RECEIVED INTERESTS (AUTH REQUIRED)
   static Future<Map<String, dynamic>> getReceivedInterests() async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
     }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.interestsReceived,
-    );
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.interestsReceived);
 
     final response = await http.get(
       url,
@@ -456,18 +408,9 @@ class ApiClient {
       },
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
-
-    return data;
+    return _decodeResponse(response);
   }
 
-  // ✅ ACCEPT INTEREST (AUTH REQUIRED)
   static Future<Map<String, dynamic>> acceptInterest(int interestId) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
@@ -485,18 +428,9 @@ class ApiClient {
       },
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
-
-    return data;
+    return _decodeResponse(response);
   }
 
-  // ❌ REJECT INTEREST (AUTH REQUIRED)
   static Future<Map<String, dynamic>> rejectInterest(int interestId) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
@@ -514,18 +448,9 @@ class ApiClient {
       },
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
-
-    return data;
+    return _decodeResponse(response);
   }
 
-  // 🔙 WITHDRAW INTEREST (AUTH REQUIRED)
   static Future<Map<String, dynamic>> withdrawInterest(int interestId) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
@@ -543,15 +468,6 @@ class ApiClient {
       },
     );
 
-    Map<String, dynamic> data;
-    try {
-      data = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      data = <String, dynamic>{};
-    }
-    data['statusCode'] = response.statusCode;
-
-    return data;
+    return _decodeResponse(response);
   }
-
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
-import '../../core/api_routes.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
 /// ===============================
@@ -114,25 +113,6 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
     }
   }
 
-  // Construct photo URL
-  String? _constructPhotoUrl(Map<String, dynamic>? profile) {
-    if (profile == null) return null;
-
-    if (profile['profile_photo_url'] != null && profile['profile_photo_url'].toString().isNotEmpty) {
-      return profile['profile_photo_url'].toString();
-    } else if (profile['url'] != null && profile['url'].toString().isNotEmpty) {
-      return profile['url'].toString();
-    } else if (profile['photo_url'] != null && profile['photo_url'].toString().isNotEmpty) {
-      return profile['photo_url'].toString();
-    } else if (profile['profile_photo'] != null && profile['profile_photo'].toString().isNotEmpty) {
-      final filename = profile['profile_photo'].toString();
-      final baseDomain = ApiRoutes.baseUrl.replaceAll('/api', '');
-      return '$baseDomain/uploads/matrimony_photos/$filename';
-    }
-
-    return null;
-  }
-
   // Get status text and color
   String _getStatusText(String? status) {
     switch (status) {
@@ -222,7 +202,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
             return const SizedBox.shrink();
           }
 
-          final photoUrl = _constructPhotoUrl(receiverProfile);
+          final photoUrl = ApiClient.resolveProfilePhotoUrl(receiverProfile);
           final receiverName = receiverProfile['full_name']?.toString() ?? 'Unknown';
           final receiverProfileId = receiverProfile['id'] as int?;
 

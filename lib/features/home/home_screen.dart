@@ -6,7 +6,6 @@ import '../interests/sent_interests_screen.dart';
 import '../interests/received_interests_screen.dart';
 import '../browse/browse_profiles_screen.dart';
 import '../../core/api_client.dart';
-import '../../core/api_routes.dart';
 import '../../main.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -153,22 +152,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   @override
   Widget build(BuildContext context) {
     final profile = ApiClient.currentUserProfile;
-
-    // Construct photo URL using same logic as view_profile_screen
-    String? photoUrl;
-    if (profile != null) {
-      if (profile['profile_photo_url'] != null && profile['profile_photo_url'].toString().isNotEmpty) {
-        photoUrl = profile['profile_photo_url'].toString();
-      } else if (profile['url'] != null && profile['url'].toString().isNotEmpty) {
-        photoUrl = profile['url'].toString();
-      } else if (profile['photo_url'] != null && profile['photo_url'].toString().isNotEmpty) {
-        photoUrl = profile['photo_url'].toString();
-      } else if (profile['profile_photo'] != null && profile['profile_photo'].toString().isNotEmpty) {
-        final filename = profile['profile_photo'].toString();
-        final baseDomain = ApiRoutes.baseUrl.replaceAll('/api', '');
-        photoUrl = '$baseDomain/uploads/matrimony_photos/$filename';
-      }
-    }
+    final photoUrl = ApiClient.resolveProfilePhotoUrl(profile);
 
     return Scaffold(
       appBar: AppBar(

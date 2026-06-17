@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
-import '../../core/api_routes.dart';
 
 class ViewProfileScreen extends StatefulWidget {
   const ViewProfileScreen({super.key});
@@ -27,16 +26,6 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       if (!mounted) return;
 
       if (response['success'] == true && response['profile'] != null) {
-        // Debug print - Profile response check करा
-        print('=== VIEW PROFILE - FETCH PROFILE DEBUG ===');
-        print('Full Response: $response');
-        print('Profile Keys: ${response['profile'].keys.toList()}');
-        print('profile_photo: ${response['profile']['profile_photo']}');
-        print('profile_photo_url: ${response['profile']['profile_photo_url']}');
-        print('url: ${response['profile']['url']}');
-        print('photo_url: ${response['profile']['photo_url']}');
-        print('==========================================');
-        
         setState(() {
           _profile = response['profile'];
           _isLoading = false;
@@ -104,36 +93,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       return const Center(child: Text('प्रोफाइल डेटा उपलब्ध नाही.'));
     }
 
-    // सर्व्हरवरून फोटोची URL मिळवा
-    // Backend GET profile मध्ये फक्त filename पाठवते, full URL नाही
-    String? photoUrl;
-    
-    // First: Check for full URL fields (if backend provides)
-    if (_profile!['profile_photo_url'] != null && _profile!['profile_photo_url'].toString().isNotEmpty) {
-      photoUrl = _profile!['profile_photo_url'].toString();
-    } else if (_profile!['url'] != null && _profile!['url'].toString().isNotEmpty) {
-      photoUrl = _profile!['url'].toString();
-    } else if (_profile!['photo_url'] != null && _profile!['photo_url'].toString().isNotEmpty) {
-      photoUrl = _profile!['photo_url'].toString();
-    }
-    // Second: If only filename exists, construct full URL using ApiRoutes.baseUrl
-    else if (_profile!['profile_photo'] != null && _profile!['profile_photo'].toString().isNotEmpty) {
-      final filename = _profile!['profile_photo'].toString();
-      // Extract base domain from ApiRoutes.baseUrl (remove '/api')
-      final baseDomain = ApiRoutes.baseUrl.replaceAll('/api', '');
-      // Construct URL: baseDomain + uploads path
-      photoUrl = '$baseDomain/uploads/matrimony_photos/$filename';
-    }
-    
-    // Debug print - Photo URL check करा
-    print('=== VIEW PROFILE - PHOTO URL DEBUG ===');
-    print('All Profile Keys: ${_profile!.keys.toList()}');
-    print('profile_photo_url: ${_profile!['profile_photo_url']}');
-    print('url: ${_profile!['url']}');
-    print('profile_photo (filename): ${_profile!['profile_photo']}');
-    print('photo_url: ${_profile!['photo_url']}');
-    print('Final photoUrl (constructed): $photoUrl');
-    print('=====================================');
+    final photoUrl = ApiClient.resolveProfilePhotoUrl(_profile);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),

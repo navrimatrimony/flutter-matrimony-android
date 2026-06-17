@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
-import '../../core/api_routes.dart';
 
 /// ===============================
 /// PROFILE DETAIL SCREEN (OTHER USER)
@@ -89,28 +88,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     } catch (_) {
       return null;
     }
-  }
-
-  // Construct photo URL using filename-based rule (per SSOT)
-  String? _constructPhotoUrl(Map<String, dynamic>? profile) {
-    if (profile == null) return null;
-
-    // First: Check for full URL fields (if backend provides)
-    if (profile['profile_photo_url'] != null && profile['profile_photo_url'].toString().isNotEmpty) {
-      return profile['profile_photo_url'].toString();
-    } else if (profile['url'] != null && profile['url'].toString().isNotEmpty) {
-      return profile['url'].toString();
-    } else if (profile['photo_url'] != null && profile['photo_url'].toString().isNotEmpty) {
-      return profile['photo_url'].toString();
-    }
-    // Second: If only filename exists, construct full URL using ApiRoutes.baseUrl
-    else if (profile['profile_photo'] != null && profile['profile_photo'].toString().isNotEmpty) {
-      final filename = profile['profile_photo'].toString();
-      final baseDomain = ApiRoutes.baseUrl.replaceAll('/api', '');
-      return '$baseDomain/uploads/matrimony_photos/$filename';
-    }
-
-    return null;
   }
 
   // Send interest to this profile
@@ -245,7 +222,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       return const Center(child: Text('प्रोफाइल डेटा उपलब्ध नाही.'));
     }
 
-    final photoUrl = _constructPhotoUrl(_profile);
+    final photoUrl = ApiClient.resolveProfilePhotoUrl(_profile);
     final age = _calculateAge(_profile!['date_of_birth']?.toString());
 
     return ListView(

@@ -111,8 +111,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   isLoading = false;
                 });
 
-                if (result['message'] != null &&
-                    result['message'].toString().toLowerCase().contains('success')) {
+                // Check if registration was successful (token present)
+                if (result.containsKey('token') && result['token'] != null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('✅ Registration यशस्वी! Profile create करा...'),
@@ -121,8 +121,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                   );
                   Navigator.pushReplacementNamed(context, '/create-profile');
-
-
                 } else {
                   setState(() {
                     errorMessage = result['message'] ?? 'Registration failed';

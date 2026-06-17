@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
-import '../../core/api_routes.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
 /// ===============================
@@ -29,7 +28,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   @override
   void initState() {
     super.initState();
-    print('🔥 BrowseProfilesScreen initState CALLED');
     _fetchProfileList();
   }
 
@@ -48,7 +46,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     String? caste,
     String? location,
   }) async {
-    print('🔥 _fetchProfileList STARTED');
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -63,16 +60,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       );
       if (!mounted) return;
 
-      // >>>>> DEBUG: RESPONSE PROCESSING <<<<<
-      print('=== BROWSE PROFILES SCREEN - PROCESSING RESPONSE ===');
-      print('Response received from API');
-      print('Response keys: ${response.keys.toList()}');
-      
       final statusCode = response['statusCode'];
-      print('Status Code: $statusCode');
 
       if (statusCode == 401) {
-        print('❌ Path: StatusCode 401 - Auth expired');
         setState(() {
           _errorMessage = '🔒 Auth expired! पुन्हा login करा';
           _isLoading = false;
@@ -81,7 +71,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       }
 
       if (statusCode == 404) {
-        print('❌ Path: StatusCode 404 - Profiles not found');
         setState(() {
           _errorMessage = '❌ प्रोफाइल सापडली नाही.';
           _isLoading = false;
@@ -89,34 +78,19 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         return;
       }
 
-      print('Checking success and profiles...');
-      print('response["success"]: ${response['success']}');
-      print('response["success"] == true: ${response['success'] == true}');
-      print('response["profiles"]: ${response['profiles']}');
-      print('response["profiles"] is List: ${response['profiles'] is List}');
-
       if (response['success'] == true && response['profiles'] is List) {
-        print('✅ Path: SUCCESS - Loading profiles list');
-        final profilesList = response['profiles'] as List;
-        print('Profiles list length: ${profilesList.length}');
         setState(() {
           _profiles = List<dynamic>.from(response['profiles']);
           _isLoading = false;
         });
-        print('✅ Profiles loaded: ${_profiles.length} items');
       } else {
-        print('❌ Path: ELSE BRANCH - Success/profiles check failed');
-        print('Reason: success=${response['success']}, profiles is List=${response['profiles'] is List}');
         setState(() {
           _profiles = [];
           _errorMessage = '❌ प्रोफाइल सापडली नाही.';
           _isLoading = false;
         });
       }
-      print('==========================================');
-
     } catch (e) {
-      print('❌ EXCEPTION in _fetchProfileList: $e');
       if (!mounted) return;
       setState(() {
         _errorMessage = 'एक अनपेक्षित एरर आली: ${e.toString()}';
@@ -140,26 +114,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     } catch (_) {
       return null;
     }
-  }
-
-  // Construct photo URL using filename-based rule (per SSOT)
-  String? _constructPhotoUrl(Map<String, dynamic> profile) {
-    // First: Check for full URL fields (if backend provides)
-    if (profile['profile_photo_url'] != null && profile['profile_photo_url'].toString().isNotEmpty) {
-      return profile['profile_photo_url'].toString();
-    } else if (profile['url'] != null && profile['url'].toString().isNotEmpty) {
-      return profile['url'].toString();
-    } else if (profile['photo_url'] != null && profile['photo_url'].toString().isNotEmpty) {
-      return profile['photo_url'].toString();
-    }
-    // Second: If only filename exists, construct full URL using ApiRoutes.baseUrl
-    else if (profile['profile_photo'] != null && profile['profile_photo'].toString().isNotEmpty) {
-      final filename = profile['profile_photo'].toString();
-      final baseDomain = ApiRoutes.baseUrl.replaceAll('/api', '');
-      return '$baseDomain/uploads/matrimony_photos/$filename';
-    }
-
-    return null;
   }
 
   @override
@@ -340,7 +294,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         itemCount: _profiles.length,
         itemBuilder: (context, index) {
           final profile = _profiles[index] as Map<String, dynamic>;
-          final photoUrl = _constructPhotoUrl(profile);
+          final photoUrl = ApiClient.resolveProfilePhotoUrl(profile);
           final age = _calculateAge(profile['date_of_birth']?.toString());
 
           return Card(

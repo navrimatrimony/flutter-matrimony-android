@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
-import '../../core/api_routes.dart';
 
 class PhotoUploadScreen extends StatefulWidget {
   const PhotoUploadScreen({super.key});
@@ -127,28 +126,14 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         // Profile आधीच verify केली आहे, पण photo upload API 404 देते
         // Backend issue असू शकते - detailed error message दाखवा
         final errorMsg = response['message']?.toString();
-        final responseBody = response.toString();
-        
-        // Debugging साठी print
-        print('=== PHOTO UPLOAD 404 ERROR ===');
-        print('Status Code: $statusCode');
-        print('Response: $responseBody');
-        print('Error Message: $errorMsg');
-        print('Profile verified: Yes (before upload)');
-        print('Current Profile: ${ApiClient.currentUserProfile != null ? "Exists" : "Null"}');
-        if (ApiClient.currentUserProfile != null) {
-          print('Profile Data: ${ApiClient.currentUserProfile}');
-        }
-        print('Upload API URL: ${ApiRoutes.baseUrl}${ApiRoutes.matrimonyProfilePhoto}');
-        print('=================================');
-        
+
         if (errorMsg != null && errorMsg.isNotEmpty) {
           _showErrorMessage('❌ $errorMsg');
         } else {
           _showErrorMessage(
             '❌ Photo upload API ला profile सापडली नाही (404).\n'
             'Backend issue असू शकते. Profile आहे, पण upload endpoint 404 देते.\n'
-            'कृपया backend verify करा. Console मध्ये details पहा.'
+            'कृपया backend verify करा.'
           );
         }
         return;
@@ -158,7 +143,9 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         return;
       } else if (response['success'] == true && response['data'] != null) {
         final uploadData = response['data'] as Map<String, dynamic>;
-        final photoUrl = uploadData['url']?.toString();
+        final photoUrl = ApiClient.resolveProfilePhotoUrl({
+          'profile_photo': uploadData['profile_photo'],
+        });
 
         setState(() {
           _uploadedUrl = photoUrl;
@@ -184,7 +171,6 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
       _showErrorMessage(
         '❌ Exception आली!\nError: ${e.toString()}',
       );
-      print('Upload Error: $e');
     } finally {
       setState(() {
         _uploading = false;
