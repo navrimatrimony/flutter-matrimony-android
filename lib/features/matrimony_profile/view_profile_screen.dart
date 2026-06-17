@@ -94,6 +94,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     }
 
     final photoUrl = ApiClient.resolveProfilePhotoUrl(_profile);
+    final education = ApiClient.profileEducationLabel(_profile);
+    final location = ApiClient.profileLocationLabel(_profile);
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
@@ -116,8 +118,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           _buildProfileDetail('नाव', _profile!['full_name']),
           _buildProfileDetail('जन्मतारीख', _profile!['date_of_birth']),
           _buildProfileDetail('जात', _profile!['caste']),
-          _buildProfileDetail('शिक्षण', _profile!['education']),
-          _buildProfileDetail('ठिकाण', _profile!['location']),
+          _buildProfileDetail('शिक्षण', education),
+          _buildProfileDetail('ठिकाण', location),
         ],
       ),
     );

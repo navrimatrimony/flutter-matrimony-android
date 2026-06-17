@@ -16,6 +16,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   List<dynamic> _profiles = [];
   bool _isLoading = true;
   String? _errorMessage;
+  bool _locationSearching = false;
+  int? _selectedLocationId;
+  String? _selectedLocationLabel;
+  int _locationSearchRequest = 0;
+  List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
 
   // ========================================
   // SEARCH / FILTER UI CONTROLLERS (SSOT v2.5)
@@ -44,7 +49,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     int? ageFrom,
     int? ageTo,
     String? caste,
-    String? location,
+    int? locationId,
   }) async {
     setState(() {
       _isLoading = true;
@@ -56,7 +61,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         ageFrom: ageFrom,
         ageTo: ageTo,
         caste: caste,
-        location: location,
+        locationId: locationId,
       );
       if (!mounted) return;
 
@@ -114,6 +119,52 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<void> _searchLocations(String query) async {
+    final requestId = ++_locationSearchRequest;
+    final trimmedQuery = query.trim();
+
+    if (_selectedLocationLabel == null ||
+        trimmedQuery != _selectedLocationLabel) {
+      _selectedLocationId = null;
+      _selectedLocationLabel = null;
+    }
+
+    if (trimmedQuery.length < 2) {
+      setState(() {
+        _locationSearching = false;
+        _locationSuggestions = <Map<String, dynamic>>[];
+      });
+      return;
+    }
+
+    setState(() {
+      _locationSearching = true;
+    });
+
+    final results = await ApiClient.searchLocations(trimmedQuery);
+    if (!mounted || requestId != _locationSearchRequest) return;
+
+    setState(() {
+      _locationSuggestions = results;
+      _locationSearching = false;
+    });
+  }
+
+  void _selectLocation(Map<String, dynamic> location) {
+    final locationId = ApiClient.locationIdFrom(location);
+    if (locationId == null) return;
+
+    final label = ApiClient.locationSuggestionLabel(location);
+    setState(() {
+      _selectedLocationId = locationId;
+      _selectedLocationLabel = label;
+      _locationController.text = label;
+      _locationSuggestions = <Map<String, dynamic>>[];
+      _locationSearching = false;
+    });
+    FocusScope.of(context).unfocus();
   }
 
   @override
@@ -191,7 +242,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
               border: OutlineInputBorder(),
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
+            onChanged: _searchLocations,
           ),
+          _buildLocationSuggestions(),
           const SizedBox(height: 16),
           // Search Button
           ElevatedButton(
@@ -202,6 +255,48 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
             child: const Text('Search'),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLocationSuggestions() {
+    if (_locationSearching) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: LinearProgressIndicator(),
+      );
+    }
+
+    if (_locationSuggestions.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      constraints: const BoxConstraints(maxHeight: 180),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: ListView.builder(
+        shrinkWrap: true,
+        itemCount: _locationSuggestions.length,
+        itemBuilder: (context, index) {
+          final location = _locationSuggestions[index];
+          final label = ApiClient.locationSuggestionLabel(location);
+          final hierarchy = location['hierarchy']?.toString().trim();
+
+          return ListTile(
+            dense: true,
+            title: Text(label),
+            subtitle: hierarchy != null &&
+                    hierarchy.isNotEmpty &&
+                    hierarchy != label
+                ? Text(hierarchy)
+                : null,
+            onTap: () => _selectLocation(location),
+          );
+        },
       ),
     );
   }
@@ -217,7 +312,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     int? ageFrom;
     int? ageTo;
     String? caste;
-    String? location;
 
     // Parse age_from
     if (ageFromText.isNotEmpty) {
@@ -234,9 +328,13 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       caste = casteText;
     }
 
-    // Set location (null if empty)
-    if (locationText.isNotEmpty) {
-      location = locationText;
+    if (locationText.isNotEmpty && _selectedLocationId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('कृपया suggestions मधून location निवडा.'),
+        ),
+      );
+      return;
     }
 
     // Call API with filters
@@ -244,7 +342,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       ageFrom: ageFrom,
       ageTo: ageTo,
       caste: caste,
-      location: location,
+      locationId: _selectedLocationId,
     );
   }
 
@@ -296,6 +394,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
           final profile = _profiles[index] as Map<String, dynamic>;
           final photoUrl = ApiClient.resolveProfilePhotoUrl(profile);
           final age = _calculateAge(profile['date_of_birth']?.toString());
+          final location = ApiClient.profileLocationLabel(profile);
 
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
@@ -348,9 +447,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
                                 color: Colors.grey.shade700,
                               ),
                             ),
-                          if (profile['location'] != null && profile['location'].toString().isNotEmpty)
+                          if (location != null)
                             Text(
-                              'ठिकाण: ${profile['location']}',
+                              'ठिकाण: $location',
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey.shade700,

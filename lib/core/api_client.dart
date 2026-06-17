@@ -31,6 +31,83 @@ class ApiClient {
     return data;
   }
 
+  static List<Map<String, dynamic>> _safeMapList(dynamic value) {
+    final List<dynamic> rows;
+
+    if (value is List) {
+      rows = value;
+    } else if (value is Map) {
+      final nested = value['data'] ?? value['results'] ?? value['items'];
+      rows = nested is List ? nested : <dynamic>[];
+    } else {
+      rows = <dynamic>[];
+    }
+
+    return rows
+        .whereType<Map>()
+        .map((row) => Map<String, dynamic>.from(row))
+        .toList();
+  }
+
+  static String? _firstNonEmptyValue(
+    Map<String, dynamic>? data,
+    List<String> keys,
+  ) {
+    if (data == null) return null;
+
+    for (final key in keys) {
+      final value = data[key]?.toString().trim();
+      if (value != null && value.isNotEmpty) {
+        return value;
+      }
+    }
+
+    return null;
+  }
+
+  static int? _intValue(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  static int? locationIdFrom(Map<String, dynamic> location) {
+    for (final key in ['location_id', 'id', 'city_id']) {
+      final id = _intValue(location[key]);
+      if (id != null) return id;
+    }
+    return null;
+  }
+
+  static String locationSuggestionLabel(Map<String, dynamic> location) {
+    final label = _firstNonEmptyValue(location, [
+      'display_label',
+      'location_label',
+      'name',
+      'hierarchy',
+    ]);
+    if (label != null) return label;
+
+    final id = locationIdFrom(location);
+    return id != null ? 'Location ID: $id' : 'Unknown location';
+  }
+
+  static String? profileEducationLabel(Map<String, dynamic>? profile) {
+    return _firstNonEmptyValue(profile, ['highest_education', 'education']);
+  }
+
+  static String? profileLocationLabel(Map<String, dynamic>? profile) {
+    final label = _firstNonEmptyValue(profile, [
+      'location_label',
+      'display_label',
+      'name',
+    ]);
+    if (label != null) return label;
+
+    final id = _intValue(profile?['location_id']);
+    return id != null ? 'Location ID: $id' : null;
+  }
+
   static String? resolveProfilePhotoUrl(Map<String, dynamic>? profile) {
     if (profile == null) return null;
 
@@ -66,6 +143,31 @@ class ApiClient {
     if (filename.startsWith('pending/')) return null;
 
     return Uri.encodeFull('$_profilePhotoBaseUrl/$filename');
+  }
+
+  static Future<List<Map<String, dynamic>>> searchLocations(
+    String query,
+  ) async {
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) return <Map<String, dynamic>>[];
+
+    final url = Uri.parse(
+      ApiRoutes.rootApiBaseUrl + ApiRoutes.locationSearch,
+    ).replace(queryParameters: {'q': trimmedQuery});
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+      },
+    );
+
+    try {
+      final decoded = jsonDecode(response.body);
+      return _safeMapList(decoded);
+    } catch (_) {
+      return <Map<String, dynamic>>[];
+    }
   }
 
   static Future<Map<String, dynamic>> getMyProfile() async {
@@ -265,7 +367,7 @@ class ApiClient {
     int? ageFrom,
     int? ageTo,
     String? caste,
-    String? location,
+    int? locationId,
   }) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
@@ -281,8 +383,8 @@ class ApiClient {
     if (caste != null && caste.isNotEmpty) {
       queryParams['caste'] = caste;
     }
-    if (location != null && location.isNotEmpty) {
-      queryParams['location'] = location;
+    if (locationId != null) {
+      queryParams['location_id'] = locationId.toString();
     }
 
     final baseUrl = ApiRoutes.baseUrl + ApiRoutes.matrimonyProfiles;

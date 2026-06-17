@@ -223,6 +223,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
 
     final photoUrl = ApiClient.resolveProfilePhotoUrl(_profile);
+    final education = ApiClient.profileEducationLabel(_profile);
+    final location = ApiClient.profileLocationLabel(_profile);
     final age = _calculateAge(_profile!['date_of_birth']?.toString());
 
     return ListView(
@@ -282,8 +284,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               if (age != null)
                 _buildProfileDetail('वय', '$age वर्षे'),
               _buildProfileDetail('जात', _profile!['caste']),
-              _buildProfileDetail('शिक्षण', _profile!['education']),
-              _buildProfileDetail('ठिकाण', _profile!['location']),
+              _buildProfileDetail('शिक्षण', education),
+              _buildProfileDetail('ठिकाण', location),
             ],
           ),
         ),

@@ -1,7 +1,9 @@
 class ApiRoutes {
   static const String baseUrl = 'https://freelovemarriage.com/api/v1';
+  static const String rootApiBaseUrl = 'https://freelovemarriage.com/api';
   static const String login = '/login';
   static const String register = '/register';
+  static const String locationSearch = '/location/search';
 
   // Matrimony Profile
   static const String matrimonyProfile = '/matrimony-profile';
@@ -12,5 +14,4 @@ class ApiRoutes {
   static const String interests = '/interests';
   static const String interestsSent = '/interests/sent';
   static const String interestsReceived = '/interests/received';
-
 }
