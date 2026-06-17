@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/app_strings.dart';
 import 'login_screen.dart';
 import 'register_screen.dart';
 
@@ -70,7 +72,7 @@ class LandingScreen extends StatelessWidget {
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'नवरी मिळे नवऱ्याला',
+                                AppStrings.appName,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 24,
@@ -102,10 +104,10 @@ class LandingScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        'Find Your Perfect Match',
+                        AppStrings.landingHeadline,
                         style: TextStyle(
                           color: Colors.white,
-                          fontSize: 32,
+                          fontSize: 30,
                           fontWeight: FontWeight.bold,
                           shadows: [
                             Shadow(
@@ -119,7 +121,7 @@ class LandingScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Trusted Matrimonial Platform',
+                        AppStrings.landingSubline,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -133,6 +135,17 @@ class LandingScreen extends StatelessWidget {
                           ],
                         ),
                         textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 18),
+                      Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _TrustPoint(label: AppStrings.safeProfiles),
+                          _TrustPoint(label: AppStrings.familyFriendly),
+                          _TrustPoint(label: AppStrings.simpleProcess),
+                        ],
                       ),
                     ],
                   ),
@@ -163,8 +176,8 @@ class LandingScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Register',
+                          child: Text(
+                            AppStrings.register,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -195,8 +208,8 @@ class LandingScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Login',
+                          child: Text(
+                            AppStrings.login,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -210,6 +223,39 @@ class LandingScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrustPoint extends StatelessWidget {
+  final String label;
+
+  const _TrustPoint({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.verified_user_outlined, color: Colors.white, size: 15),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],

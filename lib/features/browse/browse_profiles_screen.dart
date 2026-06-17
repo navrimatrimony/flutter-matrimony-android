@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
@@ -171,7 +172,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Browse Profiles'),
+        title: Text(AppStrings.browseProfiles),
         automaticallyImplyLeading: true,
       ),
       body: Column(

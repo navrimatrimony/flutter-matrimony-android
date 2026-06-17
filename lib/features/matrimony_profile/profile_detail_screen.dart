@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 
 /// ===============================
@@ -194,7 +195,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('प्रोफाइल')),
+      appBar: AppBar(title: Text(AppStrings.profile)),
       body: _buildBody(),
     );
   }
@@ -218,7 +219,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
 
     if (_profile == null) {
-      return const Center(child: Text('प्रोफाइल डेटा उपलब्ध नाही.'));
+      return Center(child: Text(AppStrings.noProfileData));
     }
 
     final photoUrl = ApiClient.resolveProfilePhotoUrl(_profile);
@@ -232,7 +233,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         // ========================================
         // HERO PROFILE PHOTO WITH OVERLAY
         // ========================================
-        _buildHeroPhoto(photoUrl, _profile!['full_name'], age),
+        _buildHeroPhoto(photoUrl, _profile!['full_name'], age, location),
 
         // Send Interest Button (immediately below hero, always visible)
         if (_shouldShowSendInterestButton())
@@ -269,8 +270,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       )
                     : Text(
                         _isInterestAlreadySent()
-                            ? 'Interest Sent ✓'
-                            : 'Send Interest',
+                            ? AppStrings.interestSent
+                            : AppStrings.sendInterest,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -282,16 +283,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
         // Profile Details Section
         Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 18),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // All 7 profile fields
-              _buildProfileDetail('नाव', _profile!['full_name']),
-              _buildProfileDetail('जन्मतारीख', _profile!['date_of_birth']),
-              if (age != null) _buildProfileDetail('वय', '$age वर्षे'),
-              _buildProfileDetail('जात', _profile!['caste']),
-              _buildProfileDetail('शिक्षण', education),
-              _buildProfileDetail('ठिकाण', location),
+              Text(
+                AppStrings.profile,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 10),
+              _buildProfileDetail(AppStrings.name, _profile!['full_name']),
+              _buildProfileDetail(
+                AppStrings.dateOfBirth,
+                _profile!['date_of_birth'],
+              ),
+              if (age != null) _buildProfileDetail(AppStrings.age, AppStrings.years(age)),
+              _buildProfileDetail(AppStrings.caste, _profile!['caste']),
+              _buildProfileDetail(AppStrings.education, education),
+              _buildProfileDetail(AppStrings.location, location),
             ],
           ),
         ),
@@ -300,10 +311,24 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   // Build Hero Photo with Overlay Text (Unified Design: Blurred Background + Clear Foreground)
-  Widget _buildHeroPhoto(String? photoUrl, dynamic fullName, int? age) {
+  Widget _buildHeroPhoto(
+    String? photoUrl,
+    dynamic fullName,
+    int? age,
+    String? location,
+  ) {
+    final heroHeight = (MediaQuery.of(context).size.height * 0.48)
+        .clamp(340.0, 460.0)
+        .toDouble();
+    final name = fullName?.toString().toUpperCase() ?? AppStrings.noInformation;
+    final shortInfo = <String>[
+      if (age != null) AppStrings.years(age),
+      if (location != null && location.trim().isNotEmpty) location,
+    ].join(' • ');
+
     return Container(
       width: double.infinity,
-      height: 300, // Large height for dominant visual (280-320px range)
+      height: heroHeight,
       color: Colors.grey.shade300,
       child: photoUrl != null
           // If profile image exists: Show HERO with blurred background
@@ -382,24 +407,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   left: 16,
                   right: 16,
                   bottom: 24,
-                  child: Text(
-                    age != null
-                        ? '${fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही'}, $age'
-                        : fullName?.toString().toUpperCase() ??
-                              'नाव उपलब्ध नाही',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          offset: Offset(1, 1),
-                          blurRadius: 3,
-                          color: Colors.black54,
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _buildHeroText(name, shortInfo),
                 ),
               ],
             )
@@ -424,24 +432,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   left: 16,
                   right: 16,
                   bottom: 24,
-                  child: Text(
-                    age != null
-                        ? '${fullName?.toString().toUpperCase() ?? 'नाव उपलब्ध नाही'}, $age'
-                        : fullName?.toString().toUpperCase() ??
-                              'नाव उपलब्ध नाही',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      shadows: [
-                        Shadow(
-                          offset: Offset(1, 1),
-                          blurRadius: 3,
-                          color: Colors.black54,
-                        ),
-                      ],
-                    ),
-                  ),
+                  child: _buildHeroText(name, shortInfo),
                 ),
                 // Fallback icon if no photo
                 const Center(
@@ -452,10 +443,47 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
+  Widget _buildHeroText(String name, String shortInfo) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            shadows: [
+              Shadow(
+                offset: Offset(1, 1),
+                blurRadius: 3,
+                color: Colors.black54,
+              ),
+            ],
+          ),
+        ),
+        if (shortInfo.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            shortInfo,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   // Helper widget to display profile detail in card format
   Widget _buildProfileDetail(String label, dynamic value) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -467,7 +495,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
             Expanded(
               child: Text(
-                value?.toString() ?? 'माहिती नाही',
+                value?.toString() ?? AppStrings.noInformation,
                 style: const TextStyle(fontSize: 16),
               ),
             ),

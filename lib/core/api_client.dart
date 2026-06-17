@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
+import 'app_language.dart';
 import 'api_routes.dart';
 
 class ApiClient {
@@ -80,6 +81,9 @@ class ApiClient {
   }
 
   static String locationSuggestionLabel(Map<String, dynamic> location) {
+    final localizedLabel = localizedMapValue(location);
+    if (localizedLabel != null) return localizedLabel;
+
     final label = _firstNonEmptyValue(location, [
       'display_label',
       'location_label',
@@ -97,6 +101,9 @@ class ApiClient {
   }
 
   static String? profileLocationLabel(Map<String, dynamic>? profile) {
+    final localizedLabel = localizedMapValue(profile);
+    if (localizedLabel != null) return localizedLabel;
+
     final label = _firstNonEmptyValue(profile, [
       'location_label',
       'display_label',

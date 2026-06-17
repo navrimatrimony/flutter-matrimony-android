@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 
 class ViewProfileScreen extends StatefulWidget {
@@ -49,7 +50,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('माझे प्रोफाइल'),
+        title: Text(AppStrings.myProfile),
         actions: [
           // 'रिफ्रेश' बटण जेणेकरून युझर माहिती पुन्हा लोड करू शकेल
           IconButton(
@@ -90,7 +91,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     }
 
     if (_profile == null) {
-      return const Center(child: Text('प्रोफाइल डेटा उपलब्ध नाही.'));
+      return Center(child: Text(AppStrings.noProfileData));
     }
 
     final photoUrl = ApiClient.resolveProfilePhotoUrl(_profile);
@@ -115,11 +116,14 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           const SizedBox(height: 24),
 
           // प्रोफाइलची इतर माहिती दाखवण्यासाठी
-          _buildProfileDetail('नाव', _profile!['full_name']),
-          _buildProfileDetail('जन्मतारीख', _profile!['date_of_birth']),
-          _buildProfileDetail('जात', _profile!['caste']),
-          _buildProfileDetail('शिक्षण', education),
-          _buildProfileDetail('ठिकाण', location),
+          _buildProfileDetail(AppStrings.name, _profile!['full_name']),
+          _buildProfileDetail(
+            AppStrings.dateOfBirth,
+            _profile!['date_of_birth'],
+          ),
+          _buildProfileDetail(AppStrings.caste, _profile!['caste']),
+          _buildProfileDetail(AppStrings.education, education),
+          _buildProfileDetail(AppStrings.location, location),
         ],
       ),
     );
@@ -140,7 +144,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             ),
             Expanded(
               child: Text(
-                value?.toString() ?? 'माहिती नाही',
+                value?.toString() ?? AppStrings.noInformation,
                 style: const TextStyle(fontSize: 16),
               ),
             ),

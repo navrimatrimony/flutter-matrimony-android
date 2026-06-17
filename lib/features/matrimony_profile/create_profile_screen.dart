@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/app_language.dart';
 import '../../core/api_client.dart';
 import '../photo/photo_upload_screen.dart';
 
@@ -79,6 +80,9 @@ class _CreateMatrimonyProfileScreenState
   }
 
   String _optionLabel(Map<String, dynamic> row, String fallbackPrefix) {
+    final localizedValue = localizedMapValue(row);
+    if (localizedValue != null) return localizedValue;
+
     for (final key in ['label', 'name', 'display_label', 'label_en']) {
       final value = row[key]?.toString().trim();
       if (value != null && value.isNotEmpty) return value;

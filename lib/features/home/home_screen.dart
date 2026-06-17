@@ -5,6 +5,7 @@ import '../photo/photo_upload_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../interests/received_interests_screen.dart';
 import '../browse/browse_profiles_screen.dart';
+import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../../main.dart';
 
@@ -160,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dashboard'),
+        title: Text(AppStrings.dashboard),
         automaticallyImplyLeading: true,
       ),
       drawer: Drawer(
@@ -244,9 +245,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   // Menu Items
                   ListTile(
                     leading: const Icon(Icons.home),
-                    title: const Text(
-                      'Dashboard',
-                      style: TextStyle(fontWeight: FontWeight.w500),
+                    title: Text(
+                      AppStrings.dashboard,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
                     ),
                     selected: true,
                     selectedTileColor: Theme.of(
@@ -258,7 +259,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   ListTile(
                     leading: const Icon(Icons.search),
-                    title: const Text('Browse Profiles'),
+                    title: Text(AppStrings.browseProfiles),
                     dense: false,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -276,7 +277,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   ListTile(
                     leading: const Icon(Icons.person),
-                    title: const Text('माझे प्रोफाइल'),
+                    title: Text(AppStrings.myProfile),
                     dense: false,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -289,7 +290,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   ListTile(
                     leading: const Icon(Icons.edit),
-                    title: const Text('Edit Profile'),
+                    title: Text(AppStrings.editProfile),
                     dense: false,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -331,7 +332,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   ListTile(
                     leading: const Icon(Icons.photo_camera),
-                    title: const Text('Upload Photo'),
+                    title: Text(AppStrings.uploadPhoto),
                     dense: false,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -349,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   ListTile(
                     leading: const Icon(Icons.send),
-                    title: const Text('Sent Interests'),
+                    title: Text(AppStrings.sentInterests),
                     dense: false,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -367,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   ListTile(
                     leading: const Icon(Icons.inbox),
-                    title: const Text('Received Interests'),
+                    title: Text(AppStrings.receivedInterests),
                     dense: false,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -386,9 +387,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),
-                    title: const Text(
-                      'Logout',
-                      style: TextStyle(
+                    title: Text(
+                      AppStrings.logout,
+                      style: const TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.w500,
                       ),
@@ -444,7 +445,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           const SizedBox(height: 20),
           // Welcome message
           Text(
-            'Welcome to Matrimony App',
+            AppStrings.dashboardHeadline,
             style: Theme.of(
               context,
             ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
@@ -452,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           ),
           const SizedBox(height: 8),
           Text(
-            'Choose an action to get started',
+            AppStrings.dashboardSubtitle,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
@@ -465,8 +466,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           // Browse Profiles Card
           _buildDashboardCard(
             icon: Icons.search,
-            title: 'Browse Profiles',
-            subtitle: 'View and explore matrimony profiles',
+            title: AppStrings.browseProfiles,
+            subtitle: AppStrings.browseProfilesSubtitle,
             onTap: () {
               Navigator.push(
                 context,
@@ -478,8 +479,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           // Sent Interests Card
           _buildDashboardCard(
             icon: Icons.send,
-            title: 'Sent Interests',
-            subtitle: 'View interests you have sent',
+            title: AppStrings.sentInterests,
+            subtitle: AppStrings.sentInterestsSubtitle,
             onTap: () {
               Navigator.push(
                 context,
@@ -491,8 +492,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           // Received Interests Card
           _buildDashboardCard(
             icon: Icons.inbox,
-            title: 'Received Interests',
-            subtitle: 'View and respond to received interests',
+            title: AppStrings.receivedInterests,
+            subtitle: AppStrings.receivedInterestsSubtitle,
             onTap: () {
               Navigator.push(
                 context,
@@ -506,10 +507,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           // My Profile Card
           _buildDashboardCard(
             icon: Icons.person,
-            title: 'My Profile',
-            subtitle: 'View your matrimony profile',
+            title: AppStrings.myProfile,
+            subtitle: AppStrings.myProfileSubtitle,
             onTap: () {
               Navigator.pushNamed(context, '/view-profile');
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildDashboardCard(
+            icon: Icons.photo_camera,
+            title: AppStrings.uploadPhoto,
+            subtitle: AppStrings.uploadPhotoSubtitle,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const PhotoUploadScreen()),
+              );
             },
           ),
           const SizedBox(height: 32),
@@ -583,7 +596,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Interest Statistics',
+          AppStrings.interestStatistics,
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -591,7 +604,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         const SizedBox(height: 16),
         // Sent Interests Stats Card
         _buildStatsCard(
-          title: 'Sent Interests',
+          title: AppStrings.sentInterests,
           icon: Icons.send,
           color: Colors.blue,
           total: _sentTotal,
@@ -609,7 +622,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         const SizedBox(height: 12),
         // Received Interests Stats Card
         _buildStatsCard(
-          title: 'Received Interests',
+          title: AppStrings.receivedInterests,
           icon: Icons.inbox,
           color: Colors.green,
           total: _receivedTotal,
@@ -683,12 +696,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               ),
               const SizedBox(height: 16),
               if (isLoading)
-                const Center(
+                Center(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Text(
-                      'Loading...',
-                      style: TextStyle(color: Colors.grey),
+                      AppStrings.loading,
+                      style: const TextStyle(color: Colors.grey),
                     ),
                   ),
                 )
@@ -707,28 +720,28 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   children: [
                     Expanded(
                       child: _buildStatItem(
-                        'Total',
+                        AppStrings.total,
                         total.toString(),
                         Colors.grey.shade700,
                       ),
                     ),
                     Expanded(
                       child: _buildStatItem(
-                        'Pending',
+                        AppStrings.pending,
                         pending.toString(),
                         Colors.orange,
                       ),
                     ),
                     Expanded(
                       child: _buildStatItem(
-                        'Accepted',
+                        AppStrings.accepted,
                         accepted.toString(),
                         Colors.green,
                       ),
                     ),
                     Expanded(
                       child: _buildStatItem(
-                        'Rejected',
+                        AppStrings.rejected,
                         rejected.toString(),
                         Colors.red,
                       ),
