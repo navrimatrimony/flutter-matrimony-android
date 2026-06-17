@@ -1,6 +1,6 @@
 class ApiRoutes {
-  static const String baseUrl = 'https://freelovemarriage.com/api/v1';
-  static const String rootApiBaseUrl = 'https://freelovemarriage.com/api';
+  static const String baseUrl = 'https://navrimilenavryala.com/api/v1';
+  static const String rootApiBaseUrl = 'https://navrimilenavryala.com/api';
   static const String login = '/login';
   static const String register = '/register';
   static const String locationSearch = '/location/search';
