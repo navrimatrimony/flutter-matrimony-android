@@ -38,7 +38,6 @@ class _CreateMatrimonyProfileScreenState
   String? _selectedReligionLabel;
   String? _selectedCasteLabel;
   String? _selectedSubCasteLabel;
-  String? _selectedEducationText;
   String? _selectedLocationLabel;
 
   int _subCasteSearchRequest = 0;
@@ -52,6 +51,7 @@ class _CreateMatrimonyProfileScreenState
   List<Map<String, dynamic>> _subCasteSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _educationSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
+  final List<String> _selectedEducations = <String>[];
 
   @override
   void initState() {
@@ -116,15 +116,73 @@ class _CreateMatrimonyProfileScreenState
     return null;
   }
 
+  List<String> _splitEducationText(String value) {
+    final trimmedValue = value.trim();
+    if (trimmedValue.isEmpty) return <String>[];
+
+    final parts = trimmedValue
+        .split(RegExp(r'[,|\n\r]+'))
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    return parts.length > 1 ? parts : <String>[];
+  }
+
+  bool _hasEducationChip(String label) {
+    final normalizedLabel = label.trim().toLowerCase();
+    return _selectedEducations.any(
+      (item) => item.trim().toLowerCase() == normalizedLabel,
+    );
+  }
+
+  void _addEducationChip(String value) {
+    final label = value.trim();
+
+    setState(() {
+      if (label.isNotEmpty && !_hasEducationChip(label)) {
+        _selectedEducations.add(label);
+      }
+      _educationController.clear();
+      _educationSuggestions = <Map<String, dynamic>>[];
+      _educationSearching = false;
+    });
+  }
+
+  void _addTypedEducation() {
+    _addEducationChip(_educationController.text);
+    FocusScope.of(context).unfocus();
+  }
+
+  void _removeEducationChip(String value) {
+    setState(() {
+      _selectedEducations.remove(value);
+    });
+  }
+
+  String _educationSubmitText() {
+    if (_selectedEducations.isNotEmpty) {
+      return _selectedEducations.join(', ');
+    }
+
+    return _educationController.text.trim();
+  }
+
   void _prefillExistingProfile() {
     final profile = widget.existingProfile;
     if (profile == null) return;
 
     _fullNameController.text = profile['full_name']?.toString() ?? '';
-    _educationController.text = ApiClient.profileEducationLabel(profile) ?? '';
-    _selectedEducationText = _educationController.text.trim().isNotEmpty
-        ? _educationController.text.trim()
-        : null;
+    final educationText = ApiClient.profileEducationLabel(profile) ?? '';
+    final educationParts = _splitEducationText(educationText);
+    if (educationParts.isNotEmpty) {
+      _selectedEducations
+        ..clear()
+        ..addAll(educationParts);
+      _educationController.clear();
+    } else {
+      _educationController.text = educationText;
+    }
     _dobController.text = profile['date_of_birth']?.toString() ?? '';
 
     _selectedReligionId = _readInt(profile['religion_id']);
@@ -353,11 +411,6 @@ class _CreateMatrimonyProfileScreenState
     final requestId = ++_educationSearchRequest;
     final trimmedQuery = query.trim();
 
-    if (_selectedEducationText == null ||
-        trimmedQuery != _selectedEducationText) {
-      _selectedEducationText = null;
-    }
-
     if (trimmedQuery.length < 2) {
       setState(() {
         _educationSearching = false;
@@ -381,12 +434,7 @@ class _CreateMatrimonyProfileScreenState
 
   void _selectEducation(Map<String, dynamic> education) {
     final label = _optionLabel(education, 'Education');
-    setState(() {
-      _selectedEducationText = label;
-      _educationController.text = label;
-      _educationSuggestions = <Map<String, dynamic>>[];
-      _educationSearching = false;
-    });
+    _addEducationChip(label);
     FocusScope.of(context).unfocus();
   }
 
@@ -446,9 +494,7 @@ class _CreateMatrimonyProfileScreenState
     final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
         ? _selectedCasteLabel!.trim()
         : _casteController.text.trim();
-    final educationText = _selectedEducationText?.trim().isNotEmpty == true
-        ? _selectedEducationText!.trim()
-        : _educationController.text.trim();
+    final educationText = _educationSubmitText();
 
     if (_selectedReligionId == null) {
       _showMessage('कृपया suggestions मधून religion निवडा.');
@@ -554,6 +600,27 @@ class _CreateMatrimonyProfileScreenState
             onTap: () => onSelect(item),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildEducationChips() {
+    if (_selectedEducations.isEmpty) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: _selectedEducations.map((education) {
+            return InputChip(
+              label: Text(education),
+              onDeleted: () => _removeEducationChip(education),
+            );
+          }).toList(),
+        ),
       ),
     );
   }
@@ -698,9 +765,18 @@ class _CreateMatrimonyProfileScreenState
             const SizedBox(height: 12),
             TextField(
               controller: _educationController,
-              decoration: const InputDecoration(labelText: 'Education'),
+              decoration: InputDecoration(
+                labelText: 'Education',
+                suffixIcon: IconButton(
+                  tooltip: 'Add education',
+                  icon: const Icon(Icons.add),
+                  onPressed: _addTypedEducation,
+                ),
+              ),
               onChanged: _searchEducation,
+              onSubmitted: (_) => _addTypedEducation(),
             ),
+            _buildEducationChips(),
             _buildOptionSuggestions(
               suggestions: _educationSuggestions,
               fallbackPrefix: 'Education',
