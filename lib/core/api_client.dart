@@ -41,15 +41,15 @@ class ApiClient {
       }
     }
 
-    var filename = profile['profile_photo']?.toString().trim();
-    if (filename == null || filename.isEmpty) return null;
+    final rawFilename = profile['profile_photo'];
+    if (rawFilename == null) return null;
+
+    var filename = rawFilename.toString().trim();
+    if (filename.isEmpty) return null;
 
     filename = filename.replaceAll('\\', '/').replaceFirst(RegExp(r'^/+'), '');
     if (filename.startsWith('http://') || filename.startsWith('https://')) {
       return filename;
-    }
-    if (filename.startsWith('pending/')) {
-      return null;
     }
 
     for (final prefix in [
@@ -63,6 +63,7 @@ class ApiClient {
     }
 
     if (filename.isEmpty) return null;
+    if (filename.startsWith('pending/')) return null;
 
     return Uri.encodeFull('$_profilePhotoBaseUrl/$filename');
   }
