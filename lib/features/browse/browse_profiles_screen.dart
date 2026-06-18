@@ -408,19 +408,36 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         itemCount: _profiles.length,
         itemBuilder: (context, index) {
-          final profile = _profiles[index] as Map<String, dynamic>;
-          final photoUrl = ApiClient.resolveProfilePhotoUrl(profile);
-          final age = _calculateAge(profile['date_of_birth']?.toString());
-          final name = ApiClient.safeDisplayLabel(profile['full_name']) ??
+          final profile = Map<String, dynamic>.from(_profiles[index] as Map);
+          final hero = _displayHero(profile);
+          final photoUrl = _displayString(hero?['primary_photo_url']) ??
+              ApiClient.resolveProfilePhotoUrl(profile);
+          final age = _displayInt(hero?['age']) ??
+              _calculateAge(profile['date_of_birth']?.toString());
+          final name = _displayString(hero?['name']) ??
+              ApiClient.safeDisplayLabel(profile['full_name']) ??
               ApiClient.safeDisplayLabel(profile['name']) ??
               'नाव उपलब्ध नाही';
-          final community = ApiClient.profileCommunityLabel(profile);
+          final ageLabel =
+              _displayString(hero?['age_label']) ?? (age != null ? '$age वर्षे' : null);
+          final community =
+              _displayString(hero?['community_label']) ??
+              ApiClient.profileCommunityLabel(profile);
+          final height =
+              _displayString(hero?['height_label']) ??
+              ApiClient.profileHeightLabel(profile);
           final education = ApiClient.profileEducationLabel(profile);
-          final location = ApiClient.profileLocationLabel(
+          final occupation =
+              _displayString(hero?['occupation_label']) ??
+              ApiClient.profileOccupationLabel(profile);
+          final location = _displayString(hero?['location_label']) ??
+              ApiClient.profileLocationLabel(
             profile,
             allowIdFallback: false,
           );
-          final nameLine = age != null ? '$name, $age वर्षे' : name;
+          final nameLine = ageLabel != null ? '$name, $ageLabel' : name;
+          final communityLine = _joinNonEmpty([height, community]);
+          final workEducationLine = _joinNonEmpty([education, occupation]);
 
           return Container(
             margin: const EdgeInsets.only(bottom: 14),
@@ -439,7 +456,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
               onTap: () {
-                final profileId = profile['id'] as int?;
+                final profileId = _displayInt(profile['id']);
                 if (profileId != null) {
                   Navigator.push(
                     context,
@@ -471,8 +488,13 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          if (community != null) _buildProfileLine(community),
-                          if (education != null) _buildProfileLine(education),
+                          if (communityLine != null)
+                            _buildProfileLine(communityLine),
+                          if (workEducationLine != null)
+                            _buildProfileLine(
+                              workEducationLine,
+                              icon: Icons.school,
+                            ),
                           if (location != null)
                             _buildProfileLine(location, icon: Icons.place),
                         ],
@@ -487,6 +509,50 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         },
       ),
     );
+  }
+
+  Map<String, dynamic>? _displayHero(Map<String, dynamic> profile) {
+    final display = _safeMap(profile['display']);
+    return _safeMap(display?['hero']);
+  }
+
+  Map<String, dynamic>? _safeMap(dynamic value) {
+    if (value is! Map) return null;
+    try {
+      return Map<String, dynamic>.from(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  String? _displayString(dynamic value) {
+    if (value == null) return null;
+    if (value is Map || value is List) return null;
+    if (value is bool) return value ? 'Yes' : 'No';
+
+    final text = value.toString().trim();
+    if (text.isEmpty) return null;
+    if (text.startsWith('{') || text.startsWith('[')) return null;
+    if (text.contains('=>')) return null;
+    if (text.toLowerCase().startsWith('location id:')) return null;
+
+    return text;
+  }
+
+  int? _displayInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value.trim());
+    return null;
+  }
+
+  String? _joinNonEmpty(List<String?> values) {
+    final parts = values
+        .whereType<String>()
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? null : parts.join(' • ');
   }
 
   Widget _buildProfileThumb(String? photoUrl) {

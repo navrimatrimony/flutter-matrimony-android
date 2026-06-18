@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import 'widgets/profile_display_section.dart';
 
 /// ===============================
 /// PROFILE DETAIL SCREEN (OTHER USER)
@@ -20,6 +21,7 @@ class ProfileDetailScreen extends StatefulWidget {
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Map<String, dynamic>? _profile;
+  Map<String, dynamic>? _display;
   bool _isLoading = true;
   String? _errorMessage;
   bool _isSendingInterest = false;
@@ -54,9 +56,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         return;
       }
 
-      if (response['success'] == true && response['profile'] != null) {
+      final profile = _safeMap(response['profile']);
+      if (response['success'] == true && profile != null) {
         setState(() {
-          _profile = response['profile'];
+          _profile = profile;
+          _display = _safeMap(response['display']);
           _isLoading = false;
         });
       } else {
@@ -146,6 +150,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return currentUserProfileId == null || currentUserProfileId != viewingProfileId;
   }
 
+  bool _canSendInterestNow() {
+    final displayCanSend = _displayBool(_displayActions()?['can_send_interest']);
+    if (displayCanSend != null) {
+      return displayCanSend && !_isInterestAlreadySent();
+    }
+
+    return !_isInterestAlreadySent();
+  }
+
   bool _isInterestAlreadySent() {
     return ApiClient.sentInterestProfileIds.contains(widget.profileId) ||
         _interestSent;
@@ -183,13 +196,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
 
     final profile = _profile!;
-    final photoUrl = ApiClient.resolveProfilePhotoUrl(profile);
-    final education = ApiClient.profileEducationLabel(profile);
-    final location = ApiClient.profileLocationLabel(
+    final hero = _displayHero();
+    final about = _displayAbout();
+    final displaySections = _displaySections();
+    final photoUrl = _displayString(hero?['primary_photo_url']) ??
+        ApiClient.resolveProfilePhotoUrl(profile);
+    final location = _displayString(hero?['location_label']) ??
+        ApiClient.profileLocationLabel(
       profile,
       allowIdFallback: false,
     );
-    final age = _calculateAge(profile['date_of_birth']?.toString());
+    final age = _displayInt(hero?['age']) ??
+        _calculateAge(profile['date_of_birth']?.toString());
+    final aboutBody = _displayString(about?['body']);
+    final aboutTitle = _displayString(about?['title']) ??
+        'About ${_displayString(hero?['name']) ?? _nameText(profile)}';
 
     return ListView(
       padding: EdgeInsets.zero,
@@ -198,6 +219,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _buildHeroPhoto(
           photoUrl: photoUrl,
           profile: profile,
+          hero: hero,
           age: age,
           location: location,
         ),
@@ -212,22 +234,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               16,
               24,
               16,
-              _shouldShowSendInterestButton() ? 108 : 34,
+              _bottomContentPadding(),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionTitle('प्रोफाइल माहिती'),
-                const SizedBox(height: 10),
-                _buildProfileDetail(AppStrings.name, profile['full_name']),
-                _buildProfileDetail(AppStrings.age, _ageText(age)),
-                _buildProfileDetail(
-                  AppStrings.dateOfBirth,
-                  profile['date_of_birth'],
-                ),
-                _buildProfileDetail('समुदाय', _communityText(profile)),
-                _buildProfileDetail(AppStrings.education, education),
-                _buildProfileDetail(AppStrings.location, location),
+                if (aboutBody != null) ...[
+                  _buildAboutCard(aboutTitle, aboutBody),
+                  const SizedBox(height: 4),
+                ],
+                if (displaySections.isNotEmpty)
+                  ...displaySections.map(
+                    (section) => ProfileDisplaySection(section: section),
+                  )
+                else
+                  ..._buildFallbackProfileDetails(profile, age, location),
               ],
             ),
           ),
@@ -239,16 +260,31 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Widget _buildHeroPhoto({
     required String? photoUrl,
     required Map<String, dynamic> profile,
+    required Map<String, dynamic>? hero,
     required int? age,
     required String? location,
   }) {
-    final heroHeight = (MediaQuery.of(context).size.height * 0.68)
-        .clamp(460.0, 680.0)
+    final screenSize = MediaQuery.of(context).size;
+    final hasPhoto = photoUrl != null;
+    final heroHeight = (screenSize.height * (hasPhoto ? 0.68 : 0.48))
+        .clamp(hasPhoto ? 460.0 : 340.0, hasPhoto ? 680.0 : 460.0)
         .toDouble();
-    final name = _nameText(profile);
-    final heroName = age != null ? '$name, ${AppStrings.years(age)}' : name;
-    final factLine = _heroFactLine(profile, location);
-    final photoCount = _photoCount(profile, photoUrl);
+    final titleFontSize = screenSize.width < 360 ? 26.0 : 29.0;
+    final name = _displayString(hero?['name']) ?? _nameText(profile);
+    final heroName = age != null ? '$name, $age' : name;
+    final heightLabel = _displayString(hero?['height_label']) ??
+        ApiClient.profileHeightLabel(profile);
+    final communityLabel =
+        _displayString(hero?['community_label']) ?? _communityText(profile);
+    final occupationLabel = _displayString(hero?['occupation_label']) ??
+        ApiClient.profileOccupationLabel(profile);
+    final line1 = _joinNonEmpty([heightLabel, communityLabel]);
+    final photoCount =
+        _displayInt(hero?['photo_count']) ?? _photoCount(profile, photoUrl);
+    final isPremium = _displaySafeBool(hero?['premium']) ??
+        (hero == null ? _isPremium(profile) : false);
+    final isVerified = _displayBool(hero?['verified']) ?? _isVerified(profile);
+    final heroChips = _displayChips(profile);
 
     return SizedBox(
       width: double.infinity,
@@ -287,7 +323,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       onTap: () => Navigator.maybePop(context),
                     ),
                     const Spacer(),
-                    if (_isPremium(profile)) ...[
+                    if (isPremium) ...[
                       _buildStatusPill(
                         icon: Icons.workspace_premium,
                         label: 'Premium',
@@ -323,17 +359,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     Flexible(
                       child: Text(
                         heroName,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white,
-                          fontSize: 30,
+                          fontSize: titleFontSize,
                           fontWeight: FontWeight.w800,
-                          height: 1.08,
+                          height: 1.12,
                         ),
                       ),
                     ),
-                    if (_isVerified(profile)) ...[
+                    if (isVerified) ...[
                       const SizedBox(width: 8),
                       const Icon(
                         Icons.verified,
@@ -343,11 +379,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ],
                   ],
                 ),
-                if (factLine.isNotEmpty) ...[
+                if (line1 != null) ...[
                   const SizedBox(height: 8),
                   Text(
-                    factLine,
-                    maxLines: 2,
+                    line1,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Colors.white,
@@ -357,24 +393,39 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ),
                   ),
                 ],
+                if (occupationLabel != null) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    occupationLabel,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
+                  ),
+                ],
+                if (location != null) ...[
+                  const SizedBox(height: 5),
+                  Text(
+                    location,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 14),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: [
-                    if (_isOnline(profile))
-                      _buildHeroChip(
-                        icon: Icons.circle,
-                        label: 'Online',
-                        iconColor: Colors.greenAccent,
-                      ),
-                    if (ApiClient.currentUserProfile != null)
-                      _buildHeroChip(
-                        icon: Icons.compare_arrows,
-                        label: _comparisonLabel(profile),
-                        onTap: _showComparisonSheet,
-                      ),
-                  ],
+                  children: heroChips,
                 ),
               ],
             ),
@@ -415,10 +466,80 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   Widget _buildHeroFallback() {
-    return Container(
-      color: Colors.grey.shade300,
-      alignment: Alignment.center,
-      child: Icon(Icons.person, size: 132, color: Colors.grey.shade600),
+    return DecoratedBox(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFFB53B61),
+            Color(0xFF7D1538),
+            Color(0xFF2E2220),
+          ],
+        ),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Positioned(
+            right: -44,
+            top: 78,
+            child: Container(
+              width: 160,
+              height: 160,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            left: -36,
+            bottom: 84,
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.07),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Center(
+            child: Container(
+              width: 118,
+              height: 118,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.16),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.30),
+                  width: 1.4,
+                ),
+              ),
+              child: Icon(
+                Icons.person,
+                size: 70,
+                color: Colors.white.withValues(alpha: 0.86),
+              ),
+            ),
+          ),
+          Positioned(
+            left: 16,
+            right: 16,
+            top: 122,
+            child: Text(
+              'फोटो अजून जोडलेला नाही',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.72),
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -556,6 +677,74 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
+  Widget _buildAboutCard(String title, String body) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFEDE2DE)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: const Color(0xFF2E2220),
+                ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            body,
+            style: TextStyle(
+              color: Colors.grey.shade800,
+              fontSize: 15,
+              height: 1.45,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _buildFallbackProfileDetails(
+    Map<String, dynamic> profile,
+    int? age,
+    String? location,
+  ) {
+    final education = ApiClient.profileEducationLabel(profile);
+
+    return [
+      _buildSectionTitle('प्रोफाइल माहिती'),
+      const SizedBox(height: 10),
+      _buildProfileDetail(AppStrings.name, profile['full_name']),
+      _buildProfileDetail(AppStrings.age, _ageText(age)),
+      _buildProfileDetail(
+        AppStrings.dateOfBirth,
+        profile['date_of_birth'],
+      ),
+      _buildProfileDetail('समुदाय', _communityText(profile)),
+      _buildProfileDetail(AppStrings.education, education),
+      _buildProfileDetail(AppStrings.location, location),
+    ];
+  }
+
+  double _bottomContentPadding() {
+    return _shouldShowSendInterestButton() ? 132 : 38;
+  }
+
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -616,6 +805,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (!_shouldShowSendInterestButton()) return null;
 
     final alreadySent = _isInterestAlreadySent();
+    final canSend = _canSendInterestNow();
+    final disabledByBackend =
+        _displayBool(_displayActions()?['can_send_interest']) == false;
 
     return Container(
       decoration: BoxDecoration(
@@ -645,9 +837,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
               const SizedBox(width: 12),
               ElevatedButton.icon(
-                onPressed: (alreadySent || _isSendingInterest)
-                    ? null
-                    : _sendInterest,
+                onPressed: (!canSend || _isSendingInterest) ? null : _sendInterest,
                 icon: _isSendingInterest
                     ? const SizedBox(
                         height: 16,
@@ -655,11 +845,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : Icon(
-                        alreadySent ? Icons.check : Icons.favorite,
+                        alreadySent || disabledByBackend
+                            ? Icons.check
+                            : Icons.favorite,
                         size: 18,
                       ),
                 label: Text(
-                  alreadySent ? AppStrings.interestSent : AppStrings.sendInterest,
+                  alreadySent
+                      ? AppStrings.interestSent
+                      : disabledByBackend
+                          ? 'Interest उपलब्ध नाही'
+                          : AppStrings.sendInterest,
                 ),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(
@@ -698,15 +894,23 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final profile = _profile;
     if (profile == null) return;
 
+    final hero = _displayHero();
     final age = _calculateAge(profile['date_of_birth']?.toString());
-    final location = ApiClient.profileLocationLabel(
+    final location = _displayString(hero?['location_label']) ??
+        ApiClient.profileLocationLabel(
       profile,
       allowIdFallback: false,
     );
+    final ageLabel = _displayString(hero?['age_label']);
+    final communityLabel =
+        _displayString(hero?['community_label']) ?? _communityText(profile);
     final parts = <String>[
-      _nameText(profile),
-      if (age != null) '$age वर्षे',
-      if (_communityText(profile) != null) _communityText(profile)!,
+      _displayString(hero?['name']) ?? _nameText(profile),
+      if (ageLabel != null)
+        ageLabel
+      else if (age != null)
+        '$age वर्षे',
+      if (communityLabel != null) communityLabel,
       if (location != null) location,
       'Profile ID: ${widget.profileId}',
     ];
@@ -860,6 +1064,187 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
+  Map<String, dynamic>? _displayHero() {
+    return _safeMap(_display?['hero']);
+  }
+
+  Map<String, dynamic>? _displayAbout() {
+    return _safeMap(_display?['about']);
+  }
+
+  Map<String, dynamic>? _displayActions() {
+    return _safeMap(_display?['actions']);
+  }
+
+  List<ProfileDisplaySectionData> _displaySections() {
+    final sections = _safeMapList(_display?['sections']);
+    return sections
+        .map(ProfileDisplaySectionData.fromMap)
+        .whereType<ProfileDisplaySectionData>()
+        .toList();
+  }
+
+  List<Widget> _displayChips(Map<String, dynamic> profile) {
+    final widgets = <Widget>[];
+    final rows = _safeMapList(_display?['chips']);
+
+    for (final row in rows) {
+      final label = _displayString(row['label']);
+      if (label == null) continue;
+
+      final normalized = label.trim().toLowerCase();
+      final iconKey = _displayString(row['icon']);
+      if (normalized == 'premium' ||
+          normalized == 'verified' ||
+          normalized.contains('photo') ||
+          iconKey == 'photo') {
+        continue;
+      }
+
+      widgets.add(
+        _buildHeroChip(
+          icon: _chipIcon(iconKey),
+          label: label,
+          iconColor: _chipColor(iconKey, _displayString(row['tone'])),
+          onTap: normalized.startsWith('you &') ? _showComparisonSheet : null,
+        ),
+      );
+
+      if (widgets.length >= 4) return widgets;
+    }
+
+    if (widgets.isNotEmpty) return widgets;
+
+    if (_isOnline(profile)) {
+      widgets.add(
+        _buildHeroChip(
+          icon: Icons.circle,
+          label: 'Online',
+          iconColor: Colors.greenAccent,
+        ),
+      );
+    }
+
+    if (ApiClient.currentUserProfile != null) {
+      widgets.add(
+        _buildHeroChip(
+          icon: Icons.compare_arrows,
+          label: _comparisonLabel(profile),
+          onTap: _showComparisonSheet,
+        ),
+      );
+    }
+
+    return widgets;
+  }
+
+  Map<String, dynamic>? _safeMap(dynamic value) {
+    if (value is! Map) return null;
+    try {
+      return Map<String, dynamic>.from(value);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<Map<String, dynamic>> _safeMapList(dynamic value) {
+    if (value is! List) return <Map<String, dynamic>>[];
+
+    final rows = <Map<String, dynamic>>[];
+    for (final item in value) {
+      final row = _safeMap(item);
+      if (row != null) rows.add(row);
+    }
+    return rows;
+  }
+
+  String? _displayString(dynamic value) {
+    if (value == null) return null;
+    if (value is Map || value is List) return null;
+    if (value is bool) return value ? 'Yes' : 'No';
+
+    final text = value.toString().trim();
+    if (text.isEmpty) return null;
+    if (text.startsWith('{') || text.startsWith('[')) return null;
+    if (text.contains('=>')) return null;
+    if (text.toLowerCase().startsWith('location id:')) return null;
+
+    return text;
+  }
+
+  bool? _displayBool(dynamic value) {
+    return value is bool ? value : null;
+  }
+
+  bool? _displaySafeBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) {
+      if (value == 1) return true;
+      if (value == 0) return false;
+      return null;
+    }
+
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+        return false;
+      }
+    }
+
+    return null;
+  }
+
+  int? _displayInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value.trim());
+    return null;
+  }
+
+  String? _joinNonEmpty(List<String?> values) {
+    final parts = values
+        .whereType<String>()
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .toList();
+    return parts.isEmpty ? null : parts.join(' • ');
+  }
+
+  IconData _chipIcon(String? icon) {
+    switch (icon?.trim().toLowerCase()) {
+      case 'compare':
+        return Icons.compare_arrows;
+      case 'astro':
+        return Icons.auto_awesome;
+      case 'verified':
+        return Icons.verified;
+      case 'premium':
+        return Icons.workspace_premium;
+      case 'photo':
+        return Icons.photo_library_outlined;
+      default:
+        return Icons.circle;
+    }
+  }
+
+  Color? _chipColor(String? icon, String? tone) {
+    final key = icon?.trim().toLowerCase();
+    final toneKey = tone?.trim().toLowerCase();
+    if (key == 'astro' || toneKey == 'warm') {
+      return const Color(0xFFFFC857);
+    }
+    if (key == 'compare') {
+      return Colors.white;
+    }
+    if (key == 'verified' || toneKey == 'trust') {
+      return const Color(0xFF4DA3FF);
+    }
+    return null;
+  }
+
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: color),
@@ -873,18 +1258,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   String? _ageText(int? age) {
     return age != null ? AppStrings.years(age) : null;
-  }
-
-  String _heroFactLine(
-    Map<String, dynamic> profile,
-    String? location,
-  ) {
-    final facts = <String>[
-      if (_communityText(profile) != null) _communityText(profile)!,
-      if (location != null && location.trim().isNotEmpty) location,
-    ];
-
-    return facts.join(' • ');
   }
 
   String? _communityText(Map<String, dynamic> profile) {
