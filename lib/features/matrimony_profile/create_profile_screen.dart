@@ -420,6 +420,24 @@ class _CreateMatrimonyProfileScreenState
     FocusScope.of(context).unfocus();
   }
 
+  Map<String, dynamic>? _findExactOptionByLabel(
+    List<Map<String, dynamic>> options,
+    String label,
+    String fallbackPrefix,
+  ) {
+    final normalizedLabel = label.trim().toLowerCase();
+    if (normalizedLabel.isEmpty) return null;
+
+    for (final option in options) {
+      final optionLabel = _optionLabel(option, fallbackPrefix);
+      if (optionLabel.trim().toLowerCase() == normalizedLabel) {
+        return option;
+      }
+    }
+
+    return null;
+  }
+
   Future<void> _searchLocations(String query) async {
     final requestId = ++_locationSearchRequest;
     final trimmedQuery = query.trim();
@@ -490,6 +508,29 @@ class _CreateMatrimonyProfileScreenState
         ? selectedCasteLabel
         : _casteController.text.trim();
     final educationText = _educationSubmitText();
+    final subCasteText = _subCasteController.text.trim();
+
+    if (subCasteText.isNotEmpty && _selectedSubCasteId == null) {
+      final exactSubCaste = _findExactOptionByLabel(
+        _subCasteSuggestions,
+        subCasteText,
+        'Sub-caste',
+      );
+      final exactSubCasteId = exactSubCaste != null
+          ? _readInt(exactSubCaste['id'])
+          : null;
+
+      if (exactSubCasteId != null) {
+        _selectedSubCasteId = exactSubCasteId;
+        _selectedSubCasteLabel = _optionLabel(exactSubCaste!, 'Sub-caste');
+        _subCasteController.text = _selectedSubCasteLabel ?? subCasteText;
+      } else {
+        _showMessage(
+          'कृपया suggestions मधून sub-caste निवडा किंवा field रिकामी ठेवा.',
+        );
+        return;
+      }
+    }
 
     if (_selectedReligionId == null) {
       _showMessage('कृपया suggestions मधून religion निवडा.');
