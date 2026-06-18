@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
@@ -951,7 +952,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Future<void> _handleMenuAction(String action) async {
     switch (action) {
       case 'share':
-        _copyProfileShareText();
+        await Future<void>.delayed(Duration.zero);
+        if (!mounted) return;
+        await _shareProfile();
         break;
       case 'shortlist':
       case 'unshortlist':
@@ -1223,13 +1226,130 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final profile = _profile;
     if (profile == null) return;
 
+    await Clipboard.setData(ClipboardData(text: _fallbackProfileShareText()));
+    if (!mounted) return;
+    _showSnackBar('Profile details copy झाले.', Colors.green);
+  }
+
+  Future<void> _shareProfile() async {
+    final payload = _publicSharePayload();
+    if (payload == null) {
+      await _copyProfileShareText();
+      return;
+    }
+
+    try {
+      await Share.share(payload['text']!, subject: payload['title']);
+      if (!mounted) return;
+      _showSnackBar('Profile link ready to share.', Colors.green);
+    } catch (_) {
+      try {
+        await Clipboard.setData(ClipboardData(text: payload['text']!));
+        if (!mounted) return;
+        _showSnackBar('Profile link copied.', Colors.green);
+      } catch (_) {
+        if (!mounted) return;
+        _showSnackBar('Profile share करता आली नाही.', Colors.red);
+      }
+    }
+  }
+
+  Map<String, String>? _publicSharePayload() {
+    final share = _displayShare();
+    final actions = _displayActions();
+    final rawUrl =
+        _displayString(share?['url']) ?? _displayString(actions?['share_url']);
+    final url = _cleanShareUrl(rawUrl);
+    if (url == null) return null;
+
+    final title = _displayString(share?['title']) ?? _shareTitle();
+    final backendText =
+        _displayString(share?['text']) ?? _displayString(actions?['share_text']);
+    final text = _shareTextWithUrl(
+      backendText: backendText,
+      title: title,
+      url: url,
+    );
+
+    return {'url': url, 'title': title, 'text': text};
+  }
+
+  String? _cleanShareUrl(String? rawUrl) {
+    final value = rawUrl?.trim();
+    if (value == null || value.isEmpty) return null;
+
+    final uri = Uri.tryParse(value);
+    if (uri == null) return null;
+    final scheme = uri.scheme.toLowerCase();
+    if ((scheme != 'https' && scheme != 'http') || uri.host.isEmpty) {
+      return null;
+    }
+
+    return value;
+  }
+
+  String _shareTitle() {
+    final profile = _profile;
+    final hero = _displayHero();
+    final name = _displayString(hero?['name']) ??
+        (profile != null ? _nameText(profile) : 'Profile');
+    final age = _displayInt(hero?['age']) ??
+        _calculateAge(profile?['date_of_birth']?.toString());
+
+    return age != null
+        ? '$name, $age - Navri Mile Navryala'
+        : '$name - Navri Mile Navryala';
+  }
+
+  String _shareTextWithUrl({
+    required String? backendText,
+    required String title,
+    required String url,
+  }) {
+    final cleanedBackendText = backendText?.trim();
+    if (cleanedBackendText != null && cleanedBackendText.isNotEmpty) {
+      if (cleanedBackendText.contains(url)) {
+        return cleanedBackendText;
+      }
+
+      return '$cleanedBackendText\n\nView profile:\n$url';
+    }
+
+    final profile = _profile;
+    final hero = _displayHero();
+    final communityLabel = _displayString(hero?['community_label']) ??
+        (profile != null ? _communityText(profile) : null);
+    final location = _displayString(hero?['location_label']) ??
+        (profile != null
+            ? ApiClient.profileLocationLabel(
+                profile,
+                allowIdFallback: false,
+              )
+            : null);
+    final parts = <String>[
+      title,
+      if (communityLabel != null || location != null) '',
+      if (communityLabel != null) communityLabel,
+      if (location != null) location,
+      '',
+      'View profile:',
+      url,
+    ];
+
+    return parts.join('\n').trim();
+  }
+
+  String _fallbackProfileShareText() {
+    final profile = _profile;
+    if (profile == null) return 'Profile ID: ${widget.profileId}';
+
     final hero = _displayHero();
     final age = _calculateAge(profile['date_of_birth']?.toString());
     final location = _displayString(hero?['location_label']) ??
         ApiClient.profileLocationLabel(
-      profile,
-      allowIdFallback: false,
-    );
+          profile,
+          allowIdFallback: false,
+        );
     final ageLabel = _displayString(hero?['age_label']);
     final communityLabel =
         _displayString(hero?['community_label']) ?? _communityText(profile);
@@ -1244,9 +1364,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       'Profile ID: ${widget.profileId}',
     ];
 
-    await Clipboard.setData(ClipboardData(text: parts.join('\n')));
-    if (!mounted) return;
-    _showSnackBar('Profile details copy झाले.', Colors.green);
+    return parts.join('\n');
   }
 
   Future<String?> _askReportReason() {
@@ -1397,6 +1515,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   Map<String, dynamic>? _displayActions() {
     return _safeMap(_display?['actions']);
+  }
+
+  Map<String, dynamic>? _displayShare() {
+    return _safeMap(_display?['share']);
   }
 
   List<ProfileDisplaySectionData> _displaySections() {
