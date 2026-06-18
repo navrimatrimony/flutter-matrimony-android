@@ -19,4 +19,13 @@ class ApiRoutes {
   static const String interestsSent = '/interests/sent';
   static const String interestsReceived = '/interests/received';
   static const String abuseReports = '/abuse-reports';
+
+  static String profileShortlist(int profileId) =>
+      '$matrimonyProfiles/$profileId/shortlist';
+
+  static String profileHide(int profileId) =>
+      '$matrimonyProfiles/$profileId/hide';
+
+  static String profileBlock(int profileId) =>
+      '$matrimonyProfiles/$profileId/block';
 }

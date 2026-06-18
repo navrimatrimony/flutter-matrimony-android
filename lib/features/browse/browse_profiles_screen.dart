@@ -455,15 +455,17 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
             ),
             child: InkWell(
               borderRadius: BorderRadius.circular(14),
-              onTap: () {
+              onTap: () async {
                 final profileId = _displayInt(profile['id']);
                 if (profileId != null) {
-                  Navigator.push(
+                  final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (_) => ProfileDetailScreen(profileId: profileId),
                     ),
                   );
+                  if (!mounted) return;
+                  _handleProfileDetailResult(result);
                 }
               },
               child: Padding(
@@ -514,6 +516,24 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   Map<String, dynamic>? _displayHero(Map<String, dynamic> profile) {
     final display = _safeMap(profile['display']);
     return _safeMap(display?['hero']);
+  }
+
+  void _handleProfileDetailResult(dynamic result) {
+    final actionResult = _safeMap(result);
+    if (actionResult == null) return;
+
+    final profileId = _displayInt(actionResult['profileId']);
+    final action = _displayString(actionResult['action']);
+    if (profileId == null || (action != 'hidden' && action != 'blocked')) {
+      return;
+    }
+
+    setState(() {
+      _profiles = _profiles.where((profile) {
+        final row = _safeMap(profile);
+        return _displayInt(row?['id']) != profileId;
+      }).toList();
+    });
   }
 
   Map<String, dynamic>? _safeMap(dynamic value) {

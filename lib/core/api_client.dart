@@ -933,6 +933,63 @@ class ApiClient {
     return _decodeResponse(response);
   }
 
+  static Future<Map<String, dynamic>> shortlistProfile(int profileId) {
+    return _profileActionPost(ApiRoutes.profileShortlist(profileId));
+  }
+
+  static Future<Map<String, dynamic>> unshortlistProfile(int profileId) {
+    return _profileActionDelete(ApiRoutes.profileShortlist(profileId));
+  }
+
+  static Future<Map<String, dynamic>> hideProfile(int profileId) {
+    return _profileActionPost(ApiRoutes.profileHide(profileId));
+  }
+
+  static Future<Map<String, dynamic>> blockProfile(int profileId) {
+    return _profileActionPost(ApiRoutes.profileBlock(profileId));
+  }
+
+  static Future<Map<String, dynamic>> unblockProfile(int profileId) {
+    return _profileActionDelete(ApiRoutes.profileBlock(profileId));
+  }
+
+  static Future<Map<String, dynamic>> _profileActionPost(String route) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(ApiRoutes.baseUrl + route);
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    return _decodeResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> _profileActionDelete(String route) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(ApiRoutes.baseUrl + route);
+
+    final response = await http.delete(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    return _decodeResponse(response);
+  }
+
   static Future<Map<String, dynamic>> getSentInterests() async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');

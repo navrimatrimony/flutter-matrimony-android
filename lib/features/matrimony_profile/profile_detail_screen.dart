@@ -26,6 +26,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   String? _errorMessage;
   bool _isSendingInterest = false;
   bool _interestSent = false;
+  bool _isShortlisted = false;
+  bool _isHidden = false;
+  bool _isBlocked = false;
+  bool? _canShortlist;
+  bool? _canHide;
+  bool? _canBlock;
+  bool _isProfileActionInFlight = false;
 
   @override
   void initState() {
@@ -58,9 +65,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
       final profile = _safeMap(response['profile']);
       if (response['success'] == true && profile != null) {
+        final display = _safeMap(response['display']);
+        final actions = _safeMap(display?['actions']);
         setState(() {
           _profile = profile;
-          _display = _safeMap(response['display']);
+          _display = display;
+          _isShortlisted =
+              _displaySafeBool(actions?['is_shortlisted']) ?? false;
+          _isHidden = _displaySafeBool(actions?['is_hidden']) ?? false;
+          _isBlocked = _displaySafeBool(actions?['is_blocked']) ?? false;
+          _canShortlist = _displaySafeBool(actions?['can_shortlist']);
+          _canHide = _displaySafeBool(actions?['can_hide']);
+          _canBlock = _displaySafeBool(actions?['can_block']);
           _isLoading = false;
         });
       } else {
@@ -565,53 +581,114 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       shape: const CircleBorder(),
       child: PopupMenuButton<String>(
         tooltip: 'Profile actions',
+        enabled: !_isProfileActionInFlight,
         icon: const Icon(Icons.more_vert, color: Colors.white),
         onSelected: _handleMenuAction,
-        itemBuilder: (context) => const [
-          PopupMenuItem(
-            value: 'share',
-            child: ListTile(
-              dense: true,
-              leading: Icon(Icons.ios_share),
-              title: Text('Share profile'),
+        itemBuilder: (context) {
+          final items = <PopupMenuEntry<String>>[
+            const PopupMenuItem(
+              value: 'share',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.ios_share),
+                title: Text('Share profile'),
+              ),
             ),
-          ),
-          PopupMenuItem(
-            value: 'shortlist',
-            child: ListTile(
-              dense: true,
-              leading: Icon(Icons.bookmark_border),
-              title: Text('Shortlist'),
-            ),
-          ),
-          PopupMenuItem(
-            value: 'hide',
-            child: ListTile(
-              dense: true,
-              leading: Icon(Icons.visibility_off_outlined),
-              title: Text('Hide'),
-            ),
-          ),
-          PopupMenuItem(
-            value: 'block',
-            child: ListTile(
-              dense: true,
-              leading: Icon(Icons.block),
-              title: Text('Block'),
-            ),
-          ),
-          PopupMenuDivider(),
-          PopupMenuItem(
-            value: 'report',
-            child: ListTile(
-              dense: true,
-              leading: Icon(Icons.flag_outlined),
-              title: Text('Report'),
-            ),
-          ),
-        ],
+          ];
+
+          if (_canShowShortlistAction()) {
+            items.add(
+              PopupMenuItem(
+                value: _isShortlisted ? 'unshortlist' : 'shortlist',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(
+                    _isShortlisted ? Icons.bookmark : Icons.bookmark_border,
+                  ),
+                  title: Text(
+                    _isShortlisted
+                        ? 'Remove from Shortlist'
+                        : 'Add to Shortlist',
+                  ),
+                ),
+              ),
+            );
+          }
+
+          if (_canShowHideAction()) {
+            items.add(
+              const PopupMenuItem(
+                value: 'hide',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.visibility_off_outlined),
+                  title: Text('Hide this Profile'),
+                ),
+              ),
+            );
+          }
+
+          if (_canShowBlockAction()) {
+            items.add(
+              const PopupMenuItem(
+                value: 'block',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.block),
+                  title: Text('Block this Profile'),
+                ),
+              ),
+            );
+          }
+
+          items.addAll(
+            const [
+              PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'report',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.flag_outlined),
+                  title: Text('Report this Profile'),
+                ),
+              ),
+            ],
+          );
+
+          return items;
+        },
       ),
     );
+  }
+
+  bool _canShowShortlistAction() {
+    if (_isViewingOwnProfile()) return false;
+    if (_isBlocked) return false;
+    if (_isShortlisted) return ApiClient.authToken != null;
+
+    return _canShortlist ?? ApiClient.authToken != null;
+  }
+
+  bool _canShowHideAction() {
+    if (_isViewingOwnProfile() || _isHidden || _isBlocked) return false;
+
+    return _canHide ?? ApiClient.authToken != null;
+  }
+
+  bool _canShowBlockAction() {
+    if (_isViewingOwnProfile() || _isBlocked) return false;
+
+    return _canBlock ?? ApiClient.authToken != null;
+  }
+
+  bool _isViewingOwnProfile() {
+    final profile = _profile;
+    if (profile == null) return false;
+
+    final currentUserProfileId = _displayInt(ApiClient.currentUserProfile?['id']);
+    final viewingProfileId = _displayInt(profile['id']) ?? widget.profileId;
+    return currentUserProfileId != null &&
+        currentUserProfileId == viewingProfileId;
   }
 
   Widget _buildStatusPill({
@@ -871,23 +948,275 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  void _handleMenuAction(String action) {
+  Future<void> _handleMenuAction(String action) async {
     switch (action) {
       case 'share':
         _copyProfileShareText();
         break;
       case 'shortlist':
-      case 'hide':
+      case 'unshortlist':
+        _toggleShortlist();
+        break;
       case 'block':
-        _showSnackBar(
-          'ही सुविधा backend API उपलब्ध झाल्यावर जोडता येईल.',
-          Colors.orange,
-        );
+        _confirmAndBlockProfile();
+        break;
+      case 'hide':
+        _confirmAndHideProfile();
         break;
       case 'report':
-        _showReportDialog();
+        await Future<void>.delayed(Duration.zero);
+        if (!mounted) return;
+        await _reportProfile();
         break;
     }
+  }
+
+  Future<void> _toggleShortlist() async {
+    if (_isProfileActionInFlight || _profile == null) return;
+
+    final shouldShortlist = !_isShortlisted;
+    setState(() {
+      _isProfileActionInFlight = true;
+    });
+
+    try {
+      final response = shouldShortlist
+          ? await ApiClient.shortlistProfile(widget.profileId)
+          : await ApiClient.unshortlistProfile(widget.profileId);
+      if (!mounted) return;
+
+      if (_responseSuccess(response)) {
+        _applyActionStateFromResponse(
+          response,
+          fallbackShortlisted: shouldShortlist,
+        );
+        _showSnackBar(
+          _backendMessage(
+            response,
+            shouldShortlist
+                ? 'Shortlist मध्ये जोडले.'
+                : 'Shortlist मधून काढले.',
+          ),
+          Colors.green,
+        );
+        return;
+      }
+
+      setState(() {
+        _isProfileActionInFlight = false;
+      });
+      _showSnackBar(
+        _responseErrorMessage(
+          response,
+          shouldShortlist
+              ? 'Shortlist करता आली नाही.'
+              : 'Shortlist मधून काढता आली नाही.',
+        ),
+        Colors.red,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isProfileActionInFlight = false;
+      });
+      _showSnackBar(
+        shouldShortlist
+            ? 'Shortlist करता आली नाही.'
+            : 'Shortlist मधून काढता आली नाही.',
+        Colors.red,
+      );
+    }
+  }
+
+  Future<void> _confirmAndHideProfile() async {
+    if (_isProfileActionInFlight || _profile == null) return;
+
+    final confirmed = await _confirmProfileAction(
+      title: 'Hide profile?',
+      message: 'This profile will be hidden from your browse/search list.',
+      confirmLabel: 'Hide',
+    );
+    if (!mounted || !confirmed) return;
+
+    setState(() {
+      _isProfileActionInFlight = true;
+    });
+
+    try {
+      final response = await ApiClient.hideProfile(widget.profileId);
+      if (!mounted) return;
+
+      if (_responseSuccess(response)) {
+        _applyActionStateFromResponse(response, fallbackHidden: true);
+        _showSnackBar(
+          _backendMessage(response, 'Profile hidden.'),
+          Colors.green,
+        );
+        Navigator.pop(context, {
+          'profileId': widget.profileId,
+          'action': 'hidden',
+        });
+        return;
+      }
+
+      setState(() {
+        _isProfileActionInFlight = false;
+      });
+      _showSnackBar(
+        _responseErrorMessage(response, 'Profile hide करता आली नाही.'),
+        Colors.red,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isProfileActionInFlight = false;
+      });
+      _showSnackBar('Profile hide करता आली नाही.', Colors.red);
+    }
+  }
+
+  Future<void> _confirmAndBlockProfile() async {
+    if (_isProfileActionInFlight || _profile == null) return;
+
+    final confirmed = await _confirmProfileAction(
+      title: 'Block profile?',
+      message:
+          'Blocking will remove interests/shortlists between both profiles and hide this profile from you.',
+      confirmLabel: 'Block',
+      isDestructive: true,
+    );
+    if (!mounted || !confirmed) return;
+
+    setState(() {
+      _isProfileActionInFlight = true;
+    });
+
+    try {
+      final response = await ApiClient.blockProfile(widget.profileId);
+      if (!mounted) return;
+
+      if (_responseSuccess(response)) {
+        _applyActionStateFromResponse(
+          response,
+          fallbackShortlisted: false,
+          fallbackBlocked: true,
+        );
+        _showSnackBar(
+          _backendMessage(response, 'Profile blocked.'),
+          Colors.green,
+        );
+        Navigator.pop(context, {
+          'profileId': widget.profileId,
+          'action': 'blocked',
+        });
+        return;
+      }
+
+      setState(() {
+        _isProfileActionInFlight = false;
+      });
+      _showSnackBar(
+        _responseErrorMessage(response, 'Profile block करता आली नाही.'),
+        Colors.red,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isProfileActionInFlight = false;
+      });
+      _showSnackBar('Profile block करता आली नाही.', Colors.red);
+    }
+  }
+
+  Future<bool> _confirmProfileAction({
+    required String title,
+    required String message,
+    required String confirmLabel,
+    bool isDestructive = false,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: isDestructive
+                  ? ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade700,
+                      foregroundColor: Colors.white,
+                    )
+                  : null,
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(confirmLabel),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed == true;
+  }
+
+  void _applyActionStateFromResponse(
+    Map<String, dynamic> response, {
+    bool? fallbackShortlisted,
+    bool? fallbackHidden,
+    bool? fallbackBlocked,
+  }) {
+    final state = _safeMap(response['state']);
+    setState(() {
+      _isProfileActionInFlight = false;
+      _isShortlisted = _displaySafeBool(state?['shortlisted']) ??
+          fallbackShortlisted ??
+          _isShortlisted;
+      _isHidden =
+          _displaySafeBool(state?['hidden']) ?? fallbackHidden ?? _isHidden;
+      _isBlocked =
+          _displaySafeBool(state?['blocked']) ?? fallbackBlocked ?? _isBlocked;
+
+      if (state?.containsKey('shortlisted') == true ||
+          fallbackShortlisted != null) {
+        _canShortlist = !_isShortlisted && !_isBlocked;
+      }
+      if (state?.containsKey('hidden') == true || fallbackHidden != null) {
+        _canHide = !_isHidden && !_isBlocked;
+      }
+      if (state?.containsKey('blocked') == true || fallbackBlocked != null) {
+        _canBlock = !_isBlocked;
+        if (_isBlocked) {
+          _canShortlist = false;
+          _canHide = false;
+        }
+      }
+    });
+  }
+
+  bool _responseSuccess(Map<String, dynamic> response) {
+    return _responseStatusCode(response) == 200 && response['success'] == true;
+  }
+
+  int? _responseStatusCode(Map<String, dynamic> response) {
+    return _displayInt(response['statusCode']);
+  }
+
+  String _backendMessage(Map<String, dynamic> response, String fallback) {
+    return _displayString(response['message']) ?? fallback;
+  }
+
+  String _responseErrorMessage(
+    Map<String, dynamic> response,
+    String fallback,
+  ) {
+    final statusCode = _responseStatusCode(response);
+    if (statusCode == 401) return 'Auth expired. पुन्हा login करा.';
+
+    return _backendMessage(response, fallback);
   }
 
   Future<void> _copyProfileShareText() async {
@@ -920,65 +1249,59 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     _showSnackBar('Profile details copy झाले.', Colors.green);
   }
 
-  Future<void> _showReportDialog() async {
-    final reasonController = TextEditingController();
-    final reason = await showDialog<String>(
+  Future<String?> _askReportReason() {
+    return showDialog<String>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Report profile'),
-          content: TextField(
-            controller: reasonController,
-            autofocus: true,
-            minLines: 3,
-            maxLines: 5,
-            decoration: const InputDecoration(
-              hintText: 'कृपया report चे कारण लिहा',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext, reasonController.text.trim());
-              },
-              child: const Text('Submit'),
-            ),
-          ],
-        );
-      },
+      useRootNavigator: true,
+      builder: (dialogContext) => const _ReportReasonDialog(),
     );
-    reasonController.dispose();
+  }
 
-    if (reason == null) return;
-    if (!mounted) return;
-    if (reason.length < 10) {
+  Future<void> _reportProfile() async {
+    if (_isProfileActionInFlight || _profile == null) return;
+
+    final reason = await _askReportReason();
+    if (!mounted || reason == null) return;
+
+    final trimmedReason = reason.trim();
+    if (trimmedReason.length < 10) {
       _showSnackBar('Report reason किमान 10 अक्षरांचे असावे.', Colors.orange);
       return;
     }
 
+    setState(() {
+      _isProfileActionInFlight = true;
+    });
+
     try {
       final response = await ApiClient.reportProfile(
         profileId: widget.profileId,
-        reason: reason,
+        reason: trimmedReason,
       );
       if (!mounted) return;
 
-      if (response['success'] == true) {
-        _showSnackBar('Report submit झाला.', Colors.green);
-      } else {
+      setState(() {
+        _isProfileActionInFlight = false;
+      });
+
+      if (_responseSuccess(response)) {
         _showSnackBar(
-          response['message']?.toString() ?? 'Report submit करता आला नाही.',
-          Colors.red,
+          _backendMessage(response, 'Report submitted.'),
+          Colors.green,
         );
+        return;
       }
-    } catch (e) {
+
+      _showSnackBar(
+        _responseErrorMessage(response, 'Report submit करता आला नाही.'),
+        Colors.red,
+      );
+    } catch (_) {
       if (!mounted) return;
-      _showSnackBar('Report submit करता आला नाही: ${e.toString()}', Colors.red);
+      setState(() {
+        _isProfileActionInFlight = false;
+      });
+      _showSnackBar('Report submit करता आला नाही.', Colors.red);
     }
   }
 
@@ -1246,7 +1569,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    if (!mounted) return;
+
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) return;
+
+    messenger.showSnackBar(
       SnackBar(content: Text(message), backgroundColor: color),
     );
   }
@@ -1331,5 +1659,71 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
 
     return photoUrl != null ? 1 : 0;
+  }
+}
+
+class _ReportReasonDialog extends StatefulWidget {
+  const _ReportReasonDialog();
+
+  @override
+  State<_ReportReasonDialog> createState() => _ReportReasonDialogState();
+}
+
+class _ReportReasonDialogState extends State<_ReportReasonDialog> {
+  final TextEditingController _reasonController = TextEditingController();
+  String? _errorText;
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final reason = _reasonController.text.trim();
+    if (reason.length < 10) {
+      setState(() {
+        _errorText = 'Report reason किमान 10 अक्षरांचे असावे.';
+      });
+      return;
+    }
+
+    Navigator.of(context, rootNavigator: true).pop(reason);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Report profile'),
+      content: TextField(
+        controller: _reasonController,
+        autofocus: true,
+        minLines: 3,
+        maxLines: 5,
+        onChanged: (_) {
+          if (_errorText == null) return;
+          setState(() {
+            _errorText = null;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: 'कृपया report चे कारण लिहा',
+          border: const OutlineInputBorder(),
+          errorText: _errorText,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context, rootNavigator: true).pop(null);
+          },
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: _submit,
+          child: const Text('Submit'),
+        ),
+      ],
+    );
   }
 }
