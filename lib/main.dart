@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'core/app_language.dart';
+import 'core/app_storage.dart';
+import 'core/api_client.dart';
 import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
@@ -14,6 +17,7 @@ const Color _brandGold = Color(0xFFC79A3B);
 const Color _screenBackground = Color(0xFFF8F4EF);
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -25,7 +29,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
 
-      initialRoute: '/language',
+      initialRoute: '/bootstrap',
 
       navigatorObservers: [routeObserver],
 
@@ -95,6 +99,7 @@ class MyApp extends StatelessWidget {
       ),
 
       routes: {
+        '/bootstrap': (context) => const BootstrapScreen(),
         '/language': (context) => const LanguageChoiceScreen(),
         '/landing': (context) => const LandingScreen(),
         '/login': (context) => const LoginScreen(),
@@ -102,6 +107,47 @@ class MyApp extends StatelessWidget {
         '/create-profile': (context) => const CreateMatrimonyProfileScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
       },
+    );
+  }
+}
+
+class BootstrapScreen extends StatefulWidget {
+  const BootstrapScreen({super.key});
+
+  @override
+  State<BootstrapScreen> createState() => _BootstrapScreenState();
+}
+
+class _BootstrapScreenState extends State<BootstrapScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _restoreAndRoute();
+  }
+
+  Future<void> _restoreAndRoute() async {
+    final savedLanguage = await AppStorage.instance.readLanguage();
+
+    if (!mounted) return;
+
+    if (savedLanguage == null) {
+      Navigator.pushReplacementNamed(context, '/language');
+      return;
+    }
+
+    setAppLanguage(savedLanguage);
+    await ApiClient.restoreSessionFromStorage();
+
+    if (!mounted) return;
+
+    final route = ApiClient.authToken == null ? '/landing' : '/home';
+    Navigator.pushReplacementNamed(context, route);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_matrimony_android/core/app_language.dart';
+import 'package:flutter_matrimony_android/core/app_storage.dart';
 import 'package:flutter_matrimony_android/core/app_strings.dart';
 import 'package:flutter_matrimony_android/main.dart';
 
@@ -8,9 +9,11 @@ void main() {
   testWidgets('Language choice appears before landing screen', (
     WidgetTester tester,
   ) async {
+    AppStorage.instance = AppStorage.memory();
     appLanguage.value = null;
 
     await tester.pumpWidget(const MyApp());
+    await tester.pumpAndSettle();
 
     expect(find.text(AppStrings.chooseLanguage), findsOneWidget);
     expect(find.text(AppStrings.marathi), findsOneWidget);

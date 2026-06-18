@@ -96,41 +96,129 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
     final photoUrl = ApiClient.resolveProfilePhotoUrl(_profile);
     final education = ApiClient.profileEducationLabel(_profile);
-    final location = ApiClient.profileLocationLabel(_profile);
+    final location = ApiClient.profileLocationLabel(
+      _profile,
+      allowIdFallback: false,
+    );
+    final community = ApiClient.profileCommunityLabel(_profile);
 
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        _buildProfileHero(photoUrl, _profile!['full_name'], location),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            children: [
+              // प्रोफाइलची इतर माहिती दाखवण्यासाठी
+              _buildProfileDetail(AppStrings.name, _profile!['full_name']),
+              _buildProfileDetail(
+                AppStrings.dateOfBirth,
+                _profile!['date_of_birth'],
+              ),
+              _buildProfileDetail('समुदाय', community),
+              _buildProfileDetail(AppStrings.education, education),
+              _buildProfileDetail(AppStrings.location, location),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileHero(
+    String? photoUrl,
+    dynamic fullName,
+    String? location,
+  ) {
+    final heroHeight = (MediaQuery.of(context).size.height * 0.52)
+        .clamp(360.0, 520.0)
+        .toDouble();
+    final name = ApiClient.safeDisplayLabel(fullName);
+    final title = name != null && name.isNotEmpty
+        ? name.toUpperCase()
+        : AppStrings.noInformation;
+
+    return SizedBox(
+      width: double.infinity,
+      height: heroHeight,
+      child: Stack(
+        fit: StackFit.expand,
         children: [
-          // युझरचा फोटो दाखवण्यासाठी
-          Center(
-            child: CircleAvatar(
-              radius: 80,
-              backgroundColor: Colors.grey.shade300,
-              backgroundImage: (photoUrl != null) ? NetworkImage(photoUrl) : null,
-              child: (photoUrl == null)
-                  ? const Icon(Icons.person, size: 80, color: Colors.grey)
-                  : null,
+          if (photoUrl != null)
+            Image.network(
+              photoUrl,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              errorBuilder: (context, error, stackTrace) {
+                return _buildProfileHeroFallback();
+              },
+            )
+          else
+            _buildProfileHeroFallback(),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.05),
+                  Colors.black.withValues(alpha: 0.72),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 24),
-
-          // प्रोफाइलची इतर माहिती दाखवण्यासाठी
-          _buildProfileDetail(AppStrings.name, _profile!['full_name']),
-          _buildProfileDetail(
-            AppStrings.dateOfBirth,
-            _profile!['date_of_birth'],
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: 24,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    height: 1.1,
+                  ),
+                ),
+                if (location != null && location.trim().isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    location,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
-          _buildProfileDetail(AppStrings.caste, _profile!['caste']),
-          _buildProfileDetail(AppStrings.education, education),
-          _buildProfileDetail(AppStrings.location, location),
         ],
       ),
     );
   }
 
+  Widget _buildProfileHeroFallback() {
+    return Container(
+      color: Colors.grey.shade300,
+      alignment: Alignment.center,
+      child: Icon(Icons.person, size: 132, color: Colors.grey.shade600),
+    );
+  }
+
   // माहिती सुंदर पद्धतीने दाखवण्यासाठी एक मदतनीस विजेट
   Widget _buildProfileDetail(String label, dynamic value) {
+    final displayValue = ApiClient.safeDisplayLabel(value);
+    if (displayValue == null || displayValue.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
@@ -144,7 +232,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             ),
             Expanded(
               child: Text(
-                value?.toString() ?? AppStrings.noInformation,
+                displayValue,
                 style: const TextStyle(fontSize: 16),
               ),
             ),

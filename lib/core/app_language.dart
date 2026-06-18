@@ -18,6 +18,21 @@ void setAppLanguage(AppLanguage language) {
   appLanguage.value = language;
 }
 
+String appLanguageCode(AppLanguage language) {
+  return language == AppLanguage.marathi ? 'mr' : 'en';
+}
+
+AppLanguage? appLanguageFromCode(String? code) {
+  switch (code) {
+    case 'mr':
+      return AppLanguage.marathi;
+    case 'en':
+      return AppLanguage.english;
+  }
+
+  return null;
+}
+
 String? localizedMapValue(Map<String, dynamic>? row) {
   if (row == null) return null;
 

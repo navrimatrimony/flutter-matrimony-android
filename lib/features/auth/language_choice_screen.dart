@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_language.dart';
+import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
 
 class LanguageChoiceScreen extends StatelessWidget {
   const LanguageChoiceScreen({super.key});
 
-  void _selectLanguage(BuildContext context, AppLanguage language) {
+  Future<void> _selectLanguage(
+    BuildContext context,
+    AppLanguage language,
+  ) async {
     setAppLanguage(language);
+    await AppStorage.instance.saveLanguage(language);
+
+    if (!context.mounted) return;
+
     Navigator.pushReplacementNamed(context, '/landing');
   }
 

@@ -28,7 +28,6 @@ class _CreateMatrimonyProfileScreenState
   bool _religionsLoading = false;
   bool _castesLoading = false;
   bool _subCasteSearching = false;
-  bool _educationSearching = false;
   bool _locationSearching = false;
 
   int? _selectedReligionId;
@@ -42,7 +41,6 @@ class _CreateMatrimonyProfileScreenState
   String? _selectedLocationLabel;
 
   int _subCasteSearchRequest = 0;
-  int _educationSearchRequest = 0;
   int _locationSearchRequest = 0;
 
   List<Map<String, dynamic>> _religions = <Map<String, dynamic>>[];
@@ -50,7 +48,6 @@ class _CreateMatrimonyProfileScreenState
   List<Map<String, dynamic>> _castes = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _casteSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _subCasteSuggestions = <Map<String, dynamic>>[];
-  List<Map<String, dynamic>> _educationSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
   final List<String> _selectedEducations = <String>[];
 
@@ -88,8 +85,7 @@ class _CreateMatrimonyProfileScreenState
       if (value != null && value.isNotEmpty) return value;
     }
 
-    final id = _readInt(row['id']);
-    return id != null ? '$fallbackPrefix ID: $id' : fallbackPrefix;
+    return fallbackPrefix;
   }
 
   List<Map<String, dynamic>> _filterOptions(
@@ -112,14 +108,6 @@ class _CreateMatrimonyProfileScreenState
         .toList();
   }
 
-  String? _firstText(Map<String, dynamic> profile, List<String> keys) {
-    for (final key in keys) {
-      final value = profile[key]?.toString().trim();
-      if (value != null && value.isNotEmpty) return value;
-    }
-    return null;
-  }
-
   List<String> _splitEducationText(String value) {
     final trimmedValue = value.trim();
     if (trimmedValue.isEmpty) return <String>[];
@@ -131,33 +119,6 @@ class _CreateMatrimonyProfileScreenState
         .toList();
 
     return parts.length > 1 ? parts : <String>[];
-  }
-
-  bool _hasEducationChip(String label) {
-    final normalizedLabel = label.trim().toLowerCase();
-    return _selectedEducations.any(
-      (item) => item.trim().toLowerCase() == normalizedLabel,
-    );
-  }
-
-  void _addEducationChip(String value) {
-    final label = value.trim();
-
-    setState(() {
-      if (label.isNotEmpty && !_hasEducationChip(label)) {
-        _selectedEducations.add(label);
-      }
-      _educationController.clear();
-      _educationSuggestions = <Map<String, dynamic>>[];
-      _educationSearching = false;
-    });
-  }
-
-  bool get _canAddTypedEducation => _educationController.text.trim().isNotEmpty;
-
-  void _addTypedEducation() {
-    _addEducationChip(_educationController.text);
-    FocusScope.of(context).unfocus();
   }
 
   void _removeEducationChip(String value) {
@@ -172,6 +133,20 @@ class _CreateMatrimonyProfileScreenState
     }
 
     return _educationController.text.trim();
+  }
+
+  String _educationDisplayText() {
+    if (_selectedEducations.isNotEmpty) {
+      final summary = _selectedEducations.join(', ');
+      return _selectedEducations.length == 1
+          ? summary
+          : '${_selectedEducations.length} selected: $summary';
+    }
+
+    final typedText = _educationController.text.trim();
+    if (typedText.isNotEmpty) return typedText;
+
+    return 'Search and add education';
   }
 
   void _prefillExistingProfile() {
@@ -196,40 +171,40 @@ class _CreateMatrimonyProfileScreenState
     _selectedSubCasteId = _readInt(profile['sub_caste_id']);
 
     if (_selectedReligionId != null) {
-      _selectedReligionLabel =
-          _firstText(profile, ['religion_label', 'religion_name']) ??
-          'Selected religion ID: $_selectedReligionId';
-      _religionController.text = _selectedReligionLabel ?? '';
+      _selectedReligionLabel = ApiClient.profileReligionLabel(profile);
+      if (_selectedReligionLabel != null) {
+        _religionController.text = _selectedReligionLabel ?? '';
+      }
     }
 
     if (_selectedCasteId != null) {
-      _selectedCasteLabel =
-          _firstText(profile, ['caste_label', 'caste_name', 'caste']) ??
-          'Selected caste ID: $_selectedCasteId';
-      _casteController.text = _selectedCasteLabel ?? '';
+      _selectedCasteLabel = ApiClient.profileCasteLabel(profile);
+      if (_selectedCasteLabel != null) {
+        _casteController.text = _selectedCasteLabel ?? '';
+      }
     } else {
-      final casteText = profile['caste']?.toString().trim();
+      final casteText = ApiClient.safeDisplayLabel(profile['caste']);
       if (casteText != null && casteText.isNotEmpty) {
         _casteController.text = casteText;
       }
     }
 
     if (_selectedSubCasteId != null) {
-      _selectedSubCasteLabel =
-          _firstText(profile, ['sub_caste_label', 'subcaste_label']) ??
-          'Selected sub-caste ID: $_selectedSubCasteId';
-      _subCasteController.text = _selectedSubCasteLabel ?? '';
+      _selectedSubCasteLabel = ApiClient.profileSubCasteLabel(profile);
+      if (_selectedSubCasteLabel != null) {
+        _subCasteController.text = _selectedSubCasteLabel ?? '';
+      }
     }
 
     _selectedLocationId = _readInt(profile['location_id']);
 
-    final locationLabel = ApiClient.profileLocationLabel(profile);
+    final locationLabel = ApiClient.profileLocationLabel(
+      profile,
+      allowIdFallback: false,
+    );
     if (locationLabel != null) {
       _selectedLocationLabel = locationLabel;
       _locationController.text = locationLabel;
-    } else if (_selectedLocationId != null) {
-      _selectedLocationLabel = 'Location ID: $_selectedLocationId';
-      _locationController.text = _selectedLocationLabel ?? '';
     }
   }
 
@@ -238,7 +213,17 @@ class _CreateMatrimonyProfileScreenState
       _religionsLoading = true;
     });
 
-    final results = await ApiClient.getReligions();
+    List<Map<String, dynamic>> results;
+    try {
+      results = await ApiClient.getReligions();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _religionsLoading = false;
+      });
+      _showMessage('Religion list load करता आली नाही.');
+      return;
+    }
     if (!mounted) return;
 
     setState(() {
@@ -270,7 +255,17 @@ class _CreateMatrimonyProfileScreenState
       _casteSuggestions = <Map<String, dynamic>>[];
     });
 
-    final results = await ApiClient.getCastes(religionId: religionId);
+    List<Map<String, dynamic>> results;
+    try {
+      results = await ApiClient.getCastes(religionId: religionId);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _castesLoading = false;
+      });
+      _showMessage('Caste list load करता आली नाही.');
+      return;
+    }
     if (!mounted) return;
 
     setState(() {
@@ -387,10 +382,21 @@ class _CreateMatrimonyProfileScreenState
       _subCasteSearching = true;
     });
 
-    final results = await ApiClient.searchSubCastes(
-      casteId: casteId,
-      query: trimmedQuery,
-    );
+    List<Map<String, dynamic>> results;
+    try {
+      results = await ApiClient.searchSubCastes(
+        casteId: casteId,
+        query: trimmedQuery,
+      );
+    } catch (_) {
+      if (!mounted || requestId != _subCasteSearchRequest) return;
+      setState(() {
+        _subCasteSearching = false;
+        _subCasteSuggestions = <Map<String, dynamic>>[];
+      });
+      _showMessage('Sub-caste search करता आली नाही.');
+      return;
+    }
     if (!mounted || requestId != _subCasteSearchRequest) return;
 
     setState(() {
@@ -411,37 +417,6 @@ class _CreateMatrimonyProfileScreenState
       _subCasteSuggestions = <Map<String, dynamic>>[];
       _subCasteSearching = false;
     });
-    FocusScope.of(context).unfocus();
-  }
-
-  Future<void> _searchEducation(String query) async {
-    final requestId = ++_educationSearchRequest;
-    final trimmedQuery = query.trim();
-
-    if (trimmedQuery.length < 2) {
-      setState(() {
-        _educationSearching = false;
-        _educationSuggestions = <Map<String, dynamic>>[];
-      });
-      return;
-    }
-
-    setState(() {
-      _educationSearching = true;
-    });
-
-    final results = await ApiClient.searchEducationDegrees(trimmedQuery);
-    if (!mounted || requestId != _educationSearchRequest) return;
-
-    setState(() {
-      _educationSuggestions = results;
-      _educationSearching = false;
-    });
-  }
-
-  void _selectEducation(Map<String, dynamic> education) {
-    final label = _optionLabel(education, 'Education');
-    _addEducationChip(label);
     FocusScope.of(context).unfocus();
   }
 
@@ -467,7 +442,18 @@ class _CreateMatrimonyProfileScreenState
       _locationSearching = true;
     });
 
-    final results = await ApiClient.searchLocations(trimmedQuery);
+    List<Map<String, dynamic>> results;
+    try {
+      results = await ApiClient.searchLocations(trimmedQuery);
+    } catch (_) {
+      if (!mounted || requestId != _locationSearchRequest) return;
+      setState(() {
+        _locationSearching = false;
+        _locationSuggestions = <Map<String, dynamic>>[];
+      });
+      _showMessage('Location search करता आली नाही.');
+      return;
+    }
     if (!mounted || requestId != _locationSearchRequest) return;
 
     setState(() {
@@ -540,9 +526,19 @@ class _CreateMatrimonyProfileScreenState
       payload['sub_caste_id'] = _selectedSubCasteId;
     }
 
-    final response = widget.existingProfile == null
-        ? await ApiClient.createMatrimonyProfile(payload)
-        : await ApiClient.updateMatrimonyProfile(payload);
+    Map<String, dynamic> response;
+    try {
+      response = widget.existingProfile == null
+          ? await ApiClient.createMatrimonyProfile(payload)
+          : await ApiClient.updateMatrimonyProfile(payload);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+      });
+      _showMessage('Profile save करता आली नाही. कृपया पुन्हा प्रयत्न करा.');
+      return;
+    }
 
     if (!mounted) return;
 
@@ -561,10 +557,14 @@ class _CreateMatrimonyProfileScreenState
           duration: const Duration(seconds: 2),
         ),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const PhotoUploadScreen()),
-      );
+      if (isCreate) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const PhotoUploadScreen()),
+        );
+      } else {
+        Navigator.pushReplacementNamed(context, '/view-profile');
+      }
     } else {
       _showMessage(response['message']?.toString() ?? 'Profile save failed');
     }
@@ -613,14 +613,18 @@ class _CreateMatrimonyProfileScreenState
     );
   }
 
-  Widget _buildEducationChips() {
+  Widget _buildEducationChips({VoidCallback? onChanged}) {
     if (_selectedEducations.isEmpty) {
+      if (_educationController.text.trim().isNotEmpty) {
+        return const SizedBox.shrink();
+      }
+
       return const Padding(
         padding: EdgeInsets.only(top: 8),
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            'Select suggestions or add typed education.',
+            'Search suggestions or add typed education.',
             style: TextStyle(color: Colors.grey, fontSize: 12),
           ),
         ),
@@ -629,103 +633,51 @@ class _CreateMatrimonyProfileScreenState
 
     return Padding(
       padding: const EdgeInsets.only(top: 8),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.blue.shade50,
-          border: Border.all(color: Colors.blue.shade100),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Selected education (${_selectedEducations.length})',
-              style: TextStyle(
-                color: Colors.blue.shade800,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              children: _selectedEducations.map((education) {
-                return InputChip(
-                  label: Text(education),
-                  deleteIcon: const Icon(Icons.close, size: 18),
-                  onDeleted: () => _removeEducationChip(education),
-                  backgroundColor: Colors.white,
-                  side: BorderSide(color: Colors.blue.shade200),
-                );
-              }).toList(),
-            ),
-          ],
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: _selectedEducations.map((education) {
+            return InputChip(
+              label: Text(education),
+              deleteIcon: const Icon(Icons.close, size: 18),
+              onDeleted: () {
+                _removeEducationChip(education);
+                onChanged?.call();
+              },
+              backgroundColor: Colors.blue.shade50,
+              side: BorderSide(color: Colors.blue.shade200),
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  Widget _buildEducationSuggestions() {
-    final query = _educationController.text.trim();
-
-    if (_educationSearching) {
-      return const Padding(
-        padding: EdgeInsets.only(top: 8),
-        child: LinearProgressIndicator(),
-      );
-    }
-
-    if (_educationSuggestions.isEmpty) {
-      if (query.length < 2) return const SizedBox.shrink();
-
-      return Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'No suggestion found. Tap + to add "$query".',
-            style: TextStyle(color: Colors.grey.shade700),
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      constraints: const BoxConstraints(maxHeight: 220),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: _educationSuggestions.length,
-        separatorBuilder: (context, index) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final education = _educationSuggestions[index];
-          final label = _optionLabel(education, 'Education');
-          final alreadySelected = _hasEducationChip(label);
-
-          return ListTile(
-            dense: true,
-            leading: Icon(
-              alreadySelected ? Icons.check_circle : Icons.school_outlined,
-              color: alreadySelected ? Colors.green : null,
-            ),
-            title: Text(label),
-            trailing: alreadySelected ? const Text('Added') : null,
-            onTap: alreadySelected ? null : () => _selectEducation(education),
-          );
-        },
-      ),
+  Future<void> _openEducationPicker() async {
+    final result = await showModalBottomSheet<_EducationPickerResult>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        return _EducationPickerSheet(
+          initialSelected: _selectedEducations,
+          initialText: _educationController.text,
+        );
+      },
     );
+
+    if (!mounted || result == null) return;
+
+    setState(() {
+      _selectedEducations
+        ..clear()
+        ..addAll(result.selected);
+      _educationController.text =
+          result.selected.isEmpty ? result.typedText : '';
+    });
+    FocusScope.of(context).unfocus();
   }
 
   Widget _buildLocationSuggestions() {
@@ -868,21 +820,30 @@ class _CreateMatrimonyProfileScreenState
               loading: _subCasteSearching,
             ),
             const SizedBox(height: 12),
-            TextField(
-              controller: _educationController,
-              decoration: InputDecoration(
-                labelText: 'Education',
-                suffixIcon: IconButton(
-                  tooltip: 'Add education',
-                  icon: const Icon(Icons.add),
-                  onPressed: _canAddTypedEducation ? _addTypedEducation : null,
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: _openEducationPicker,
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Education',
+                  suffixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                ),
+                child: Text(
+                  _educationDisplayText(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color:
+                        _selectedEducations.isEmpty &&
+                            _educationController.text.trim().isEmpty
+                        ? Colors.grey.shade700
+                        : null,
+                  ),
                 ),
               ),
-              onChanged: _searchEducation,
-              onSubmitted: (_) => _addTypedEducation(),
             ),
             _buildEducationChips(),
-            _buildEducationSuggestions(),
             const SizedBox(height: 12),
             TextField(
               controller: _locationController,
@@ -908,6 +869,284 @@ class _CreateMatrimonyProfileScreenState
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EducationPickerResult {
+  final List<String> selected;
+  final String typedText;
+
+  const _EducationPickerResult({
+    required this.selected,
+    required this.typedText,
+  });
+}
+
+class _EducationPickerSheet extends StatefulWidget {
+  final List<String> initialSelected;
+  final String initialText;
+
+  const _EducationPickerSheet({
+    required this.initialSelected,
+    required this.initialText,
+  });
+
+  @override
+  State<_EducationPickerSheet> createState() => _EducationPickerSheetState();
+}
+
+class _EducationPickerSheetState extends State<_EducationPickerSheet> {
+  late final TextEditingController _searchController;
+  late final List<String> _selected;
+  List<Map<String, dynamic>> _suggestions = <Map<String, dynamic>>[];
+  bool _searching = false;
+  int _searchRequest = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController(text: widget.initialText);
+    _selected = List<String>.from(widget.initialSelected);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  bool _hasEducationChip(String label) {
+    final normalizedLabel = label.trim().toLowerCase();
+    return _selected.any(
+      (item) => item.trim().toLowerCase() == normalizedLabel,
+    );
+  }
+
+  bool _canAddEducationLabel(String value) {
+    final label = value.trim();
+    return label.isNotEmpty && !_hasEducationChip(label);
+  }
+
+  void _addEducation(String value) {
+    final label = value.trim();
+    if (!_canAddEducationLabel(label)) return;
+
+    setState(() {
+      _selected.add(label);
+      _searchController.clear();
+      _suggestions = <Map<String, dynamic>>[];
+      _searching = false;
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  void _removeEducation(String value) {
+    setState(() {
+      _selected.remove(value);
+    });
+  }
+
+  Future<void> _searchEducation(String query) async {
+    final currentRequest = ++_searchRequest;
+    final trimmedQuery = query.trim();
+
+    if (trimmedQuery.length < 2) {
+      if (!mounted) return;
+      setState(() {
+        _searching = false;
+        _suggestions = <Map<String, dynamic>>[];
+      });
+      return;
+    }
+
+    setState(() {
+      _searching = true;
+    });
+
+    List<Map<String, dynamic>> results;
+    try {
+      results = await ApiClient.searchEducationDegrees(trimmedQuery);
+    } catch (_) {
+      if (!mounted || currentRequest != _searchRequest) return;
+      setState(() {
+        _suggestions = <Map<String, dynamic>>[];
+        _searching = false;
+      });
+      return;
+    }
+    if (!mounted || currentRequest != _searchRequest) return;
+
+    setState(() {
+      _suggestions = results;
+      _searching = false;
+    });
+  }
+
+  void _finish() {
+    Navigator.pop(
+      context,
+      _EducationPickerResult(
+        selected: List<String>.from(_selected),
+        typedText: _searchController.text.trim(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final query = _searchController.text.trim();
+    final canAddTyped = _canAddEducationLabel(query);
+
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height * 0.82,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Select education',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _finish,
+                    child: const Text('Done'),
+                  ),
+                  IconButton(
+                    tooltip: 'Close',
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: 'Search education',
+                  hintText: 'Type degree or education',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    tooltip: 'Add typed education',
+                    icon: const Icon(Icons.add),
+                    onPressed: canAddTyped
+                        ? () => _addEducation(_searchController.text)
+                        : null,
+                  ),
+                ),
+                onChanged: _searchEducation,
+                onSubmitted: _addEducation,
+              ),
+              _buildSelectedChips(),
+              const SizedBox(height: 12),
+              if (_searching) const LinearProgressIndicator(),
+              if (_searching) const SizedBox(height: 8),
+              Expanded(child: _buildResults(query, canAddTyped)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectedChips() {
+    if (_selected.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: Text(
+          'Search suggestions or add typed education.',
+          style: TextStyle(color: Colors.grey, fontSize: 12),
+        ),
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          children: _selected.map((education) {
+            return InputChip(
+              label: Text(education),
+              deleteIcon: const Icon(Icons.close, size: 18),
+              onDeleted: () => _removeEducation(education),
+              backgroundColor: Colors.blue.shade50,
+              side: BorderSide(color: Colors.blue.shade200),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResults(String query, bool canAddTyped) {
+    if (query.length < 2) {
+      return Center(
+        child: Text(
+          'Type at least 2 letters to search.',
+          style: TextStyle(color: Colors.grey.shade700),
+        ),
+      );
+    }
+
+    if (_suggestions.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'No suggestion found.',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: canAddTyped
+                  ? () => _addEducation(_searchController.text)
+                  : null,
+              icon: const Icon(Icons.add),
+              label: Text('Add "$query"'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.separated(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      itemCount: _suggestions.length,
+      separatorBuilder: (context, index) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        final education = _suggestions[index];
+        final label = ApiClient.safeDisplayLabel(education) ?? 'Education';
+        final alreadySelected = _hasEducationChip(label);
+
+        return ListTile(
+          leading: Icon(
+            alreadySelected ? Icons.check_circle : Icons.school_outlined,
+            color: alreadySelected ? Colors.green : null,
+          ),
+          title: Text(label),
+          trailing: alreadySelected ? const Text('Added') : null,
+          onTap: alreadySelected ? null : () => _addEducation(label),
+        );
+      },
     );
   }
 }

@@ -175,6 +175,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         title: Text(AppStrings.browseProfiles),
         automaticallyImplyLeading: true,
       ),
+      backgroundColor: const Color(0xFFFAF7F5),
       body: Column(
         children: [
           // ========================================
@@ -193,70 +194,85 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   // Build Search/Filter UI form (SSOT v2.5)
   Widget _buildSearchFilterUI() {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: Colors.grey.shade300),
+          bottom: BorderSide(color: Colors.grey.shade200),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Age From
-          TextField(
-            controller: _ageFromController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              hintText: 'Age From',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _ageFromController,
+                  keyboardType: TextInputType.number,
+                  decoration: _filterDecoration('Age From'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: TextField(
+                  controller: _ageToController,
+                  keyboardType: TextInputType.number,
+                  decoration: _filterDecoration('Age To'),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          // Age To
-          TextField(
-            controller: _ageToController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              hintText: 'Age To',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Caste
+          const SizedBox(height: 10),
           TextField(
             controller: _casteController,
-            decoration: const InputDecoration(
-              hintText: 'Caste',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
+            decoration: _filterDecoration('Caste'),
           ),
-          const SizedBox(height: 12),
-          // Location
+          const SizedBox(height: 10),
           TextField(
             controller: _locationController,
-            decoration: const InputDecoration(
-              hintText: 'Location',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            ),
+            decoration: _filterDecoration('Location'),
             onChanged: _searchLocations,
           ),
           _buildLocationSuggestions(),
-          const SizedBox(height: 16),
-          // Search Button
-          ElevatedButton(
+          const SizedBox(height: 14),
+          ElevatedButton.icon(
             onPressed: _handleSearch,
+            icon: const Icon(Icons.search),
+            label: const Text('Search'),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              textStyle: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-            child: const Text('Search'),
           ),
         ],
       ),
+    );
+  }
+
+  InputDecoration _filterDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      fillColor: const Color(0xFFFCFBFA),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade300),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
     );
   }
 
@@ -389,18 +405,39 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       onRefresh: _fetchProfileList,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
         itemCount: _profiles.length,
         itemBuilder: (context, index) {
           final profile = _profiles[index] as Map<String, dynamic>;
           final photoUrl = ApiClient.resolveProfilePhotoUrl(profile);
           final age = _calculateAge(profile['date_of_birth']?.toString());
-          final location = ApiClient.profileLocationLabel(profile);
+          final name = ApiClient.safeDisplayLabel(profile['full_name']) ??
+              ApiClient.safeDisplayLabel(profile['name']) ??
+              'नाव उपलब्ध नाही';
+          final community = ApiClient.profileCommunityLabel(profile);
+          final education = ApiClient.profileEducationLabel(profile);
+          final location = ApiClient.profileLocationLabel(
+            profile,
+            allowIdFallback: false,
+          );
+          final nameLine = age != null ? '$name, $age वर्षे' : name;
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 2,
+          return Container(
+            margin: const EdgeInsets.only(bottom: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF1F2),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFFF3D9DE)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 14,
+                  offset: const Offset(0, 7),
+                ),
+              ],
+            ),
             child: InkWell(
+              borderRadius: BorderRadius.circular(14),
               onTap: () {
                 final profileId = profile['id'] as int?;
                 if (profileId != null) {
@@ -413,57 +450,31 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
                 }
               },
               child: Padding(
-                padding: const EdgeInsets.all(12.0),
+                padding: const EdgeInsets.all(12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Profile Photo
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.grey.shade300,
-                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                      child: photoUrl == null
-                          ? const Icon(Icons.person, size: 40, color: Colors.grey)
-                          : null,
-                    ),
-                    const SizedBox(width: 16),
-                    // Profile Info
+                    _buildProfileThumb(photoUrl),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            profile['full_name']?.toString() ?? 'नाव उपलब्ध नाही',
+                            nameLine,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
+                              color: Colors.black87,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          if (profile['caste'] != null && profile['caste'].toString().isNotEmpty)
-                            Text(
-                              'जात: ${profile['caste']}',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
+                          if (community != null) _buildProfileLine(community),
+                          if (education != null) _buildProfileLine(education),
                           if (location != null)
-                            Text(
-                              'ठिकाण: $location',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
-                          if (age != null)
-                            Text(
-                              'वय: $age वर्षे',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey.shade700,
-                              ),
-                            ),
+                            _buildProfileLine(location, icon: Icons.place),
                         ],
                       ),
                     ),
@@ -474,6 +485,54 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildProfileThumb(String? photoUrl) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: Container(
+        width: 86,
+        height: 108,
+        color: Colors.grey.shade300,
+        child: photoUrl != null
+            ? Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(Icons.person, size: 42, color: Colors.grey);
+                },
+              )
+            : const Icon(Icons.person, size: 42, color: Colors.grey),
+      ),
+    );
+  }
+
+  Widget _buildProfileLine(String text, {IconData? icon}) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 3),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 15, color: Colors.grey.shade700),
+            const SizedBox(width: 4),
+          ],
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade800,
+                height: 1.25,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

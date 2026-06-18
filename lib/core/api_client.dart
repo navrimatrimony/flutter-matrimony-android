@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import 'app_language.dart';
+import 'app_storage.dart';
 import 'api_routes.dart';
 
 class ApiClient {
@@ -11,8 +12,8 @@ class ApiClient {
   static Map<String, dynamic>? currentUserProfile;
   static Set<int> sentInterestProfileIds = {};
 
-  static const String _profilePhotoBaseUrl =
-      'https://freelovemarriage.com/storage/matrimony_photos';
+  static const String _siteBaseUrl = 'https://navrimilenavryala.com';
+  static const String _profilePhotoStoragePath = 'storage/matrimony_photos';
 
   static Map<String, dynamic> _decodeResponse(http.Response response) {
     Map<String, dynamic> data;
@@ -72,6 +73,68 @@ class ApiClient {
     return int.tryParse(value?.toString() ?? '');
   }
 
+  static bool? _boolValue(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    final normalized = value?.toString().trim().toLowerCase();
+    if (normalized == null || normalized.isEmpty) return null;
+    if (['1', 'true', 'yes', 'approved'].contains(normalized)) return true;
+    if (['0', 'false', 'no', 'rejected', 'pending'].contains(normalized)) {
+      return false;
+    }
+
+    return null;
+  }
+
+  static String? safeDisplayLabel(
+    dynamic value, {
+    bool allowIdFallback = false,
+    String idPrefix = 'ID',
+  }) {
+    if (value == null) return null;
+
+    if (value is Map) {
+      final row = Map<String, dynamic>.from(value);
+      final localizedLabel = localizedMapValue(row);
+      if (localizedLabel != null) return localizedLabel;
+
+      final label = _firstNonEmptyValue(row, const [
+        'label_mr',
+        'label',
+        'label_en',
+        'name',
+        'title',
+        'display_label',
+        'location_label',
+        'key',
+      ]);
+      if (label != null) return label;
+
+      final id = _intValue(row['id'] ?? row['location_id']);
+      return allowIdFallback && id != null ? '$idPrefix: $id' : null;
+    }
+
+    if (value is List) {
+      final labels = value
+          .map((item) => safeDisplayLabel(item))
+          .whereType<String>()
+          .where((label) => label.trim().isNotEmpty)
+          .toList();
+      return labels.isNotEmpty ? labels.join(' • ') : null;
+    }
+
+    final text = value.toString().trim();
+    if (text.isEmpty) return null;
+    if (text.startsWith('{') || text.startsWith('[')) return null;
+    if (!allowIdFallback && RegExp(r'^\d+$').hasMatch(text)) return null;
+    if (!allowIdFallback && text.toLowerCase().startsWith('location id:')) {
+      return null;
+    }
+
+    return text;
+  }
+
   static int? locationIdFrom(Map<String, dynamic> location) {
     for (final key in ['location_id', 'id', 'city_id']) {
       final id = _intValue(location[key]);
@@ -97,59 +160,334 @@ class ApiClient {
   }
 
   static String? profileEducationLabel(Map<String, dynamic>? profile) {
-    return _firstNonEmptyValue(profile, ['highest_education', 'education']);
+    if (profile == null) return null;
+    for (final key in ['highest_education', 'education']) {
+      final label = safeDisplayLabel(profile[key]);
+      if (label != null) return label;
+    }
+    return null;
   }
 
-  static String? profileLocationLabel(Map<String, dynamic>? profile) {
-    final localizedLabel = localizedMapValue(profile);
-    if (localizedLabel != null) return localizedLabel;
+  static String? profileReligionLabel(Map<String, dynamic>? profile) {
+    if (profile == null) return null;
+    for (final key in ['religion', 'religion_label', 'religion_name']) {
+      final label = safeDisplayLabel(profile[key]);
+      if (label != null) return label;
+    }
+    return null;
+  }
 
-    final label = _firstNonEmptyValue(profile, [
+  static String? profileCasteLabel(Map<String, dynamic>? profile) {
+    if (profile == null) return null;
+    for (final key in ['caste', 'caste_label', 'caste_name']) {
+      final label = safeDisplayLabel(profile[key]);
+      if (label != null) return label;
+    }
+    return null;
+  }
+
+  static String? profileSubCasteLabel(Map<String, dynamic>? profile) {
+    if (profile == null) return null;
+    for (final key in [
+      'sub_caste',
+      'sub_caste_label',
+      'sub_caste_name',
+      'subcaste_label',
+      'subcaste_name',
+    ]) {
+      final label = safeDisplayLabel(profile[key]);
+      if (label != null) return label;
+    }
+    return null;
+  }
+
+  static String? profileCommunityLabel(Map<String, dynamic>? profile) {
+    final parts = <String>[
+      if (profileReligionLabel(profile) != null) profileReligionLabel(profile)!,
+      if (profileCasteLabel(profile) != null) profileCasteLabel(profile)!,
+      if (profileSubCasteLabel(profile) != null)
+        profileSubCasteLabel(profile)!,
+    ];
+    return parts.isNotEmpty ? parts.join(' • ') : null;
+  }
+
+  static String? profileOccupationLabel(Map<String, dynamic>? profile) {
+    if (profile == null) return null;
+    for (final key in [
+      'occupation',
+      'occupation_title',
+      'occupation_label',
+      'occupation_name',
+      'profession',
+      'profession_label',
+    ]) {
+      final label = safeDisplayLabel(profile[key]);
+      if (label != null) return label;
+    }
+    return null;
+  }
+
+  static String? profileHeightLabel(Map<String, dynamic>? profile) {
+    if (profile == null) return null;
+
+    final storedLabel = safeDisplayLabel(profile['height_label']) ??
+        safeDisplayLabel(profile['height_text']) ??
+        safeDisplayLabel(profile['height']);
+    if (storedLabel != null) return storedLabel;
+
+    final cm = _intValue(profile['height_cm'] ?? profile['height']);
+    if (cm == null || cm <= 0) return null;
+
+    final totalInches = (cm / 2.54).round();
+    final feet = totalInches ~/ 12;
+    final inches = totalInches % 12;
+    if (feet <= 0) return '$cm cm';
+
+    return "$feet' $inches\"";
+  }
+
+  static String? profileLocationLabel(
+    Map<String, dynamic>? profile, {
+    bool allowIdFallback = true,
+  }) {
+    if (profile == null) return null;
+
+    for (final key in [
+      'location',
       'location_label',
       'display_label',
-      'name',
-    ]);
-    if (label != null) return label;
+      'current_location',
+      'city',
+      'city_name',
+      'residence_location',
+      'address_line',
+    ]) {
+      final label = safeDisplayLabel(profile[key]);
+      if (label != null) return label;
+    }
 
-    final id = _intValue(profile?['location_id']);
-    return id != null ? 'Location ID: $id' : null;
+    final id = _intValue(profile['location_id']);
+    return allowIdFallback && id != null ? 'Location ID: $id' : null;
   }
 
   static String? resolveProfilePhotoUrl(Map<String, dynamic>? profile) {
     if (profile == null) return null;
 
-    for (final key in ['profile_photo_url', 'url', 'photo_url']) {
-      final value = profile[key]?.toString().trim();
-      if (value != null && value.isNotEmpty) {
-        return value;
+    final directPhotoUrl = _resolvePhotoValueFromMap(profile, const [
+      'profile_photo_url',
+      'photo_url',
+      'image_url',
+      'avatar_url',
+    ]);
+    if (directPhotoUrl != null) return directPhotoUrl;
+
+    final listPhotoUrl = _resolveBestPhotoFromLists(profile);
+    if (listPhotoUrl != null) return listPhotoUrl;
+
+    final profilePhotoUrl = _resolvePhotoValueFromMap(profile, const [
+      'profile_photo',
+    ]);
+    if (profilePhotoUrl != null) return profilePhotoUrl;
+
+    return _resolvePhotoValueFromMap(profile, const ['url', 'path']);
+  }
+
+  static String? _resolvePhotoValueFromMap(
+    Map<String, dynamic> data,
+    List<String> keys, {
+    bool respectApproval = true,
+  }) {
+    if (respectApproval && !_photoMapAllowsDisplay(data)) return null;
+
+    for (final key in keys) {
+      final url = _resolvePhotoValue(data[key]);
+      if (url != null) return url;
+    }
+
+    return null;
+  }
+
+  static String? _resolveBestPhotoFromLists(Map<String, dynamic> profile) {
+    final candidates = <({int score, String url})>[];
+
+    for (final key in ['photos', 'profile_photos']) {
+      final rawList = profile[key];
+      if (rawList is List) {
+        for (final item in rawList) {
+          if (item is Map) {
+            final row = Map<String, dynamic>.from(item);
+            final score = _photoMapScore(row);
+            if (score < 0) continue;
+
+            final url = _resolvePhotoValueFromMap(
+              row,
+              const [
+                'profile_photo_url',
+                'photo_url',
+                'image_url',
+                'avatar_url',
+                'url',
+                'path',
+                'file_path',
+                'profile_photo',
+              ],
+              respectApproval: false,
+            );
+            if (url != null) {
+              candidates.add((score: score, url: url));
+            }
+          } else {
+            final url = _resolvePhotoValue(item);
+            if (url != null) {
+              candidates.add((score: 0, url: url));
+            }
+          }
+        }
+        continue;
+      }
+
+      final rows = _safeMapList(rawList);
+      for (final row in rows) {
+        final score = _photoMapScore(row);
+        if (score < 0) continue;
+
+        final url = _resolvePhotoValueFromMap(
+          row,
+          const [
+            'profile_photo_url',
+            'photo_url',
+            'image_url',
+            'avatar_url',
+            'url',
+            'path',
+            'file_path',
+            'profile_photo',
+          ],
+          respectApproval: false,
+        );
+        if (url != null) {
+          candidates.add((score: score, url: url));
+        }
       }
     }
 
-    final rawFilename = profile['profile_photo'];
-    if (rawFilename == null) return null;
+    if (candidates.isEmpty) return null;
 
-    var filename = rawFilename.toString().trim();
-    if (filename.isEmpty) return null;
+    candidates.sort((a, b) => b.score.compareTo(a.score));
+    return candidates.first.url;
+  }
 
-    filename = filename.replaceAll('\\', '/').replaceFirst(RegExp(r'^/+'), '');
-    if (filename.startsWith('http://') || filename.startsWith('https://')) {
-      return filename;
+  static bool _photoMapAllowsDisplay(Map<String, dynamic> data) {
+    for (final key in ['photo_approved', 'approved', 'is_approved']) {
+      final value = _boolValue(data[key]);
+      if (value == false) return false;
     }
 
-    for (final prefix in [
-      'storage/matrimony_photos/',
-      'uploads/matrimony_photos/',
-      'matrimony_photos/',
+    for (final key in [
+      'status',
+      'approval_status',
+      'approved_status',
+      'photo_status',
+      'moderation_status',
+      'admin_override_status',
     ]) {
-      if (filename.startsWith(prefix)) {
-        filename = filename.substring(prefix.length);
+      final normalized = data[key]?.toString().trim().toLowerCase();
+      if (normalized == null || normalized.isEmpty) continue;
+      if (normalized.contains('reject') ||
+          normalized == 'pending' ||
+          normalized == 'review' ||
+          normalized == 'processing' ||
+          normalized == 'error') {
+        return false;
       }
     }
 
-    if (filename.isEmpty) return null;
-    if (filename.startsWith('pending/')) return null;
+    return true;
+  }
 
-    return Uri.encodeFull('$_profilePhotoBaseUrl/$filename');
+  static int _photoMapScore(Map<String, dynamic> data) {
+    if (!_photoMapAllowsDisplay(data)) return -1;
+
+    var score = 0;
+
+    for (final key in ['photo_approved', 'approved', 'is_approved']) {
+      if (_boolValue(data[key]) == true) score += 100;
+    }
+
+    for (final key in [
+      'status',
+      'approval_status',
+      'approved_status',
+      'photo_status',
+      'moderation_status',
+      'admin_override_status',
+    ]) {
+      final normalized = data[key]?.toString().trim().toLowerCase();
+      if (normalized != null && normalized.contains('approved')) {
+        score += 100;
+      }
+    }
+
+    for (final key in [
+      'is_primary',
+      'primary',
+      'is_profile',
+      'is_current',
+      'current',
+      'is_showcase',
+      'showcase',
+    ]) {
+      if (_boolValue(data[key]) == true) score += 20;
+    }
+
+    return score;
+  }
+
+  static String? _resolvePhotoValue(dynamic rawValue) {
+    var value = rawValue?.toString().trim();
+    if (value == null || value.isEmpty) return null;
+
+    value = value.replaceAll('\\', '/');
+    if (value.startsWith('file:')) return null;
+    if (value.startsWith('//')) {
+      return Uri.encodeFull('https:$value');
+    }
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return Uri.encodeFull(_normalizeAbsolutePhotoUrl(value));
+    }
+
+    var path = value.replaceFirst(RegExp(r'^/+'), '');
+    if (path.isEmpty || path.startsWith('pending/')) return null;
+    if (path.contains('..')) return null;
+
+    path = path.replaceFirst(RegExp(r'^app/public/'), '');
+    path = path.replaceFirst(RegExp(r'^public/'), '');
+
+    while (path.startsWith('storage/storage/')) {
+      path = path.replaceFirst('storage/storage/', 'storage/');
+    }
+    if (path.startsWith('storage/uploads/')) {
+      path = path.replaceFirst('storage/', '');
+    }
+
+    if (path.startsWith('storage/matrimony_photos/') ||
+        path.startsWith('uploads/matrimony_photos/')) {
+      return Uri.encodeFull('$_siteBaseUrl/$path');
+    }
+    if (path.startsWith('matrimony_photos/')) {
+      return Uri.encodeFull('$_siteBaseUrl/storage/$path');
+    }
+    if (path.startsWith('storage/') || path.startsWith('uploads/')) {
+      return Uri.encodeFull('$_siteBaseUrl/$path');
+    }
+
+    return Uri.encodeFull('$_siteBaseUrl/$_profilePhotoStoragePath/$path');
+  }
+
+  static String _normalizeAbsolutePhotoUrl(String value) {
+    return value
+        .replaceAll('/storage/storage/', '/storage/')
+        .replaceAll('/storage/uploads/', '/uploads/');
   }
 
   static Future<List<Map<String, dynamic>>> searchLocations(
@@ -328,6 +666,7 @@ class ApiClient {
     final token = data['token']?.toString();
     if (token != null && token.isNotEmpty) {
       authToken = token;
+      await AppStorage.instance.saveAuthToken(token);
       return data;
     }
 
@@ -369,6 +708,7 @@ class ApiClient {
     final token = data['token']?.toString();
     if (token != null && token.isNotEmpty) {
       authToken = token;
+      await AppStorage.instance.saveAuthToken(token);
       return data;
     }
 
@@ -526,10 +866,18 @@ class ApiClient {
     return _decodeResponse(response);
   }
 
-  static void logout() {
+  static Future<void> restoreSessionFromStorage() async {
+    final token = await AppStorage.instance.readAuthToken();
+    authToken = token != null && token.isNotEmpty ? token : null;
+    currentUserProfile = null;
+    sentInterestProfileIds.clear();
+  }
+
+  static Future<void> logout() async {
     authToken = null;
     currentUserProfile = null;
     sentInterestProfileIds.clear();
+    await AppStorage.instance.clearSessionButKeepLanguage();
   }
 
   static Future<Map<String, dynamic>> sendInterest(
@@ -558,6 +906,31 @@ class ApiClient {
     }
 
     return data;
+  }
+
+  static Future<Map<String, dynamic>> reportProfile({
+    required int profileId,
+    required String reason,
+  }) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    final url = Uri.parse(
+      '${ApiRoutes.baseUrl}${ApiRoutes.abuseReports}/$profileId',
+    );
+
+    final response = await http.post(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+      body: jsonEncode({'reason': reason}),
+    );
+
+    return _decodeResponse(response);
   }
 
   static Future<Map<String, dynamic>> getSentInterests() async {

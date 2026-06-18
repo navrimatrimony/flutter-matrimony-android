@@ -18,4 +18,5 @@ class ApiRoutes {
   static const String interests = '/interests';
   static const String interestsSent = '/interests/sent';
   static const String interestsReceived = '/interests/received';
+  static const String abuseReports = '/abuse-reports';
 }
