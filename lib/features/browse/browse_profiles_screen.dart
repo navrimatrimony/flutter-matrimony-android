@@ -4,7 +4,7 @@ import '../../core/api_client.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
 /// ===============================
-/// BROWSE PROFILES SCREEN
+/// MATCHES / BROWSE PROFILES SCREEN
 /// ===============================
 class BrowseProfilesScreen extends StatefulWidget {
   const BrowseProfilesScreen({super.key});
@@ -14,18 +14,23 @@ class BrowseProfilesScreen extends StatefulWidget {
 }
 
 class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
+  static const Color _brandColor = Color(0xFF9F1646);
+  static const Color _surfaceWarm = Color(0xFFFCF7F2);
+  static const Color _trustGreen = Color(0xFF16A085);
+  static const Color _premiumGold = Color(0xFFF2A900);
+
   List<dynamic> _profiles = [];
   bool _isLoading = true;
+  bool _filtersExpanded = false;
   String? _errorMessage;
   bool _locationSearching = false;
   int? _selectedLocationId;
   String? _selectedLocationLabel;
   int _locationSearchRequest = 0;
+  int _selectedTabIndex = 0;
+  final Set<int> _sendingInterestIds = <int>{};
   List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
 
-  // ========================================
-  // SEARCH / FILTER UI CONTROLLERS (SSOT v2.5)
-  // ========================================
   final TextEditingController _ageFromController = TextEditingController();
   final TextEditingController _ageToController = TextEditingController();
   final TextEditingController _casteController = TextEditingController();
@@ -105,18 +110,18 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     }
   }
 
-  // Calculate age from date_of_birth
   int? _calculateAge(String? dateOfBirth) {
     if (dateOfBirth == null || dateOfBirth.isEmpty) return null;
 
     try {
       final dob = DateTime.parse(dateOfBirth);
       final now = DateTime.now();
-      int age = now.year - dob.year;
-      if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) {
+      var age = now.year - dob.year;
+      if (now.month < dob.month ||
+          (now.month == dob.month && now.day < dob.day)) {
         age--;
       }
-      return age;
+      return age > 0 ? age : null;
     } catch (_) {
       return null;
     }
@@ -174,43 +179,192 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       appBar: AppBar(
         title: Text(AppStrings.browseProfiles),
         automaticallyImplyLeading: true,
+        actions: [
+          IconButton(
+            tooltip: 'Filter',
+            icon: Icon(_filtersExpanded ? Icons.close : Icons.tune),
+            onPressed: () {
+              setState(() {
+                _filtersExpanded = !_filtersExpanded;
+              });
+            },
+          ),
+        ],
       ),
-      backgroundColor: const Color(0xFFFAF7F5),
-      body: Column(
+      backgroundColor: _surfaceWarm,
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            _buildTopDiscoveryArea(),
+            Expanded(child: _buildProfileListBody()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopDiscoveryArea() {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
         children: [
-          // ========================================
-          // SEARCH / FILTER UI (SSOT v2.5)
-          // ========================================
-          _buildSearchFilterUI(),
-          // Profile List Body
-          Expanded(
-            child: _buildProfileListBody(),
+          _buildTabs(),
+          _buildFilterToggleRow(),
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: _buildSearchFilterUI(),
+            crossFadeState: _filtersExpanded
+                ? CrossFadeState.showSecond
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 180),
           ),
         ],
       ),
     );
   }
 
-  // Build Search/Filter UI form (SSOT v2.5)
+  Widget _buildTabs() {
+    final tabs = [
+      AppStrings.matchesTabNew,
+      AppStrings.matchesTabDaily,
+      AppStrings.matchesTabMyMatches,
+      AppStrings.matchesTabNearMe,
+      AppStrings.matchesTabMore,
+    ];
+
+    return SizedBox(
+      height: 56,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+        itemCount: tabs.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final selected = _selectedTabIndex == index;
+          return ChoiceChip(
+            label: Text(
+              tabs[index],
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            selected: selected,
+            showCheckmark: false,
+            selectedColor: _brandColor,
+            backgroundColor: const Color(0xFFF7F0EC),
+            side: BorderSide(
+              color: selected ? _brandColor : const Color(0xFFE6D8D3),
+            ),
+            labelStyle: TextStyle(
+              color: selected ? Colors.white : const Color(0xFF594044),
+              fontWeight: FontWeight.w800,
+              fontSize: 13,
+            ),
+            onSelected: (_) {
+              setState(() {
+                _selectedTabIndex = index;
+              });
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildFilterToggleRow() {
+    final activeFilters = [
+      _ageFromController.text.trim().isNotEmpty ||
+              _ageToController.text.trim().isNotEmpty
+          ? 'Age'
+          : null,
+      _casteController.text.trim().isNotEmpty ? 'Caste' : null,
+      _selectedLocationLabel,
+    ].whereType<String>().toList();
+
+    final subtitle = activeFilters.isEmpty
+        ? 'Age, caste, location filters'
+        : activeFilters.join(' • ');
+
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _filtersExpanded = !_filtersExpanded;
+        });
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
+        child: Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: _brandColor.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.filter_list,
+                color: _BrowseProfilesScreenState._brandColor,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Search filters',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF33282B),
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              _filtersExpanded
+                  ? Icons.keyboard_arrow_up
+                  : Icons.keyboard_arrow_down,
+              color: Colors.grey.shade700,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSearchFilterUI() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      decoration: const BoxDecoration(
         border: Border(
-          bottom: BorderSide(color: Colors.grey.shade200),
+          top: BorderSide(color: Color(0xFFF0E5E1)),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
@@ -248,6 +402,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
             icon: const Icon(Icons.search),
             label: const Text('Search'),
             style: ElevatedButton.styleFrom(
+              backgroundColor: _brandColor,
+              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 14),
               textStyle: const TextStyle(
                 fontSize: 16,
@@ -266,11 +422,18 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       filled: true,
       fillColor: const Color(0xFFFCFBFA),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(color: Color(0xFFE4D8D2)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(14),
+        borderSide: const BorderSide(
+          color: _BrowseProfilesScreenState._brandColor,
+          width: 1.4,
+        ),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
     );
@@ -280,7 +443,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     if (_locationSearching) {
       return const Padding(
         padding: EdgeInsets.only(top: 8),
-        child: LinearProgressIndicator(),
+        child: LinearProgressIndicator(minHeight: 2),
       );
     }
 
@@ -290,14 +453,23 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      constraints: const BoxConstraints(maxHeight: 180),
+      constraints: const BoxConstraints(maxHeight: 190),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(4),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE4D8D2)),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
-      child: ListView.builder(
+      child: ListView.separated(
         shrinkWrap: true,
         itemCount: _locationSuggestions.length,
+        separatorBuilder: (_, _) => const Divider(height: 1),
         itemBuilder: (context, index) {
           final location = _locationSuggestions[index];
           final label = ApiClient.locationSuggestionLabel(location);
@@ -305,12 +477,15 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
           return ListTile(
             dense: true,
-            title: Text(label),
-            subtitle: hierarchy != null &&
-                    hierarchy.isNotEmpty &&
-                    hierarchy != label
-                ? Text(hierarchy)
-                : null,
+            leading: const Icon(
+              Icons.place_outlined,
+              color: _BrowseProfilesScreenState._brandColor,
+            ),
+            title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+            subtitle:
+                hierarchy != null && hierarchy.isNotEmpty && hierarchy != label
+                    ? Text(hierarchy, maxLines: 1, overflow: TextOverflow.ellipsis)
+                    : null,
             onTap: () => _selectLocation(location),
           );
         },
@@ -318,43 +493,26 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     );
   }
 
-  // Handle Search button tap
   void _handleSearch() {
-    // Read values from fields and convert empty strings to null
     final ageFromText = _ageFromController.text.trim();
     final ageToText = _ageToController.text.trim();
     final casteText = _casteController.text.trim();
     final locationText = _locationController.text.trim();
 
-    int? ageFrom;
-    int? ageTo;
-    String? caste;
-
-    // Parse age_from
-    if (ageFromText.isNotEmpty) {
-      ageFrom = int.tryParse(ageFromText);
-    }
-
-    // Parse age_to
-    if (ageToText.isNotEmpty) {
-      ageTo = int.tryParse(ageToText);
-    }
-
-    // Set caste (null if empty)
-    if (casteText.isNotEmpty) {
-      caste = casteText;
-    }
+    final ageFrom = ageFromText.isNotEmpty ? int.tryParse(ageFromText) : null;
+    final ageTo = ageToText.isNotEmpty ? int.tryParse(ageToText) : null;
+    final caste = casteText.isNotEmpty ? casteText : null;
 
     if (locationText.isNotEmpty && _selectedLocationId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('कृपया suggestions मधून location निवडा.'),
-        ),
-      );
+      _showSnackBar('कृपया suggestions मधून location निवडा.');
       return;
     }
 
-    // Call API with filters
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _filtersExpanded = false;
+    });
+
     _fetchProfileList(
       ageFrom: ageFrom,
       ageTo: ageTo,
@@ -363,7 +521,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     );
   }
 
-  // Build profile list body with loading, error, and list states
   Widget _buildProfileListBody() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -372,7 +529,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     if (_errorMessage != null) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -392,7 +549,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       );
     }
 
-    if (_profiles.isEmpty) {
+    final profiles = _profileRows();
+    if (profiles.isEmpty) {
       return const Center(
         child: Text(
           'प्रोफाइल सापडली नाही.',
@@ -403,108 +561,140 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
     return RefreshIndicator(
       onRefresh: _fetchProfileList,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        itemCount: _profiles.length,
-        itemBuilder: (context, index) {
-          final profile = Map<String, dynamic>.from(_profiles[index] as Map);
-          final hero = _displayHero(profile);
-          final photoUrl = _displayString(hero?['primary_photo_url']) ??
-              ApiClient.resolveProfilePhotoUrl(profile);
-          final age = _displayInt(hero?['age']) ??
-              _calculateAge(profile['date_of_birth']?.toString());
-          final name = _displayString(hero?['name']) ??
-              ApiClient.safeDisplayLabel(profile['full_name']) ??
-              ApiClient.safeDisplayLabel(profile['name']) ??
-              'नाव उपलब्ध नाही';
-          final ageLabel =
-              _displayString(hero?['age_label']) ?? (age != null ? '$age वर्षे' : null);
-          final community =
-              _displayString(hero?['community_label']) ??
-              ApiClient.profileCommunityLabel(profile);
-          final height =
-              _displayString(hero?['height_label']) ??
-              ApiClient.profileHeightLabel(profile);
-          final education = ApiClient.profileEducationLabel(profile);
-          final occupation =
-              _displayString(hero?['occupation_label']) ??
-              ApiClient.profileOccupationLabel(profile);
-          final location = _displayString(hero?['location_label']) ??
-              ApiClient.profileLocationLabel(
-            profile,
-            allowIdFallback: false,
-          );
-          final nameLine = ageLabel != null ? '$name, $ageLabel' : name;
-          final communityLine = _joinNonEmpty([height, community]);
-          final workEducationLine = _joinNonEmpty([education, occupation]);
+      child: _selectedTabIndex == 4
+          ? _buildMoreMatchesList(profiles)
+          : _buildStandardMatchesList(profiles),
+    );
+  }
 
-          return Container(
-            margin: const EdgeInsets.only(bottom: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF1F2),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFF3D9DE)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
-                  blurRadius: 14,
-                  offset: const Offset(0, 7),
-                ),
-              ],
+  ListView _buildStandardMatchesList(List<Map<String, dynamic>> profiles) {
+    final showMini = _selectedTabIndex == 2;
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+      children: [
+        if (showMini) _buildMiniCarousel(profiles),
+        if (showMini) const SizedBox(height: 16),
+        ...profiles.map(_buildMatchCard),
+      ],
+    );
+  }
+
+  ListView _buildMoreMatchesList(List<Map<String, dynamic>> profiles) {
+    final premiumProfiles = profiles
+        .where((profile) => _cardData(profile).premium == true)
+        .toList();
+
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+      children: [
+        _buildMiniCarousel(profiles),
+        const SizedBox(height: 18),
+        _buildSectionHeader(
+          'Members you may like',
+          'Profiles available from your current search',
+        ),
+        ...profiles.take(4).map(_buildMatchCard),
+        if (profiles.length > 4) ...[
+          const SizedBox(height: 8),
+          _buildSectionHeader(
+            'More profiles you may like',
+            'Additional suggestions from the same result set',
+          ),
+          ...profiles.skip(4).map(_buildMatchCard),
+        ],
+        if (premiumProfiles.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          _buildSectionHeader(
+            'Premium profiles',
+            'Shown only when backend marks the profile premium',
+          ),
+          ...premiumProfiles.map(_buildMatchCard),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildSectionHeader(String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10, top: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF2E2528),
             ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(14),
-              onTap: () async {
-                final profileId = _displayInt(profile['id']);
-                if (profileId != null) {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ProfileDetailScreen(profileId: profileId),
-                    ),
-                  );
-                  if (!mounted) return;
-                  _handleProfileDetailResult(result);
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildProfileThumb(photoUrl),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            nameLine,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          if (communityLine != null)
-                            _buildProfileLine(communityLine),
-                          if (workEducationLine != null)
-                            _buildProfileLine(
-                              workEducationLine,
-                              icon: Icons.school,
-                            ),
-                          if (location != null)
-                            _buildProfileLine(location, icon: Icons.place),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right, color: Colors.grey),
-                  ],
-                ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMiniCarousel(List<Map<String, dynamic>> profiles) {
+    final suggestions = profiles.take(5).toList();
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 154,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: suggestions.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          final profile = suggestions[index];
+          final data = _cardData(profile);
+          return InkWell(
+            borderRadius: BorderRadius.circular(18),
+            onTap: () => _openProfile(profile),
+            child: Container(
+              width: 126,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFFECDDD8)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildCircularPhoto(data.photoUrl, 54),
+                  const SizedBox(height: 8),
+                  Text(
+                    data.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _joinNonEmpty([data.ageShortLabel, data.heightLabel]) ??
+                        AppStrings.noInformation,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: Colors.grey.shade700),
+                  ),
+                  const Spacer(),
+                  _buildMiniInterestButton(profile, data),
+                ],
               ),
             ),
           );
@@ -513,9 +703,514 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     );
   }
 
-  Map<String, dynamic>? _displayHero(Map<String, dynamic> profile) {
-    final display = _safeMap(profile['display']);
-    return _safeMap(display?['hero']);
+  Widget _buildMatchCard(Map<String, dynamic> profile) {
+    final data = _cardData(profile);
+    final cardHeight =
+        (MediaQuery.sizeOf(context).height * 0.58).clamp(390.0, 520.0).toDouble();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      height: cardHeight,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.16),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(22),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _openProfile(profile),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _buildCardPhoto(data),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x20000000),
+                      Color(0x00000000),
+                      Color(0xD9000000),
+                    ],
+                    stops: [0, 0.43, 1],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 14,
+                left: 14,
+                right: 14,
+                child: _buildTopBadges(data),
+              ),
+              Positioned(
+                left: 18,
+                right: 18,
+                bottom: 18,
+                child: _buildCardOverlay(profile, data),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCardPhoto(_MatchCardData data) {
+    if (data.photoUrl == null) {
+      return _buildPhotoPlaceholder();
+    }
+
+    return Image.network(
+      data.photoUrl!,
+      fit: BoxFit.cover,
+      alignment: Alignment.topCenter,
+      errorBuilder: (context, error, stackTrace) {
+        return _buildPhotoPlaceholder();
+      },
+    );
+  }
+
+  Widget _buildPhotoPlaceholder() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF4DDD8), Color(0xFF8D294C)],
+        ),
+      ),
+      child: Center(
+        child: Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.20),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white54, width: 1.4),
+          ),
+          child: const Icon(Icons.person, color: Colors.white, size: 54),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBadges(_MatchCardData data) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (data.premium)
+          _buildGlassBadge(
+            'Premium',
+            Icons.workspace_premium,
+            _premiumGold,
+          ),
+        const Spacer(),
+        if (data.verified)
+          _buildGlassIcon(Icons.verified, _trustGreen),
+        if (data.photoCount > 0) ...[
+          const SizedBox(width: 8),
+          _buildGlassBadge('${data.photoCount}', Icons.photo_library, null),
+        ],
+        const SizedBox(width: 8),
+        _buildGlassIcon(Icons.more_vert, Colors.white),
+      ],
+    );
+  }
+
+  Widget _buildGlassBadge(String label, IconData icon, Color? accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: accent ?? Colors.white, size: 15),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGlassIcon(IconData icon, Color color) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.38),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(icon, color: color, size: 20),
+    );
+  }
+
+  Widget _buildCardOverlay(Map<String, dynamic> profile, _MatchCardData data) {
+    final communityLine = _joinNonEmpty([data.heightLabel, data.communityLabel]);
+    final workLine = _joinNonEmpty([data.occupationLabel, data.educationLabel]);
+    final chips = _statusChips(data);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          data.titleLine,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.w900,
+            height: 1.05,
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (communityLine != null)
+          _buildOverlayLine(communityLine, fontWeight: FontWeight.w800),
+        if (workLine != null) _buildOverlayLine(workLine),
+        if (data.locationLabel != null)
+          _buildOverlayLine(data.locationLabel!, icon: Icons.place),
+        if (chips.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Wrap(spacing: 8, runSpacing: 8, children: chips),
+        ],
+        const SizedBox(height: 14),
+        _buildCardActionStrip(profile, data),
+      ],
+    );
+  }
+
+  Widget _buildOverlayLine(
+    String text, {
+    IconData? icon,
+    FontWeight fontWeight = FontWeight.w600,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          if (icon != null) ...[
+            Icon(icon, color: Colors.white.withValues(alpha: 0.88), size: 16),
+            const SizedBox(width: 5),
+          ],
+          Expanded(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.94),
+                fontWeight: fontWeight,
+                fontSize: 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _statusChips(_MatchCardData data) {
+    return [
+      if (data.comparisonLabel != null)
+        _buildStatusChip(data.comparisonLabel!, Icons.compare_arrows, _brandColor),
+      if (data.hasAstro) _buildStatusChip('Astro', Icons.auto_awesome, _premiumGold),
+      if (data.verified) _buildStatusChip('Verified', Icons.verified, _trustGreen),
+      if (data.premium)
+        _buildStatusChip('Premium', Icons.workspace_premium, _premiumGold),
+    ];
+  }
+
+  Widget _buildStatusChip(String label, IconData icon, Color accent) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: accent, size: 15),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCardActionStrip(
+    Map<String, dynamic> profile,
+    _MatchCardData data,
+  ) {
+    final canSend = _canSendInterest(profile);
+    final sent = _interestSent(profile);
+    final busy = data.profileId != null && _sendingInterestIds.contains(data.profileId);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.42),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              sent ? 'Interest पाठवला' : 'हे स्थळ आवडले?',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.9),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: canSend && !busy ? () => _sendInterestFromCard(profile) : null,
+            style: TextButton.styleFrom(
+              foregroundColor: canSend ? const Color(0xFF79F2E4) : Colors.white54,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: const Size(0, 36),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              sent ? AppStrings.interestSent : 'Connect Now',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ),
+          const SizedBox(width: 8),
+          _buildRoundInterestButton(profile, canSend && !busy, sent, busy),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRoundInterestButton(
+    Map<String, dynamic> profile,
+    bool enabled,
+    bool sent,
+    bool busy,
+  ) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(26),
+      onTap: enabled ? () => _sendInterestFromCard(profile) : null,
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: enabled
+              ? const LinearGradient(
+                  colors: [Color(0xFF1EE5C1), Color(0xFF58D64E)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: enabled ? null : Colors.white.withValues(alpha: 0.20),
+        ),
+        child: Center(
+          child: busy
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                )
+              : Icon(
+                  sent ? Icons.check : Icons.favorite,
+                  color: Colors.white,
+                  size: 27,
+                ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniInterestButton(
+    Map<String, dynamic> profile,
+    _MatchCardData data,
+  ) {
+    final canSend = _canSendInterest(profile);
+    final sent = _interestSent(profile);
+    final busy = data.profileId != null && _sendingInterestIds.contains(data.profileId);
+
+    return SizedBox(
+      height: 28,
+      child: OutlinedButton.icon(
+        onPressed: canSend && !busy ? () => _sendInterestFromCard(profile) : null,
+        icon: busy
+            ? const SizedBox(
+                width: 12,
+                height: 12,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : Icon(sent ? Icons.check : Icons.favorite_border, size: 13),
+        label: Text(
+          sent ? 'Sent' : 'Interest',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: sent ? Colors.grey.shade600 : _brandColor,
+          side: BorderSide(
+            color: sent ? Colors.grey.shade300 : _brandColor.withValues(alpha: 0.45),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCircularPhoto(String? photoUrl, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: _brandColor.withValues(alpha: 0.20)),
+      ),
+      child: ClipOval(
+        child: photoUrl != null
+            ? Image.network(
+                photoUrl,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter,
+                errorBuilder: (_, _, _) => _buildCircleFallback(),
+              )
+            : _buildCircleFallback(),
+      ),
+    );
+  }
+
+  Widget _buildCircleFallback() {
+    return Container(
+      color: const Color(0xFFF1DDD8),
+      child: const Icon(
+        Icons.person,
+        color: _BrowseProfilesScreenState._brandColor,
+      ),
+    );
+  }
+
+  Future<void> _openProfile(Map<String, dynamic> profile) async {
+    final profileId = _displayInt(profile['id']);
+    if (profileId == null) return;
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProfileDetailScreen(profileId: profileId),
+      ),
+    );
+    if (!mounted) return;
+    _handleProfileDetailResult(result);
+  }
+
+  Future<void> _sendInterestFromCard(Map<String, dynamic> profile) async {
+    final profileId = _displayInt(profile['id']);
+    if (profileId == null || _sendingInterestIds.contains(profileId)) return;
+
+    if (!_canSendInterest(profile)) {
+      _showSnackBar(
+        _interestSent(profile)
+            ? 'Interest आधीच पाठवला आहे.'
+            : 'या प्रोफाइलसाठी interest पाठवता येत नाही.',
+      );
+      return;
+    }
+
+    setState(() {
+      _sendingInterestIds.add(profileId);
+    });
+
+    try {
+      final response = await ApiClient.sendInterest(profileId);
+      if (!mounted) return;
+
+      final statusCode = _displayInt(response['statusCode']);
+      final success = _displayBool(response['success']) == true ||
+          statusCode == 200 ||
+          statusCode == 409;
+
+      if (success) {
+        _markInterestSent(profileId);
+        _showSnackBar('Interest पाठवला.');
+      } else {
+        _showSnackBar(
+          _displayString(response['message']) ??
+              'Interest पाठवता आला नाही. पुन्हा प्रयत्न करा.',
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      _showSnackBar('Interest पाठवता आला नाही. पुन्हा प्रयत्न करा.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _sendingInterestIds.remove(profileId);
+        });
+      }
+    }
+  }
+
+  void _markInterestSent(int profileId) {
+    setState(() {
+      _profiles = _profiles.map((profile) {
+        final row = _safeMap(profile);
+        if (row == null || _displayInt(row['id']) != profileId) {
+          return profile;
+        }
+
+        final display = _safeMap(row['display']) ?? <String, dynamic>{};
+        final actions = _safeMap(display['actions']) ?? <String, dynamic>{};
+        actions['interest_sent'] = true;
+        actions['can_send_interest'] = false;
+        display['actions'] = actions;
+        row['display'] = display;
+        return row;
+      }).toList();
+    });
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   void _handleProfileDetailResult(dynamic result) {
@@ -534,6 +1229,79 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         return _displayInt(row?['id']) != profileId;
       }).toList();
     });
+  }
+
+  List<Map<String, dynamic>> _profileRows() {
+    return _profiles
+        .map(_safeMap)
+        .whereType<Map<String, dynamic>>()
+        .toList();
+  }
+
+  _MatchCardData _cardData(Map<String, dynamic> profile) {
+    final display = _safeMap(profile['display']);
+    final card = _safeMap(display?['card']) ?? _safeMap(display?['hero']);
+
+    final age = _displayInt(card?['age']) ??
+        _calculateAge(_displayString(profile['date_of_birth']));
+    final ageLabel = _displayString(card?['age_label']) ??
+        (age != null ? AppStrings.years(age) : null);
+    final name = _displayString(card?['name']) ??
+        ApiClient.safeDisplayLabel(profile['full_name']) ??
+        ApiClient.safeDisplayLabel(profile['name']) ??
+        'नाव उपलब्ध नाही';
+    final photoUrl = _displayString(card?['primary_photo_url']) ??
+        ApiClient.resolveProfilePhotoUrl(profile);
+    final heightLabel = _displayString(card?['height_label']) ??
+        ApiClient.profileHeightLabel(profile);
+    final communityLabel = _displayString(card?['community_label']) ??
+        ApiClient.profileCommunityLabel(profile);
+    final educationLabel = _displayString(card?['education_label']) ??
+        ApiClient.profileEducationLabel(profile);
+    final occupationLabel = _displayString(card?['occupation_label']) ??
+        ApiClient.profileOccupationLabel(profile);
+    final locationLabel = _displayString(card?['location_label']) ??
+        ApiClient.profileLocationLabel(profile, allowIdFallback: false);
+    final photoCount = _displayInt(card?['photo_count']) ?? 0;
+
+    return _MatchCardData(
+      profileId: _displayInt(profile['id']),
+      name: name,
+      age: age,
+      ageLabel: ageLabel,
+      photoUrl: photoUrl,
+      heightLabel: heightLabel,
+      communityLabel: communityLabel,
+      educationLabel: educationLabel,
+      occupationLabel: occupationLabel,
+      locationLabel: locationLabel,
+      verified: _displayBool(card?['verified']) == true,
+      premium: _displayBool(card?['premium']) == true,
+      photoCount: photoCount,
+      comparisonLabel: _displayString(card?['comparison_label']),
+      hasAstro: _displayBool(card?['has_astro']) == true,
+    );
+  }
+
+  Map<String, dynamic>? _displayActions(Map<String, dynamic> profile) {
+    final display = _safeMap(profile['display']);
+    return _safeMap(display?['actions']);
+  }
+
+  bool _interestSent(Map<String, dynamic> profile) {
+    final actions = _displayActions(profile);
+    final profileId = _displayInt(profile['id']);
+    return _displayBool(actions?['interest_sent']) == true ||
+        _displayBool(actions?['is_interested']) == true ||
+        (profileId != null && ApiClient.sentInterestProfileIds.contains(profileId));
+  }
+
+  bool _canSendInterest(Map<String, dynamic> profile) {
+    if (_interestSent(profile)) return false;
+
+    final actions = _displayActions(profile);
+    final explicit = _displayBool(actions?['can_send_interest']);
+    return explicit ?? true;
   }
 
   Map<String, dynamic>? _safeMap(dynamic value) {
@@ -566,6 +1334,17 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     return null;
   }
 
+  bool? _displayBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (['true', '1', 'yes'].contains(normalized)) return true;
+      if (['false', '0', 'no'].contains(normalized)) return false;
+    }
+    return null;
+  }
+
   String? _joinNonEmpty(List<String?> values) {
     final parts = values
         .whereType<String>()
@@ -574,52 +1353,48 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         .toList();
     return parts.isEmpty ? null : parts.join(' • ');
   }
+}
 
-  Widget _buildProfileThumb(String? photoUrl) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: 86,
-        height: 108,
-        color: Colors.grey.shade300,
-        child: photoUrl != null
-            ? Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Icon(Icons.person, size: 42, color: Colors.grey);
-                },
-              )
-            : const Icon(Icons.person, size: 42, color: Colors.grey),
-      ),
-    );
+class _MatchCardData {
+  const _MatchCardData({
+    required this.profileId,
+    required this.name,
+    required this.age,
+    required this.ageLabel,
+    required this.photoUrl,
+    required this.heightLabel,
+    required this.communityLabel,
+    required this.educationLabel,
+    required this.occupationLabel,
+    required this.locationLabel,
+    required this.verified,
+    required this.premium,
+    required this.photoCount,
+    required this.comparisonLabel,
+    required this.hasAstro,
+  });
+
+  final int? profileId;
+  final String name;
+  final int? age;
+  final String? ageLabel;
+  final String? photoUrl;
+  final String? heightLabel;
+  final String? communityLabel;
+  final String? educationLabel;
+  final String? occupationLabel;
+  final String? locationLabel;
+  final bool verified;
+  final bool premium;
+  final int photoCount;
+  final String? comparisonLabel;
+  final bool hasAstro;
+
+  String get titleLine {
+    if (age != null) return '$name, $age';
+    if (ageLabel != null) return '$name, $ageLabel';
+    return name;
   }
 
-  Widget _buildProfileLine(String text, {IconData? icon}) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 15, color: Colors.grey.shade700),
-            const SizedBox(width: 4),
-          ],
-          Expanded(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade800,
-                height: 1.25,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  String? get ageShortLabel => age != null ? '$age' : ageLabel;
 }

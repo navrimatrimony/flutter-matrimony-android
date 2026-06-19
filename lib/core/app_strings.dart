@@ -49,11 +49,24 @@ class AppStrings {
       : 'Manage your profile, photo and interests in one place.';
 
   static String get browseProfiles =>
-      _mr ? 'स्थळे पहा' : 'Browse Profiles';
+      _mr ? 'स्थळे' : 'Matches';
 
   static String get browseProfilesSubtitle => _mr
       ? 'तुमच्यासाठी योग्य स्थळे शोधा'
       : 'Explore suitable matrimony profiles';
+
+  static String get matchesTabNew => _mr ? 'नवीन' : 'New';
+
+  static String get matchesTabDaily => _mr ? 'दैनिक' : 'Daily';
+
+  static String get matchesTabMyMatches =>
+      _mr ? 'माझी जुळणारी स्थळे' : 'My Matches';
+
+  static String get matchesTabNearMe =>
+      _mr ? 'जवळची स्थळे' : 'Near Me';
+
+  static String get matchesTabMore =>
+      _mr ? 'अधिक स्थळे' : 'More Matches';
 
   static String get myProfile => _mr ? 'माझे प्रोफाइल' : 'My Profile';
 
