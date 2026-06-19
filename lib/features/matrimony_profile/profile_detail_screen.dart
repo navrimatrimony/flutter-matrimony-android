@@ -6,6 +6,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import 'widgets/profile_comparison_card.dart';
+import 'widgets/profile_contact_card.dart';
 import 'widgets/profile_display_section.dart';
 
 /// ===============================
@@ -34,11 +36,19 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool? _canHide;
   bool? _canBlock;
   bool _isProfileActionInFlight = false;
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _comparisonKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
     _fetchProfile();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchProfile() async {
@@ -164,11 +174,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     final currentUserProfileId = ApiClient.currentUserProfile?['id'];
     final viewingProfileId = _profile!['id'];
-    return currentUserProfileId == null || currentUserProfileId != viewingProfileId;
+    return currentUserProfileId == null ||
+        currentUserProfileId != viewingProfileId;
   }
 
   bool _canSendInterestNow() {
-    final displayCanSend = _displayBool(_displayActions()?['can_send_interest']);
+    final displayCanSend = _displayBool(
+      _displayActions()?['can_send_interest'],
+    );
     if (displayCanSend != null) {
       return displayCanSend && !_isInterestAlreadySent();
     }
@@ -215,21 +228,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final profile = _profile!;
     final hero = _displayHero();
     final about = _displayAbout();
+    final comparison = _comparisonData();
+    final contact = _contactData();
+    final hasComparisonCard = comparison != null;
     final displaySections = _displaySections();
-    final photoUrl = _displayString(hero?['primary_photo_url']) ??
+    final photoUrl =
+        _displayString(hero?['primary_photo_url']) ??
         ApiClient.resolveProfilePhotoUrl(profile);
-    final location = _displayString(hero?['location_label']) ??
-        ApiClient.profileLocationLabel(
-      profile,
-      allowIdFallback: false,
-    );
-    final age = _displayInt(hero?['age']) ??
+    final location =
+        _displayString(hero?['location_label']) ??
+        ApiClient.profileLocationLabel(profile, allowIdFallback: false);
+    final age =
+        _displayInt(hero?['age']) ??
         _calculateAge(profile['date_of_birth']?.toString());
     final aboutBody = _displayString(about?['body']);
-    final aboutTitle = _displayString(about?['title']) ??
+    final aboutTitle =
+        _displayString(about?['title']) ??
         'About ${_displayString(hero?['name']) ?? _nameText(profile)}';
 
     return ListView(
+      controller: _scrollController,
       padding: EdgeInsets.zero,
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
@@ -239,6 +257,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           hero: hero,
           age: age,
           location: location,
+          hasComparisonCard: hasComparisonCard,
         ),
         Transform.translate(
           offset: const Offset(0, -18),
@@ -247,12 +266,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               color: Color(0xFFFAF7F5),
               borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
             ),
-            padding: EdgeInsets.fromLTRB(
-              16,
-              24,
-              16,
-              _bottomContentPadding(),
-            ),
+            padding: EdgeInsets.fromLTRB(16, 24, 16, _bottomContentPadding()),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -261,11 +275,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   const SizedBox(height: 4),
                 ],
                 if (displaySections.isNotEmpty)
-                  ...displaySections.map(
-                    (section) => ProfileDisplaySection(section: section),
-                  )
-                else
+                  ..._buildDisplaySectionsWithContact(displaySections, contact)
+                else ...[
+                  if (contact != null) _buildContactCard(contact),
                   ..._buildFallbackProfileDetails(profile, age, location),
+                ],
+                if (comparison != null)
+                  KeyedSubtree(
+                    key: _comparisonKey,
+                    child: ProfileComparisonCard(comparison: comparison),
+                  ),
               ],
             ),
           ),
@@ -280,6 +299,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     required Map<String, dynamic>? hero,
     required int? age,
     required String? location,
+    required bool hasComparisonCard,
   }) {
     final screenSize = MediaQuery.of(context).size;
     final hasPhoto = photoUrl != null;
@@ -289,19 +309,25 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final titleFontSize = screenSize.width < 360 ? 26.0 : 29.0;
     final name = _displayString(hero?['name']) ?? _nameText(profile);
     final heroName = age != null ? '$name, $age' : name;
-    final heightLabel = _displayString(hero?['height_label']) ??
+    final heightLabel =
+        _displayString(hero?['height_label']) ??
         ApiClient.profileHeightLabel(profile);
     final communityLabel =
         _displayString(hero?['community_label']) ?? _communityText(profile);
-    final occupationLabel = _displayString(hero?['occupation_label']) ??
+    final occupationLabel =
+        _displayString(hero?['occupation_label']) ??
         ApiClient.profileOccupationLabel(profile);
     final line1 = _joinNonEmpty([heightLabel, communityLabel]);
     final photoCount =
         _displayInt(hero?['photo_count']) ?? _photoCount(profile, photoUrl);
-    final isPremium = _displaySafeBool(hero?['premium']) ??
+    final isPremium =
+        _displaySafeBool(hero?['premium']) ??
         (hero == null ? _isPremium(profile) : false);
     final isVerified = _displayBool(hero?['verified']) ?? _isVerified(profile);
-    final heroChips = _displayChips(profile);
+    final heroChips = _displayChips(
+      profile,
+      hasComparisonCard: hasComparisonCard,
+    );
 
     return SizedBox(
       width: double.infinity,
@@ -439,11 +465,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   ),
                 ],
                 const SizedBox(height: 14),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: heroChips,
-                ),
+                Wrap(spacing: 8, runSpacing: 8, children: heroChips),
               ],
             ),
           ),
@@ -488,11 +510,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFFB53B61),
-            Color(0xFF7D1538),
-            Color(0xFF2E2220),
-          ],
+          colors: [Color(0xFFB53B61), Color(0xFF7D1538), Color(0xFF2E2220)],
         ),
       ),
       child: Stack(
@@ -642,19 +660,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             );
           }
 
-          items.addAll(
-            const [
-              PopupMenuDivider(),
-              PopupMenuItem(
-                value: 'report',
-                child: ListTile(
-                  dense: true,
-                  leading: Icon(Icons.flag_outlined),
-                  title: Text('Report this Profile'),
-                ),
+          items.addAll(const [
+            PopupMenuDivider(),
+            PopupMenuItem(
+              value: 'report',
+              child: ListTile(
+                dense: true,
+                leading: Icon(Icons.flag_outlined),
+                title: Text('Report this Profile'),
               ),
-            ],
-          );
+            ),
+          ]);
 
           return items;
         },
@@ -686,7 +702,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final profile = _profile;
     if (profile == null) return false;
 
-    final currentUserProfileId = _displayInt(ApiClient.currentUserProfile?['id']);
+    final currentUserProfileId = _displayInt(
+      ApiClient.currentUserProfile?['id'],
+    );
     final viewingProfileId = _displayInt(profile['id']) ?? widget.profileId;
     return currentUserProfileId != null &&
         currentUserProfileId == viewingProfileId;
@@ -778,9 +796,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           Text(
             title,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF2E2220),
-                ),
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF2E2220),
+            ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -809,14 +827,60 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       const SizedBox(height: 10),
       _buildProfileDetail(AppStrings.name, profile['full_name']),
       _buildProfileDetail(AppStrings.age, _ageText(age)),
-      _buildProfileDetail(
-        AppStrings.dateOfBirth,
-        profile['date_of_birth'],
-      ),
+      _buildProfileDetail(AppStrings.dateOfBirth, profile['date_of_birth']),
       _buildProfileDetail('समुदाय', _communityText(profile)),
       _buildProfileDetail(AppStrings.education, education),
       _buildProfileDetail(AppStrings.location, location),
     ];
+  }
+
+  List<Widget> _buildDisplaySectionsWithContact(
+    List<ProfileDisplaySectionData> sections,
+    ProfileContactData? contact,
+  ) {
+    final widgets = <Widget>[];
+    var contactInserted = false;
+
+    for (var index = 0; index < sections.length; index++) {
+      final section = sections[index];
+      widgets.add(ProfileDisplaySection(section: section));
+
+      if (contact != null &&
+          !contactInserted &&
+          _shouldPlaceContactAfterSection(section, index)) {
+        widgets.add(_buildContactCard(contact));
+        contactInserted = true;
+      }
+    }
+
+    if (contact != null && !contactInserted) {
+      widgets.insert(0, _buildContactCard(contact));
+    }
+
+    return widgets;
+  }
+
+  bool _shouldPlaceContactAfterSection(
+    ProfileDisplaySectionData section,
+    int index,
+  ) {
+    final key = section.key.trim().toLowerCase();
+    final title = section.title.trim().toLowerCase();
+
+    return index == 0 ||
+        key.contains('basic') ||
+        title.contains('basic') ||
+        title.contains('profile information') ||
+        title.contains('प्रोफाइल माहिती');
+  }
+
+  Widget _buildContactCard(ProfileContactData contact) {
+    return ProfileContactCard(
+      contact: contact,
+      onCopy: _copyContactValue,
+      onPrimaryAction: _handleContactPrimaryAction,
+      onWhatsAppResponse: _handleWhatsAppResponseAction,
+    );
   }
 
   double _bottomContentPadding() {
@@ -827,9 +891,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: Colors.black87,
-          ),
+        fontWeight: FontWeight.w800,
+        color: Colors.black87,
+      ),
     );
   }
 
@@ -884,8 +948,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     final alreadySent = _isInterestAlreadySent();
     final canSend = _canSendInterestNow();
-    final disabledByBackend =
-        _displayBool(_displayActions()?['can_send_interest']) == false;
+    final canPressInterest = canSend && !_isSendingInterest;
 
     return Container(
       decoration: BoxDecoration(
@@ -905,40 +968,44 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           child: Row(
             children: [
               Expanded(
-                child: Text(
-                  'हा प्रोफाइल आवडला?',
-                  style: TextStyle(
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w700,
+                child: OutlinedButton.icon(
+                  onPressed: _showChatComingSoon,
+                  icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                  label: const Text(
+                    'Chat',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: Color(0xFF9B1B46)),
+                    foregroundColor: const Color(0xFF9B1B46),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: (!canSend || _isSendingInterest) ? null : _sendInterest,
-                icon: _isSendingInterest
-                    ? const SizedBox(
-                        height: 16,
-                        width: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Icon(
-                        alreadySent || disabledByBackend
-                            ? Icons.check
-                            : Icons.favorite,
-                        size: 18,
-                      ),
-                label: Text(
-                  alreadySent
-                      ? AppStrings.interestSent
-                      : disabledByBackend
-                          ? 'Interest उपलब्ध नाही'
-                          : AppStrings.sendInterest,
-                ),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 14,
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: canPressInterest ? _sendInterest : null,
+                  icon: _isSendingInterest
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Icon(
+                          alreadySent ? Icons.check : Icons.favorite,
+                          size: 18,
+                        ),
+                  label: Text(
+                    alreadySent
+                        ? AppStrings.interestSent
+                        : AppStrings.sendInterest,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
                 ),
               ),
@@ -946,6 +1013,33 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showChatComingSoon() {
+    _showSnackBar('Chat सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
+  }
+
+  Future<void> _copyContactValue(String label, String value) async {
+    await Clipboard.setData(ClipboardData(text: value));
+    if (!mounted) return;
+    _showSnackBar('$label copied.', Colors.black87);
+  }
+
+  void _handleContactPrimaryAction(ProfileContactCtaData cta) {
+    final action = cta.action.trim().toLowerCase();
+    if (action == 'upgrade') {
+      _showSnackBar('Upgrade सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
+      return;
+    }
+
+    _showSnackBar('Contact unlock सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
+  }
+
+  void _handleWhatsAppResponseAction() {
+    _showSnackBar(
+      'WhatsApp Response सुविधा लवकरच उपलब्ध होईल.',
+      Colors.black87,
     );
   }
 
@@ -1175,7 +1269,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final state = _safeMap(response['state']);
     setState(() {
       _isProfileActionInFlight = false;
-      _isShortlisted = _displaySafeBool(state?['shortlisted']) ??
+      _isShortlisted =
+          _displaySafeBool(state?['shortlisted']) ??
           fallbackShortlisted ??
           _isShortlisted;
       _isHidden =
@@ -1212,10 +1307,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return _displayString(response['message']) ?? fallback;
   }
 
-  String _responseErrorMessage(
-    Map<String, dynamic> response,
-    String fallback,
-  ) {
+  String _responseErrorMessage(Map<String, dynamic> response, String fallback) {
     final statusCode = _responseStatusCode(response);
     if (statusCode == 401) return 'Auth expired. पुन्हा login करा.';
 
@@ -1264,7 +1356,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     final title = _displayString(share?['title']) ?? _shareTitle();
     final backendText =
-        _displayString(share?['text']) ?? _displayString(actions?['share_text']);
+        _displayString(share?['text']) ??
+        _displayString(actions?['share_text']);
     final text = _shareTextWithUrl(
       backendText: backendText,
       title: title,
@@ -1291,9 +1384,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   String _shareTitle() {
     final profile = _profile;
     final hero = _displayHero();
-    final name = _displayString(hero?['name']) ??
+    final name =
+        _displayString(hero?['name']) ??
         (profile != null ? _nameText(profile) : 'Profile');
-    final age = _displayInt(hero?['age']) ??
+    final age =
+        _displayInt(hero?['age']) ??
         _calculateAge(profile?['date_of_birth']?.toString());
 
     return age != null
@@ -1317,14 +1412,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     final profile = _profile;
     final hero = _displayHero();
-    final communityLabel = _displayString(hero?['community_label']) ??
+    final communityLabel =
+        _displayString(hero?['community_label']) ??
         (profile != null ? _communityText(profile) : null);
-    final location = _displayString(hero?['location_label']) ??
+    final location =
+        _displayString(hero?['location_label']) ??
         (profile != null
-            ? ApiClient.profileLocationLabel(
-                profile,
-                allowIdFallback: false,
-              )
+            ? ApiClient.profileLocationLabel(profile, allowIdFallback: false)
             : null);
     final parts = <String>[
       title,
@@ -1345,20 +1439,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     final hero = _displayHero();
     final age = _calculateAge(profile['date_of_birth']?.toString());
-    final location = _displayString(hero?['location_label']) ??
-        ApiClient.profileLocationLabel(
-          profile,
-          allowIdFallback: false,
-        );
+    final location =
+        _displayString(hero?['location_label']) ??
+        ApiClient.profileLocationLabel(profile, allowIdFallback: false);
     final ageLabel = _displayString(hero?['age_label']);
     final communityLabel =
         _displayString(hero?['community_label']) ?? _communityText(profile);
     final parts = <String>[
       _displayString(hero?['name']) ?? _nameText(profile),
-      if (ageLabel != null)
-        ageLabel
-      else if (age != null)
-        '$age वर्षे',
+      if (ageLabel != null) ageLabel else if (age != null) '$age वर्षे',
       if (communityLabel != null) communityLabel,
       if (location != null) location,
       'Profile ID: ${widget.profileId}',
@@ -1423,85 +1512,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
   }
 
-  void _showComparisonSheet() {
-    final profile = _profile;
-    final ownProfile = ApiClient.currentUserProfile;
-    if (profile == null || ownProfile == null) {
-      _showSnackBar('Comparison साठी तुमचे profile data उपलब्ध नाही.', Colors.orange);
-      return;
-    }
+  void _scrollToComparisonCard() {
+    final comparisonContext = _comparisonKey.currentContext;
+    if (comparisonContext == null) return;
 
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _comparisonLabel(profile),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildCompareRow(
-                  'वय',
-                  _ageText(_calculateAge(ownProfile['date_of_birth']?.toString())),
-                  _ageText(_calculateAge(profile['date_of_birth']?.toString())),
-                ),
-                _buildCompareRow(
-                  'समुदाय',
-                  _communityText(ownProfile),
-                  _communityText(profile),
-                ),
-                _buildCompareRow(
-                  'शिक्षण',
-                  ApiClient.profileEducationLabel(ownProfile),
-                  ApiClient.profileEducationLabel(profile),
-                ),
-                _buildCompareRow(
-                  'ठिकाण',
-                  ApiClient.profileLocationLabel(
-                    ownProfile,
-                    allowIdFallback: false,
-                  ),
-                  ApiClient.profileLocationLabel(
-                    profile,
-                    allowIdFallback: false,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildCompareRow(String label, String? left, String? right) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 7),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 84,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-          Expanded(child: Text(left ?? AppStrings.noInformation)),
-          const SizedBox(width: 12),
-          Expanded(child: Text(right ?? AppStrings.noInformation)),
-        ],
-      ),
+    Scrollable.ensureVisible(
+      comparisonContext,
+      duration: const Duration(milliseconds: 360),
+      curve: Curves.easeOutCubic,
+      alignment: 0.08,
     );
   }
 
@@ -1521,17 +1540,228 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return _safeMap(_display?['share']);
   }
 
+  Map<String, dynamic>? _contactMap() {
+    return _safeMap(_display?['contact']);
+  }
+
+  ProfileContactData? _contactData() {
+    final contact = _contactMap();
+    if (contact == null) return null;
+    if (_displaySafeBool(contact['enabled']) != true) return null;
+
+    final state = _contactState(contact['state']);
+    final primaryCta = _contactPrimaryCta(contact['primary_cta'], state);
+    final whatsapp = _contactWhatsAppResponse(contact['whatsapp_response']);
+    final phone = _displayString(contact['phone']);
+    final email = _displayString(contact['email']);
+    final message =
+        _displayString(contact['message']) ?? _fallbackContactMessage(state);
+
+    final hasVisibleData =
+        phone != null ||
+        email != null ||
+        message != null ||
+        primaryCta != null ||
+        whatsapp.visible;
+    if (!hasVisibleData) return null;
+
+    return ProfileContactData(
+      title: _displayString(contact['title']) ?? 'Contact Information',
+      state: state,
+      message: message,
+      phone: phone,
+      email: email,
+      primaryCta: primaryCta,
+      whatsAppResponse: whatsapp,
+    );
+  }
+
+  String _contactState(dynamic value) {
+    final state = _displayString(value)?.trim().toLowerCase();
+    if (state == 'revealed' ||
+        state == 'locked' ||
+        state == 'unlock_available' ||
+        state == 'upgrade_required' ||
+        state == 'whatsapp_response_available' ||
+        state == 'unavailable') {
+      return state!;
+    }
+
+    return 'unavailable';
+  }
+
+  ProfileContactCtaData? _contactPrimaryCta(dynamic value, String state) {
+    final map = _safeMap(value);
+    final label = _displayString(map?['label']) ?? _fallbackContactCta(state);
+    if (label == null) return null;
+
+    return ProfileContactCtaData(
+      label: label,
+      style: _displayString(map?['style']) ?? 'disabled',
+      action: _displayString(map?['action']) ?? 'none',
+      enabled: _displaySafeBool(map?['enabled']) ?? false,
+    );
+  }
+
+  ProfileContactWhatsAppData _contactWhatsAppResponse(dynamic value) {
+    final map = _safeMap(value);
+    return ProfileContactWhatsAppData(
+      visible: _displaySafeBool(map?['visible']) ?? false,
+      label: _displayString(map?['label']) ?? 'WhatsApp Response',
+      message: _displayString(map?['message']),
+      enabled: _displaySafeBool(map?['enabled']) ?? false,
+    );
+  }
+
+  String? _fallbackContactMessage(String state) {
+    switch (state) {
+      case 'revealed':
+        return 'Contact information is available.';
+      case 'unlock_available':
+      case 'locked':
+        return 'Contact details पाहण्यासाठी unlock आवश्यक आहे.';
+      case 'upgrade_required':
+        return 'Contact details पाहण्यासाठी upgrade आवश्यक आहे.';
+      case 'whatsapp_response_available':
+        return 'WhatsApp Response उपलब्ध आहे.';
+      case 'unavailable':
+        return 'Contact information सध्या उपलब्ध नाही.';
+      default:
+        return null;
+    }
+  }
+
+  String? _fallbackContactCta(String state) {
+    switch (state) {
+      case 'unlock_available':
+        return 'View Contact';
+      case 'upgrade_required':
+        return 'Upgrade to View Contact';
+      default:
+        return null;
+    }
+  }
+
+  Map<String, dynamic>? _comparisonMap() {
+    return _safeMap(_display?['comparison']);
+  }
+
+  List<Map<String, dynamic>> _comparisonItems(Map<String, dynamic> comparison) {
+    final rows = _safeMapList(comparison['rows']);
+    if (rows.isNotEmpty) return rows;
+
+    return _safeMapList(comparison['items']);
+  }
+
+  String? _comparisonString(dynamic value) {
+    return _displayString(value);
+  }
+
+  bool? _comparisonBoolOrNull(dynamic value) {
+    return _displaySafeBool(value);
+  }
+
+  ProfileComparisonData? _comparisonData() {
+    final comparison = _comparisonMap();
+    if (comparison == null) return null;
+    if (_displaySafeBool(comparison['enabled']) != true) return null;
+
+    final title = _comparisonString(comparison['title']) ?? 'Comparison';
+    final viewer = _safeMap(comparison['viewer']);
+    final target = _safeMap(comparison['target']);
+
+    final items = <ProfileComparisonItemData>[];
+    for (final row in _comparisonItems(comparison)) {
+      final label = _comparisonString(row['label']);
+      if (label == null) continue;
+
+      final status = _comparisonStatus(row);
+      final viewerValue = _comparisonString(row['viewer_value']);
+      final targetValue =
+          _comparisonString(row['target_value']) ??
+          _comparisonString(row['target_preference']);
+      if (targetValue == null && viewerValue == null) continue;
+
+      items.add(
+        ProfileComparisonItemData(
+          key: _comparisonString(row['key']),
+          label: label,
+          status: status,
+          statusLabel: _comparisonString(row['status_label']),
+          targetValue: targetValue,
+          viewerValue: viewerValue,
+          isCounted: _comparisonBoolOrNull(row['is_counted']) ?? false,
+        ),
+      );
+    }
+
+    if (items.isEmpty) return null;
+
+    return ProfileComparisonData(
+      title: title,
+      summary: _comparisonString(comparison['summary']),
+      viewerName: _comparisonString(viewer?['name']) ?? 'You',
+      viewerPhotoUrl: _comparisonString(viewer?['photo_url']),
+      targetName: _comparisonString(target?['name']) ?? 'Profile',
+      targetPhotoUrl: _comparisonString(target?['photo_url']),
+      matchedCount: _displayInt(comparison['matched_count']),
+      totalCount: _displayInt(comparison['total_count']),
+      items: items,
+    );
+  }
+
+  String _comparisonStatus(Map<String, dynamic> row) {
+    final rawStatus = _comparisonString(row['status'])?.toLowerCase().trim();
+    if (rawStatus == 'strong' ||
+        rawStatus == 'match' ||
+        rawStatus == 'near' ||
+        rawStatus == 'neutral') {
+      return rawStatus!;
+    }
+
+    final matched = _comparisonBoolOrNull(row['matched']);
+    return matched == true ? 'match' : 'neutral';
+  }
+
   List<ProfileDisplaySectionData> _displaySections() {
     final sections = _safeMapList(_display?['sections']);
     return sections
         .map(ProfileDisplaySectionData.fromMap)
         .whereType<ProfileDisplaySectionData>()
+        .where((section) => !_isLegacyComparisonSection(section))
         .toList();
   }
 
-  List<Widget> _displayChips(Map<String, dynamic> profile) {
+  bool _isLegacyComparisonSection(ProfileDisplaySectionData section) {
+    final key = section.key.trim().toLowerCase();
+    if (key == 'partner_match') return true;
+    if (key != 'match' && key != 'comparison') return false;
+
+    final title = section.title.trim().toLowerCase();
+    if (title.startsWith('you &') ||
+        title.contains('match') ||
+        title.contains('comparison')) {
+      return true;
+    }
+
+    return section.items.any((item) {
+      final label = item.label.trim().toLowerCase();
+      final value = item.value.trim().toLowerCase();
+      return label.contains('preference') ||
+          value.contains('not matched') ||
+          value.contains('review');
+    });
+  }
+
+  List<Widget> _displayChips(
+    Map<String, dynamic> profile, {
+    required bool hasComparisonCard,
+  }) {
     final widgets = <Widget>[];
     final rows = _safeMapList(_display?['chips']);
+    final comparisonTitle = _comparisonData()?.title;
+    final shouldShowComparisonChip = hasComparisonCard;
+    var hasComparisonChip = false;
 
     for (final row in rows) {
       final label = _displayString(row['label']);
@@ -1539,6 +1769,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
       final normalized = label.trim().toLowerCase();
       final iconKey = _displayString(row['icon']);
+      final isComparisonChip = normalized.startsWith('you &');
+      if (isComparisonChip && !hasComparisonCard) continue;
+      if (isComparisonChip) hasComparisonChip = true;
       if (normalized == 'premium' ||
           normalized == 'verified' ||
           normalized.contains('photo') ||
@@ -1551,14 +1784,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           icon: _chipIcon(iconKey),
           label: label,
           iconColor: _chipColor(iconKey, _displayString(row['tone'])),
-          onTap: normalized.startsWith('you &') ? _showComparisonSheet : null,
+          onTap: isComparisonChip ? _scrollToComparisonCard : null,
         ),
       );
 
-      if (widgets.length >= 4) return widgets;
+      if (widgets.length >= 4) break;
     }
 
-    if (widgets.isNotEmpty) return widgets;
+    if (widgets.isNotEmpty) {
+      if (shouldShowComparisonChip && !hasComparisonChip) {
+        if (widgets.length >= 4) widgets.removeLast();
+        widgets.add(
+          _buildHeroChip(
+            icon: Icons.compare_arrows,
+            label: comparisonTitle ?? _comparisonLabel(profile),
+            onTap: _scrollToComparisonCard,
+          ),
+        );
+      }
+      return widgets;
+    }
 
     if (_isOnline(profile)) {
       widgets.add(
@@ -1570,12 +1815,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       );
     }
 
-    if (ApiClient.currentUserProfile != null) {
+    if (shouldShowComparisonChip) {
       widgets.add(
         _buildHeroChip(
           icon: Icons.compare_arrows,
-          label: _comparisonLabel(profile),
-          onTap: _showComparisonSheet,
+          label: comparisonTitle ?? _comparisonLabel(profile),
+          onTap: _scrollToComparisonCard,
         ),
       );
     }
@@ -1731,8 +1976,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     final normalized = value?.toString().trim().toLowerCase();
     if (normalized == null || normalized.isEmpty) return false;
-    return ['1', 'true', 'yes', 'active', 'online', 'verified', 'approved']
-        .contains(normalized);
+    return [
+      '1',
+      'true',
+      'yes',
+      'active',
+      'online',
+      'verified',
+      'approved',
+    ].contains(normalized);
   }
 
   bool _isPremium(Map<String, dynamic> profile) {
@@ -1757,9 +2009,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   String _comparisonLabel(Map<String, dynamic> profile) {
-    final gender = ApiClient.safeDisplayLabel(profile['gender'])
-        ?.trim()
-        .toLowerCase();
+    final gender = ApiClient.safeDisplayLabel(
+      profile['gender'],
+    )?.trim().toLowerCase();
     if (gender == 'female' || gender == 'f' || gender == 'woman') {
       return 'You & Her';
     }
@@ -1841,10 +2093,7 @@ class _ReportReasonDialogState extends State<_ReportReasonDialog> {
           },
           child: const Text('Cancel'),
         ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Submit'),
-        ),
+        ElevatedButton(onPressed: _submit, child: const Text('Submit')),
       ],
     );
   }
