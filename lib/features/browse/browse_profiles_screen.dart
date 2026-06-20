@@ -63,7 +63,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchProfileList();
+    _fetchProfileList(feed: _feedForTab(_selectedTabIndex));
   }
 
   @override
@@ -80,6 +80,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     int? ageTo,
     String? caste,
     int? locationId,
+    String? feed,
   }) async {
     setState(() {
       _isLoading = true;
@@ -92,6 +93,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         ageTo: ageTo,
         caste: caste,
         locationId: locationId,
+        feed: feed,
       );
       if (!mounted) return;
 
@@ -132,6 +134,30 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  String? _feedForTab(int tabIndex) {
+    return switch (tabIndex) {
+      0 => 'new',
+      1 => 'daily',
+      2 => 'my_matches',
+      3 => 'nearby',
+      _ => null,
+    };
+  }
+
+  Future<void> _fetchProfileListForCurrentTab() {
+    final ageFromText = _ageFromController.text.trim();
+    final ageToText = _ageToController.text.trim();
+    final casteText = _casteController.text.trim();
+
+    return _fetchProfileList(
+      ageFrom: ageFromText.isNotEmpty ? int.tryParse(ageFromText) : null,
+      ageTo: ageToText.isNotEmpty ? int.tryParse(ageToText) : null,
+      caste: casteText.isNotEmpty ? casteText : null,
+      locationId: _selectedLocationId,
+      feed: _feedForTab(_selectedTabIndex),
+    );
   }
 
   Future<void> _fetchMoreSections({bool force = false}) async {
@@ -543,6 +569,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
               });
               if (tabIndex == 4) {
                 _fetchMoreSections();
+              } else {
+                _fetchProfileListForCurrentTab();
               }
             },
           );
@@ -770,6 +798,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       ageTo: ageTo,
       caste: caste,
       locationId: _selectedLocationId,
+      feed: _feedForTab(_selectedTabIndex),
     );
   }
 
@@ -792,7 +821,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: _fetchProfileList,
+                onPressed: _fetchProfileListForCurrentTab,
                 child: const Text('पुन्हा प्रयत्न करा'),
               ),
             ],
@@ -812,7 +841,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     }
 
     return RefreshIndicator(
-      onRefresh: _fetchProfileList,
+      onRefresh: _fetchProfileListForCurrentTab,
       child: _selectedTabIndex == 4
           ? _buildMoreMatchesList(profiles)
           : _buildStandardMatchesList(profiles),

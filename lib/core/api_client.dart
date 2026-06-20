@@ -858,6 +858,7 @@ class ApiClient {
     int? ageTo,
     String? caste,
     int? locationId,
+    String? feed,
   }) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
@@ -875,6 +876,9 @@ class ApiClient {
     }
     if (locationId != null) {
       queryParams['location_id'] = locationId.toString();
+    }
+    if (feed != null && feed.isNotEmpty) {
+      queryParams['feed'] = feed;
     }
 
     final baseUrl = ApiRoutes.baseUrl + ApiRoutes.matrimonyProfiles;
