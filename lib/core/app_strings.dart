@@ -130,6 +130,15 @@ class AppStrings {
         if (bride) return 'Brides matching my preference';
         if (groom) return 'Grooms matching my preference';
         return 'Profiles matching my preference';
+      case 'nearby':
+        if (_mr) {
+          if (bride) return 'जवळच्या वधू';
+          if (groom) return 'जवळचे वर';
+          return 'जवळची स्थळे';
+        }
+        if (bride) return 'Nearby Brides';
+        if (groom) return 'Nearby Grooms';
+        return 'Nearby profiles';
       case 'recent_visitors':
         if (_mr) {
           if (bride) return 'अलीकडील भेट देणाऱ्या वधू';
@@ -165,6 +174,10 @@ class AppStrings {
         return _mr
             ? 'तुमच्या जोडीदार पसंतीवर आधारित'
             : 'Based on your partner preferences';
+      case 'nearby':
+        return _mr
+            ? 'तुमच्या ठिकाणाजवळील स्थळे'
+            : 'Profiles closer to your location';
       case 'recent_visitors':
         return _mr
             ? 'तुमचे profile कोणी पाहिले ते पहा'
@@ -181,6 +194,10 @@ class AppStrings {
   static String get upgradeToSeeVisitors => _mr
       ? 'भेट देणारे पाहण्यासाठी अपग्रेड करा'
       : 'Upgrade to see visitors';
+
+  static String get recentVisitorsEmpty => _mr
+      ? 'दाखवण्यासाठी योग्य अलीकडील भेटी अजून नाहीत.'
+      : 'No eligible recent visitors to show yet.';
 
   static String get upgrade => _mr ? 'अपग्रेड करा' : 'Upgrade';
 
@@ -203,17 +220,6 @@ class AppStrings {
   static String get chatComingSoon => _mr
       ? 'Chat सुविधा लवकरच app मध्ये येईल.'
       : 'Chat will be available in the app soon.';
-
-  static String visitorsLockedMessage(int? count) {
-    if (_mr) {
-      return count != null && count > 0
-          ? '$count भेटी लॉक आहेत.'
-          : 'तुमचे profile कोणी पाहिले ते पाहण्यासाठी upgrade आवश्यक आहे.';
-    }
-    return count != null && count > 0
-        ? '$count visits are locked.'
-        : 'Upgrade is required to see who viewed your profile.';
-  }
 
   static String get likeThisProfile =>
       _mr ? 'हे स्थळ आवडले?' : 'Like this profile?';
@@ -277,6 +283,19 @@ class AppStrings {
   static String get loading => _mr ? 'लोड होत आहे...' : 'Loading...';
 
   static String get profile => _mr ? 'प्रोफाइल' : 'Profile';
+
+  static String get profileType =>
+      _mr ? 'प्रोफाइल प्रकार' : 'Profile type';
+
+  static String get brideGroom =>
+      _mr ? 'वधू / वर' : 'Bride / Groom';
+
+  static String get selectProfileType =>
+      _mr ? 'कृपया वधू / वर निवडा.' : 'Please select profile type.';
+
+  static String get profileTypeLoadFailed => _mr
+      ? 'प्रोफाइल प्रकार load करता आला नाही.'
+      : 'Profile type could not be loaded.';
 
   static String get name => _mr ? 'नाव' : 'Name';
 

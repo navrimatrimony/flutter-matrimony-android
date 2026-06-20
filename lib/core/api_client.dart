@@ -205,8 +205,7 @@ class ApiClient {
     final parts = <String>[
       if (profileReligionLabel(profile) != null) profileReligionLabel(profile)!,
       if (profileCasteLabel(profile) != null) profileCasteLabel(profile)!,
-      if (profileSubCasteLabel(profile) != null)
-        profileSubCasteLabel(profile)!,
+      if (profileSubCasteLabel(profile) != null) profileSubCasteLabel(profile)!,
     ];
     return parts.isNotEmpty ? parts.join(' • ') : null;
   }
@@ -230,7 +229,8 @@ class ApiClient {
   static String? profileHeightLabel(Map<String, dynamic>? profile) {
     if (profile == null) return null;
 
-    final storedLabel = safeDisplayLabel(profile['height_label']) ??
+    final storedLabel =
+        safeDisplayLabel(profile['height_label']) ??
         safeDisplayLabel(profile['height_text']) ??
         safeDisplayLabel(profile['height']);
     if (storedLabel != null) return storedLabel;
@@ -319,20 +319,16 @@ class ApiClient {
             final score = _photoMapScore(row);
             if (score < 0) continue;
 
-            final url = _resolvePhotoValueFromMap(
-              row,
-              const [
-                'profile_photo_url',
-                'photo_url',
-                'image_url',
-                'avatar_url',
-                'url',
-                'path',
-                'file_path',
-                'profile_photo',
-              ],
-              respectApproval: false,
-            );
+            final url = _resolvePhotoValueFromMap(row, const [
+              'profile_photo_url',
+              'photo_url',
+              'image_url',
+              'avatar_url',
+              'url',
+              'path',
+              'file_path',
+              'profile_photo',
+            ], respectApproval: false);
             if (url != null) {
               candidates.add((score: score, url: url));
             }
@@ -351,20 +347,16 @@ class ApiClient {
         final score = _photoMapScore(row);
         if (score < 0) continue;
 
-        final url = _resolvePhotoValueFromMap(
-          row,
-          const [
-            'profile_photo_url',
-            'photo_url',
-            'image_url',
-            'avatar_url',
-            'url',
-            'path',
-            'file_path',
-            'profile_photo',
-          ],
-          respectApproval: false,
-        );
+        final url = _resolvePhotoValueFromMap(row, const [
+          'profile_photo_url',
+          'photo_url',
+          'image_url',
+          'avatar_url',
+          'url',
+          'path',
+          'file_path',
+          'profile_photo',
+        ], respectApproval: false);
         if (url != null) {
           candidates.add((score: score, url: url));
         }
@@ -536,6 +528,63 @@ class ApiClient {
     }
   }
 
+  static Future<List<Map<String, dynamic>>> getGenders() async {
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.genders);
+    final headers = <String, String>{'Accept': 'application/json'};
+    final token = authToken;
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final response = await http.get(url, headers: headers);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Gender options load failed: HTTP ${response.statusCode}',
+      );
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+      final rows = _safeMapList(decoded);
+      final options = rows
+          .map((row) {
+            final id = _intValue(row['id']);
+            final key = row['key']?.toString().trim();
+            final label = _firstNonEmptyValue(row, const [
+              'label',
+              'label_en',
+              'name',
+            ]);
+            final labelMr = row['label_mr']?.toString().trim();
+
+            if (id == null || key == null || key.isEmpty) {
+              return null;
+            }
+
+            return <String, dynamic>{
+              'id': id,
+              'key': key,
+              'label': label ?? key,
+              'label_mr': labelMr?.isNotEmpty == true ? labelMr : null,
+            };
+          })
+          .whereType<Map<String, dynamic>>()
+          .toList();
+
+      if (options.isEmpty) {
+        throw Exception('Gender options are empty.');
+      }
+
+      return options;
+    } on FormatException {
+      throw Exception('Gender options response could not be read.');
+    } catch (error) {
+      if (error is Exception) rethrow;
+      throw Exception('Gender options response could not be read.');
+    }
+  }
+
   static Future<List<Map<String, dynamic>>> getCastes({
     required int religionId,
   }) async {
@@ -679,7 +728,6 @@ class ApiClient {
     required String email,
     required String password,
     required String passwordConfirmation,
-    required String gender,
   }) async {
     final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.register);
 
@@ -694,7 +742,6 @@ class ApiClient {
         'email': email,
         'password': password,
         'password_confirmation': passwordConfirmation,
-        'gender': gender,
       }),
     );
 

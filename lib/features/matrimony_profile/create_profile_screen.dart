@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_language.dart';
+import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../photo/photo_upload_screen.dart';
 
@@ -29,12 +30,15 @@ class _CreateMatrimonyProfileScreenState
   bool _castesLoading = false;
   bool _subCasteSearching = false;
   bool _locationSearching = false;
+  bool _gendersLoading = false;
 
+  int? _selectedGenderId;
   int? _selectedReligionId;
   int? _selectedCasteId;
   int? _selectedSubCasteId;
   int? _selectedLocationId;
 
+  String? _genderLoadError;
   String? _selectedReligionLabel;
   String? _selectedCasteLabel;
   String? _selectedSubCasteLabel;
@@ -44,6 +48,7 @@ class _CreateMatrimonyProfileScreenState
   int _locationSearchRequest = 0;
 
   List<Map<String, dynamic>> _religions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _genders = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _religionSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _castes = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _casteSuggestions = <Map<String, dynamic>>[];
@@ -55,6 +60,7 @@ class _CreateMatrimonyProfileScreenState
   void initState() {
     super.initState();
     _prefillExistingProfile();
+    _loadGenders();
     _loadReligions();
   }
 
@@ -86,6 +92,73 @@ class _CreateMatrimonyProfileScreenState
     }
 
     return fallbackPrefix;
+  }
+
+  String _genderOptionLabel(Map<String, dynamic> row) {
+    final preferredKey = AppStrings.isMarathi ? 'label_mr' : 'label';
+    final preferred = row[preferredKey]?.toString().trim();
+    if (preferred != null && preferred.isNotEmpty) return preferred;
+
+    return _optionLabel(row, AppStrings.brideGroom);
+  }
+
+  String? _genderLookupValue(Map<String, dynamic> profile) {
+    final gender = profile['gender'];
+    if (gender is Map) {
+      final row = Map<String, dynamic>.from(gender);
+      for (final key in ['key', 'label', 'label_en', 'label_mr', 'name']) {
+        final value = row[key]?.toString().trim();
+        if (value != null && value.isNotEmpty) return value;
+      }
+    }
+
+    for (final key in ['gender_key', 'profile_gender', 'gender']) {
+      final value = ApiClient.safeDisplayLabel(profile[key]);
+      if (value != null && value.isNotEmpty) return value;
+    }
+
+    return null;
+  }
+
+  int? _readGenderId(Map<String, dynamic> profile) {
+    final direct = _readInt(profile['gender_id']);
+    if (direct != null) return direct;
+
+    final gender = profile['gender'];
+    if (gender is Map) {
+      final row = Map<String, dynamic>.from(gender);
+      return _readInt(row['id'] ?? row['gender_id']);
+    }
+
+    return null;
+  }
+
+  int? _findGenderIdByLookupValue(
+    List<Map<String, dynamic>> genders,
+    String? lookupValue,
+  ) {
+    final normalizedLookup = lookupValue?.trim().toLowerCase();
+    if (normalizedLookup == null || normalizedLookup.isEmpty) return null;
+
+    for (final gender in genders) {
+      final id = _readInt(gender['id']);
+      if (id == null) continue;
+
+      final candidates = <String?>[
+        gender['key']?.toString(),
+        gender['label']?.toString(),
+        gender['label_en']?.toString(),
+        gender['label_mr']?.toString(),
+        gender['name']?.toString(),
+      ];
+
+      final matched = candidates.any(
+        (value) => value?.trim().toLowerCase() == normalizedLookup,
+      );
+      if (matched) return id;
+    }
+
+    return null;
   }
 
   List<Map<String, dynamic>> _filterOptions(
@@ -166,6 +239,7 @@ class _CreateMatrimonyProfileScreenState
     }
     _dobController.text = profile['date_of_birth']?.toString() ?? '';
 
+    _selectedGenderId = _readGenderId(profile);
     _selectedReligionId = _readInt(profile['religion_id']);
     _selectedCasteId = _readInt(profile['caste_id']);
     _selectedSubCasteId = _readInt(profile['sub_caste_id']);
@@ -206,6 +280,44 @@ class _CreateMatrimonyProfileScreenState
       _selectedLocationLabel = locationLabel;
       _locationController.text = locationLabel;
     }
+  }
+
+  Future<void> _loadGenders() async {
+    setState(() {
+      _gendersLoading = true;
+      _genderLoadError = null;
+    });
+
+    List<Map<String, dynamic>> results;
+    try {
+      results = await ApiClient.getGenders();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _genders = <Map<String, dynamic>>[];
+        _gendersLoading = false;
+        _genderLoadError = AppStrings.profileTypeLoadFailed;
+      });
+      _showMessage(AppStrings.profileTypeLoadFailed);
+      return;
+    }
+    if (!mounted) return;
+
+    final inferredGenderId =
+        _selectedGenderId ??
+        _findGenderIdByLookupValue(
+          results,
+          widget.existingProfile == null
+              ? null
+              : _genderLookupValue(widget.existingProfile!),
+        );
+
+    setState(() {
+      _genders = results;
+      _selectedGenderId = inferredGenderId;
+      _gendersLoading = false;
+      _genderLoadError = null;
+    });
   }
 
   Future<void> _loadReligions() async {
@@ -532,6 +644,10 @@ class _CreateMatrimonyProfileScreenState
       }
     }
 
+    if (_selectedGenderId == null) {
+      _showMessage(AppStrings.selectProfileType);
+      return;
+    }
     if (_selectedReligionId == null) {
       _showMessage('कृपया suggestions मधून religion निवडा.');
       return;
@@ -555,6 +671,7 @@ class _CreateMatrimonyProfileScreenState
 
     final payload = <String, dynamic>{
       'full_name': _fullNameController.text.trim(),
+      'gender_id': _selectedGenderId,
       'date_of_birth': _dobController.text.trim(),
       'religion_id': _selectedReligionId,
       'caste_id': _selectedCasteId,
@@ -715,8 +832,9 @@ class _CreateMatrimonyProfileScreenState
       _selectedEducations
         ..clear()
         ..addAll(result.selected);
-      _educationController.text =
-          result.selected.isEmpty ? result.typedText : '';
+      _educationController.text = result.selected.isEmpty
+          ? result.typedText
+          : '';
     });
     FocusScope.of(context).unfocus();
   }
@@ -763,6 +881,10 @@ class _CreateMatrimonyProfileScreenState
   @override
   Widget build(BuildContext context) {
     final subCasteEnabled = _selectedCasteId != null;
+    final selectedGenderValue =
+        _genders.any((row) => _readInt(row['id']) == _selectedGenderId)
+        ? _selectedGenderId
+        : null;
 
     return Scaffold(
       appBar: AppBar(
@@ -778,6 +900,38 @@ class _CreateMatrimonyProfileScreenState
               controller: _fullNameController,
               decoration: const InputDecoration(labelText: 'Full Name'),
             ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              value: selectedGenderValue,
+              isExpanded: true,
+              items: _genders
+                  .map((gender) {
+                    final id = _readInt(gender['id']);
+                    if (id == null) return null;
+
+                    return DropdownMenuItem<int>(
+                      value: id,
+                      child: Text(_genderOptionLabel(gender)),
+                    );
+                  })
+                  .whereType<DropdownMenuItem<int>>()
+                  .toList(),
+              onChanged: _loading || _gendersLoading
+                  ? null
+                  : (value) {
+                      setState(() {
+                        _selectedGenderId = value;
+                      });
+                    },
+              decoration: InputDecoration(
+                labelText: AppStrings.profileType,
+                hintText: _gendersLoading
+                    ? AppStrings.loading
+                    : AppStrings.brideGroom,
+                errorText: _genderLoadError,
+              ),
+            ),
+            if (_gendersLoading) const LinearProgressIndicator(),
             const SizedBox(height: 12),
             TextField(
               controller: _dobController,
@@ -1063,10 +1217,7 @@ class _EducationPickerSheetState extends State<_EducationPickerSheet> {
                       ),
                     ),
                   ),
-                  TextButton(
-                    onPressed: _finish,
-                    child: const Text('Done'),
-                  ),
+                  TextButton(onPressed: _finish, child: const Text('Done')),
                   IconButton(
                     tooltip: 'Close',
                     icon: const Icon(Icons.close),

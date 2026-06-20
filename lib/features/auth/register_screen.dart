@@ -16,7 +16,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool isLoading = false;
   String errorMessage = '';
-  String selectedGender = 'male';
 
   @override
   void dispose() {
@@ -37,7 +36,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       email: emailController.text,
       password: passwordController.text,
       passwordConfirmation: passwordController.text,
-      gender: selectedGender,
     );
 
     if (!mounted) return;
@@ -82,23 +80,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: nameController,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: 'Full Name'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: selectedGender,
-                items: const [
-                  DropdownMenuItem(value: 'male', child: Text('Male')),
-                  DropdownMenuItem(value: 'female', child: Text('Female')),
-                ],
-                onChanged: isLoading
-                    ? null
-                    : (value) {
-                        if (value == null) return;
-                        setState(() {
-                          selectedGender = value;
-                        });
-                      },
-                decoration: const InputDecoration(labelText: 'Gender'),
               ),
               const SizedBox(height: 12),
               TextField(

@@ -13,6 +13,7 @@ class ApiRoutes {
   static const String matrimonyProfileMoreSections =
       '/matrimony-profiles/more-sections';
   static const String religions = '/religions';
+  static const String genders = '/genders';
   static const String castes = '/castes';
   static const String subCastes = '/sub-castes';
 

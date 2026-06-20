@@ -15,14 +15,22 @@ import 'widgets/profile_display_section.dart';
 /// ===============================
 class ProfileDetailScreen extends StatefulWidget {
   final int profileId;
+  final List<int> profileIds;
 
-  const ProfileDetailScreen({super.key, required this.profileId});
+  const ProfileDetailScreen({
+    super.key,
+    required this.profileId,
+    this.profileIds = const <int>[],
+  });
 
   @override
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
 }
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
+  late int _currentProfileId;
+  late List<int> _profileIds;
+  late int _currentProfileIndex;
   Map<String, dynamic>? _profile;
   Map<String, dynamic>? _display;
   bool _isLoading = true;
@@ -36,25 +44,97 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool? _canHide;
   bool? _canBlock;
   bool _isProfileActionInFlight = false;
+  bool _showScrolledStatusStrip = false;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _comparisonKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
+    _profileIds = _normalizedProfileIds(widget.profileIds, widget.profileId);
+    _currentProfileIndex = _profileIds.indexOf(widget.profileId);
+    if (_currentProfileIndex < 0) _currentProfileIndex = 0;
+    _currentProfileId = _profileIds[_currentProfileIndex];
+    _scrollController.addListener(_handleHeroScroll);
     _fetchProfile();
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_handleHeroScroll);
     _scrollController.dispose();
     super.dispose();
   }
 
+  void _handleHeroScroll() {
+    final shouldShow =
+        _scrollController.hasClients && _scrollController.offset > 28;
+    if (shouldShow == _showScrolledStatusStrip || !mounted) return;
+
+    setState(() {
+      _showScrolledStatusStrip = shouldShow;
+    });
+  }
+
+  List<int> _normalizedProfileIds(List<int> ids, int initialProfileId) {
+    final normalized = <int>[];
+    for (final id in ids) {
+      if (id > 0 && !normalized.contains(id)) {
+        normalized.add(id);
+      }
+    }
+    if (!normalized.contains(initialProfileId)) {
+      normalized.insert(0, initialProfileId);
+    }
+    return normalized;
+  }
+
+  void _handleHorizontalProfileSwipe(DragEndDetails details) {
+    final velocity = details.primaryVelocity ?? 0;
+    if (velocity.abs() < 260 || _profileIds.length < 2) return;
+
+    if (velocity < 0) {
+      _openAdjacentProfile(1);
+    } else {
+      _openAdjacentProfile(-1);
+    }
+  }
+
+  void _openAdjacentProfile(int delta) {
+    final nextIndex = _currentProfileIndex + delta;
+    if (nextIndex < 0 || nextIndex >= _profileIds.length) return;
+
+    setState(() {
+      _currentProfileIndex = nextIndex;
+      _currentProfileId = _profileIds[nextIndex];
+      _profile = null;
+      _display = null;
+      _errorMessage = null;
+      _isLoading = true;
+      _isSendingInterest = false;
+      _interestSent = false;
+      _isShortlisted = false;
+      _isHidden = false;
+      _isBlocked = false;
+      _canShortlist = null;
+      _canHide = null;
+      _canBlock = null;
+      _isProfileActionInFlight = false;
+      _showScrolledStatusStrip = false;
+    });
+
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
+    _fetchProfile();
+  }
+
   Future<void> _fetchProfile() async {
+    final requestedProfileId = _currentProfileId;
     try {
-      final response = await ApiClient.getProfileDetail(widget.profileId);
+      final response = await ApiClient.getProfileDetail(requestedProfileId);
       if (!mounted) return;
+      if (requestedProfileId != _currentProfileId) return;
 
       final statusCode = response['statusCode'];
 
@@ -130,7 +210,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     });
 
     try {
-      final response = await ApiClient.sendInterest(widget.profileId);
+      final response = await ApiClient.sendInterest(_currentProfileId);
       if (!mounted) return;
 
       final statusCode = response['statusCode'];
@@ -190,16 +270,96 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   bool _isInterestAlreadySent() {
-    return ApiClient.sentInterestProfileIds.contains(widget.profileId) ||
+    return ApiClient.sentInterestProfileIds.contains(_currentProfileId) ||
         _interestSent;
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFFAF7F5),
-      body: _buildBody(),
-      bottomNavigationBar: _buildBottomActionBar(),
+    final overlayStyle = (_showScrolledStatusStrip
+            ? SystemUiOverlayStyle.dark
+            : SystemUiOverlayStyle.light)
+        .copyWith(statusBarColor: Colors.transparent);
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: overlayStyle,
+      child: Scaffold(
+        backgroundColor: const Color(0xFFFAF7F5),
+        body: Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragEnd: _handleHorizontalProfileSwipe,
+                child: _buildBody(),
+              ),
+            ),
+            _buildScrolledStatusStrip(),
+            _buildFixedBackButton(),
+          ],
+        ),
+        bottomNavigationBar: _buildBottomActionBar(),
+      ),
+    );
+  }
+
+  Widget _buildFixedBackButton() {
+    return Positioned(
+      top: 0,
+      left: 0,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 0, 0),
+          child: _buildRoundIconButton(
+            icon: Icons.arrow_back,
+            tooltip: 'Back',
+            onTap: () => Navigator.maybePop(context),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScrolledStatusStrip() {
+    final statusHeight = MediaQuery.of(context).padding.top;
+    if (statusHeight <= 0 || _profile == null || _isLoading) {
+      return const SizedBox.shrink();
+    }
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: AnimatedBuilder(
+        animation: _scrollController,
+        child: Container(
+          height: statusHeight,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.black.withValues(alpha: 0.06),
+              ),
+            ),
+          ),
+        ),
+        builder: (context, child) {
+          final offset =
+              _scrollController.hasClients ? _scrollController.offset : 0.0;
+          final progress = ((offset - 16) / 42).clamp(0.0, 1.0).toDouble();
+
+          return IgnorePointer(
+            child: Opacity(
+              opacity: progress,
+              child: Transform.translate(
+                offset: Offset(0, -statusHeight * (1 - progress)),
+                child: child,
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -359,13 +519,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    _buildRoundIconButton(
-                      icon: Icons.arrow_back,
-                      tooltip: 'Back',
-                      onTap: () => Navigator.maybePop(context),
-                    ),
-                    const Spacer(),
                     if (isPremium) ...[
                       _buildStatusPill(
                         icon: Icons.workspace_premium,
@@ -705,7 +860,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final currentUserProfileId = _displayInt(
       ApiClient.currentUserProfile?['id'],
     );
-    final viewingProfileId = _displayInt(profile['id']) ?? widget.profileId;
+    final viewingProfileId = _displayInt(profile['id']) ?? _currentProfileId;
     return currentUserProfileId != null &&
         currentUserProfileId == viewingProfileId;
   }
@@ -1078,8 +1233,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     try {
       final response = shouldShortlist
-          ? await ApiClient.shortlistProfile(widget.profileId)
-          : await ApiClient.unshortlistProfile(widget.profileId);
+          ? await ApiClient.shortlistProfile(_currentProfileId)
+          : await ApiClient.unshortlistProfile(_currentProfileId);
       if (!mounted) return;
 
       if (_responseSuccess(response)) {
@@ -1140,7 +1295,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     });
 
     try {
-      final response = await ApiClient.hideProfile(widget.profileId);
+      final response = await ApiClient.hideProfile(_currentProfileId);
       if (!mounted) return;
 
       if (_responseSuccess(response)) {
@@ -1150,7 +1305,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           Colors.green,
         );
         Navigator.pop(context, {
-          'profileId': widget.profileId,
+          'profileId': _currentProfileId,
           'action': 'hidden',
         });
         return;
@@ -1189,7 +1344,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     });
 
     try {
-      final response = await ApiClient.blockProfile(widget.profileId);
+      final response = await ApiClient.blockProfile(_currentProfileId);
       if (!mounted) return;
 
       if (_responseSuccess(response)) {
@@ -1203,7 +1358,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           Colors.green,
         );
         Navigator.pop(context, {
-          'profileId': widget.profileId,
+          'profileId': _currentProfileId,
           'action': 'blocked',
         });
         return;
@@ -1435,7 +1590,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   String _fallbackProfileShareText() {
     final profile = _profile;
-    if (profile == null) return 'Profile ID: ${widget.profileId}';
+    if (profile == null) return 'Profile ID: $_currentProfileId';
 
     final hero = _displayHero();
     final age = _calculateAge(profile['date_of_birth']?.toString());
@@ -1450,7 +1605,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       if (ageLabel != null) ageLabel else if (age != null) '$age वर्षे',
       if (communityLabel != null) communityLabel,
       if (location != null) location,
-      'Profile ID: ${widget.profileId}',
+      'Profile ID: $_currentProfileId',
     ];
 
     return parts.join('\n');
@@ -1482,7 +1637,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     try {
       final response = await ApiClient.reportProfile(
-        profileId: widget.profileId,
+        profileId: _currentProfileId,
         reason: trimmedReason,
       );
       if (!mounted) return;
