@@ -12,7 +12,7 @@ import 'features/matrimony_profile/view_profile_screen.dart';
 // RouteObserver for RouteAware lifecycle management
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
-const Color _brandMaroon = Color(0xFF8B1E3F);
+const Color _brandMaroon = Color(0xFFDC2626);
 const Color _brandGold = Color(0xFFC79A3B);
 const Color _screenBackground = Color(0xFFF8F4EF);
 

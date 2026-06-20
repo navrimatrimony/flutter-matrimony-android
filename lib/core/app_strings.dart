@@ -6,6 +6,8 @@ class AppStrings {
   static String get appName =>
       _mr ? 'नवरी मिळे नवऱ्याला' : 'Navri Mile Navryala';
 
+  static bool get isMarathi => _mr;
+
   static String get chooseLanguage =>
       _mr ? 'भाषा निवडा' : 'Choose Language';
 
@@ -67,6 +69,167 @@ class AppStrings {
 
   static String get matchesTabMore =>
       _mr ? 'अधिक स्थळे' : 'More Matches';
+
+  static String get matchesFilter => _mr ? 'फिल्टर' : 'Filters';
+
+  static String get matchesFilterHint =>
+      _mr ? 'वय, जात, ठिकाण निवडा' : 'Age, caste, location';
+
+  static String get chooseLocationForNearMe => _mr
+      ? 'जवळची स्थळे पाहण्यासाठी location filter निवडा.'
+      : 'Choose a location filter to see nearby profiles.';
+
+  static String get chooseLocationFilter =>
+      _mr ? 'Location निवडा' : 'Choose location';
+
+  static String get membersYouMayLike =>
+      _mr ? 'तुम्हाला आवडू शकणारी स्थळे' : 'Profiles you may like';
+
+  static String get moreProfilesYouMayLike =>
+      _mr ? 'आणखी योग्य स्थळे' : 'More suitable profiles';
+
+  static String get premiumProfiles =>
+      _mr ? 'Premium स्थळे' : 'Premium profiles';
+
+  static String get premiumProfilesSubtitle =>
+      _mr ? 'सदस्यत्व असलेली निवडक स्थळे' : 'Selected premium profiles';
+
+  static String get profilesFromSearch =>
+      _mr ? 'तुमच्या सध्याच्या शोधातील स्थळे' : 'Profiles from your search';
+
+  static String moreMatchesSectionTitle(String key, String? targetGender) {
+    final target = targetGender?.trim().toLowerCase();
+    final bride = target == 'female';
+    final groom = target == 'male';
+
+    switch (key) {
+      case 'looking_for_me':
+        if (_mr) {
+          if (bride) return 'माझ्या शोधात असलेल्या वधू';
+          if (groom) return 'माझ्या शोधात असलेले वर';
+          return 'माझ्या शोधात असलेली स्थळे';
+        }
+        if (bride) return 'Brides looking for me';
+        if (groom) return 'Grooms looking for me';
+        return 'Profiles looking for me';
+      case 'recently_viewed':
+        if (_mr) {
+          if (bride) return 'अलीकडे पाहिलेल्या वधू';
+          if (groom) return 'अलीकडे पाहिलेले वर';
+          return 'अलीकडे पाहिलेली स्थळे';
+        }
+        if (bride) return 'Recently viewed Brides';
+        if (groom) return 'Recently viewed Grooms';
+        return 'Recently viewed Profiles';
+      case 'matching_my_preference':
+        if (_mr) {
+          if (bride) return 'माझ्या पसंतीशी जुळणाऱ्या वधू';
+          if (groom) return 'माझ्या पसंतीशी जुळणारे वर';
+          return 'माझ्या पसंतीशी जुळणारी स्थळे';
+        }
+        if (bride) return 'Brides matching my preference';
+        if (groom) return 'Grooms matching my preference';
+        return 'Profiles matching my preference';
+      case 'recent_visitors':
+        if (_mr) {
+          if (bride) return 'अलीकडील भेट देणाऱ्या वधू';
+          if (groom) return 'अलीकडील भेट देणारे वर';
+          return 'अलीकडील भेट देणारी स्थळे';
+        }
+        return 'Recent visitors';
+      case 'you_may_like':
+        if (_mr) {
+          if (bride) return 'तुम्हाला आवडू शकणाऱ्या वधू';
+          if (groom) return 'तुम्हाला आवडू शकणारे वर';
+          return 'तुम्हाला आवडू शकणारी स्थळे';
+        }
+        if (bride) return 'Brides you may like';
+        if (groom) return 'Grooms you may like';
+        return 'Profiles you may like';
+    }
+
+    return _mr ? 'अधिक स्थळे' : 'More Matches';
+  }
+
+  static String moreMatchesSectionSubtitle(String key) {
+    switch (key) {
+      case 'looking_for_me':
+        return _mr
+            ? 'ज्यांच्या पसंतीशी तुमची माहिती जुळू शकते'
+            : 'Profiles whose preferences may match you';
+      case 'recently_viewed':
+        return _mr
+            ? 'तुम्ही अलीकडे पाहिलेली स्थळे'
+            : 'Profiles you viewed recently';
+      case 'matching_my_preference':
+        return _mr
+            ? 'तुमच्या जोडीदार पसंतीवर आधारित'
+            : 'Based on your partner preferences';
+      case 'recent_visitors':
+        return _mr
+            ? 'तुमचे profile कोणी पाहिले ते पहा'
+            : 'See who viewed your profile';
+      case 'you_may_like':
+        return _mr
+            ? 'तुमच्यासाठी सुचवलेली स्थळे'
+            : 'Suggested profiles for you';
+    }
+
+    return '';
+  }
+
+  static String get upgradeToSeeVisitors => _mr
+      ? 'भेट देणारे पाहण्यासाठी अपग्रेड करा'
+      : 'Upgrade to see visitors';
+
+  static String get upgrade => _mr ? 'अपग्रेड करा' : 'Upgrade';
+
+  static String get bottomHome => _mr ? 'होम' : 'Home';
+
+  static String get bottomMatches => _mr ? 'स्थळे' : 'Matches';
+
+  static String get bottomConnect => _mr ? 'कनेक्ट' : 'Connect';
+
+  static String get bottomChat => _mr ? 'चॅट' : 'Chat';
+
+  static String get connectReceived => _mr ? 'आलेले' : 'Received';
+
+  static String get connectSent => _mr ? 'पाठवलेले' : 'Sent';
+
+  static String get notificationsSoon => _mr
+      ? 'सूचना लवकरच app मध्ये येतील.'
+      : 'Notifications will be available soon.';
+
+  static String get chatComingSoon => _mr
+      ? 'Chat सुविधा लवकरच app मध्ये येईल.'
+      : 'Chat will be available in the app soon.';
+
+  static String visitorsLockedMessage(int? count) {
+    if (_mr) {
+      return count != null && count > 0
+          ? '$count भेटी लॉक आहेत.'
+          : 'तुमचे profile कोणी पाहिले ते पाहण्यासाठी upgrade आवश्यक आहे.';
+    }
+    return count != null && count > 0
+        ? '$count visits are locked.'
+        : 'Upgrade is required to see who viewed your profile.';
+  }
+
+  static String get likeThisProfile =>
+      _mr ? 'हे स्थळ आवडले?' : 'Like this profile?';
+
+  static String get photoUnavailable =>
+      _mr ? 'फोटो उपलब्ध नाही' : 'Photo not available';
+
+  static String comparisonLabel(String label) {
+    if (!_mr) return label;
+
+    final normalized = label.trim().toLowerCase();
+    if (normalized == 'you & her') return 'तू आणि ती';
+    if (normalized == 'you & him') return 'तू आणि तो';
+    if (normalized == 'you & profile') return 'तू आणि हे स्थळ';
+    return label;
+  }
 
   static String get myProfile => _mr ? 'माझे प्रोफाइल' : 'My Profile';
 

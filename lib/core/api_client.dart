@@ -846,6 +846,36 @@ class ApiClient {
     return _decodeResponse(response);
   }
 
+  static Future<Map<String, dynamic>> getMoreMatchSections() async {
+    if (authToken == null) {
+      return <String, dynamic>{
+        'success': false,
+        'statusCode': 401,
+        'sections': <dynamic>[],
+      };
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          '${ApiRoutes.baseUrl}${ApiRoutes.matrimonyProfileMoreSections}',
+        ),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+      );
+
+      return _decodeResponse(response);
+    } catch (_) {
+      return <String, dynamic>{
+        'success': false,
+        'statusCode': 0,
+        'sections': <dynamic>[],
+      };
+    }
+  }
+
   static Future<Map<String, dynamic>> getProfileDetail(int profileId) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
