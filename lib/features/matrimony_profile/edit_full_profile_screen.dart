@@ -46,10 +46,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _workLocationSearching = false;
   bool _optionsLoading = false;
   bool _educationCareerOptionsLoading = false;
+  bool _maritalLifestyleOptionsLoading = false;
 
   String? _loadError;
   String? _optionsError;
   String? _educationCareerOptionsError;
+  String? _maritalLifestyleOptionsError;
   String? _selectedReligionLabel;
   String? _selectedCasteLabel;
   String? _selectedSubCasteLabel;
@@ -73,6 +75,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _selectedComplexionId;
   int? _selectedBloodGroupId;
   int? _selectedPhysicalBuildId;
+  int? _selectedMaritalStatusId;
+  bool? _selectedHasChildren;
+  int? _selectedDietId;
+  int? _selectedSmokingStatusId;
+  int? _selectedDrinkingStatusId;
   int? _selectedEducationDegreeId;
   int? _selectedOccupationMasterId;
   int? _selectedOccupationCustomId;
@@ -103,6 +110,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _spectaclesLensOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _physicalConditionOptions =
       <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _maritalStatusOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _dietOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _smokingStatusOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _drinkingStatusOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _educationDegreeOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _educationSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _occupationOptions = <Map<String, dynamic>>[];
@@ -143,6 +154,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (value is int) return value;
     if (value is num) return value.toInt();
     return int.tryParse(value?.toString() ?? '');
+  }
+
+  bool? _readBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    final text = value?.toString().trim().toLowerCase();
+    if (text == null || text.isEmpty || text == 'null') return null;
+    if (['1', 'true', 'yes', 'y'].contains(text)) return true;
+    if (['0', 'false', 'no', 'n'].contains(text)) return false;
+
+    return null;
   }
 
   String? _readText(dynamic value) {
@@ -342,6 +365,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedPhysicalBuildId = _readInt(profile['physical_build_id']);
     _selectedSpectaclesLens = _readText(profile['spectacles_lens']);
     _selectedPhysicalCondition = _readText(profile['physical_condition']);
+    _selectedMaritalStatusId = _readInt(profile['marital_status_id']);
+    _selectedHasChildren = _readBool(profile['has_children']);
+    _selectedDietId = _readInt(profile['diet_id']);
+    _selectedSmokingStatusId = _readInt(profile['smoking_status_id']);
+    _selectedDrinkingStatusId = _readInt(profile['drinking_status_id']);
     _selectedOccupationMasterId = _readInt(profile['occupation_master_id']);
     _selectedOccupationCustomId = _readInt(profile['occupation_custom_id']);
     _selectedOccupationLabel =
@@ -374,6 +402,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _loadReligions(),
         _loadBasicPhysicalOptions(),
         _loadEducationCareerOptions(),
+        _loadMaritalLifestyleOptions(),
       ]);
     } catch (_) {
       if (!mounted) return;
@@ -505,6 +534,40 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (mounted) {
         setState(() {
           _educationCareerOptionsLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadMaritalLifestyleOptions() async {
+    if (!mounted) return;
+    setState(() {
+      _maritalLifestyleOptionsLoading = true;
+      _maritalLifestyleOptionsError = null;
+    });
+
+    try {
+      final results = await ApiClient.getProfileMaritalLifestyleOptions();
+      if (!mounted) return;
+      setState(() {
+        _maritalStatusOptions =
+            results['marital_statuses'] ?? <Map<String, dynamic>>[];
+        _dietOptions = results['diets'] ?? <Map<String, dynamic>>[];
+        _smokingStatusOptions =
+            results['smoking_statuses'] ?? <Map<String, dynamic>>[];
+        _drinkingStatusOptions =
+            results['drinking_statuses'] ?? <Map<String, dynamic>>[];
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _maritalLifestyleOptionsError =
+            'Marital आणि lifestyle options load करता आले नाहीत.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _maritalLifestyleOptionsLoading = false;
         });
       }
     }
@@ -1162,6 +1225,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'physical_build_id': _selectedPhysicalBuildId,
       'spectacles_lens': _selectedSpectaclesLens,
       'physical_condition': _selectedPhysicalCondition,
+      'marital_status_id': _selectedMaritalStatusId,
+      'has_children': _selectedHasChildren,
+      'diet_id': _selectedDietId,
+      'smoking_status_id': _selectedSmokingStatusId,
+      'drinking_status_id': _selectedDrinkingStatusId,
       'occupation_master_id': _selectedOccupationMasterId,
       'occupation_custom_id': _selectedOccupationCustomId,
       'company_name': _nullableText(_companyNameController),
@@ -1305,7 +1373,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     required int? selectedId,
     required String fallbackPrefix,
     required ValueChanged<int?> onChanged,
+    bool? loading,
   }) {
+    final isLoading = loading ?? _optionsLoading;
     final selectedValue =
         options.any((row) => _readInt(row['id']) == selectedId)
         ? selectedId
@@ -1330,7 +1400,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       onChanged: _saving || items.isEmpty ? null : onChanged,
       decoration: InputDecoration(
         labelText: labelText,
-        hintText: _optionsLoading
+        hintText: isLoading
             ? AppStrings.loading
             : _labelForId(options, selectedId, fallbackPrefix) ?? 'Optional',
         prefixIcon: Icon(icon),
@@ -1397,6 +1467,111 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 onPressed: () => onChanged(null),
               ),
       ),
+    );
+  }
+
+  Widget _boolDropdown({
+    required String labelText,
+    required IconData icon,
+    required bool? selectedValue,
+    required ValueChanged<bool?> onChanged,
+  }) {
+    final selectedKey = selectedValue == null ? -1 : (selectedValue ? 1 : 0);
+
+    return DropdownButtonFormField<int>(
+      key: ValueKey('$labelText-${selectedValue?.toString() ?? 'none'}'),
+      initialValue: selectedKey,
+      isExpanded: true,
+      items: const [
+        DropdownMenuItem<int>(value: -1, child: Text('Not selected')),
+        DropdownMenuItem<int>(value: 0, child: Text('No')),
+        DropdownMenuItem<int>(value: 1, child: Text('Yes')),
+      ],
+      onChanged: _saving
+          ? null
+          : (value) {
+              if (value == null || value < 0) {
+                onChanged(null);
+              } else {
+                onChanged(value == 1);
+              }
+            },
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: 'Optional',
+        prefixIcon: Icon(icon),
+      ),
+    );
+  }
+
+  Widget _buildMaritalLifestyleSection() {
+    return _sectionCard(
+      title: 'Marital & Lifestyle',
+      icon: Icons.favorite_border,
+      children: [
+        _intDropdown(
+          labelText: 'Marital status (Optional)',
+          icon: Icons.favorite_border,
+          options: _maritalStatusOptions,
+          selectedId: _selectedMaritalStatusId,
+          fallbackPrefix: 'Marital status',
+          loading: _maritalLifestyleOptionsLoading,
+          onChanged: (value) =>
+              setState(() => _selectedMaritalStatusId = value),
+        ),
+        const SizedBox(height: 14),
+        _boolDropdown(
+          labelText: 'Has children (Optional)',
+          icon: Icons.child_care_outlined,
+          selectedValue: _selectedHasChildren,
+          onChanged: (value) => setState(() => _selectedHasChildren = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Diet (Optional)',
+          icon: Icons.restaurant_outlined,
+          options: _dietOptions,
+          selectedId: _selectedDietId,
+          fallbackPrefix: 'Diet',
+          loading: _maritalLifestyleOptionsLoading,
+          onChanged: (value) => setState(() => _selectedDietId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Smoking status (Optional)',
+          icon: Icons.smoke_free_outlined,
+          options: _smokingStatusOptions,
+          selectedId: _selectedSmokingStatusId,
+          fallbackPrefix: 'Smoking status',
+          loading: _maritalLifestyleOptionsLoading,
+          onChanged: (value) =>
+              setState(() => _selectedSmokingStatusId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Drinking status (Optional)',
+          icon: Icons.local_bar_outlined,
+          options: _drinkingStatusOptions,
+          selectedId: _selectedDrinkingStatusId,
+          fallbackPrefix: 'Drinking status',
+          loading: _maritalLifestyleOptionsLoading,
+          onChanged: (value) =>
+              setState(() => _selectedDrinkingStatusId = value),
+        ),
+        if (_maritalLifestyleOptionsLoading)
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: LinearProgressIndicator(),
+          ),
+        if (_maritalLifestyleOptionsError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              _maritalLifestyleOptionsError!,
+              style: TextStyle(color: Colors.amber.shade900),
+            ),
+          ),
+      ],
     );
   }
 
@@ -1863,6 +2038,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                       child: Column(
                         children: [
                           _buildBasicSection(),
+                          _buildMaritalLifestyleSection(),
                           _buildBirthSection(),
                           _buildPhysicalSection(),
                           _buildEducationCareerSection(),

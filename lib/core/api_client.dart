@@ -807,6 +807,70 @@ class ApiClient {
     return options;
   }
 
+  static Future<Map<String, List<Map<String, dynamic>>>>
+  getProfileMaritalLifestyleOptions() async {
+    if (authToken == null) {
+      throw Exception('Auth token missing');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.profileMaritalLifestyleOptions,
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Marital lifestyle options load failed: HTTP ${response.statusCode}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    final payload = decoded is Map
+        ? decoded['data'] ?? decoded['options'] ?? decoded
+        : null;
+    final source = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
+    final options = <String, List<Map<String, dynamic>>>{};
+
+    void addOptions(String key, List<String> aliases) {
+      for (final alias in aliases) {
+        final rows = _safeOptionList(source[alias]);
+        if (rows.isNotEmpty) {
+          options[key] = rows;
+          return;
+        }
+      }
+      options[key] = <Map<String, dynamic>>[];
+    }
+
+    addOptions('marital_statuses', const [
+      'marital_statuses',
+      'maritalStatuses',
+      'marital_status',
+    ]);
+    addOptions('diets', const ['diets', 'diet']);
+    addOptions('smoking_statuses', const [
+      'smoking_statuses',
+      'smokingStatuses',
+      'smoking_status',
+    ]);
+    addOptions('drinking_statuses', const [
+      'drinking_statuses',
+      'drinkingStatuses',
+      'drinking_status',
+    ]);
+
+    return options;
+  }
+
   static Future<List<Map<String, dynamic>>> getCastes({
     required int religionId,
   }) async {
