@@ -12,6 +12,8 @@ class ApiRoutes {
   static const String matrimonyProfiles = '/matrimony-profiles'; // For listing
   static const String matrimonyProfileMoreSections =
       '/matrimony-profiles/more-sections';
+  static const String profileBasicPhysicalOptions =
+      '/profile/basic-physical-options';
   static const String religions = '/religions';
   static const String genders = '/genders';
   static const String castes = '/castes';

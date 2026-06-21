@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import '../matrimony_profile/create_profile_screen.dart';
+import '../matrimony_profile/edit_full_profile_screen.dart';
 import '../photo/photo_upload_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../interests/received_interests_screen.dart';
@@ -323,8 +323,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => CreateMatrimonyProfileScreen(
-                            existingProfile: ApiClient.currentUserProfile,
+                          builder: (_) => EditFullProfileScreen(
+                            initialProfile: ApiClient.currentUserProfile,
                           ),
                         ),
                       );

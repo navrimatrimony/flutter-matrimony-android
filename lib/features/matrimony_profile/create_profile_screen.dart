@@ -55,6 +55,7 @@ class _CreateMatrimonyProfileScreenState
   List<Map<String, dynamic>> _subCasteSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
   final List<String> _selectedEducations = <String>[];
+  int _currentStep = 0;
 
   @override
   void initState() {
@@ -613,6 +614,170 @@ class _CreateMatrimonyProfileScreenState
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  int get _totalSteps => 3;
+
+  bool get _isEditMode => widget.existingProfile != null;
+
+  String get _primaryActionLabel {
+    if (_currentStep < _totalSteps - 1) return 'Continue';
+    return _isEditMode ? 'Update Profile' : 'Create Profile';
+  }
+
+  String _stepTitle(int index) {
+    switch (index) {
+      case 0:
+        return 'Basic details';
+      case 1:
+        return 'Community';
+      case 2:
+        return 'Education & location';
+      default:
+        return 'Profile setup';
+    }
+  }
+
+  String _stepSubtitle(int index) {
+    switch (index) {
+      case 0:
+        return 'Start with the core profile identity.';
+      case 1:
+        return 'Select religion, caste and optional sub-caste from suggestions.';
+      case 2:
+        return 'Add education and select a valid location.';
+      default:
+        return '';
+    }
+  }
+
+  IconData _stepIcon(int index) {
+    switch (index) {
+      case 0:
+        return Icons.badge_outlined;
+      case 1:
+        return Icons.group_outlined;
+      case 2:
+        return Icons.school_outlined;
+      default:
+        return Icons.person_outline;
+    }
+  }
+
+  bool _validateBasicStep() {
+    if (_fullNameController.text.trim().isEmpty) {
+      _showMessage('कृपया full name भरा.');
+      return false;
+    }
+
+    if (_selectedGenderId == null) {
+      _showMessage(AppStrings.selectProfileType);
+      return false;
+    }
+
+    if (_dobController.text.trim().isEmpty) {
+      _showMessage('कृपया date of birth निवडा.');
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _resolveOptionalSubCasteSelection() {
+    final subCasteText = _subCasteController.text.trim();
+    if (subCasteText.isEmpty || _selectedSubCasteId != null) {
+      return true;
+    }
+
+    final exactSubCaste = _findExactOptionByLabel(
+      _subCasteSuggestions,
+      subCasteText,
+      'Sub-caste',
+    );
+    final exactSubCasteId = exactSubCaste == null
+        ? null
+        : _readInt(exactSubCaste['id']);
+    if (exactSubCaste != null && exactSubCasteId != null) {
+      setState(() {
+        _selectedSubCasteId = exactSubCasteId;
+        _selectedSubCasteLabel = _optionLabel(exactSubCaste, 'Sub-caste');
+        _subCasteController.text = _selectedSubCasteLabel ?? subCasteText;
+      });
+      return true;
+    }
+
+    _showMessage(
+      'कृपया suggestions मधून sub-caste निवडा किंवा field रिकामी ठेवा.',
+    );
+    return false;
+  }
+
+  bool _validateCommunityStep() {
+    if (_selectedReligionId == null) {
+      _showMessage('कृपया suggestions मधून religion निवडा.');
+      return false;
+    }
+
+    if (_selectedCasteId == null || (_selectedCasteLabel?.trim().isEmpty ?? true)) {
+      _showMessage('कृपया suggestions मधून caste निवडा.');
+      return false;
+    }
+
+    return _resolveOptionalSubCasteSelection();
+  }
+
+  bool _validateEducationLocationStep() {
+    if (_educationSubmitText().isEmpty) {
+      _showMessage('कृपया education भरा किंवा suggestion निवडा.');
+      return false;
+    }
+
+    if (_selectedLocationId == null) {
+      _showMessage('कृपया suggestions मधून location निवडा.');
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _validateCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        return _validateBasicStep();
+      case 1:
+        return _validateCommunityStep();
+      case 2:
+        return _validateEducationLocationStep();
+      default:
+        return true;
+    }
+  }
+
+  void _goToPreviousStep() {
+    FocusScope.of(context).unfocus();
+    if (_currentStep == 0) {
+      Navigator.maybePop(context);
+      return;
+    }
+
+    setState(() {
+      _currentStep -= 1;
+    });
+  }
+
+  Future<void> _handlePrimaryAction() async {
+    FocusScope.of(context).unfocus();
+
+    if (!_validateCurrentStep()) return;
+
+    if (_currentStep < _totalSteps - 1) {
+      setState(() {
+        _currentStep += 1;
+      });
+      return;
+    }
+
+    await _submitProfile();
+  }
+
   Future<void> _submitProfile() async {
     final selectedCasteLabel = _selectedCasteLabel?.trim();
     final casteLabel =
@@ -878,189 +1043,377 @@ class _CreateMatrimonyProfileScreenState
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final subCasteEnabled = _selectedCasteId != null;
+  Widget _buildProgressHeader(BuildContext context) {
+    final progress = (_currentStep + 1) / _totalSteps;
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      color: theme.colorScheme.surface,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Step ${_currentStep + 1} of $_totalSteps',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                '${(progress * 100).round()}%',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepShell(Widget child) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  _stepIcon(_currentStep),
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _stepTitle(_currentStep),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _stepSubtitle(_currentStep),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.grey.shade700,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 22),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBasicDetailsStep() {
     final selectedGenderValue =
         _genders.any((row) => _readInt(row['id']) == _selectedGenderId)
         ? _selectedGenderId
         : null;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.existingProfile == null ? 'Create Profile' : 'Edit Profile',
+    return Column(
+      children: [
+        TextField(
+          controller: _fullNameController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Full Name',
+            prefixIcon: Icon(Icons.person_outline),
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _fullNameController,
-              decoration: const InputDecoration(labelText: 'Full Name'),
-            ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<int>(
-              value: selectedGenderValue,
-              isExpanded: true,
-              items: _genders
-                  .map((gender) {
-                    final id = _readInt(gender['id']);
-                    if (id == null) return null;
+        const SizedBox(height: 14),
+        DropdownButtonFormField<int>(
+          initialValue: selectedGenderValue,
+          isExpanded: true,
+          items: _genders
+              .map((gender) {
+                final id = _readInt(gender['id']);
+                if (id == null) return null;
 
-                    return DropdownMenuItem<int>(
-                      value: id,
-                      child: Text(_genderOptionLabel(gender)),
-                    );
-                  })
-                  .whereType<DropdownMenuItem<int>>()
-                  .toList(),
-              onChanged: _loading || _gendersLoading
-                  ? null
-                  : (value) {
-                      setState(() {
-                        _selectedGenderId = value;
-                      });
-                    },
-              decoration: InputDecoration(
-                labelText: AppStrings.profileType,
-                hintText: _gendersLoading
-                    ? AppStrings.loading
-                    : AppStrings.brideGroom,
-                errorText: _genderLoadError,
-              ),
-            ),
-            if (_gendersLoading) const LinearProgressIndicator(),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _dobController,
-              readOnly: true,
-              decoration: const InputDecoration(
-                labelText: 'Date of Birth (YYYY-MM-DD)',
-              ),
-              onTap: () async {
-                final pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: DateTime(1995),
-                  firstDate: DateTime(1950),
-                  lastDate: DateTime.now(),
+                return DropdownMenuItem<int>(
+                  value: id,
+                  child: Text(_genderOptionLabel(gender)),
                 );
+              })
+              .whereType<DropdownMenuItem<int>>()
+              .toList(),
+          onChanged: _loading || _gendersLoading
+              ? null
+              : (value) {
+                  setState(() {
+                    _selectedGenderId = value;
+                  });
+                },
+          decoration: InputDecoration(
+            labelText: AppStrings.profileType,
+            hintText: _gendersLoading ? AppStrings.loading : AppStrings.brideGroom,
+            errorText: _genderLoadError,
+            prefixIcon: const Icon(Icons.wc_outlined),
+          ),
+        ),
+        if (_gendersLoading) const LinearProgressIndicator(),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _dobController,
+          readOnly: true,
+          decoration: const InputDecoration(
+            labelText: 'Date of Birth (YYYY-MM-DD)',
+            prefixIcon: Icon(Icons.calendar_today_outlined),
+          ),
+          onTap: () async {
+            final pickedDate = await showDatePicker(
+              context: context,
+              initialDate: DateTime(1995),
+              firstDate: DateTime(1950),
+              lastDate: DateTime.now(),
+            );
 
-                if (pickedDate != null) {
-                  if (!context.mounted) return;
+            if (pickedDate == null) return;
+            if (!context.mounted) return;
 
-                  final dateStr =
-                      "${pickedDate.year.toString().padLeft(4, '0')}-"
-                      "${pickedDate.month.toString().padLeft(2, '0')}-"
-                      "${pickedDate.day.toString().padLeft(2, '0')}";
-                  _dobController.text = dateStr;
+            final dateStr =
+                "${pickedDate.year.toString().padLeft(4, '0')}-"
+                "${pickedDate.month.toString().padLeft(2, '0')}-"
+                "${pickedDate.day.toString().padLeft(2, '0')}";
+            setState(() {
+              _dobController.text = dateStr;
+            });
+          },
+        ),
+      ],
+    );
+  }
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Date select केले: $dateStr'),
-                      backgroundColor: Colors.green,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
-                }
-              },
+  Widget _buildCommunityStep() {
+    final subCasteEnabled = _selectedCasteId != null;
+
+    return Column(
+      children: [
+        TextField(
+          controller: _religionController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Religion',
+            prefixIcon: Icon(Icons.account_balance_outlined),
+          ),
+          onChanged: _onReligionChanged,
+          onTap: () => _onReligionChanged(_religionController.text),
+        ),
+        _buildOptionSuggestions(
+          suggestions: _religionSuggestions,
+          fallbackPrefix: 'Religion',
+          onSelect: _selectReligion,
+          loading: _religionsLoading,
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _casteController,
+          enabled: _selectedReligionId != null && !_castesLoading,
+          textInputAction: TextInputAction.next,
+          decoration: InputDecoration(
+            labelText: 'Caste',
+            hintText: _selectedReligionId == null ? 'Select religion first' : null,
+            prefixIcon: const Icon(Icons.group_outlined),
+          ),
+          onChanged: _onCasteChanged,
+          onTap: () => _onCasteChanged(_casteController.text),
+        ),
+        _buildOptionSuggestions(
+          suggestions: _casteSuggestions,
+          fallbackPrefix: 'Caste',
+          onSelect: _selectCaste,
+          loading: _castesLoading,
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _subCasteController,
+          enabled: subCasteEnabled,
+          decoration: InputDecoration(
+            labelText: 'Sub-caste (Optional)',
+            hintText: subCasteEnabled ? null : 'Select caste first',
+            prefixIcon: const Icon(Icons.account_tree_outlined),
+          ),
+          onChanged: _searchSubCastes,
+        ),
+        _buildOptionSuggestions(
+          suggestions: _subCasteSuggestions,
+          fallbackPrefix: 'Sub-caste',
+          onSelect: _selectSubCaste,
+          loading: _subCasteSearching,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEducationLocationStep() {
+    return Column(
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: _openEducationPicker,
+          child: InputDecorator(
+            decoration: const InputDecoration(
+              labelText: 'Education',
+              prefixIcon: Icon(Icons.school_outlined),
+              suffixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _religionController,
-              decoration: const InputDecoration(labelText: 'Religion'),
-              onChanged: _onReligionChanged,
-              onTap: () => _onReligionChanged(_religionController.text),
-            ),
-            _buildOptionSuggestions(
-              suggestions: _religionSuggestions,
-              fallbackPrefix: 'Religion',
-              onSelect: _selectReligion,
-              loading: _religionsLoading,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _casteController,
-              enabled: _selectedReligionId != null && !_castesLoading,
-              decoration: InputDecoration(
-                labelText: 'Caste',
-                hintText: _selectedReligionId == null
-                    ? 'Select religion first'
+            child: Text(
+              _educationDisplayText(),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color:
+                    _selectedEducations.isEmpty &&
+                        _educationController.text.trim().isEmpty
+                    ? Colors.grey.shade700
                     : null,
               ),
-              onChanged: _onCasteChanged,
-              onTap: () => _onCasteChanged(_casteController.text),
             ),
-            _buildOptionSuggestions(
-              suggestions: _casteSuggestions,
-              fallbackPrefix: 'Caste',
-              onSelect: _selectCaste,
-              loading: _castesLoading,
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _subCasteController,
-              enabled: subCasteEnabled,
-              decoration: InputDecoration(
-                labelText: 'Sub-caste (Optional)',
-                hintText: subCasteEnabled ? null : 'Select caste first',
+          ),
+        ),
+        _buildEducationChips(),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _locationController,
+          decoration: const InputDecoration(
+            labelText: 'Location',
+            prefixIcon: Icon(Icons.location_on_outlined),
+          ),
+          onChanged: _searchLocations,
+        ),
+        _buildLocationSuggestions(),
+      ],
+    );
+  }
+
+  Widget _buildCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        return _buildBasicDetailsStep();
+      case 1:
+        return _buildCommunityStep();
+      case 2:
+        return _buildEducationLocationStep();
+      default:
+        return _buildBasicDetailsStep();
+    }
+  }
+
+  Widget _buildBottomActions() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _loading ? null : _goToPreviousStep,
+                child: Text(_currentStep == 0 ? 'Cancel' : 'Back'),
               ),
-              onChanged: _searchSubCastes,
             ),
-            _buildOptionSuggestions(
-              suggestions: _subCasteSuggestions,
-              fallbackPrefix: 'Sub-caste',
-              onSelect: _selectSubCaste,
-              loading: _subCasteSearching,
-            ),
-            const SizedBox(height: 12),
-            InkWell(
-              borderRadius: BorderRadius.circular(8),
-              onTap: _openEducationPicker,
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Education',
-                  suffixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
-                ),
-                child: Text(
-                  _educationDisplayText(),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color:
-                        _selectedEducations.isEmpty &&
-                            _educationController.text.trim().isEmpty
-                        ? Colors.grey.shade700
-                        : null,
-                  ),
-                ),
-              ),
-            ),
-            _buildEducationChips(),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _locationController,
-              decoration: const InputDecoration(labelText: 'Location'),
-              onChanged: _searchLocations,
-            ),
-            _buildLocationSuggestions(),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
               child: ElevatedButton(
-                onPressed: _loading ? null : _submitProfile,
+                onPressed: _loading
+                    ? null
+                    : () async {
+                        await _handlePrimaryAction();
+                      },
                 child: _loading
-                    ? const CircularProgressIndicator()
-                    : Text(
-                        widget.existingProfile == null
-                            ? 'Create Profile'
-                            : 'Update Profile',
-                      ),
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(_primaryActionLabel),
               ),
             ),
-            SizedBox(height: MediaQuery.of(context).viewInsets.bottom),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(_isEditMode ? 'Edit Profile' : 'Create Profile')),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildProgressHeader(context),
+            Expanded(
+              child: SingleChildScrollView(
+                keyboardDismissBehavior:
+                    ScrollViewKeyboardDismissBehavior.onDrag,
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 28),
+                child: _buildStepShell(_buildCurrentStep()),
+              ),
+            ),
+            _buildBottomActions(),
           ],
         ),
       ),

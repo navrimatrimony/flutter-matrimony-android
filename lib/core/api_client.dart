@@ -51,6 +51,45 @@ class ApiClient {
         .toList();
   }
 
+  static List<Map<String, dynamic>> _safeOptionList(dynamic value) {
+    if (value is Map) {
+      final nested = value['data'] ?? value['results'] ?? value['items'];
+      if (nested is List) {
+        return _safeOptionList(nested);
+      }
+      if (value.containsKey('id') ||
+          value.containsKey('key') ||
+          value.containsKey('label')) {
+        return <Map<String, dynamic>>[Map<String, dynamic>.from(value)];
+      }
+
+      return value.entries
+          .map((entry) {
+            final key = entry.key.toString().trim();
+            final label = entry.value?.toString().trim();
+            if (key.isEmpty || label == null || label.isEmpty) return null;
+
+            return <String, dynamic>{'key': key, 'label': label};
+          })
+          .whereType<Map<String, dynamic>>()
+          .toList();
+    }
+
+    if (value is! List) return <Map<String, dynamic>>[];
+
+    return value
+        .map((item) {
+          if (item is Map) return Map<String, dynamic>.from(item);
+
+          final label = item?.toString().trim();
+          if (label == null || label.isEmpty) return null;
+
+          return <String, dynamic>{'key': label, 'label': label};
+        })
+        .whereType<Map<String, dynamic>>()
+        .toList();
+  }
+
   static String? _firstNonEmptyValue(
     Map<String, dynamic>? data,
     List<String> keys,
@@ -583,6 +622,80 @@ class ApiClient {
       if (error is Exception) rethrow;
       throw Exception('Gender options response could not be read.');
     }
+  }
+
+  static Future<Map<String, List<Map<String, dynamic>>>> getProfileBasicPhysicalOptions() async {
+    if (authToken == null) {
+      throw Exception('Auth token missing');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.profileBasicPhysicalOptions,
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Profile options load failed: HTTP ${response.statusCode}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    final payload = decoded is Map
+        ? decoded['data'] ?? decoded['options'] ?? decoded
+        : null;
+    final source = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
+    final options = <String, List<Map<String, dynamic>>>{};
+
+    void addOptions(String key, List<String> aliases) {
+      for (final alias in aliases) {
+        final rows = _safeOptionList(source[alias]);
+        if (rows.isNotEmpty) {
+          options[key] = rows;
+          return;
+        }
+      }
+      options[key] = <Map<String, dynamic>>[];
+    }
+
+    addOptions('mother_tongues', const [
+      'mother_tongues',
+      'motherTongues',
+      'mother_tongue',
+    ]);
+    addOptions('complexions', const ['complexions', 'complexion']);
+    addOptions('blood_groups', const [
+      'blood_groups',
+      'bloodGroups',
+      'blood_group',
+    ]);
+    addOptions('physical_builds', const [
+      'physical_builds',
+      'physicalBuilds',
+      'physical_build',
+    ]);
+    addOptions('spectacles_lens', const [
+      'spectacles_lens',
+      'spectaclesLens',
+      'spectacles_options',
+      'spectacles',
+    ]);
+    addOptions('physical_conditions', const [
+      'physical_conditions',
+      'physicalConditions',
+      'physical_condition',
+    ]);
+
+    return options;
   }
 
   static Future<List<Map<String, dynamic>>> getCastes({
