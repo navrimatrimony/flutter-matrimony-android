@@ -14,6 +14,8 @@ class EditFullProfileScreen extends StatefulWidget {
 }
 
 class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
+  static const int _clearNumberSelection = -1;
+
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _religionController = TextEditingController();
@@ -128,13 +130,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return fallbackPrefix;
   }
 
-  String? _optionStringValue(Map<String, dynamic> row) {
-    for (final key in ['key', 'value', 'code', 'label', 'label_en', 'name']) {
+  String? _optionStoredValue(Map<String, dynamic> row) {
+    for (final key in ['key', 'value', 'code']) {
       final value = _readText(row[key]);
       if (value != null) return value;
     }
 
-    return localizedMapValue(row);
+    return null;
   }
 
   List<Map<String, dynamic>> _filterOptions(
@@ -638,8 +640,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Future<int?> _pickNumber({
     required String title,
-    required int min,
-    required int max,
+    required List<int> values,
     required int? selected,
     required String Function(int value) labelBuilder,
   }) {
@@ -647,7 +648,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       context: context,
       showDragHandle: true,
       builder: (sheetContext) {
-        final itemCount = max - min + 1;
         return SafeArea(
           child: SizedBox(
             height: MediaQuery.of(sheetContext).size.height * 0.62,
@@ -667,7 +667,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                         ),
                       ),
                       TextButton(
-                        onPressed: () => Navigator.pop(sheetContext),
+                        onPressed: () =>
+                            Navigator.pop(sheetContext, _clearNumberSelection),
                         child: const Text('Clear'),
                       ),
                     ],
@@ -675,10 +676,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 ),
                 Expanded(
                   child: ListView.separated(
-                    itemCount: itemCount,
+                    itemCount: values.length,
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
-                      final value = min + index;
+                      final value = values[index];
                       final isSelected = value == selected;
                       return ListTile(
                         title: Text(labelBuilder(value)),
@@ -699,13 +700,29 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   String _heightLabel(int cm) {
+    if (cm == 136) return 'Below 4\' 6" (136 cm)';
+    if (cm == 214) return 'Above 7\' 0" (214 cm)';
+
     final totalInches = (cm / 2.54).round();
     final feet = totalInches ~/ 12;
     final inches = totalInches % 12;
-    return '$cm cm ($feet\' $inches")';
+    return '$feet\' $inches" ($cm cm)';
   }
 
   String _weightLabel(int kg) => '$kg kg';
+
+  List<int> _heightValues() {
+    return <int>[
+      136,
+      ...List<int>.generate(
+        31,
+        (index) => ((54 + index) * 2.54).round(),
+      ),
+      214,
+    ];
+  }
+
+  List<int> _weightValues() => List<int>.generate(231, (index) => 20 + index);
 
   String? _labelForId(
     List<Map<String, dynamic>> options,
@@ -730,7 +747,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (normalizedValue == null || normalizedValue.isEmpty) return null;
 
     for (final option in options) {
-      final value = _optionStringValue(option)?.trim().toLowerCase();
+      final value = _optionStoredValue(option)?.trim().toLowerCase();
       if (value == normalizedValue) {
         return _optionLabel(option, fallback);
       }
@@ -953,13 +970,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       key: ValueKey('$labelText-${items.length}-${selectedValue ?? 'none'}'),
       initialValue: selectedValue,
       isExpanded: true,
-      items: <DropdownMenuItem<int>>[
-        const DropdownMenuItem<int>(
-          value: null,
-          child: Text('Not selected'),
-        ),
-        ...items,
-      ],
+      items: items,
       onChanged: _saving || items.isEmpty ? null : onChanged,
       decoration: InputDecoration(
         labelText: labelText,
@@ -967,6 +978,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             ? AppStrings.loading
             : _labelForId(options, selectedId, fallbackPrefix) ?? 'Optional',
         prefixIcon: Icon(icon),
+        suffixIcon: selectedId == null || _saving
+            ? null
+            : IconButton(
+                tooltip: 'Clear',
+                icon: const Icon(Icons.close),
+                onPressed: () => onChanged(null),
+              ),
       ),
     );
   }
@@ -983,7 +1001,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     String? matchedValue;
     if (normalizedSelected != null && normalizedSelected.isNotEmpty) {
       for (final row in options) {
-        final value = _optionStringValue(row);
+        final value = _optionStoredValue(row);
         if (value != null && value.trim().toLowerCase() == normalizedSelected) {
           matchedValue = value;
           break;
@@ -992,7 +1010,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
     final items = options
         .map((option) {
-          final value = _optionStringValue(option);
+          final value = _optionStoredValue(option);
           if (value == null || value.isEmpty) return null;
           return DropdownMenuItem<String>(
             value: value,
@@ -1006,13 +1024,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       key: ValueKey('$labelText-${items.length}-${matchedValue ?? 'none'}'),
       initialValue: matchedValue,
       isExpanded: true,
-      items: <DropdownMenuItem<String>>[
-        const DropdownMenuItem<String>(
-          value: null,
-          child: Text('Not selected'),
-        ),
-        ...items,
-      ],
+      items: items,
       onChanged: _saving || items.isEmpty ? null : onChanged,
       decoration: InputDecoration(
         labelText: labelText,
@@ -1021,6 +1033,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             : _labelForValue(options, selectedValue, fallbackPrefix) ??
                   'Optional',
         prefixIcon: Icon(icon),
+        suffixIcon: selectedValue == null || _saving
+            ? null
+            : IconButton(
+                tooltip: 'Clear',
+                icon: const Icon(Icons.close),
+                onPressed: () => onChanged(null),
+              ),
       ),
     );
   }
@@ -1227,13 +1246,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 onTap: () async {
                   final value = await _pickNumber(
                     title: 'Select height',
-                    min: 120,
-                    max: 220,
+                    values: _heightValues(),
                     selected: _selectedHeightCm,
                     labelBuilder: _heightLabel,
                   );
                   if (!mounted) return;
-                  setState(() => _selectedHeightCm = value);
+                  if (value == null) return;
+                  setState(() {
+                    _selectedHeightCm =
+                        value == _clearNumberSelection ? null : value;
+                  });
                 },
                 child: InputDecorator(
                   decoration: const InputDecoration(
@@ -1256,13 +1278,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 onTap: () async {
                   final value = await _pickNumber(
                     title: 'Select weight',
-                    min: 30,
-                    max: 140,
+                    values: _weightValues(),
                     selected: _selectedWeightKg,
                     labelBuilder: _weightLabel,
                   );
                   if (!mounted) return;
-                  setState(() => _selectedWeightKg = value);
+                  if (value == null) return;
+                  setState(() {
+                    _selectedWeightKg =
+                        value == _clearNumberSelection ? null : value;
+                  });
                 },
                 child: InputDecorator(
                   decoration: const InputDecoration(
