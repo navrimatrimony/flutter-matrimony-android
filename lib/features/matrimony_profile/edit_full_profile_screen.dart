@@ -25,6 +25,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _birthTimeController = TextEditingController();
   final TextEditingController _birthPlaceController = TextEditingController();
+  final TextEditingController _companyNameController = TextEditingController();
+  final TextEditingController _workLocationController = TextEditingController();
 
   bool _loading = true;
   bool _saving = false;
@@ -35,14 +37,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _locationSearching = false;
   bool _birthPlaceSearching = false;
   bool _optionsLoading = false;
+  bool _educationCareerOptionsLoading = false;
 
   String? _loadError;
   String? _optionsError;
+  String? _educationCareerOptionsError;
   String? _selectedReligionLabel;
   String? _selectedCasteLabel;
   String? _selectedSubCasteLabel;
   String? _selectedLocationLabel;
   String? _selectedBirthPlaceLabel;
+  String? _selectedOccupationLabel;
   String? _selectedSpectaclesLens;
   String? _selectedPhysicalCondition;
 
@@ -58,6 +63,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _selectedComplexionId;
   int? _selectedBloodGroupId;
   int? _selectedPhysicalBuildId;
+  int? _selectedOccupationMasterId;
+  int? _selectedOccupationCustomId;
 
   int _subCasteSearchRequest = 0;
   int _locationSearchRequest = 0;
@@ -77,6 +84,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _physicalBuildOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _spectaclesLensOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _physicalConditionOptions =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _educationDegreeOptions =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _educationSuggestions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _occupationOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _customOccupationOptions =
       <Map<String, dynamic>>[];
 
   @override
@@ -100,6 +113,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _locationController.dispose();
     _birthTimeController.dispose();
     _birthPlaceController.dispose();
+    _companyNameController.dispose();
+    _workLocationController.dispose();
     super.dispose();
   }
 
@@ -148,12 +163,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     return rows
         .where((row) {
-          return ['label', 'name', 'display_label', 'label_en', 'label_mr'].any(
-            (key) {
-              final value = row[key]?.toString().toLowerCase();
-              return value != null && value.contains(normalizedQuery);
-            },
-          );
+          return [
+            'label',
+            'name',
+            'display_label',
+            'label_en',
+            'label_mr',
+            'code',
+            'full_form',
+            'category_label',
+            'category_label_mr',
+          ].any((key) {
+            final value = row[key]?.toString().toLowerCase();
+            return value != null && value.contains(normalizedQuery);
+          });
         })
         .take(20)
         .toList();
@@ -198,6 +221,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedPhysicalBuildId = _readInt(profile['physical_build_id']);
     _selectedSpectaclesLens = _readText(profile['spectacles_lens']);
     _selectedPhysicalCondition = _readText(profile['physical_condition']);
+    _selectedOccupationMasterId = _readInt(profile['occupation_master_id']);
+    _selectedOccupationCustomId = _readInt(profile['occupation_custom_id']);
+    _selectedOccupationLabel =
+        ApiClient.safeDisplayLabel(profile['occupation_master_label']) ??
+        ApiClient.safeDisplayLabel(profile['occupation_custom_label']) ??
+        ApiClient.profileOccupationLabel(profile);
+    _companyNameController.text =
+        ApiClient.safeDisplayLabel(profile['company_name']) ?? '';
+    _workLocationController.text =
+        ApiClient.safeDisplayLabel(profile['work_location_text']) ?? '';
   }
 
   Future<void> _loadScreenData() async {
@@ -216,6 +249,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _loadGenders(),
         _loadReligions(),
         _loadBasicPhysicalOptions(),
+        _loadEducationCareerOptions(),
       ]);
     } catch (_) {
       if (!mounted) return;
@@ -315,6 +349,38 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (mounted) {
         setState(() {
           _optionsLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadEducationCareerOptions() async {
+    if (!mounted) return;
+    setState(() {
+      _educationCareerOptionsLoading = true;
+      _educationCareerOptionsError = null;
+    });
+
+    try {
+      final results = await ApiClient.getProfileEducationCareerOptions();
+      if (!mounted) return;
+      setState(() {
+        _educationDegreeOptions =
+            results['education_degrees'] ?? <Map<String, dynamic>>[];
+        _occupationOptions = results['occupations'] ?? <Map<String, dynamic>>[];
+        _customOccupationOptions =
+            results['custom_occupations'] ?? <Map<String, dynamic>>[];
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _educationCareerOptionsError =
+            'Education आणि career options load करता आले नाहीत.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _educationCareerOptionsLoading = false;
         });
       }
     }
@@ -534,6 +600,68 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       _locationSearching = false;
     });
     FocusScope.of(context).unfocus();
+  }
+
+  void _onEducationChanged(String query) {
+    setState(() {
+      _educationSuggestions = _filterOptions(_educationDegreeOptions, query);
+    });
+  }
+
+  void _selectEducation(Map<String, dynamic> degree) {
+    final label =
+        _readText(degree['code']) ?? _optionLabel(degree, 'Education');
+    setState(() {
+      _educationController.text = label;
+      _educationSuggestions = <Map<String, dynamic>>[];
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  String? _selectedOccupationChoice() {
+    if (_selectedOccupationMasterId != null) {
+      return 'master:${_selectedOccupationMasterId!}';
+    }
+    if (_selectedOccupationCustomId != null) {
+      return 'custom:${_selectedOccupationCustomId!}';
+    }
+
+    return null;
+  }
+
+  void _selectOccupationChoice(String? value) {
+    setState(() {
+      if (value == null || value.trim().isEmpty) {
+        _selectedOccupationMasterId = null;
+        _selectedOccupationCustomId = null;
+        _selectedOccupationLabel = null;
+        return;
+      }
+
+      final parts = value.split(':');
+      if (parts.length != 2) return;
+
+      final id = int.tryParse(parts[1]);
+      if (id == null) return;
+
+      if (parts[0] == 'master') {
+        _selectedOccupationMasterId = id;
+        _selectedOccupationCustomId = null;
+        _selectedOccupationLabel = _labelForId(
+          _occupationOptions,
+          id,
+          'Occupation',
+        );
+      } else if (parts[0] == 'custom') {
+        _selectedOccupationMasterId = null;
+        _selectedOccupationCustomId = id;
+        _selectedOccupationLabel = _labelForId(
+          _customOccupationOptions,
+          id,
+          'Occupation',
+        );
+      }
+    });
   }
 
   Future<void> _searchBirthPlaces(String query) async {
@@ -825,6 +953,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'physical_build_id': _selectedPhysicalBuildId,
       'spectacles_lens': _selectedSpectaclesLens,
       'physical_condition': _selectedPhysicalCondition,
+      'occupation_master_id': _selectedOccupationMasterId,
+      'occupation_custom_id': _selectedOccupationCustomId,
+      'company_name': _nullableText(_companyNameController),
+      'work_location_text': _nullableText(_workLocationController),
     };
 
     Map<String, dynamic> response;
@@ -926,7 +1058,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           final label = fallbackPrefix == 'Location'
               ? ApiClient.locationSuggestionLabel(item)
               : _optionLabel(item, fallbackPrefix);
-          final hierarchy = item['hierarchy']?.toString().trim();
+          final hierarchy =
+              item['hierarchy']?.toString().trim() ??
+              item['full_form']?.toString().trim() ??
+              item['category_label']?.toString().trim();
 
           return ListTile(
             dense: true,
@@ -1149,14 +1284,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         TextField(
-          controller: _educationController,
-          decoration: const InputDecoration(
-            labelText: 'Education',
-            prefixIcon: Icon(Icons.school_outlined),
-          ),
-        ),
-        const SizedBox(height: 14),
-        TextField(
           controller: _locationController,
           decoration: const InputDecoration(
             labelText: 'Current location',
@@ -1229,6 +1356,126 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             });
           },
         ),
+      ],
+    );
+  }
+
+  Widget _occupationDropdown() {
+    final items = <DropdownMenuItem<String>>[
+      ..._occupationOptions
+          .map((occupation) {
+            final id = _readInt(occupation['id']);
+            if (id == null) return null;
+            final label = _optionLabel(occupation, 'Occupation');
+            return DropdownMenuItem<String>(
+              value: 'master:$id',
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          })
+          .whereType<DropdownMenuItem<String>>(),
+      ..._customOccupationOptions
+          .map((occupation) {
+            final id = _readInt(occupation['id']);
+            if (id == null) return null;
+            final label = _optionLabel(occupation, 'Occupation');
+            return DropdownMenuItem<String>(
+              value: 'custom:$id',
+              child: Text(
+                '$label (Custom)',
+                overflow: TextOverflow.ellipsis,
+              ),
+            );
+          })
+          .whereType<DropdownMenuItem<String>>(),
+    ];
+
+    final selectedChoice = _selectedOccupationChoice();
+    final selectedValue = items.any((item) => item.value == selectedChoice)
+        ? selectedChoice
+        : null;
+
+    return DropdownButtonFormField<String>(
+      key: ValueKey(
+        'occupation-${items.length}-${selectedValue ?? 'none'}',
+      ),
+      initialValue: selectedValue,
+      isExpanded: true,
+      items: items,
+      onChanged: _saving || items.isEmpty ? null : _selectOccupationChoice,
+      decoration: InputDecoration(
+        labelText: 'Occupation (Optional)',
+        hintText: _educationCareerOptionsLoading
+            ? AppStrings.loading
+            : _selectedOccupationLabel ?? 'Optional',
+        prefixIcon: const Icon(Icons.work_outline),
+        suffixIcon:
+            (_selectedOccupationMasterId == null &&
+                _selectedOccupationCustomId == null)
+            ? null
+            : IconButton(
+                tooltip: 'Clear occupation',
+                icon: const Icon(Icons.close),
+                onPressed: _saving ? null : () => _selectOccupationChoice(null),
+              ),
+      ),
+    );
+  }
+
+  Widget _buildEducationCareerSection() {
+    return _sectionCard(
+      title: 'Education & Career',
+      icon: Icons.school_outlined,
+      children: [
+        TextField(
+          controller: _educationController,
+          decoration: InputDecoration(
+            labelText: 'Highest education',
+            hintText: _educationCareerOptionsLoading
+                ? AppStrings.loading
+                : 'Search or type education',
+            prefixIcon: const Icon(Icons.school_outlined),
+          ),
+          onChanged: _onEducationChanged,
+          onTap: () => _onEducationChanged(_educationController.text),
+        ),
+        _buildSuggestions(
+          suggestions: _educationSuggestions,
+          fallbackPrefix: 'Education',
+          loading: _educationCareerOptionsLoading,
+          onSelect: _selectEducation,
+        ),
+        const SizedBox(height: 14),
+        _occupationDropdown(),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _companyNameController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Company name (Optional)',
+            prefixIcon: Icon(Icons.business_outlined),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _workLocationController,
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            labelText: 'Work location (Optional)',
+            hintText: 'Example: Pune, Maharashtra',
+            prefixIcon: Icon(Icons.location_city_outlined),
+          ),
+        ),
+        if (_educationCareerOptionsError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              _educationCareerOptionsError!,
+              style: TextStyle(color: Colors.amber.shade900),
+            ),
+          ),
       ],
     );
   }
@@ -1395,6 +1642,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                           _buildBasicSection(),
                           _buildBirthSection(),
                           _buildPhysicalSection(),
+                          _buildEducationCareerSection(),
                         ],
                       ),
                     ),

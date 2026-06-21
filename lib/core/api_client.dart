@@ -698,6 +698,73 @@ class ApiClient {
     return options;
   }
 
+  static Future<Map<String, List<Map<String, dynamic>>>> getProfileEducationCareerOptions() async {
+    if (authToken == null) {
+      throw Exception('Auth token missing');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.profileEducationCareerOptions,
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Education career options load failed: HTTP ${response.statusCode}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    final payload = decoded is Map
+        ? decoded['data'] ?? decoded['options'] ?? decoded
+        : null;
+    final source = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
+    final options = <String, List<Map<String, dynamic>>>{};
+
+    void addOptions(String key, List<String> aliases) {
+      for (final alias in aliases) {
+        final rows = _safeOptionList(source[alias]);
+        if (rows.isNotEmpty) {
+          options[key] = rows;
+          return;
+        }
+      }
+      options[key] = <Map<String, dynamic>>[];
+    }
+
+    addOptions('education_degrees', const [
+      'education_degrees',
+      'educationDegrees',
+      'education',
+      'degrees',
+    ]);
+    addOptions('occupation_categories', const [
+      'occupation_categories',
+      'occupationCategories',
+    ]);
+    addOptions('occupations', const [
+      'occupations',
+      'occupation_masters',
+      'occupationMasters',
+    ]);
+    addOptions('custom_occupations', const [
+      'custom_occupations',
+      'customOccupations',
+      'occupation_custom',
+    ]);
+
+    return options;
+  }
+
   static Future<List<Map<String, dynamic>>> getCastes({
     required int religionId,
   }) async {
@@ -804,10 +871,12 @@ class ApiClient {
   }
 
   static Future<Map<String, dynamic>> login({
-    required String email,
+    String? login,
+    String? email,
     required String password,
   }) async {
     final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.login);
+    final loginValue = (login ?? email ?? '').trim();
 
     final response = await http.post(
       url,
@@ -815,7 +884,7 @@ class ApiClient {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'email': email, 'password': password}),
+      body: jsonEncode({'login': loginValue, 'password': password}),
     );
 
     final data = _decodeResponse(response);
