@@ -1112,6 +1112,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     });
 
     if (response['success'] == true) {
+      try {
+        await ApiClient.getMyProfile();
+      } catch (_) {
+        // Save already succeeded; the destination screen also performs a reload.
+      }
+      if (!mounted) return;
       _showMessage('Profile update यशस्वी!');
       Navigator.pushReplacementNamed(context, '/view-profile');
     } else {
