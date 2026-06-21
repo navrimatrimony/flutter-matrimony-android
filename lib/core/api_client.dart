@@ -11,9 +11,14 @@ class ApiClient {
   static String? authToken;
   static Map<String, dynamic>? currentUserProfile;
   static Set<int> sentInterestProfileIds = {};
+  static final Map<String, List<Map<String, dynamic>>> _locationSearchCache =
+      <String, List<Map<String, dynamic>>>{};
+  static final Map<String, DateTime> _locationSearchCacheTimes =
+      <String, DateTime>{};
 
   static const String _siteBaseUrl = 'https://navrimilenavryala.com';
   static const String _profilePhotoStoragePath = 'storage/matrimony_photos';
+  static const Duration _locationSearchCacheTtl = Duration(minutes: 2);
 
   static Map<String, dynamic> _decodeResponse(http.Response response) {
     Map<String, dynamic> data;
@@ -522,14 +527,44 @@ class ApiClient {
   }
 
   static Future<List<Map<String, dynamic>>> searchLocations(
-    String query,
-  ) async {
+    String query, {
+    int? preferredStateId,
+    String? preferredStateName,
+    int limit = 20,
+  }) async {
     final trimmedQuery = query.trim();
-    if (trimmedQuery.isEmpty) return <Map<String, dynamic>>[];
+    if (trimmedQuery.length < 2) return <Map<String, dynamic>>[];
+
+    final safeLimit = limit.clamp(1, 50);
+    final normalizedPreferredName = preferredStateName?.trim();
+    final cacheKey = [
+      trimmedQuery.toLowerCase(),
+      preferredStateId?.toString() ?? '',
+      normalizedPreferredName?.toLowerCase() ?? '',
+      safeLimit.toString(),
+    ].join('|');
+    final cachedAt = _locationSearchCacheTimes[cacheKey];
+    final cached = _locationSearchCache[cacheKey];
+    if (cachedAt != null &&
+        cached != null &&
+        DateTime.now().difference(cachedAt) < _locationSearchCacheTtl) {
+      return cached.map((row) => Map<String, dynamic>.from(row)).toList();
+    }
+
+    final queryParameters = <String, String>{
+      'q': trimmedQuery,
+      'limit': safeLimit.toString(),
+    };
+    if (preferredStateId != null && preferredStateId > 0) {
+      queryParameters['preferred_state_id'] = preferredStateId.toString();
+    } else if (normalizedPreferredName != null &&
+        normalizedPreferredName.isNotEmpty) {
+      queryParameters['preferred_state_name'] = normalizedPreferredName;
+    }
 
     final url = Uri.parse(
       ApiRoutes.rootApiBaseUrl + ApiRoutes.locationSearch,
-    ).replace(queryParameters: {'q': trimmedQuery});
+    ).replace(queryParameters: queryParameters);
 
     final response = await http.get(
       url,
@@ -538,7 +573,12 @@ class ApiClient {
 
     try {
       final decoded = jsonDecode(response.body);
-      return _safeMapList(decoded);
+      final results = _safeMapList(decoded);
+      _locationSearchCache[cacheKey] = results
+          .map((row) => Map<String, dynamic>.from(row))
+          .toList();
+      _locationSearchCacheTimes[cacheKey] = DateTime.now();
+      return results;
     } catch (_) {
       return <Map<String, dynamic>>[];
     }
@@ -624,7 +664,8 @@ class ApiClient {
     }
   }
 
-  static Future<Map<String, List<Map<String, dynamic>>>> getProfileBasicPhysicalOptions() async {
+  static Future<Map<String, List<Map<String, dynamic>>>>
+  getProfileBasicPhysicalOptions() async {
     if (authToken == null) {
       throw Exception('Auth token missing');
     }
@@ -698,7 +739,8 @@ class ApiClient {
     return options;
   }
 
-  static Future<Map<String, List<Map<String, dynamic>>>> getProfileEducationCareerOptions() async {
+  static Future<Map<String, List<Map<String, dynamic>>>>
+  getProfileEducationCareerOptions() async {
     if (authToken == null) {
       throw Exception('Auth token missing');
     }

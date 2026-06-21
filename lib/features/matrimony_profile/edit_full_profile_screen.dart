@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -17,6 +18,10 @@ class EditFullProfileScreen extends StatefulWidget {
 
 class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   static const int _clearNumberSelection = -1;
+  static const Duration _locationSearchDebounceDuration = Duration(
+    milliseconds: 400,
+  );
+  static const String _defaultPreferredStateName = 'Maharashtra';
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
@@ -71,11 +76,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _selectedEducationDegreeId;
   int? _selectedOccupationMasterId;
   int? _selectedOccupationCustomId;
+  int? _preferredStateId;
 
   int _subCasteSearchRequest = 0;
   int _locationSearchRequest = 0;
   int _birthPlaceSearchRequest = 0;
   int _workLocationSearchRequest = 0;
+  Timer? _locationSearchDebounce;
+  Timer? _birthPlaceSearchDebounce;
+  Timer? _workLocationSearchDebounce;
 
   List<Map<String, dynamic>> _genders = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _religions = <Map<String, dynamic>>[];
@@ -113,6 +122,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   @override
   void dispose() {
+    _locationSearchDebounce?.cancel();
+    _birthPlaceSearchDebounce?.cancel();
+    _workLocationSearchDebounce?.cancel();
     _fullNameController.dispose();
     _dobController.dispose();
     _religionController.dispose();
@@ -167,6 +179,48 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ApiClient.safeDisplayLabel(location['label']) ??
         ApiClient.safeDisplayLabel(location['name']) ??
         'Location';
+  }
+
+  int? _locationStateId(Map<String, dynamic> location) {
+    final direct =
+        _readInt(location['state_id']) ?? _readInt(location['stateId']);
+    if (direct != null) return direct;
+
+    final state = location['state'];
+    if (state is Map) {
+      return _readInt(state['id']);
+    }
+
+    return null;
+  }
+
+  int? _profileLocationStateId(Map<String, dynamic> profile) {
+    final direct =
+        _readInt(profile['state_id']) ??
+        _readInt(profile['location_state_id']) ??
+        _readInt(profile['current_location_state_id']);
+    if (direct != null) return direct;
+
+    for (final key in ['location', 'current_location', 'residence_location']) {
+      final value = profile[key];
+      if (value is Map) {
+        final id = _locationStateId(Map<String, dynamic>.from(value));
+        if (id != null) return id;
+      }
+    }
+
+    return null;
+  }
+
+  Future<List<Map<String, dynamic>>> _searchLocationOptions(String query) {
+    return ApiClient.searchLocations(
+      query,
+      preferredStateId: _preferredStateId,
+      preferredStateName: _preferredStateId == null
+          ? _defaultPreferredStateName
+          : null,
+      limit: 20,
+    );
   }
 
   String? _optionStoredValue(Map<String, dynamic> row) {
@@ -269,6 +323,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       allowIdFallback: false,
     );
     _locationController.text = _selectedLocationLabel ?? '';
+    _preferredStateId = _profileLocationStateId(profile);
 
     _birthTimeController.text = _readText(profile['birth_time']) ?? '';
     _selectedBirthCityId = _readInt(profile['birth_city_id']);
@@ -619,30 +674,37 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     FocusScope.of(context).unfocus();
   }
 
-  Future<void> _searchLocations(String query) async {
+  void _scheduleLocationSearch(String query) {
+    _locationSearchDebounce?.cancel();
     final requestId = ++_locationSearchRequest;
     final trimmedQuery = query.trim();
 
-    if (_selectedLocationLabel == null ||
-        trimmedQuery != _selectedLocationLabel) {
-      _selectedLocationId = null;
-      _selectedLocationLabel = null;
-    }
-
-    if (trimmedQuery.length < 2) {
-      setState(() {
+    setState(() {
+      if (_selectedLocationLabel == null ||
+          trimmedQuery != _selectedLocationLabel) {
+        _selectedLocationId = null;
+        _selectedLocationLabel = null;
+      }
+      if (trimmedQuery.length < 2) {
         _locationSearching = false;
         _locationSuggestions = <Map<String, dynamic>>[];
-      });
+      } else {
+        _locationSearching = true;
+      }
+    });
+
+    if (trimmedQuery.length < 2) {
       return;
     }
 
-    setState(() {
-      _locationSearching = true;
+    _locationSearchDebounce = Timer(_locationSearchDebounceDuration, () {
+      _runLocationSearch(trimmedQuery, requestId);
     });
+  }
 
+  Future<void> _runLocationSearch(String trimmedQuery, int requestId) async {
     try {
-      final results = await ApiClient.searchLocations(trimmedQuery);
+      final results = await _searchLocationOptions(trimmedQuery);
       if (!mounted || requestId != _locationSearchRequest) return;
       setState(() {
         _locationSuggestions = results;
@@ -668,6 +730,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       _locationController.text = label;
       _locationSuggestions = <Map<String, dynamic>>[];
       _locationSearching = false;
+      _preferredStateId = _locationStateId(location) ?? _preferredStateId;
     });
     FocusScope.of(context).unfocus();
   }
@@ -741,30 +804,37 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     });
   }
 
-  Future<void> _searchBirthPlaces(String query) async {
+  void _scheduleBirthPlaceSearch(String query) {
+    _birthPlaceSearchDebounce?.cancel();
     final requestId = ++_birthPlaceSearchRequest;
     final trimmedQuery = query.trim();
 
-    if (_selectedBirthPlaceLabel == null ||
-        trimmedQuery != _selectedBirthPlaceLabel) {
-      _selectedBirthCityId = null;
-      _selectedBirthPlaceLabel = null;
-    }
-
-    if (trimmedQuery.length < 2) {
-      setState(() {
+    setState(() {
+      if (_selectedBirthPlaceLabel == null ||
+          trimmedQuery != _selectedBirthPlaceLabel) {
+        _selectedBirthCityId = null;
+        _selectedBirthPlaceLabel = null;
+      }
+      if (trimmedQuery.length < 2) {
         _birthPlaceSearching = false;
         _birthPlaceSuggestions = <Map<String, dynamic>>[];
-      });
+      } else {
+        _birthPlaceSearching = true;
+      }
+    });
+
+    if (trimmedQuery.length < 2) {
       return;
     }
 
-    setState(() {
-      _birthPlaceSearching = true;
+    _birthPlaceSearchDebounce = Timer(_locationSearchDebounceDuration, () {
+      _runBirthPlaceSearch(trimmedQuery, requestId);
     });
+  }
 
+  Future<void> _runBirthPlaceSearch(String trimmedQuery, int requestId) async {
     try {
-      final results = await ApiClient.searchLocations(trimmedQuery);
+      final results = await _searchLocationOptions(trimmedQuery);
       if (!mounted || requestId != _birthPlaceSearchRequest) return;
       setState(() {
         _birthPlaceSuggestions = results;
@@ -794,29 +864,39 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     FocusScope.of(context).unfocus();
   }
 
-  Future<void> _searchWorkLocations(String query) async {
+  void _scheduleWorkLocationSearch(String query) {
+    _workLocationSearchDebounce?.cancel();
     final requestId = ++_workLocationSearchRequest;
     final trimmedQuery = query.trim();
 
-    if (_selectedWorkLocationLabel == null ||
-        trimmedQuery != _selectedWorkLocationLabel) {
-      _selectedWorkLocationLabel = null;
-    }
-
-    if (trimmedQuery.length < 2) {
-      setState(() {
+    setState(() {
+      if (_selectedWorkLocationLabel == null ||
+          trimmedQuery != _selectedWorkLocationLabel) {
+        _selectedWorkLocationLabel = null;
+      }
+      if (trimmedQuery.length < 2) {
         _workLocationSearching = false;
         _workLocationSuggestions = <Map<String, dynamic>>[];
-      });
+      } else {
+        _workLocationSearching = true;
+      }
+    });
+
+    if (trimmedQuery.length < 2) {
       return;
     }
 
-    setState(() {
-      _workLocationSearching = true;
+    _workLocationSearchDebounce = Timer(_locationSearchDebounceDuration, () {
+      _runWorkLocationSearch(trimmedQuery, requestId);
     });
+  }
 
+  Future<void> _runWorkLocationSearch(
+    String trimmedQuery,
+    int requestId,
+  ) async {
     try {
-      final results = await ApiClient.searchLocations(trimmedQuery);
+      final results = await _searchLocationOptions(trimmedQuery);
       if (!mounted || requestId != _workLocationSearchRequest) return;
       setState(() {
         _workLocationSuggestions = results;
@@ -1434,7 +1514,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             labelText: 'Current location',
             prefixIcon: Icon(Icons.location_on_outlined),
           ),
-          onChanged: _searchLocations,
+          onChanged: _scheduleLocationSearch,
         ),
         _buildSuggestions(
           suggestions: _locationSuggestions,
@@ -1480,7 +1560,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             hintText: 'Search city or village',
             prefixIcon: Icon(Icons.place_outlined),
           ),
-          onChanged: _searchBirthPlaces,
+          onChanged: _scheduleBirthPlaceSearch,
         ),
         _buildSuggestions(
           suggestions: _birthPlaceSuggestions,
@@ -1600,7 +1680,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             hintText: 'Search city or type work location',
             prefixIcon: Icon(Icons.location_city_outlined),
           ),
-          onChanged: _searchWorkLocations,
+          onChanged: _scheduleWorkLocationSearch,
         ),
         _buildSuggestions(
           suggestions: _workLocationSuggestions,
