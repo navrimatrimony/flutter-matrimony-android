@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
@@ -36,6 +38,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _subCasteSearching = false;
   bool _locationSearching = false;
   bool _birthPlaceSearching = false;
+  bool _workLocationSearching = false;
   bool _optionsLoading = false;
   bool _educationCareerOptionsLoading = false;
 
@@ -47,7 +50,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String? _selectedSubCasteLabel;
   String? _selectedLocationLabel;
   String? _selectedBirthPlaceLabel;
+  String? _selectedEducationDegreeLabel;
   String? _selectedOccupationLabel;
+  String? _selectedWorkLocationLabel;
   String? _selectedSpectaclesLens;
   String? _selectedPhysicalCondition;
 
@@ -63,12 +68,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _selectedComplexionId;
   int? _selectedBloodGroupId;
   int? _selectedPhysicalBuildId;
+  int? _selectedEducationDegreeId;
   int? _selectedOccupationMasterId;
   int? _selectedOccupationCustomId;
 
   int _subCasteSearchRequest = 0;
   int _locationSearchRequest = 0;
   int _birthPlaceSearchRequest = 0;
+  int _workLocationSearchRequest = 0;
 
   List<Map<String, dynamic>> _genders = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _religions = <Map<String, dynamic>>[];
@@ -78,6 +85,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _subCasteSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _birthPlaceSuggestions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _workLocationSuggestions =
+      <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _motherTongueOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _complexionOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _bloodGroupOptions = <Map<String, dynamic>>[];
@@ -85,8 +94,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _spectaclesLensOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _physicalConditionOptions =
       <Map<String, dynamic>>[];
-  List<Map<String, dynamic>> _educationDegreeOptions =
-      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _educationDegreeOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _educationSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _occupationOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _customOccupationOptions =
@@ -95,7 +103,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final initialProfile = widget.initialProfile ?? ApiClient.currentUserProfile;
+    final initialProfile =
+        widget.initialProfile ?? ApiClient.currentUserProfile;
     if (initialProfile != null) {
       _prefillProfile(initialProfile);
     }
@@ -145,6 +154,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return fallbackPrefix;
   }
 
+  String _locationLabel(Map<String, dynamic> location) {
+    final label = ApiClient.locationSuggestionLabel(location).trim();
+    if (label.isNotEmpty &&
+        label != 'Unknown location' &&
+        !label.toLowerCase().startsWith('location id:')) {
+      return label;
+    }
+
+    return ApiClient.safeDisplayLabel(location['display_label']) ??
+        ApiClient.safeDisplayLabel(location['location_label']) ??
+        ApiClient.safeDisplayLabel(location['label']) ??
+        ApiClient.safeDisplayLabel(location['name']) ??
+        'Location';
+  }
+
   String? _optionStoredValue(Map<String, dynamic> row) {
     for (final key in ['key', 'value', 'code']) {
       final value = _readText(row[key]);
@@ -182,10 +206,50 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         .toList();
   }
 
+  String _educationDegreeLabel(Map<String, dynamic> degree) {
+    return _readText(degree['code']) ?? _optionLabel(degree, 'Education');
+  }
+
+  int? _findEducationDegreeIdByText(String text) {
+    final normalized = text.trim().toLowerCase();
+    if (normalized.isEmpty) return null;
+
+    for (final degree in _educationDegreeOptions) {
+      final id = _readInt(degree['id']);
+      if (id == null) continue;
+
+      final candidates = <String?>[
+        _readText(degree['code']),
+        _readText(degree['label']),
+        _readText(degree['label_en']),
+        _readText(degree['label_mr']),
+        _readText(degree['full_form']),
+      ];
+      if (candidates.any((candidate) {
+        return candidate != null &&
+            candidate.trim().toLowerCase() == normalized;
+      })) {
+        return id;
+      }
+    }
+
+    return null;
+  }
+
+  void _syncSelectedEducationFromText() {
+    final degreeId = _findEducationDegreeIdByText(_educationController.text);
+    _selectedEducationDegreeId = degreeId;
+    _selectedEducationDegreeLabel = degreeId == null
+        ? null
+        : _labelForId(_educationDegreeOptions, degreeId, 'Education');
+  }
+
   void _prefillProfile(Map<String, dynamic> profile) {
     _fullNameController.text = _readText(profile['full_name']) ?? '';
     _dobController.text = _readText(profile['date_of_birth']) ?? '';
     _educationController.text = ApiClient.profileEducationLabel(profile) ?? '';
+    _selectedEducationDegreeId = null;
+    _selectedEducationDegreeLabel = null;
     _selectedGenderId = _readInt(profile['gender_id']);
     _selectedReligionId = _readInt(profile['religion_id']);
     _selectedCasteId = _readInt(profile['caste_id']);
@@ -195,7 +259,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedSubCasteLabel = ApiClient.profileSubCasteLabel(profile);
     _religionController.text = _selectedReligionLabel ?? '';
     _casteController.text =
-        _selectedCasteLabel ?? ApiClient.safeDisplayLabel(profile['caste']) ?? '';
+        _selectedCasteLabel ??
+        ApiClient.safeDisplayLabel(profile['caste']) ??
+        '';
     _subCasteController.text = _selectedSubCasteLabel ?? '';
     _selectedLocationId = _readInt(profile['location_id']);
     _selectedLocationLabel = ApiClient.profileLocationLabel(
@@ -231,6 +297,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ApiClient.safeDisplayLabel(profile['company_name']) ?? '';
     _workLocationController.text =
         ApiClient.safeDisplayLabel(profile['work_location_text']) ?? '';
+    _selectedWorkLocationLabel =
+        ApiClient.safeDisplayLabel(profile['work_location_label']) ??
+        ApiClient.safeDisplayLabel(profile['work_location_text']);
   }
 
   Future<void> _loadScreenData() async {
@@ -329,8 +398,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       setState(() {
         _motherTongueOptions =
             results['mother_tongues'] ?? <Map<String, dynamic>>[];
-        _complexionOptions =
-            results['complexions'] ?? <Map<String, dynamic>>[];
+        _complexionOptions = results['complexions'] ?? <Map<String, dynamic>>[];
         _bloodGroupOptions =
             results['blood_groups'] ?? <Map<String, dynamic>>[];
         _physicalBuildOptions =
@@ -370,6 +438,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _occupationOptions = results['occupations'] ?? <Map<String, dynamic>>[];
         _customOccupationOptions =
             results['custom_occupations'] ?? <Map<String, dynamic>>[];
+        _syncSelectedEducationFromText();
       });
     } catch (_) {
       if (!mounted) return;
@@ -554,7 +623,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final requestId = ++_locationSearchRequest;
     final trimmedQuery = query.trim();
 
-    if (_selectedLocationLabel == null || trimmedQuery != _selectedLocationLabel) {
+    if (_selectedLocationLabel == null ||
+        trimmedQuery != _selectedLocationLabel) {
       _selectedLocationId = null;
       _selectedLocationLabel = null;
     }
@@ -591,7 +661,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final locationId = ApiClient.locationIdFrom(location);
     if (locationId == null) return;
 
-    final label = ApiClient.locationSuggestionLabel(location);
+    final label = _locationLabel(location);
     setState(() {
       _selectedLocationId = locationId;
       _selectedLocationLabel = label;
@@ -604,14 +674,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   void _onEducationChanged(String query) {
     setState(() {
+      if (_selectedEducationDegreeLabel == null ||
+          query.trim() != _selectedEducationDegreeLabel) {
+        _selectedEducationDegreeId = null;
+        _selectedEducationDegreeLabel = null;
+      }
       _educationSuggestions = _filterOptions(_educationDegreeOptions, query);
     });
   }
 
   void _selectEducation(Map<String, dynamic> degree) {
-    final label =
-        _readText(degree['code']) ?? _optionLabel(degree, 'Education');
+    final id = _readInt(degree['id']);
+    final label = _educationDegreeLabel(degree);
     setState(() {
+      _selectedEducationDegreeId = id;
+      _selectedEducationDegreeLabel = label;
       _educationController.text = label;
       _educationSuggestions = <Map<String, dynamic>>[];
     });
@@ -706,13 +783,61 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final locationId = ApiClient.locationIdFrom(location);
     if (locationId == null) return;
 
-    final label = ApiClient.locationSuggestionLabel(location);
+    final label = _locationLabel(location);
     setState(() {
       _selectedBirthCityId = locationId;
       _selectedBirthPlaceLabel = label;
       _birthPlaceController.text = label;
       _birthPlaceSuggestions = <Map<String, dynamic>>[];
       _birthPlaceSearching = false;
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  Future<void> _searchWorkLocations(String query) async {
+    final requestId = ++_workLocationSearchRequest;
+    final trimmedQuery = query.trim();
+
+    if (_selectedWorkLocationLabel == null ||
+        trimmedQuery != _selectedWorkLocationLabel) {
+      _selectedWorkLocationLabel = null;
+    }
+
+    if (trimmedQuery.length < 2) {
+      setState(() {
+        _workLocationSearching = false;
+        _workLocationSuggestions = <Map<String, dynamic>>[];
+      });
+      return;
+    }
+
+    setState(() {
+      _workLocationSearching = true;
+    });
+
+    try {
+      final results = await ApiClient.searchLocations(trimmedQuery);
+      if (!mounted || requestId != _workLocationSearchRequest) return;
+      setState(() {
+        _workLocationSuggestions = results;
+        _workLocationSearching = false;
+      });
+    } catch (_) {
+      if (!mounted || requestId != _workLocationSearchRequest) return;
+      setState(() {
+        _workLocationSearching = false;
+        _workLocationSuggestions = <Map<String, dynamic>>[];
+      });
+    }
+  }
+
+  void _selectWorkLocation(Map<String, dynamic> location) {
+    final label = _locationLabel(location);
+    setState(() {
+      _selectedWorkLocationLabel = label;
+      _workLocationController.text = label;
+      _workLocationSuggestions = <Map<String, dynamic>>[];
+      _workLocationSearching = false;
     });
     FocusScope.of(context).unfocus();
   }
@@ -812,7 +937,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                       return ListTile(
                         title: Text(labelBuilder(value)),
                         trailing: isSelected
-                            ? const Icon(Icons.check_circle, color: Colors.green)
+                            ? const Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              )
                             : null,
                         onTap: () => Navigator.pop(sheetContext, value),
                       );
@@ -842,10 +970,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<int> _heightValues() {
     return <int>[
       136,
-      ...List<int>.generate(
-        31,
-        (index) => ((54 + index) * 2.54).round(),
-      ),
+      ...List<int>.generate(31, (index) => ((54 + index) * 2.54).round()),
       214,
     ];
   }
@@ -931,6 +1056,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
         ? _selectedCasteLabel!.trim()
         : _casteController.text.trim();
+    final educationText = _educationController.text.trim();
+    final educationDegreeId =
+        _selectedEducationDegreeId ??
+        _findEducationDegreeIdByText(educationText);
 
     final payload = <String, dynamic>{
       'full_name': _fullNameController.text.trim(),
@@ -939,7 +1068,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'religion_id': _selectedReligionId,
       'caste_id': _selectedCasteId,
       'caste': casteLabel,
-      'highest_education': _educationController.text.trim(),
+      'highest_education': educationText,
       'location_id': _selectedLocationId,
       'sub_caste_id': _selectedSubCasteId,
       'birth_time': _nullableText(_birthTimeController),
@@ -958,6 +1087,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'company_name': _nullableText(_companyNameController),
       'work_location_text': _nullableText(_workLocationController),
     };
+
+    if (educationDegreeId != null) {
+      payload['education_slots'] = jsonEncode([
+        {'t': 'd', 'id': educationDegreeId},
+      ]);
+    }
 
     Map<String, dynamic> response;
     try {
@@ -986,9 +1121,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   void _showMessage(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _sectionCard({
@@ -1056,7 +1191,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         itemBuilder: (context, index) {
           final item = suggestions[index];
           final label = fallbackPrefix == 'Location'
-              ? ApiClient.locationSuggestionLabel(item)
+              ? _locationLabel(item)
               : _optionLabel(item, fallbackPrefix);
           final hierarchy =
               item['hierarchy']?.toString().trim() ??
@@ -1217,7 +1352,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               : (value) => setState(() => _selectedGenderId = value),
           decoration: InputDecoration(
             labelText: AppStrings.profileType,
-            hintText: _gendersLoading ? AppStrings.loading : AppStrings.brideGroom,
+            hintText: _gendersLoading
+                ? AppStrings.loading
+                : AppStrings.brideGroom,
             prefixIcon: const Icon(Icons.wc_outlined),
           ),
         ),
@@ -1253,7 +1390,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           enabled: _selectedReligionId != null && !_castesLoading,
           decoration: InputDecoration(
             labelText: 'Caste',
-            hintText: _selectedReligionId == null ? 'Select religion first' : null,
+            hintText: _selectedReligionId == null
+                ? 'Select religion first'
+                : null,
             prefixIcon: const Icon(Icons.group_outlined),
           ),
           onChanged: _onCasteChanged,
@@ -1362,34 +1501,24 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _occupationDropdown() {
     final items = <DropdownMenuItem<String>>[
-      ..._occupationOptions
-          .map((occupation) {
-            final id = _readInt(occupation['id']);
-            if (id == null) return null;
-            final label = _optionLabel(occupation, 'Occupation');
-            return DropdownMenuItem<String>(
-              value: 'master:$id',
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-              ),
-            );
-          })
-          .whereType<DropdownMenuItem<String>>(),
-      ..._customOccupationOptions
-          .map((occupation) {
-            final id = _readInt(occupation['id']);
-            if (id == null) return null;
-            final label = _optionLabel(occupation, 'Occupation');
-            return DropdownMenuItem<String>(
-              value: 'custom:$id',
-              child: Text(
-                '$label (Custom)',
-                overflow: TextOverflow.ellipsis,
-              ),
-            );
-          })
-          .whereType<DropdownMenuItem<String>>(),
+      ..._occupationOptions.map((occupation) {
+        final id = _readInt(occupation['id']);
+        if (id == null) return null;
+        final label = _optionLabel(occupation, 'Occupation');
+        return DropdownMenuItem<String>(
+          value: 'master:$id',
+          child: Text(label, overflow: TextOverflow.ellipsis),
+        );
+      }).whereType<DropdownMenuItem<String>>(),
+      ..._customOccupationOptions.map((occupation) {
+        final id = _readInt(occupation['id']);
+        if (id == null) return null;
+        final label = _optionLabel(occupation, 'Occupation');
+        return DropdownMenuItem<String>(
+          value: 'custom:$id',
+          child: Text('$label (Custom)', overflow: TextOverflow.ellipsis),
+        );
+      }).whereType<DropdownMenuItem<String>>(),
     ];
 
     final selectedChoice = _selectedOccupationChoice();
@@ -1398,9 +1527,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         : null;
 
     return DropdownButtonFormField<String>(
-      key: ValueKey(
-        'occupation-${items.length}-${selectedValue ?? 'none'}',
-      ),
+      key: ValueKey('occupation-${items.length}-${selectedValue ?? 'none'}'),
       initialValue: selectedValue,
       isExpanded: true,
       items: items,
@@ -1464,9 +1591,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           textInputAction: TextInputAction.done,
           decoration: const InputDecoration(
             labelText: 'Work location (Optional)',
-            hintText: 'Example: Pune, Maharashtra',
+            hintText: 'Search city or type work location',
             prefixIcon: Icon(Icons.location_city_outlined),
           ),
+          onChanged: _searchWorkLocations,
+        ),
+        _buildSuggestions(
+          suggestions: _workLocationSuggestions,
+          fallbackPrefix: 'Location',
+          loading: _workLocationSearching,
+          onSelect: _selectWorkLocation,
         ),
         if (_educationCareerOptionsError != null)
           Padding(
@@ -1500,8 +1634,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   if (!mounted) return;
                   if (value == null) return;
                   setState(() {
-                    _selectedHeightCm =
-                        value == _clearNumberSelection ? null : value;
+                    _selectedHeightCm = value == _clearNumberSelection
+                        ? null
+                        : value;
                   });
                 },
                 child: InputDecorator(
@@ -1532,8 +1667,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   if (!mounted) return;
                   if (value == null) return;
                   setState(() {
-                    _selectedWeightKg =
-                        value == _clearNumberSelection ? null : value;
+                    _selectedWeightKg = value == _clearNumberSelection
+                        ? null
+                        : value;
                   });
                 },
                 child: InputDecorator(
@@ -1577,7 +1713,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           options: _physicalBuildOptions,
           selectedId: _selectedPhysicalBuildId,
           fallbackPrefix: 'Physical build',
-          onChanged: (value) => setState(() => _selectedPhysicalBuildId = value),
+          onChanged: (value) =>
+              setState(() => _selectedPhysicalBuildId = value),
         ),
         const SizedBox(height: 14),
         _stringDropdown(
