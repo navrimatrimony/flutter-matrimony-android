@@ -18,6 +18,8 @@ class ApiRoutes {
       '/profile/education-career-options';
   static const String profileMaritalLifestyleOptions =
       '/profile/marital-lifestyle-options';
+  static const String profileRemainingProfileOptions =
+      '/profile/remaining-profile-options';
   static const String religions = '/religions';
   static const String genders = '/genders';
   static const String castes = '/castes';

@@ -34,6 +34,28 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final TextEditingController _birthPlaceController = TextEditingController();
   final TextEditingController _companyNameController = TextEditingController();
   final TextEditingController _workLocationController = TextEditingController();
+  final TextEditingController _fatherNameController = TextEditingController();
+  final TextEditingController _fatherOccupationController =
+      TextEditingController();
+  final TextEditingController _fatherExtraInfoController =
+      TextEditingController();
+  final TextEditingController _motherNameController = TextEditingController();
+  final TextEditingController _motherOccupationController =
+      TextEditingController();
+  final TextEditingController _motherExtraInfoController =
+      TextEditingController();
+  final TextEditingController _familyStatusController = TextEditingController();
+  final TextEditingController _familyValuesController = TextEditingController();
+  final TextEditingController _otherRelativesController =
+      TextEditingController();
+  final TextEditingController _propertyDetailsController =
+      TextEditingController();
+  final TextEditingController _devakController = TextEditingController();
+  final TextEditingController _kulController = TextEditingController();
+  final TextEditingController _gotraController = TextEditingController();
+  final TextEditingController _navrasNameController = TextEditingController();
+  final TextEditingController _birthWeekdayController = TextEditingController();
+  final TextEditingController _aboutMeController = TextEditingController();
 
   bool _loading = true;
   bool _saving = false;
@@ -47,11 +69,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _optionsLoading = false;
   bool _educationCareerOptionsLoading = false;
   bool _maritalLifestyleOptionsLoading = false;
+  bool _remainingProfileOptionsLoading = false;
 
   String? _loadError;
   String? _optionsError;
   String? _educationCareerOptionsError;
   String? _maritalLifestyleOptionsError;
+  String? _remainingProfileOptionsError;
   String? _selectedReligionLabel;
   String? _selectedCasteLabel;
   String? _selectedSubCasteLabel;
@@ -59,6 +83,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String? _selectedBirthPlaceLabel;
   String? _selectedEducationDegreeLabel;
   String? _selectedOccupationLabel;
+  String? _selectedFatherOccupationLabel;
+  String? _selectedMotherOccupationLabel;
   String? _selectedWorkLocationLabel;
   String? _selectedSpectaclesLens;
   String? _selectedPhysicalCondition;
@@ -83,6 +109,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _selectedEducationDegreeId;
   int? _selectedOccupationMasterId;
   int? _selectedOccupationCustomId;
+  int? _selectedFatherOccupationMasterId;
+  int? _selectedFatherOccupationCustomId;
+  int? _selectedMotherOccupationMasterId;
+  int? _selectedMotherOccupationCustomId;
+  int? _selectedFamilyTypeId;
+  bool? _selectedHasSiblings;
+  int? _selectedRashiId;
+  int? _selectedNakshatraId;
+  int? _selectedCharan;
+  int? _selectedGanId;
+  int? _selectedNadiId;
+  int? _selectedYoniId;
+  int? _selectedVarnaId;
+  int? _selectedVashyaId;
+  int? _selectedRashiLordId;
+  int? _selectedMangalDoshTypeId;
   int? _preferredStateId;
 
   int _subCasteSearchRequest = 0;
@@ -119,6 +161,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _occupationOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _customOccupationOptions =
       <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _familyTypeOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _familyOccupationOptions =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _familyCustomOccupationOptions =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _rashiOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _nakshatraOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _ganOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _nadiOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _yoniOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _varnaOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _vashyaOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _rashiLordOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _mangalDoshTypeOptions = <Map<String, dynamic>>[];
 
   @override
   void initState() {
@@ -147,6 +203,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _birthPlaceController.dispose();
     _companyNameController.dispose();
     _workLocationController.dispose();
+    _fatherNameController.dispose();
+    _fatherOccupationController.dispose();
+    _fatherExtraInfoController.dispose();
+    _motherNameController.dispose();
+    _motherOccupationController.dispose();
+    _motherExtraInfoController.dispose();
+    _familyStatusController.dispose();
+    _familyValuesController.dispose();
+    _otherRelativesController.dispose();
+    _propertyDetailsController.dispose();
+    _devakController.dispose();
+    _kulController.dispose();
+    _gotraController.dispose();
+    _navrasNameController.dispose();
+    _birthWeekdayController.dispose();
+    _aboutMeController.dispose();
     super.dispose();
   }
 
@@ -383,6 +455,67 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedWorkLocationLabel =
         ApiClient.safeDisplayLabel(profile['work_location_label']) ??
         ApiClient.safeDisplayLabel(profile['work_location_text']);
+    _fatherNameController.text =
+        ApiClient.safeDisplayLabel(profile['father_name']) ?? '';
+    _fatherOccupationController.text =
+        ApiClient.safeDisplayLabel(profile['father_occupation']) ?? '';
+    _fatherExtraInfoController.text =
+        ApiClient.safeDisplayLabel(profile['father_extra_info']) ?? '';
+    _motherNameController.text =
+        ApiClient.safeDisplayLabel(profile['mother_name']) ?? '';
+    _motherOccupationController.text =
+        ApiClient.safeDisplayLabel(profile['mother_occupation']) ?? '';
+    _motherExtraInfoController.text =
+        ApiClient.safeDisplayLabel(profile['mother_extra_info']) ?? '';
+    _selectedFatherOccupationMasterId = _readInt(
+      profile['father_occupation_master_id'],
+    );
+    _selectedFatherOccupationCustomId = _readInt(
+      profile['father_occupation_custom_id'],
+    );
+    _selectedMotherOccupationMasterId = _readInt(
+      profile['mother_occupation_master_id'],
+    );
+    _selectedMotherOccupationCustomId = _readInt(
+      profile['mother_occupation_custom_id'],
+    );
+    _selectedFatherOccupationLabel =
+        ApiClient.safeDisplayLabel(profile['father_occupation_master_label']) ??
+        ApiClient.safeDisplayLabel(profile['father_occupation_custom_label']) ??
+        ApiClient.safeDisplayLabel(profile['father_occupation']);
+    _selectedMotherOccupationLabel =
+        ApiClient.safeDisplayLabel(profile['mother_occupation_master_label']) ??
+        ApiClient.safeDisplayLabel(profile['mother_occupation_custom_label']) ??
+        ApiClient.safeDisplayLabel(profile['mother_occupation']);
+    _selectedFamilyTypeId = _readInt(profile['family_type_id']);
+    _familyStatusController.text =
+        ApiClient.safeDisplayLabel(profile['family_status']) ?? '';
+    _familyValuesController.text =
+        ApiClient.safeDisplayLabel(profile['family_values']) ?? '';
+    _selectedHasSiblings = _readBool(profile['has_siblings']);
+    _otherRelativesController.text =
+        ApiClient.safeDisplayLabel(profile['other_relatives_text']) ?? '';
+    _propertyDetailsController.text =
+        ApiClient.safeDisplayLabel(profile['property_details']) ?? '';
+    _selectedRashiId = _readInt(profile['rashi_id']);
+    _selectedNakshatraId = _readInt(profile['nakshatra_id']);
+    _selectedCharan = _readInt(profile['charan']);
+    _selectedGanId = _readInt(profile['gan_id']);
+    _selectedNadiId = _readInt(profile['nadi_id']);
+    _selectedYoniId = _readInt(profile['yoni_id']);
+    _selectedVarnaId = _readInt(profile['varna_id']);
+    _selectedVashyaId = _readInt(profile['vashya_id']);
+    _selectedRashiLordId = _readInt(profile['rashi_lord_id']);
+    _selectedMangalDoshTypeId = _readInt(profile['mangal_dosh_type_id']);
+    _devakController.text = ApiClient.safeDisplayLabel(profile['devak']) ?? '';
+    _kulController.text = ApiClient.safeDisplayLabel(profile['kul']) ?? '';
+    _gotraController.text = ApiClient.safeDisplayLabel(profile['gotra']) ?? '';
+    _navrasNameController.text =
+        ApiClient.safeDisplayLabel(profile['navras_name']) ?? '';
+    _birthWeekdayController.text =
+        ApiClient.safeDisplayLabel(profile['birth_weekday']) ?? '';
+    _aboutMeController.text =
+        ApiClient.safeDisplayLabel(profile['narrative_about_me']) ?? '';
   }
 
   Future<void> _loadScreenData() async {
@@ -403,6 +536,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _loadBasicPhysicalOptions(),
         _loadEducationCareerOptions(),
         _loadMaritalLifestyleOptions(),
+        _loadRemainingProfileOptions(),
       ]);
     } catch (_) {
       if (!mounted) return;
@@ -568,6 +702,49 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (mounted) {
         setState(() {
           _maritalLifestyleOptionsLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadRemainingProfileOptions() async {
+    if (!mounted) return;
+    setState(() {
+      _remainingProfileOptionsLoading = true;
+      _remainingProfileOptionsError = null;
+    });
+
+    try {
+      final results = await ApiClient.getProfileRemainingProfileOptions();
+      if (!mounted) return;
+      setState(() {
+        _familyTypeOptions =
+            results['family_types'] ?? <Map<String, dynamic>>[];
+        _familyOccupationOptions =
+            results['occupations'] ?? <Map<String, dynamic>>[];
+        _familyCustomOccupationOptions =
+            results['custom_occupations'] ?? <Map<String, dynamic>>[];
+        _rashiOptions = results['rashis'] ?? <Map<String, dynamic>>[];
+        _nakshatraOptions = results['nakshatras'] ?? <Map<String, dynamic>>[];
+        _ganOptions = results['gans'] ?? <Map<String, dynamic>>[];
+        _nadiOptions = results['nadis'] ?? <Map<String, dynamic>>[];
+        _yoniOptions = results['yonis'] ?? <Map<String, dynamic>>[];
+        _varnaOptions = results['varnas'] ?? <Map<String, dynamic>>[];
+        _vashyaOptions = results['vashyas'] ?? <Map<String, dynamic>>[];
+        _rashiLordOptions = results['rashi_lords'] ?? <Map<String, dynamic>>[];
+        _mangalDoshTypeOptions =
+            results['mangal_dosh_types'] ?? <Map<String, dynamic>>[];
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _remainingProfileOptionsError =
+            'Family आणि horoscope options load करता आले नाहीत.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _remainingProfileOptionsLoading = false;
         });
       }
     }
@@ -863,6 +1040,76 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           id,
           'Occupation',
         );
+      }
+    });
+  }
+
+  String? _occupationChoiceValue(int? masterId, int? customId) {
+    if (masterId != null) return 'master:$masterId';
+    if (customId != null) return 'custom:$customId';
+    return null;
+  }
+
+  void _selectFamilyOccupationChoice({
+    required bool father,
+    required String? value,
+  }) {
+    setState(() {
+      if (value == null || value.trim().isEmpty) {
+        if (father) {
+          _selectedFatherOccupationMasterId = null;
+          _selectedFatherOccupationCustomId = null;
+          _selectedFatherOccupationLabel = null;
+        } else {
+          _selectedMotherOccupationMasterId = null;
+          _selectedMotherOccupationCustomId = null;
+          _selectedMotherOccupationLabel = null;
+        }
+        return;
+      }
+
+      final parts = value.split(':');
+      if (parts.length != 2) return;
+
+      final id = int.tryParse(parts[1]);
+      if (id == null) return;
+
+      if (parts[0] == 'master') {
+        if (father) {
+          _selectedFatherOccupationMasterId = id;
+          _selectedFatherOccupationCustomId = null;
+          _selectedFatherOccupationLabel = _labelForId(
+            _familyOccupationOptions,
+            id,
+            'Occupation',
+          );
+        } else {
+          _selectedMotherOccupationMasterId = id;
+          _selectedMotherOccupationCustomId = null;
+          _selectedMotherOccupationLabel = _labelForId(
+            _familyOccupationOptions,
+            id,
+            'Occupation',
+          );
+        }
+      } else if (parts[0] == 'custom') {
+        if (father) {
+          _selectedFatherOccupationMasterId = null;
+          _selectedFatherOccupationCustomId = id;
+          _selectedFatherOccupationLabel = _labelForId(
+            _familyCustomOccupationOptions,
+            id,
+            'Occupation',
+          );
+        } else {
+          _selectedMotherOccupationMasterId = null;
+          _selectedMotherOccupationCustomId = id;
+          _selectedMotherOccupationLabel = _labelForId(
+            _familyCustomOccupationOptions,
+            id,
+            'Occupation',
+          );
+        }
       }
     });
   }
@@ -1234,6 +1481,38 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'occupation_custom_id': _selectedOccupationCustomId,
       'company_name': _nullableText(_companyNameController),
       'work_location_text': _nullableText(_workLocationController),
+      'father_name': _nullableText(_fatherNameController),
+      'father_occupation': _nullableText(_fatherOccupationController),
+      'father_occupation_master_id': _selectedFatherOccupationMasterId,
+      'father_occupation_custom_id': _selectedFatherOccupationCustomId,
+      'father_extra_info': _nullableText(_fatherExtraInfoController),
+      'mother_name': _nullableText(_motherNameController),
+      'mother_occupation': _nullableText(_motherOccupationController),
+      'mother_occupation_master_id': _selectedMotherOccupationMasterId,
+      'mother_occupation_custom_id': _selectedMotherOccupationCustomId,
+      'mother_extra_info': _nullableText(_motherExtraInfoController),
+      'family_type_id': _selectedFamilyTypeId,
+      'family_status': _nullableText(_familyStatusController),
+      'family_values': _nullableText(_familyValuesController),
+      'has_siblings': _selectedHasSiblings,
+      'other_relatives_text': _nullableText(_otherRelativesController),
+      'property_details': _nullableText(_propertyDetailsController),
+      'rashi_id': _selectedRashiId,
+      'nakshatra_id': _selectedNakshatraId,
+      'charan': _selectedCharan,
+      'gan_id': _selectedGanId,
+      'nadi_id': _selectedNadiId,
+      'yoni_id': _selectedYoniId,
+      'varna_id': _selectedVarnaId,
+      'vashya_id': _selectedVashyaId,
+      'rashi_lord_id': _selectedRashiLordId,
+      'mangal_dosh_type_id': _selectedMangalDoshTypeId,
+      'devak': _nullableText(_devakController),
+      'kul': _nullableText(_kulController),
+      'gotra': _nullableText(_gotraController),
+      'navras_name': _nullableText(_navrasNameController),
+      'birth_weekday': _nullableText(_birthWeekdayController),
+      'narrative_about_me': _nullableText(_aboutMeController),
     };
 
     if (educationDegreeId != null) {
@@ -1812,6 +2091,117 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
+  Widget _familyOccupationDropdown({
+    required String labelText,
+    required bool father,
+  }) {
+    final items = <DropdownMenuItem<String>>[
+      ..._familyOccupationOptions.map((occupation) {
+        final id = _readInt(occupation['id']);
+        if (id == null) return null;
+        final label = _optionLabel(occupation, 'Occupation');
+        return DropdownMenuItem<String>(
+          value: 'master:$id',
+          child: Text(label, overflow: TextOverflow.ellipsis),
+        );
+      }).whereType<DropdownMenuItem<String>>(),
+      ..._familyCustomOccupationOptions.map((occupation) {
+        final id = _readInt(occupation['id']);
+        if (id == null) return null;
+        final label = _optionLabel(occupation, 'Occupation');
+        return DropdownMenuItem<String>(
+          value: 'custom:$id',
+          child: Text('$label (Custom)', overflow: TextOverflow.ellipsis),
+        );
+      }).whereType<DropdownMenuItem<String>>(),
+    ];
+
+    final selectedChoice = father
+        ? _occupationChoiceValue(
+            _selectedFatherOccupationMasterId,
+            _selectedFatherOccupationCustomId,
+          )
+        : _occupationChoiceValue(
+            _selectedMotherOccupationMasterId,
+            _selectedMotherOccupationCustomId,
+          );
+    final selectedValue = items.any((item) => item.value == selectedChoice)
+        ? selectedChoice
+        : null;
+    final selectedLabel = father
+        ? _selectedFatherOccupationLabel
+        : _selectedMotherOccupationLabel;
+    final hasSelection = father
+        ? (_selectedFatherOccupationMasterId != null ||
+              _selectedFatherOccupationCustomId != null)
+        : (_selectedMotherOccupationMasterId != null ||
+              _selectedMotherOccupationCustomId != null);
+
+    return DropdownButtonFormField<String>(
+      key: ValueKey('$labelText-${items.length}-${selectedValue ?? 'none'}'),
+      initialValue: selectedValue,
+      isExpanded: true,
+      items: items,
+      onChanged: _saving || items.isEmpty
+          ? null
+          : (value) =>
+                _selectFamilyOccupationChoice(father: father, value: value),
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: _remainingProfileOptionsLoading
+            ? AppStrings.loading
+            : selectedLabel ?? 'Optional',
+        prefixIcon: const Icon(Icons.work_outline),
+        suffixIcon: !hasSelection
+            ? null
+            : IconButton(
+                tooltip: 'Clear occupation',
+                icon: const Icon(Icons.close),
+                onPressed: _saving
+                    ? null
+                    : () => _selectFamilyOccupationChoice(
+                        father: father,
+                        value: null,
+                      ),
+              ),
+      ),
+    );
+  }
+
+  Widget _charanDropdown() {
+    return DropdownButtonFormField<int>(
+      key: ValueKey('charan-${_selectedCharan ?? 'none'}'),
+      initialValue:
+          _selectedCharan != null &&
+              _selectedCharan! >= 1 &&
+              _selectedCharan! <= 4
+          ? _selectedCharan
+          : null,
+      isExpanded: true,
+      items: const [
+        DropdownMenuItem<int>(value: 1, child: Text('1')),
+        DropdownMenuItem<int>(value: 2, child: Text('2')),
+        DropdownMenuItem<int>(value: 3, child: Text('3')),
+        DropdownMenuItem<int>(value: 4, child: Text('4')),
+      ],
+      onChanged: _saving
+          ? null
+          : (value) => setState(() => _selectedCharan = value),
+      decoration: InputDecoration(
+        labelText: 'Charan (Optional)',
+        hintText: 'Optional',
+        prefixIcon: const Icon(Icons.filter_4),
+        suffixIcon: _selectedCharan == null || _saving
+            ? null
+            : IconButton(
+                tooltip: 'Clear charan',
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() => _selectedCharan = null),
+              ),
+      ),
+    );
+  }
+
   Widget _buildEducationCareerSection() {
     return _sectionCard(
       title: 'Education & Career',
@@ -2013,6 +2403,332 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
+  Widget _buildFamilyDetailsSection() {
+    return _sectionCard(
+      title: 'Family details',
+      icon: Icons.group_outlined,
+      children: [
+        TextField(
+          controller: _fatherNameController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Father name (Optional)',
+            prefixIcon: Icon(Icons.person_outline),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _familyOccupationDropdown(
+          labelText: 'Father occupation (Optional)',
+          father: true,
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _fatherOccupationController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Father occupation text (Optional)',
+            prefixIcon: Icon(Icons.edit),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _fatherExtraInfoController,
+          maxLines: 2,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Father extra info (Optional)',
+            prefixIcon: Icon(Icons.notes),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _motherNameController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Mother name (Optional)',
+            prefixIcon: Icon(Icons.person_outline),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _familyOccupationDropdown(
+          labelText: 'Mother occupation (Optional)',
+          father: false,
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _motherOccupationController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Mother occupation text (Optional)',
+            prefixIcon: Icon(Icons.edit),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _motherExtraInfoController,
+          maxLines: 2,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Mother extra info (Optional)',
+            prefixIcon: Icon(Icons.notes),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFamilyOverviewSection() {
+    return _sectionCard(
+      title: 'Family overview',
+      icon: Icons.home_outlined,
+      children: [
+        _intDropdown(
+          labelText: 'Family type (Optional)',
+          icon: Icons.group,
+          options: _familyTypeOptions,
+          selectedId: _selectedFamilyTypeId,
+          fallbackPrefix: 'Family type',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedFamilyTypeId = value),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _familyStatusController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Family status (Optional)',
+            prefixIcon: Icon(Icons.info_outline),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _familyValuesController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Family values (Optional)',
+            prefixIcon: Icon(Icons.favorite_border),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _boolDropdown(
+          labelText: 'Has siblings (Optional)',
+          icon: Icons.people,
+          selectedValue: _selectedHasSiblings,
+          onChanged: (value) => setState(() => _selectedHasSiblings = value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAlliancePropertySection() {
+    return _sectionCard(
+      title: 'Alliance & Property',
+      icon: Icons.home_outlined,
+      children: [
+        TextField(
+          controller: _otherRelativesController,
+          maxLines: 3,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Other relatives (Optional)',
+            helperText: 'Contact numbers किंवा private details टाकू नका.',
+            prefixIcon: Icon(Icons.people_outline),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _propertyDetailsController,
+          maxLines: 3,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Property details (Optional)',
+            helperText: 'Public-safe summary only.',
+            prefixIcon: Icon(Icons.home_outlined),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHoroscopeAstroSection() {
+    return _sectionCard(
+      title: 'Horoscope / Astro',
+      icon: Icons.star_border,
+      children: [
+        _intDropdown(
+          labelText: 'Rashi (Optional)',
+          icon: Icons.brightness_3,
+          options: _rashiOptions,
+          selectedId: _selectedRashiId,
+          fallbackPrefix: 'Rashi',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedRashiId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Nakshatra (Optional)',
+          icon: Icons.star_border,
+          options: _nakshatraOptions,
+          selectedId: _selectedNakshatraId,
+          fallbackPrefix: 'Nakshatra',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedNakshatraId = value),
+        ),
+        const SizedBox(height: 14),
+        _charanDropdown(),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Gan (Optional)',
+          icon: Icons.category,
+          options: _ganOptions,
+          selectedId: _selectedGanId,
+          fallbackPrefix: 'Gan',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedGanId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Nadi (Optional)',
+          icon: Icons.opacity,
+          options: _nadiOptions,
+          selectedId: _selectedNadiId,
+          fallbackPrefix: 'Nadi',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedNadiId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Yoni (Optional)',
+          icon: Icons.spa,
+          options: _yoniOptions,
+          selectedId: _selectedYoniId,
+          fallbackPrefix: 'Yoni',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedYoniId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Varna (Optional)',
+          icon: Icons.layers,
+          options: _varnaOptions,
+          selectedId: _selectedVarnaId,
+          fallbackPrefix: 'Varna',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedVarnaId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Vashya (Optional)',
+          icon: Icons.device_hub,
+          options: _vashyaOptions,
+          selectedId: _selectedVashyaId,
+          fallbackPrefix: 'Vashya',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedVashyaId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Rashi lord (Optional)',
+          icon: Icons.wb_sunny,
+          options: _rashiLordOptions,
+          selectedId: _selectedRashiLordId,
+          fallbackPrefix: 'Rashi lord',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedRashiLordId = value),
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Mangal dosh type (Optional)',
+          icon: Icons.warning,
+          options: _mangalDoshTypeOptions,
+          selectedId: _selectedMangalDoshTypeId,
+          fallbackPrefix: 'Mangal dosh',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) =>
+              setState(() => _selectedMangalDoshTypeId = value),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _devakController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Devak (Optional)',
+            prefixIcon: Icon(Icons.account_balance_outlined),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _kulController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Kul (Optional)',
+            prefixIcon: Icon(Icons.account_tree_outlined),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _gotraController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Gotra (Optional)',
+            prefixIcon: Icon(Icons.account_tree_outlined),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _navrasNameController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Navras name (Optional)',
+            prefixIcon: Icon(Icons.badge_outlined),
+          ),
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _birthWeekdayController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Birth weekday (Optional)',
+            helperText: 'Backend options नसल्यामुळे text म्हणून save होते.',
+            prefixIcon: Icon(Icons.calendar_today_outlined),
+          ),
+        ),
+        if (_remainingProfileOptionsLoading)
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: LinearProgressIndicator(),
+          ),
+        if (_remainingProfileOptionsError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              _remainingProfileOptionsError!,
+              style: TextStyle(color: Colors.amber.shade900),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAboutMeSection() {
+    return _sectionCard(
+      title: 'About me',
+      icon: Icons.notes,
+      children: [
+        TextField(
+          controller: _aboutMeController,
+          maxLines: 5,
+          textInputAction: TextInputAction.newline,
+          decoration: const InputDecoration(
+            labelText: 'About me (Optional)',
+            alignLabelWithHint: true,
+            prefixIcon: Icon(Icons.edit),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -2042,6 +2758,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                           _buildBirthSection(),
                           _buildPhysicalSection(),
                           _buildEducationCareerSection(),
+                          _buildFamilyDetailsSection(),
+                          _buildFamilyOverviewSection(),
+                          _buildAlliancePropertySection(),
+                          _buildHoroscopeAstroSection(),
+                          _buildAboutMeSection(),
                         ],
                       ),
                     ),

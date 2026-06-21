@@ -871,6 +871,82 @@ class ApiClient {
     return options;
   }
 
+  static Future<Map<String, List<Map<String, dynamic>>>>
+  getProfileRemainingProfileOptions() async {
+    if (authToken == null) {
+      throw Exception('Auth token missing');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.profileRemainingProfileOptions,
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Remaining profile options load failed: HTTP ${response.statusCode}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    final payload = decoded is Map
+        ? decoded['data'] ?? decoded['options'] ?? decoded
+        : null;
+    final source = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
+    final options = <String, List<Map<String, dynamic>>>{};
+
+    void addOptions(String key, List<String> aliases) {
+      for (final alias in aliases) {
+        final rows = _safeOptionList(source[alias]);
+        if (rows.isNotEmpty) {
+          options[key] = rows;
+          return;
+        }
+      }
+      options[key] = <Map<String, dynamic>>[];
+    }
+
+    addOptions('family_types', const ['family_types', 'familyTypes']);
+    addOptions('occupation_categories', const [
+      'occupation_categories',
+      'occupationCategories',
+    ]);
+    addOptions('occupations', const [
+      'occupations',
+      'occupation_masters',
+      'occupationMasters',
+    ]);
+    addOptions('custom_occupations', const [
+      'custom_occupations',
+      'customOccupations',
+      'occupation_custom',
+    ]);
+    addOptions('rashis', const ['rashis', 'rashi']);
+    addOptions('nakshatras', const ['nakshatras', 'nakshatra']);
+    addOptions('gans', const ['gans', 'gan']);
+    addOptions('nadis', const ['nadis', 'nadi']);
+    addOptions('yonis', const ['yonis', 'yoni']);
+    addOptions('varnas', const ['varnas', 'varna']);
+    addOptions('vashyas', const ['vashyas', 'vashya']);
+    addOptions('rashi_lords', const ['rashi_lords', 'rashiLords']);
+    addOptions('mangal_dosh_types', const [
+      'mangal_dosh_types',
+      'mangalDoshTypes',
+      'mangal_dosh',
+    ]);
+
+    return options;
+  }
+
   static Future<List<Map<String, dynamic>>> getCastes({
     required int religionId,
   }) async {
