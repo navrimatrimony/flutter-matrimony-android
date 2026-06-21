@@ -916,6 +916,16 @@ class ApiClient {
     }
 
     addOptions('family_types', const ['family_types', 'familyTypes']);
+    addOptions('family_statuses', const [
+      'family_statuses',
+      'familyStatuses',
+      'family_status',
+    ]);
+    addOptions('family_values', const [
+      'family_values',
+      'familyValues',
+      'family_value',
+    ]);
     addOptions('occupation_categories', const [
       'occupation_categories',
       'occupationCategories',
@@ -942,6 +952,11 @@ class ApiClient {
       'mangal_dosh_types',
       'mangalDoshTypes',
       'mangal_dosh',
+    ]);
+    addOptions('birth_weekdays', const [
+      'birth_weekdays',
+      'birthWeekdays',
+      'weekdays',
     ]);
 
     return options;

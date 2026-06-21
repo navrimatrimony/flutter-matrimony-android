@@ -44,8 +44,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       TextEditingController();
   final TextEditingController _motherExtraInfoController =
       TextEditingController();
-  final TextEditingController _familyStatusController = TextEditingController();
-  final TextEditingController _familyValuesController = TextEditingController();
   final TextEditingController _otherRelativesController =
       TextEditingController();
   final TextEditingController _propertyDetailsController =
@@ -54,7 +52,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final TextEditingController _kulController = TextEditingController();
   final TextEditingController _gotraController = TextEditingController();
   final TextEditingController _navrasNameController = TextEditingController();
-  final TextEditingController _birthWeekdayController = TextEditingController();
   final TextEditingController _aboutMeController = TextEditingController();
 
   bool _loading = true;
@@ -88,6 +85,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String? _selectedWorkLocationLabel;
   String? _selectedSpectaclesLens;
   String? _selectedPhysicalCondition;
+  String? _selectedFamilyStatus;
+  String? _selectedFamilyValues;
+  String? _selectedBirthWeekday;
 
   int? _selectedGenderId;
   int? _selectedReligionId;
@@ -162,6 +162,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _customOccupationOptions =
       <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _familyTypeOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _familyStatusOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _familyValueOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _familyOccupationOptions =
       <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _familyCustomOccupationOptions =
@@ -175,6 +177,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _vashyaOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _rashiLordOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _mangalDoshTypeOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _birthWeekdayOptions = <Map<String, dynamic>>[];
 
   @override
   void initState() {
@@ -209,15 +212,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _motherNameController.dispose();
     _motherOccupationController.dispose();
     _motherExtraInfoController.dispose();
-    _familyStatusController.dispose();
-    _familyValuesController.dispose();
     _otherRelativesController.dispose();
     _propertyDetailsController.dispose();
     _devakController.dispose();
     _kulController.dispose();
     _gotraController.dispose();
     _navrasNameController.dispose();
-    _birthWeekdayController.dispose();
     _aboutMeController.dispose();
     super.dispose();
   }
@@ -488,10 +488,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ApiClient.safeDisplayLabel(profile['mother_occupation_custom_label']) ??
         ApiClient.safeDisplayLabel(profile['mother_occupation']);
     _selectedFamilyTypeId = _readInt(profile['family_type_id']);
-    _familyStatusController.text =
-        ApiClient.safeDisplayLabel(profile['family_status']) ?? '';
-    _familyValuesController.text =
-        ApiClient.safeDisplayLabel(profile['family_values']) ?? '';
+    _selectedFamilyStatus = _readText(profile['family_status']);
+    _selectedFamilyValues = _readText(profile['family_values']);
     _selectedHasSiblings = _readBool(profile['has_siblings']);
     _otherRelativesController.text =
         ApiClient.safeDisplayLabel(profile['other_relatives_text']) ?? '';
@@ -512,8 +510,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _gotraController.text = ApiClient.safeDisplayLabel(profile['gotra']) ?? '';
     _navrasNameController.text =
         ApiClient.safeDisplayLabel(profile['navras_name']) ?? '';
-    _birthWeekdayController.text =
-        ApiClient.safeDisplayLabel(profile['birth_weekday']) ?? '';
+    _selectedBirthWeekday = _readText(profile['birth_weekday']);
     _aboutMeController.text =
         ApiClient.safeDisplayLabel(profile['narrative_about_me']) ?? '';
   }
@@ -720,6 +717,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       setState(() {
         _familyTypeOptions =
             results['family_types'] ?? <Map<String, dynamic>>[];
+        _familyStatusOptions =
+            results['family_statuses'] ?? <Map<String, dynamic>>[];
+        _familyValueOptions =
+            results['family_values'] ?? <Map<String, dynamic>>[];
         _familyOccupationOptions =
             results['occupations'] ?? <Map<String, dynamic>>[];
         _familyCustomOccupationOptions =
@@ -734,6 +735,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _rashiLordOptions = results['rashi_lords'] ?? <Map<String, dynamic>>[];
         _mangalDoshTypeOptions =
             results['mangal_dosh_types'] ?? <Map<String, dynamic>>[];
+        _birthWeekdayOptions =
+            results['birth_weekdays'] ?? <Map<String, dynamic>>[];
       });
     } catch (_) {
       if (!mounted) return;
@@ -1492,8 +1495,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'mother_occupation_custom_id': _selectedMotherOccupationCustomId,
       'mother_extra_info': _nullableText(_motherExtraInfoController),
       'family_type_id': _selectedFamilyTypeId,
-      'family_status': _nullableText(_familyStatusController),
-      'family_values': _nullableText(_familyValuesController),
+      'family_status': _selectedFamilyStatus,
+      'family_values': _selectedFamilyValues,
       'has_siblings': _selectedHasSiblings,
       'other_relatives_text': _nullableText(_otherRelativesController),
       'property_details': _nullableText(_propertyDetailsController),
@@ -1511,7 +1514,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'kul': _nullableText(_kulController),
       'gotra': _nullableText(_gotraController),
       'navras_name': _nullableText(_navrasNameController),
-      'birth_weekday': _nullableText(_birthWeekdayController),
+      'birth_weekday': _selectedBirthWeekday,
       'narrative_about_me': _nullableText(_aboutMeController),
     };
 
@@ -1701,7 +1704,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     required String? selectedValue,
     required String fallbackPrefix,
     required ValueChanged<String?> onChanged,
+    bool? loading,
   }) {
+    final isLoading = loading ?? _optionsLoading;
     final normalizedSelected = selectedValue?.trim().toLowerCase();
     String? matchedValue;
     if (normalizedSelected != null && normalizedSelected.isNotEmpty) {
@@ -1733,7 +1738,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       onChanged: _saving || items.isEmpty ? null : onChanged,
       decoration: InputDecoration(
         labelText: labelText,
-        hintText: _optionsLoading
+        hintText: isLoading
             ? AppStrings.loading
             : _labelForValue(options, selectedValue, fallbackPrefix) ??
                   'Optional',
@@ -2492,22 +2497,24 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           onChanged: (value) => setState(() => _selectedFamilyTypeId = value),
         ),
         const SizedBox(height: 14),
-        TextField(
-          controller: _familyStatusController,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Family status (Optional)',
-            prefixIcon: Icon(Icons.info_outline),
-          ),
+        _stringDropdown(
+          labelText: 'Family status (Optional)',
+          icon: Icons.info_outline,
+          options: _familyStatusOptions,
+          selectedValue: _selectedFamilyStatus,
+          fallbackPrefix: 'Family status',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedFamilyStatus = value),
         ),
         const SizedBox(height: 14),
-        TextField(
-          controller: _familyValuesController,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Family values (Optional)',
-            prefixIcon: Icon(Icons.favorite_border),
-          ),
+        _stringDropdown(
+          labelText: 'Family values (Optional)',
+          icon: Icons.favorite_border,
+          options: _familyValueOptions,
+          selectedValue: _selectedFamilyValues,
+          fallbackPrefix: 'Family values',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedFamilyValues = value),
         ),
         const SizedBox(height: 14),
         _boolDropdown(
@@ -2684,14 +2691,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ),
         ),
         const SizedBox(height: 14),
-        TextField(
-          controller: _birthWeekdayController,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Birth weekday (Optional)',
-            helperText: 'Backend options नसल्यामुळे text म्हणून save होते.',
-            prefixIcon: Icon(Icons.calendar_today_outlined),
-          ),
+        _stringDropdown(
+          labelText: 'Birth weekday (Optional)',
+          icon: Icons.calendar_today_outlined,
+          options: _birthWeekdayOptions,
+          selectedValue: _selectedBirthWeekday,
+          fallbackPrefix: 'Birth weekday',
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => _selectedBirthWeekday = value),
         ),
         if (_remainingProfileOptionsLoading)
           const Padding(
