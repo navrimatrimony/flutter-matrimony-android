@@ -32,7 +32,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     'recent_visitors',
     'you_may_like',
   ];
-  static const int _navHome = 0;
   static const int _navMatches = 1;
   static const int _navConnect = 2;
 

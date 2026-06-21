@@ -10,7 +10,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController loginController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   bool isLoading = false;
@@ -23,7 +23,7 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     final result = await ApiClient.login(
-      email: emailController.text,
+      login: loginController.text,
       password: passwordController.text,
     );
 
@@ -86,8 +86,15 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       isLoading = false; // दुरुस्ती केली
       errorMessage =
-          result['message'] ?? 'Login failed. Check email or password.';
+          result['message'] ?? 'Login failed. Check login or password.';
     });
+  }
+
+  @override
+  void dispose() {
+    loginController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -102,9 +109,16 @@ class _LoginScreenState extends State<LoginScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             TextField(
-              controller: emailController,
+              controller: loginController,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [
+                AutofillHints.username,
+                AutofillHints.email,
+                AutofillHints.telephoneNumber,
+              ],
               decoration: const InputDecoration(
-                labelText: 'Email',
+                labelText: 'Mobile / Email / Username',
               ),
             ),
             const SizedBox(height: 12),
