@@ -235,8 +235,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _preferredProfileManagedByOptions =
       <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _preferredDietOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _preferredLocationSuggestionRows =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _selectedPreferredLocationRows =
+      <Map<String, dynamic>>[];
   final Set<int> _selectedPreferredMaritalStatusIds = <int>{};
   final Set<int> _selectedPreferredDietIds = <int>{};
+  final Set<int> _selectedPreferredCountryIds = <int>{};
+  final Set<int> _selectedPreferredStateIds = <int>{};
+  final Set<int> _selectedPreferredDistrictIds = <int>{};
+  final Set<int> _selectedPreferredTalukaIds = <int>{};
+  bool _preferredLocationsTouched = false;
   Map<String, dynamic> _horoscopeRules = <String, dynamic>{};
   Map<String, dynamic> _rashiAshtakoota = <String, dynamic>{};
 
@@ -364,6 +373,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         .toList(growable: false);
   }
 
+  double? _readDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '');
+  }
+
   String _optionLabel(Map<String, dynamic> row, String fallbackPrefix) {
     final localizedValue = localizedMapValue(row);
     if (localizedValue != null) return localizedValue;
@@ -374,6 +388,196 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
 
     return fallbackPrefix;
+  }
+
+  Map<String, dynamic>? _normalizePreferredLocationRow(dynamic value) {
+    if (value is! Map) return null;
+    final row = Map<String, dynamic>.from(value);
+    final id =
+        _readInt(row['id']) ??
+        _readInt(row['taluka_id']) ??
+        _readInt(row['location_id']);
+    if (id == null) return null;
+
+    final label =
+        ApiClient.safeDisplayLabel(row['label']) ??
+        ApiClient.safeDisplayLabel(row['display_label']) ??
+        ApiClient.safeDisplayLabel(row['location_label']) ??
+        ApiClient.safeDisplayLabel(row);
+    if (label == null || label.trim().isEmpty) return null;
+
+    return <String, dynamic>{
+      'id': id,
+      'type': _readText(row['type']) ?? 'taluka',
+      'label': label.trim(),
+      'district_id':
+          _readInt(row['district_id']) ??
+          _readInt(row['preferred_district_id']),
+      'state_id':
+          _readInt(row['state_id']) ?? _readInt(row['preferred_state_id']),
+      'country_id':
+          _readInt(row['country_id']) ?? _readInt(row['preferred_country_id']),
+      'distance_km': _readDouble(row['distance_km']),
+      'source': _readText(row['source']),
+    };
+  }
+
+  List<Map<String, dynamic>> _normalizePreferredLocationRows(dynamic value) {
+    final rows = _readRows(
+      value,
+    ).map(_normalizePreferredLocationRow).whereType<Map<String, dynamic>>();
+    final seen = <int>{};
+    final out = <Map<String, dynamic>>[];
+    for (final row in rows) {
+      final id = _readInt(row['id']);
+      if (id == null || seen.contains(id)) continue;
+      seen.add(id);
+      out.add(row);
+    }
+    return out;
+  }
+
+  List<Map<String, dynamic>> _locationRowsMatchingTalukas(
+    List<Map<String, dynamic>> rows,
+    Set<int> talukaIds,
+  ) {
+    if (talukaIds.isEmpty) return <Map<String, dynamic>>[];
+
+    return rows
+        .where((row) {
+          final id = _readInt(row['id']);
+          return id != null && talukaIds.contains(id);
+        })
+        .toList(growable: false);
+  }
+
+  void _syncPreferredLocationIdSetsFromRows(List<Map<String, dynamic>> rows) {
+    _selectedPreferredCountryIds
+      ..clear()
+      ..addAll(_idsFromLocationRows(rows, 'country_id'));
+    _selectedPreferredStateIds
+      ..clear()
+      ..addAll(_idsFromLocationRows(rows, 'state_id'));
+    _selectedPreferredDistrictIds
+      ..clear()
+      ..addAll(_idsFromLocationRows(rows, 'district_id'));
+    _selectedPreferredTalukaIds
+      ..clear()
+      ..addAll(_idsFromLocationRows(rows, 'id'));
+  }
+
+  Set<int> _idsFromLocationRows(List<Map<String, dynamic>> rows, String key) {
+    final out = <int>{};
+    for (final row in rows) {
+      final id = _readInt(row[key]);
+      if (id != null && id > 0) out.add(id);
+    }
+    return out;
+  }
+
+  List<int> _preferredLocationPayloadIds(String key, Set<int> fallback) {
+    if (_selectedPreferredLocationRows.isEmpty && !_preferredLocationsTouched) {
+      return fallback.toList(growable: false);
+    }
+
+    final ids = <int>[];
+    for (final row in _selectedPreferredLocationRows) {
+      final id = _readInt(row[key]);
+      if (id != null && id > 0 && !ids.contains(id)) {
+        ids.add(id);
+      }
+    }
+    return ids;
+  }
+
+  bool _sameLocationRowOrder(
+    List<Map<String, dynamic>> first,
+    List<Map<String, dynamic>> second,
+  ) {
+    final firstIds = first.map((row) => _readInt(row['id'])).whereType<int>();
+    final secondIds = second.map((row) => _readInt(row['id'])).whereType<int>();
+    return jsonEncode(firstIds.toList()) == jsonEncode(secondIds.toList());
+  }
+
+  String? _preferredLocationSummary() {
+    final count = _selectedPreferredLocationRows.length;
+    if (count <= 0) return null;
+
+    final firstLabel = _readText(_selectedPreferredLocationRows.first['label']);
+    if (firstLabel == null) return '$count locations';
+    if (count == 1) return firstLabel;
+    return '$firstLabel +${count - 1} nearby';
+  }
+
+  void _prefillPreferredLocations(
+    Map<String, dynamic> profile,
+    Map<String, dynamic> suggestions,
+  ) {
+    _preferredLocationsTouched = false;
+    _preferredLocationSuggestionRows = _normalizePreferredLocationRows(
+      suggestions['preferred_location_suggestions'],
+    );
+
+    final savedCountryIds = _readIntList(
+      profile['preferred_country_ids'] ?? profile['preferred_countries'],
+    );
+    final savedStateIds = _readIntList(
+      profile['preferred_state_ids'] ?? profile['preferred_states'],
+    );
+    final savedDistrictIds = _readIntList(
+      profile['preferred_district_ids'] ?? profile['preferred_districts'],
+    );
+    final savedTalukaIds = _readIntList(
+      profile['preferred_taluka_ids'] ?? profile['preferred_talukas'],
+    );
+
+    final hasSavedLocationIds =
+        savedCountryIds.isNotEmpty ||
+        savedStateIds.isNotEmpty ||
+        savedDistrictIds.isNotEmpty ||
+        savedTalukaIds.isNotEmpty;
+
+    if (hasSavedLocationIds) {
+      _selectedPreferredCountryIds
+        ..clear()
+        ..addAll(savedCountryIds);
+      _selectedPreferredStateIds
+        ..clear()
+        ..addAll(savedStateIds);
+      _selectedPreferredDistrictIds
+        ..clear()
+        ..addAll(savedDistrictIds);
+      _selectedPreferredTalukaIds
+        ..clear()
+        ..addAll(savedTalukaIds);
+
+      final savedRows = _normalizePreferredLocationRows(
+        profile['preferred_location_suggestions'] ??
+            profile['preferred_locations'] ??
+            profile['preferred_taluka_locations'] ??
+            profile['preferred_talukas'],
+      );
+      _selectedPreferredLocationRows = savedRows.isNotEmpty
+          ? savedRows
+          : _locationRowsMatchingTalukas(
+              _preferredLocationSuggestionRows,
+              _selectedPreferredTalukaIds,
+            );
+      return;
+    }
+
+    _selectedPreferredLocationRows = List<Map<String, dynamic>>.from(
+      _preferredLocationSuggestionRows,
+    );
+    if (_selectedPreferredLocationRows.isNotEmpty) {
+      _syncPreferredLocationIdSetsFromRows(_selectedPreferredLocationRows);
+      return;
+    }
+
+    _selectedPreferredCountryIds.clear();
+    _selectedPreferredStateIds.clear();
+    _selectedPreferredDistrictIds.clear();
+    _selectedPreferredTalukaIds.clear();
   }
 
   String _locationLabel(Map<String, dynamic> location) {
@@ -676,6 +880,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             ? savedPreferredDietIds
             : _readIntList(partnerPreferenceSuggestions['preferred_diet_ids']),
       );
+    _prefillPreferredLocations(profile, partnerPreferenceSuggestions);
     _expectationsController.text =
         ApiClient.safeDisplayLabel(profile['narrative_expectations']) ?? '';
     _lastLoadedProfile = Map<String, dynamic>.from(profile);
@@ -1998,6 +2203,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _preferredDietOptions,
         _selectedPreferredDietIds,
       ),
+      'preferred_country_ids': _preferredLocationPayloadIds(
+        'country_id',
+        _selectedPreferredCountryIds,
+      ),
+      'preferred_state_ids': _preferredLocationPayloadIds(
+        'state_id',
+        _selectedPreferredStateIds,
+      ),
+      'preferred_district_ids': _preferredLocationPayloadIds(
+        'district_id',
+        _selectedPreferredDistrictIds,
+      ),
+      'preferred_taluka_ids': _preferredLocationPayloadIds(
+        'id',
+        _selectedPreferredTalukaIds,
+      ),
       'narrative_expectations': _nullableText(_expectationsController),
     };
 
@@ -2342,6 +2563,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _selectedPreferredDietIds,
             'Diet',
           ),
+          _preferredLocationSummary(),
         ]);
     }
   }
@@ -2474,6 +2696,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'willing_to_relocate',
           'preferred_marital_status_ids',
           'preferred_diet_ids',
+          'preferred_country_ids',
+          'preferred_state_ids',
+          'preferred_district_ids',
+          'preferred_taluka_ids',
           'narrative_expectations',
         ];
     }
@@ -4183,6 +4409,128 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
+  void _setPreferredLocationRows(List<Map<String, dynamic>> rows) {
+    final next = <Map<String, dynamic>>[];
+    final seen = <int>{};
+    for (final row in rows) {
+      final normalized = _normalizePreferredLocationRow(row);
+      if (normalized == null) continue;
+      final id = _readInt(normalized['id']);
+      if (id == null || seen.contains(id)) continue;
+      seen.add(id);
+      next.add(normalized);
+    }
+
+    setState(() {
+      _preferredLocationsTouched = true;
+      _selectedPreferredLocationRows = next;
+      _syncPreferredLocationIdSetsFromRows(_selectedPreferredLocationRows);
+    });
+  }
+
+  String? _preferredLocationMetaLabel(Map<String, dynamic> row) {
+    final source = _readText(row['source']);
+    final distance = _readDouble(row['distance_km']);
+    if (source == 'own_taluka' || distance == 0) {
+      return 'Your taluka';
+    }
+    if (distance != null && distance > 0) {
+      final rounded = distance.round();
+      return rounded > 0 ? '$rounded km' : '${distance.toStringAsFixed(1)} km';
+    }
+    return null;
+  }
+
+  Widget _buildPreferredLocationsField() {
+    final theme = Theme.of(context);
+    final suggestionsAvailable = _preferredLocationSuggestionRows.isNotEmpty;
+    final canReset =
+        suggestionsAvailable &&
+        !_sameLocationRowOrder(
+          _selectedPreferredLocationRows,
+          _preferredLocationSuggestionRows,
+        );
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: 'Preferred locations (Optional)',
+        prefixIcon: const Icon(Icons.place_outlined),
+        border: const OutlineInputBorder(),
+        helperText: _selectedPreferredLocationRows.isEmpty
+            ? 'Nearby taluka suggestions backend मधून येतात.'
+            : 'नको असलेले taluka save करण्यापूर्वी काढा.',
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (_selectedPreferredLocationRows.isEmpty)
+            Text(
+              suggestionsAvailable
+                  ? 'No locations selected.'
+                  : 'Location suggestions are not available yet.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: Colors.grey.shade700,
+              ),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _selectedPreferredLocationRows.map((row) {
+                final label = _readText(row['label']) ?? 'Location';
+                final meta = _preferredLocationMetaLabel(row);
+
+                return InputChip(
+                  label: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(label),
+                      if (meta != null)
+                        Text(
+                          meta,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                    ],
+                  ),
+                  avatar: const Icon(Icons.location_on_outlined, size: 18),
+                  onDeleted: _saving
+                      ? null
+                      : () {
+                          final next = _selectedPreferredLocationRows
+                              .where(
+                                (item) =>
+                                    _readInt(item['id']) != _readInt(row['id']),
+                              )
+                              .toList(growable: false);
+                          _setPreferredLocationRows(next);
+                        },
+                );
+              }).toList(),
+            ),
+          if (suggestionsAvailable) ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _saving || !canReset
+                    ? null
+                    : () => _setPreferredLocationRows(
+                        _preferredLocationSuggestionRows,
+                      ),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Reset to suggested locations'),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _buildPartnerPreferencesSection() {
     return _sectionCard(
       title: 'Partner Preferences',
@@ -4264,6 +4612,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             });
           },
         ),
+        const SizedBox(height: 14),
+        _buildPreferredLocationsField(),
         const SizedBox(height: 14),
         TextField(
           controller: _expectationsController,
