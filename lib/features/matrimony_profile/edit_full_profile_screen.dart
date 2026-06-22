@@ -628,14 +628,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedBirthWeekday = _readText(profile['birth_weekday']);
     _aboutMeController.text =
         ApiClient.safeDisplayLabel(profile['narrative_about_me']) ?? '';
-    _selectedPreferredAgeMin = _readInt(profile['preferred_age_min']);
-    _selectedPreferredAgeMax = _readInt(profile['preferred_age_max']);
-    _selectedPreferredHeightMinCm = _readInt(
-      profile['preferred_height_min_cm'],
+    final partnerPreferenceSuggestions = _readMap(
+      profile['partner_preference_suggestions'],
     );
-    _selectedPreferredHeightMaxCm = _readInt(
-      profile['preferred_height_max_cm'],
-    );
+    _selectedPreferredAgeMin =
+        _readInt(profile['preferred_age_min']) ??
+        _readInt(partnerPreferenceSuggestions['preferred_age_min']);
+    _selectedPreferredAgeMax =
+        _readInt(profile['preferred_age_max']) ??
+        _readInt(partnerPreferenceSuggestions['preferred_age_max']);
+    _selectedPreferredHeightMinCm =
+        _readInt(profile['preferred_height_min_cm']) ??
+        _readInt(partnerPreferenceSuggestions['preferred_height_min_cm']);
+    _selectedPreferredHeightMaxCm =
+        _readInt(profile['preferred_height_max_cm']) ??
+        _readInt(partnerPreferenceSuggestions['preferred_height_max_cm']);
     _selectedMarriageTypePreferenceId = _readInt(
       profile['marriage_type_preference_id'],
     );
@@ -646,20 +653,28 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       profile['preferred_profile_managed_by'],
     );
     _selectedWillingToRelocate = _readBool(profile['willing_to_relocate']);
+    final savedPreferredMaritalStatusIds = _readIntList(
+      profile['preferred_marital_status_ids'] ??
+          profile['preferred_marital_statuses'],
+    );
+    final savedPreferredDietIds = _readIntList(
+      profile['preferred_diet_ids'] ?? profile['preferred_diets'],
+    );
     _selectedPreferredMaritalStatusIds
       ..clear()
       ..addAll(
-        _readIntList(
-          profile['preferred_marital_status_ids'] ??
-              profile['preferred_marital_statuses'],
-        ),
+        savedPreferredMaritalStatusIds.isNotEmpty
+            ? savedPreferredMaritalStatusIds
+            : _readIntList(
+                partnerPreferenceSuggestions['preferred_marital_status_ids'],
+              ),
       );
     _selectedPreferredDietIds
       ..clear()
       ..addAll(
-        _readIntList(
-          profile['preferred_diet_ids'] ?? profile['preferred_diets'],
-        ),
+        savedPreferredDietIds.isNotEmpty
+            ? savedPreferredDietIds
+            : _readIntList(partnerPreferenceSuggestions['preferred_diet_ids']),
       );
     _expectationsController.text =
         ApiClient.safeDisplayLabel(profile['narrative_expectations']) ?? '';
@@ -1544,6 +1559,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final inches = totalInches % 12;
     return '$feet\' $inches" ($cm cm)';
   }
+
+  String _compactHeightLabel(int cm) => _heightLabel(cm).split(' (').first;
 
   String _weightLabel(int kg) => '$kg kg';
 
@@ -2655,8 +2672,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final isExpanded = _expandedSection == section;
     final isSavedFeedback = _savedFeedbackSection == section;
     final showSavedPulse = isSavedFeedback && _savedHighlightOn;
+    const successColor = Color(0xFF15803D);
     final borderColor = showSavedPulse
-        ? theme.colorScheme.primary
+        ? successColor
         : isExpanded
         ? theme.colorScheme.primary.withValues(alpha: 0.38)
         : Colors.grey.shade200;
@@ -2668,14 +2686,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: showSavedPulse
-            ? theme.colorScheme.primary.withValues(alpha: 0.07)
+            ? successColor.withValues(alpha: 0.08)
             : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: borderColor),
         boxShadow: showSavedPulse
             ? [
                 BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.16),
+                  color: successColor.withValues(alpha: 0.18),
                   blurRadius: 18,
                   offset: const Offset(0, 6),
                 ),
@@ -2736,16 +2754,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: theme.colorScheme.primary.withValues(
-                                      alpha: 0.1,
-                                    ),
+                                    color: successColor.withValues(alpha: 0.12),
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
                                     'Saved',
                                     style: theme.textTheme.labelMedium
                                         ?.copyWith(
-                                          color: theme.colorScheme.primary,
+                                          color: successColor,
                                           fontWeight: FontWeight.w800,
                                         ),
                                   ),
@@ -3007,37 +3023,153 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
-  Widget _numberPickerField({
+  Widget _preferenceRangeField({
     required String labelText,
     required IconData icon,
-    required int? selectedValue,
-    required List<int> values,
-    required String Function(int value) labelBuilder,
-    required ValueChanged<int?> onChanged,
+    required String valueText,
+    required Widget slider,
+    required VoidCallback? onClear,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: _saving
-          ? null
-          : () async {
-              final value = await _pickNumber(
-                title: labelText,
-                values: values,
-                selected: selectedValue,
-                labelBuilder: labelBuilder,
-              );
-              if (!mounted || value == null) return;
-              onChanged(value == _clearNumberSelection ? null : value);
-            },
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: labelText,
-          prefixIcon: Icon(icon),
-          border: const OutlineInputBorder(),
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 21, color: theme.colorScheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  labelText,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: _saving ? null : onClear,
+                child: const Text('Clear'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            valueText,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: const Color(0xFF2E2220),
+            ),
+          ),
+          const SizedBox(height: 4),
+          slider,
+        ],
+      ),
+    );
+  }
+
+  Widget _preferredAgeRangeField() {
+    const minAge = 18;
+    const maxAge = 80;
+    final hasValue =
+        _selectedPreferredAgeMin != null || _selectedPreferredAgeMax != null;
+    final lower = (_selectedPreferredAgeMin ?? minAge)
+        .clamp(minAge, maxAge)
+        .toDouble();
+    final upper = (_selectedPreferredAgeMax ?? maxAge)
+        .clamp(minAge, maxAge)
+        .toDouble();
+    final values = lower <= upper
+        ? RangeValues(lower, upper)
+        : RangeValues(upper, lower);
+    final start = values.start.round();
+    final end = values.end.round();
+
+    return _preferenceRangeField(
+      labelText: 'Preferred Age',
+      icon: Icons.cake_outlined,
+      valueText: hasValue ? '$start - $end years' : 'Not selected',
+      onClear: hasValue
+          ? () {
+              setState(() {
+                _selectedPreferredAgeMin = null;
+                _selectedPreferredAgeMax = null;
+              });
+            }
+          : null,
+      slider: RangeSlider(
+        values: values,
+        min: minAge.toDouble(),
+        max: maxAge.toDouble(),
+        divisions: maxAge - minAge,
+        labels: RangeLabels('$start years', '$end years'),
+        onChanged: _saving
+            ? null
+            : (next) {
+                setState(() {
+                  _selectedPreferredAgeMin = next.start.round();
+                  _selectedPreferredAgeMax = next.end.round();
+                });
+              },
+      ),
+    );
+  }
+
+  Widget _preferredHeightRangeField() {
+    const minHeight = 136;
+    const maxHeight = 214;
+    final hasValue =
+        _selectedPreferredHeightMinCm != null ||
+        _selectedPreferredHeightMaxCm != null;
+    final lower = (_selectedPreferredHeightMinCm ?? minHeight)
+        .clamp(minHeight, maxHeight)
+        .toDouble();
+    final upper = (_selectedPreferredHeightMaxCm ?? maxHeight)
+        .clamp(minHeight, maxHeight)
+        .toDouble();
+    final values = lower <= upper
+        ? RangeValues(lower, upper)
+        : RangeValues(upper, lower);
+    final start = values.start.round();
+    final end = values.end.round();
+
+    return _preferenceRangeField(
+      labelText: 'Preferred Height',
+      icon: Icons.straighten,
+      valueText: hasValue
+          ? '${_compactHeightLabel(start)} - ${_compactHeightLabel(end)}'
+          : 'Not selected',
+      onClear: hasValue
+          ? () {
+              setState(() {
+                _selectedPreferredHeightMinCm = null;
+                _selectedPreferredHeightMaxCm = null;
+              });
+            }
+          : null,
+      slider: RangeSlider(
+        values: values,
+        min: minHeight.toDouble(),
+        max: maxHeight.toDouble(),
+        divisions: maxHeight - minHeight,
+        labels: RangeLabels(
+          _compactHeightLabel(start),
+          _compactHeightLabel(end),
         ),
-        child: Text(
-          selectedValue == null ? 'Not selected' : labelBuilder(selectedValue),
-        ),
+        onChanged: _saving
+            ? null
+            : (next) {
+                setState(() {
+                  _selectedPreferredHeightMinCm = next.start.round();
+                  _selectedPreferredHeightMaxCm = next.end.round();
+                });
+              },
       ),
     );
   }
@@ -4052,67 +4184,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Widget _buildPartnerPreferencesSection() {
-    final ageValues = List<int>.generate(63, (index) => 18 + index);
-
     return _sectionCard(
       title: 'Partner Preferences',
       icon: Icons.tune_outlined,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: _numberPickerField(
-                labelText: 'Preferred age min',
-                icon: Icons.cake_outlined,
-                selectedValue: _selectedPreferredAgeMin,
-                values: ageValues,
-                labelBuilder: (value) => '$value years',
-                onChanged: (value) =>
-                    setState(() => _selectedPreferredAgeMin = value),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _numberPickerField(
-                labelText: 'Preferred age max',
-                icon: Icons.cake,
-                selectedValue: _selectedPreferredAgeMax,
-                values: ageValues,
-                labelBuilder: (value) => '$value years',
-                onChanged: (value) =>
-                    setState(() => _selectedPreferredAgeMax = value),
-              ),
-            ),
-          ],
-        ),
+        _preferredAgeRangeField(),
         const SizedBox(height: 14),
-        Row(
-          children: [
-            Expanded(
-              child: _numberPickerField(
-                labelText: 'Preferred height min',
-                icon: Icons.straighten,
-                selectedValue: _selectedPreferredHeightMinCm,
-                values: _heightValues(),
-                labelBuilder: _heightLabel,
-                onChanged: (value) =>
-                    setState(() => _selectedPreferredHeightMinCm = value),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _numberPickerField(
-                labelText: 'Preferred height max',
-                icon: Icons.straighten,
-                selectedValue: _selectedPreferredHeightMaxCm,
-                values: _heightValues(),
-                labelBuilder: _heightLabel,
-                onChanged: (value) =>
-                    setState(() => _selectedPreferredHeightMaxCm = value),
-              ),
-            ),
-          ],
-        ),
+        _preferredHeightRangeField(),
         const SizedBox(height: 14),
         _intDropdown(
           labelText: 'Marriage type preference (Optional)',

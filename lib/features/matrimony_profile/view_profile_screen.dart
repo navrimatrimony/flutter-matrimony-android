@@ -130,78 +130,10 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final rawSections = _display?['sections'];
     if (rawSections is! List) return const <ProfileDisplaySectionData>[];
 
-    final allSections = rawSections
+    return rawSections
         .map(ProfileDisplaySectionData.fromMap)
         .whereType<ProfileDisplaySectionData>()
         .toList();
-    final sections = allSections.where(_isCurrentEditAllSection).toList();
-
-    final birthSection = _birthDetailsSection(allSections);
-    if (birthSection == null) return sections;
-
-    final insertIndex = sections.indexWhere((section) {
-      final key = section.key.trim().toLowerCase();
-      return key == 'career_education';
-    });
-    if (insertIndex <= 0) {
-      return <ProfileDisplaySectionData>[birthSection, ...sections];
-    }
-
-    return <ProfileDisplaySectionData>[
-      ...sections.take(insertIndex),
-      birthSection,
-      ...sections.skip(insertIndex),
-    ];
-  }
-
-  bool _isCurrentEditAllSection(ProfileDisplaySectionData section) {
-    final key = section.key.trim().toLowerCase();
-    return key == 'basic' || key == 'career_education';
-  }
-
-  ProfileDisplaySectionData? _birthDetailsSection(
-    List<ProfileDisplaySectionData> sections,
-  ) {
-    final astro = _sectionByKey(sections, 'astro');
-    final items = <ProfileDisplayItemData>[];
-
-    if (astro != null) {
-      for (final item in astro.items) {
-        final label = item.label.trim().toLowerCase();
-        if (label == 'birth time' || label == 'birth place') {
-          items.add(item);
-        }
-      }
-    }
-
-    if (items.isEmpty && _profile != null) {
-      _addDisplayItem(items, 'Birth Time', _profile!['birth_time']);
-      _addDisplayItem(
-        items,
-        'Birth Place',
-        _profile!['birth_place_label'] ??
-            _profile!['birth_place_text'] ??
-            _profile!['birth_place'],
-      );
-    }
-
-    if (items.isEmpty) return null;
-
-    return ProfileDisplaySectionData(
-      key: 'birth_details',
-      title: 'Birth Details',
-      items: items,
-    );
-  }
-
-  ProfileDisplaySectionData? _sectionByKey(
-    List<ProfileDisplaySectionData> sections,
-    String key,
-  ) {
-    for (final section in sections) {
-      if (section.key.trim().toLowerCase() == key) return section;
-    }
-    return null;
   }
 
   List<ProfileDisplaySectionData> _fallbackDisplaySections(

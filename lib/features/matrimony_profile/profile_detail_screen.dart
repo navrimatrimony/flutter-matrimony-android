@@ -28,12 +28,16 @@ class ProfileDetailScreen extends StatefulWidget {
 }
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
+  static final Set<int> _openedProfileIds = <int>{};
+  static final Set<int> _knownViewedProfileIds = <int>{};
   late int _currentProfileId;
   late List<int> _profileIds;
   late int _currentProfileIndex;
   Map<String, dynamic>? _profile;
   Map<String, dynamic>? _display;
+  List<Map<String, dynamic>> _suggestedProfiles = <Map<String, dynamic>>[];
   bool _isLoading = true;
+  bool _suggestedProfilesLoading = false;
   String? _errorMessage;
   bool _isSendingInterest = false;
   bool _interestSent = false;
@@ -55,6 +59,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     _currentProfileIndex = _profileIds.indexOf(widget.profileId);
     if (_currentProfileIndex < 0) _currentProfileIndex = 0;
     _currentProfileId = _profileIds[_currentProfileIndex];
+    _openedProfileIds.add(_currentProfileId);
     _scrollController.addListener(_handleHeroScroll);
     _fetchProfile();
   }
@@ -116,10 +121,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     setState(() {
       _currentProfileIndex = nextIndex;
       _currentProfileId = _profileIds[nextIndex];
+      _openedProfileIds.add(_currentProfileId);
       _profile = null;
       _display = null;
+      _suggestedProfiles = <Map<String, dynamic>>[];
       _errorMessage = null;
       _isLoading = true;
+      _suggestedProfilesLoading = false;
       _isSendingInterest = false;
       _interestSent = false;
       _isShortlisted = false;
@@ -179,6 +187,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           _canBlock = _displaySafeBool(actions?['can_block']);
           _isLoading = false;
         });
+        _fetchSuggestedProfiles();
       } else {
         setState(() {
           _errorMessage = response['message'] ?? 'प्रोफाइल लोड होऊ शकले नाही.';
@@ -192,6 +201,112 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<void> _fetchSuggestedProfiles() async {
+    if (!mounted || _suggestedProfilesLoading) return;
+    final requestedProfileId = _currentProfileId;
+
+    setState(() {
+      _suggestedProfilesLoading = true;
+    });
+
+    final suggestions = <Map<String, dynamic>>[];
+    try {
+      final sectionsResponse = await ApiClient.getMoreMatchSections();
+      suggestions.addAll(_suggestedProfilesFromSections(sectionsResponse));
+
+      if (suggestions.length < 6) {
+        final listResponse = await ApiClient.getProfileList(feed: 'my_matches');
+        suggestions.addAll(_safeMapList(listResponse['profiles']));
+      }
+    } catch (_) {
+      // Suggestions are optional; the main profile must stay usable.
+    }
+
+    final filtered = _filterSuggestedProfiles(suggestions);
+    if (!mounted) return;
+    if (requestedProfileId != _currentProfileId) return;
+
+    setState(() {
+      _suggestedProfiles = filtered.take(6).toList(growable: false);
+      _suggestedProfilesLoading = false;
+    });
+  }
+
+  List<Map<String, dynamic>> _suggestedProfilesFromSections(
+    Map<String, dynamic> response,
+  ) {
+    final sections = _safeMapList(response['sections']);
+    const preferredKeys = <String>[
+      'matching_my_preference',
+      'you_may_like',
+      'nearby',
+      'looking_for_me',
+    ];
+
+    final rows = <Map<String, dynamic>>[];
+    for (final section in sections) {
+      final key = _displayString(section['key'])?.trim().toLowerCase();
+      if (key != 'recently_viewed') continue;
+      for (final profile in _safeMapList(section['profiles'])) {
+        final id = _displayInt(profile['id']);
+        if (id != null) _knownViewedProfileIds.add(id);
+      }
+    }
+
+    for (final preferredKey in preferredKeys) {
+      for (final section in sections) {
+        final key = _displayString(section['key'])?.trim().toLowerCase();
+        if (key != preferredKey) continue;
+        rows.addAll(_safeMapList(section['profiles']));
+      }
+    }
+
+    return rows;
+  }
+
+  List<Map<String, dynamic>> _filterSuggestedProfiles(
+    List<Map<String, dynamic>> rows,
+  ) {
+    final seen = <int>{};
+    final filtered = <Map<String, dynamic>>[];
+
+    for (final row in rows) {
+      final id = _displayInt(row['id']);
+      if (id == null || id == _currentProfileId) continue;
+      if (seen.contains(id) ||
+          _openedProfileIds.contains(id) ||
+          _knownViewedProfileIds.contains(id)) {
+        continue;
+      }
+      if (_wasProfileAlreadyViewed(row)) continue;
+      if (_suggestedPhotoUrl(row) == null) continue;
+
+      seen.add(id);
+      filtered.add(row);
+      if (filtered.length >= 6) break;
+    }
+
+    return filtered;
+  }
+
+  bool _wasProfileAlreadyViewed(Map<String, dynamic> profile) {
+    final viewedFields = <dynamic>[
+      profile['viewed_at'],
+      profile['viewed_at_human'],
+      profile['last_viewed_at'],
+      profile['profile_viewed_at'],
+    ];
+
+    for (final value in viewedFields) {
+      if (_displayString(value) != null) return true;
+    }
+
+    final display = _safeMap(profile['display']);
+    final actions = _safeMap(display?['actions']);
+    return _displaySafeBool(actions?['viewed']) == true ||
+        _displaySafeBool(actions?['is_viewed']) == true;
   }
 
   int? _calculateAge(String? dateOfBirth) {
@@ -631,6 +746,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       key: _comparisonKey,
                       child: ProfileComparisonCard(comparison: comparison),
                     ),
+                  if (_suggestedProfiles.isNotEmpty)
+                    _buildSuggestedProfilesSection(),
                 ],
               ),
             ),
@@ -1135,6 +1252,221 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       onPrimaryAction: _handleContactPrimaryAction,
       onWhatsAppResponse: _handleWhatsAppResponseAction,
     );
+  }
+
+  Widget _buildSuggestedProfilesSection() {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'More profiles you may like',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF2E2220),
+                  ),
+                ),
+              ),
+              Text(
+                '${_suggestedProfiles.length}',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: const Color(0xFF9B1B46),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 232,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _suggestedProfiles.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                return _buildSuggestedProfileCard(_suggestedProfiles[index]);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestedProfileCard(Map<String, dynamic> profile) {
+    final profileId = _displayInt(profile['id']);
+    final photoUrl = _suggestedPhotoUrl(profile);
+    final name = _suggestedName(profile);
+    final age = _suggestedAge(profile);
+    final title = age == null ? name : '$name, $age';
+    final community = _suggestedCommunity(profile);
+    final location = _suggestedLocation(profile);
+
+    return SizedBox(
+      width: 156,
+      child: Material(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: profileId == null
+              ? null
+              : () => _openSuggestedProfile(profileId),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      photoUrl!,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: const Color(0xFFF1E7E3),
+                          child: const Icon(
+                            Icons.person_outline,
+                            size: 42,
+                            color: Color(0xFF9B1B46),
+                          ),
+                        );
+                      },
+                    ),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: 0.64),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 10,
+                      right: 10,
+                      bottom: 10,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (community != null)
+                      Text(
+                        community,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF2E2220),
+                        ),
+                      ),
+                    if (location != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        location,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _openSuggestedProfile(int profileId) {
+    final ids = <int>[
+      _currentProfileId,
+      ..._suggestedProfiles
+          .map((profile) => _displayInt(profile['id']))
+          .whereType<int>(),
+    ].whereType<int>().toSet().toList(growable: false);
+
+    setState(() {
+      _openedProfileIds.add(profileId);
+      _knownViewedProfileIds.add(profileId);
+      _suggestedProfiles = _suggestedProfiles
+          .where((profile) => _displayInt(profile['id']) != profileId)
+          .toList(growable: false);
+    });
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            ProfileDetailScreen(profileId: profileId, profileIds: ids),
+      ),
+    );
+  }
+
+  Map<String, dynamic>? _suggestedCard(Map<String, dynamic> profile) {
+    final display = _safeMap(profile['display']);
+    return _safeMap(display?['card']) ?? _safeMap(display?['hero']);
+  }
+
+  String? _suggestedPhotoUrl(Map<String, dynamic> profile) {
+    final card = _suggestedCard(profile);
+    return _displayString(card?['primary_photo_url']) ??
+        ApiClient.resolveProfilePhotoUrl(profile);
+  }
+
+  String _suggestedName(Map<String, dynamic> profile) {
+    final card = _suggestedCard(profile);
+    return _displayString(card?['name']) ??
+        ApiClient.safeDisplayLabel(profile['full_name']) ??
+        ApiClient.safeDisplayLabel(profile['name']) ??
+        'Profile';
+  }
+
+  int? _suggestedAge(Map<String, dynamic> profile) {
+    final card = _suggestedCard(profile);
+    return _displayInt(card?['age']) ??
+        _calculateAge(_displayString(profile['date_of_birth']));
+  }
+
+  String? _suggestedCommunity(Map<String, dynamic> profile) {
+    final card = _suggestedCard(profile);
+    return _displayString(card?['community_label']) ??
+        ApiClient.profileCommunityLabel(profile);
+  }
+
+  String? _suggestedLocation(Map<String, dynamic> profile) {
+    final card = _suggestedCard(profile);
+    return _displayString(card?['location_label']) ??
+        ApiClient.profileLocationLabel(profile, allowIdFallback: false);
   }
 
   double _bottomContentPadding() {
