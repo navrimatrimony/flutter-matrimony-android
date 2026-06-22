@@ -67,13 +67,22 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   void _handleHeroScroll() {
-    final shouldShow =
-        _scrollController.hasClients && _scrollController.offset > 28;
+    final shouldShow = _headerCollapseProgress() > 0.70;
     if (shouldShow == _showScrolledStatusStrip || !mounted) return;
 
     setState(() {
       _showScrolledStatusStrip = shouldShow;
     });
+  }
+
+  double _headerCollapseProgress() {
+    if (!_scrollController.hasClients) return 0;
+
+    return ((_scrollController.offset - 82) / 156).clamp(0.0, 1.0).toDouble();
+  }
+
+  double _lerpValue(double start, double end, double progress) {
+    return start + ((end - start) * progress);
   }
 
   List<int> _normalizedProfileIds(List<int> ids, int initialProfileId) {
@@ -276,10 +285,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final overlayStyle = (_showScrolledStatusStrip
-            ? SystemUiOverlayStyle.dark
-            : SystemUiOverlayStyle.light)
-        .copyWith(statusBarColor: Colors.transparent);
+    final overlayStyle =
+        (_showScrolledStatusStrip
+                ? SystemUiOverlayStyle.light
+                : SystemUiOverlayStyle.dark)
+            .copyWith(statusBarColor: Colors.transparent);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: overlayStyle,
@@ -295,6 +305,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
             ),
             _buildScrolledStatusStrip(),
+            _buildMovingHeroIdentity(),
             _buildFixedBackButton(),
           ],
         ),
@@ -323,9 +334,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   Widget _buildScrolledStatusStrip() {
     final statusHeight = MediaQuery.of(context).padding.top;
-    if (statusHeight <= 0 || _profile == null || _isLoading) {
+    final profile = _profile;
+    if (profile == null || _isLoading) {
       return const SizedBox.shrink();
     }
+    final headerHeight = statusHeight + 58;
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Positioned(
       top: 0,
@@ -333,33 +347,197 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       right: 0,
       child: AnimatedBuilder(
         animation: _scrollController,
-        child: Container(
-          height: statusHeight,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            border: Border(
-              bottom: BorderSide(
-                color: Colors.black.withValues(alpha: 0.06),
-              ),
-            ),
-          ),
-        ),
         builder: (context, child) {
-          final offset =
-              _scrollController.hasClients ? _scrollController.offset : 0.0;
-          final progress = ((offset - 16) / 42).clamp(0.0, 1.0).toDouble();
+          final progress = Curves.easeOutCubic.transform(
+            _headerCollapseProgress(),
+          );
 
           return IgnorePointer(
+            ignoring: progress < 0.98,
             child: Opacity(
               opacity: progress,
               child: Transform.translate(
-                offset: Offset(0, -statusHeight * (1 - progress)),
-                child: child,
+                offset: Offset(0, -18 * (1 - progress)),
+                child: Container(
+                  height: headerHeight,
+                  decoration: BoxDecoration(
+                    color: primary,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.18),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildMovingHeroIdentity() {
+    final profile = _profile;
+    if (profile == null || _isLoading) {
+      return const SizedBox.shrink();
+    }
+
+    final hero = _displayHero();
+    final photoUrl =
+        _displayString(hero?['primary_photo_url']) ??
+        ApiClient.resolveProfilePhotoUrl(profile);
+    final statusHeight = MediaQuery.of(context).padding.top;
+    final heroHeight = _heroHeight(photoUrl != null);
+    final screenWidth = MediaQuery.of(context).size.width;
+    final age =
+        _displayInt(hero?['age']) ??
+        _calculateAge(profile['date_of_birth']?.toString());
+    final name = _displayString(hero?['name']) ?? _nameText(profile);
+    final heroName = age != null ? '$name, $age' : name;
+    final heightLabel =
+        _displayString(hero?['height_label']) ??
+        ApiClient.profileHeightLabel(profile);
+    final communityLabel =
+        _displayString(hero?['community_label']) ?? _communityText(profile);
+    final occupationLabel =
+        _displayString(hero?['occupation_label']) ??
+        ApiClient.profileOccupationLabel(profile);
+    final location =
+        _displayString(hero?['location_label']) ??
+        ApiClient.profileLocationLabel(profile, allowIdFallback: false);
+    final line1 = _joinNonEmpty([heightLabel, communityLabel]);
+    final compactLine = line1 ?? location;
+    final isVerified = _displayBool(hero?['verified']) ?? _isVerified(profile);
+    final heroChips = _displayChips(
+      profile,
+      hasComparisonCard: _comparisonData() != null,
+    );
+
+    return AnimatedBuilder(
+      animation: _scrollController,
+      builder: (context, child) {
+        final progress = Curves.easeOutCubic.transform(
+          _headerCollapseProgress(),
+        );
+        final startTop = (statusHeight + heroHeight - 172)
+            .clamp(statusHeight + 112, statusHeight + heroHeight - 92)
+            .toDouble();
+        final top = _lerpValue(startTop, statusHeight + 7, progress);
+        final left = _lerpValue(16, 64, progress);
+        final titleSize = _lerpValue(screenWidth < 360 ? 28 : 32, 18, progress);
+        final subtitleSize = _lerpValue(15, 12.5, progress);
+        final titleMaxLines = progress > 0.78 ? 1 : 2;
+        final showHeroDetails = progress < 0.76;
+        final detailsOpacity = (1 - ((progress - 0.18) / 0.58))
+            .clamp(0.0, 1.0)
+            .toDouble();
+
+        return Positioned(
+          top: top,
+          left: left,
+          right: 16,
+          child: IgnorePointer(
+            ignoring: progress > 0.82,
+            child: DefaultTextStyle(
+              style: const TextStyle(color: Colors.white),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          heroName,
+                          maxLines: titleMaxLines,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: titleSize,
+                            fontWeight: FontWeight.w800,
+                            height: 1.08,
+                          ),
+                        ),
+                      ),
+                      if (isVerified) ...[
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.verified,
+                          color: const Color(0xFF4DA3FF),
+                          size: _lerpValue(24, 18, progress),
+                        ),
+                      ],
+                    ],
+                  ),
+                  if (compactLine != null) ...[
+                    SizedBox(height: _lerpValue(8, 3, progress)),
+                    Text(
+                      compactLine,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.92),
+                        fontSize: subtitleSize,
+                        fontWeight: FontWeight.w600,
+                        height: 1.18,
+                      ),
+                    ),
+                  ],
+                  if (showHeroDetails && occupationLabel != null) ...[
+                    const SizedBox(height: 5),
+                    Opacity(
+                      opacity: detailsOpacity,
+                      child: Text(
+                        occupationLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.25,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (showHeroDetails && location != null && line1 != null) ...[
+                    const SizedBox(height: 5),
+                    Opacity(
+                      opacity: detailsOpacity,
+                      child: Text(
+                        location,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.25,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (showHeroDetails && heroChips.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Opacity(
+                      opacity: detailsOpacity,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: heroChips,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -390,11 +568,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final about = _displayAbout();
     final comparison = _comparisonData();
     final contact = _contactData();
-    final hasComparisonCard = comparison != null;
     final displaySections = _displaySections();
     final photoUrl =
         _displayString(hero?['primary_photo_url']) ??
         ApiClient.resolveProfilePhotoUrl(profile);
+    final statusHeight = MediaQuery.of(context).padding.top;
+    final heroHeight = _heroHeight(photoUrl != null);
     final location =
         _displayString(hero?['location_label']) ??
         ApiClient.profileLocationLabel(profile, allowIdFallback: false);
@@ -406,88 +585,80 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _displayString(about?['title']) ??
         'About ${_displayString(hero?['name']) ?? _nameText(profile)}';
 
-    return ListView(
-      controller: _scrollController,
-      padding: EdgeInsets.zero,
-      physics: const AlwaysScrollableScrollPhysics(),
+    return Stack(
       children: [
-        _buildHeroPhoto(
-          photoUrl: photoUrl,
-          profile: profile,
-          hero: hero,
-          age: age,
-          location: location,
-          hasComparisonCard: hasComparisonCard,
-        ),
-        Transform.translate(
-          offset: const Offset(0, -18),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFFAF7F5),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
-            ),
-            padding: EdgeInsets.fromLTRB(16, 24, 16, _bottomContentPadding()),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (aboutBody != null) ...[
-                  _buildAboutCard(aboutTitle, aboutBody),
-                  const SizedBox(height: 4),
-                ],
-                if (displaySections.isNotEmpty)
-                  ..._buildDisplaySectionsWithContact(displaySections, contact)
-                else ...[
-                  if (contact != null) _buildContactCard(contact),
-                  ..._buildFallbackProfileDetails(profile, age, location),
-                ],
-                if (comparison != null)
-                  KeyedSubtree(
-                    key: _comparisonKey,
-                    child: ProfileComparisonCard(comparison: comparison),
-                  ),
-              ],
-            ),
+        Positioned(
+          top: statusHeight,
+          left: 0,
+          right: 0,
+          height: heroHeight,
+          child: _buildHeroPhoto(
+            photoUrl: photoUrl,
+            profile: profile,
+            hero: hero,
           ),
+        ),
+        ListView(
+          controller: _scrollController,
+          padding: EdgeInsets.zero,
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: statusHeight + heroHeight - 18),
+            Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFFAF7F5),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+              ),
+              padding: EdgeInsets.fromLTRB(16, 24, 16, _bottomContentPadding()),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (aboutBody != null) ...[
+                    _buildAboutCard(aboutTitle, aboutBody),
+                    const SizedBox(height: 4),
+                  ],
+                  if (displaySections.isNotEmpty)
+                    ..._buildDisplaySectionsWithContact(
+                      displaySections,
+                      contact,
+                    )
+                  else ...[
+                    if (contact != null) _buildContactCard(contact),
+                    ..._buildFallbackProfileDetails(profile, age, location),
+                  ],
+                  if (comparison != null)
+                    KeyedSubtree(
+                      key: _comparisonKey,
+                      child: ProfileComparisonCard(comparison: comparison),
+                    ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
+  }
+
+  double _heroHeight(bool hasPhoto) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    return (screenHeight * (hasPhoto ? 0.64 : 0.42))
+        .clamp(hasPhoto ? 440.0 : 300.0, hasPhoto ? 640.0 : 420.0)
+        .toDouble();
   }
 
   Widget _buildHeroPhoto({
     required String? photoUrl,
     required Map<String, dynamic> profile,
     required Map<String, dynamic>? hero,
-    required int? age,
-    required String? location,
-    required bool hasComparisonCard,
   }) {
-    final screenSize = MediaQuery.of(context).size;
     final hasPhoto = photoUrl != null;
-    final heroHeight = (screenSize.height * (hasPhoto ? 0.68 : 0.48))
-        .clamp(hasPhoto ? 460.0 : 340.0, hasPhoto ? 680.0 : 460.0)
-        .toDouble();
-    final titleFontSize = screenSize.width < 360 ? 26.0 : 29.0;
-    final name = _displayString(hero?['name']) ?? _nameText(profile);
-    final heroName = age != null ? '$name, $age' : name;
-    final heightLabel =
-        _displayString(hero?['height_label']) ??
-        ApiClient.profileHeightLabel(profile);
-    final communityLabel =
-        _displayString(hero?['community_label']) ?? _communityText(profile);
-    final occupationLabel =
-        _displayString(hero?['occupation_label']) ??
-        ApiClient.profileOccupationLabel(profile);
-    final line1 = _joinNonEmpty([heightLabel, communityLabel]);
+    final heroHeight = _heroHeight(hasPhoto);
     final photoCount =
         _displayInt(hero?['photo_count']) ?? _photoCount(profile, photoUrl);
     final isPremium =
         _displaySafeBool(hero?['premium']) ??
         (hero == null ? _isPremium(profile) : false);
-    final isVerified = _displayBool(hero?['verified']) ?? _isVerified(profile);
-    final heroChips = _displayChips(
-      profile,
-      hasComparisonCard: hasComparisonCard,
-    );
 
     return SizedBox(
       width: double.infinity,
@@ -514,8 +685,17 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             top: 0,
             left: 0,
             right: 0,
-            child: SafeArea(
-              bottom: false,
+            child: AnimatedBuilder(
+              animation: _scrollController,
+              builder: (context, child) {
+                final progress = _headerCollapseProgress();
+                final opacity = (1 - progress).clamp(0.0, 1.0).toDouble();
+
+                return IgnorePointer(
+                  ignoring: opacity < 0.08,
+                  child: Opacity(opacity: opacity, child: child),
+                );
+              },
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                 child: Row(
@@ -541,87 +721,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   ],
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 28,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Flexible(
-                      child: Text(
-                        heroName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: titleFontSize,
-                          fontWeight: FontWeight.w800,
-                          height: 1.12,
-                        ),
-                      ),
-                    ),
-                    if (isVerified) ...[
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.verified,
-                        color: Color(0xFF4DA3FF),
-                        size: 24,
-                      ),
-                    ],
-                  ],
-                ),
-                if (line1 != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    line1,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      height: 1.35,
-                    ),
-                  ),
-                ],
-                if (occupationLabel != null) ...[
-                  const SizedBox(height: 5),
-                  Text(
-                    occupationLabel,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w600,
-                      height: 1.25,
-                    ),
-                  ),
-                ],
-                if (location != null) ...[
-                  const SizedBox(height: 5),
-                  Text(
-                    location,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      fontSize: 14.5,
-                      fontWeight: FontWeight.w600,
-                      height: 1.25,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 14),
-                Wrap(spacing: 8, runSpacing: 8, children: heroChips),
-              ],
             ),
           ),
         ],

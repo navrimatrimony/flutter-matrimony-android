@@ -871,7 +871,7 @@ class ApiClient {
     return options;
   }
 
-  static Future<Map<String, List<Map<String, dynamic>>>>
+  static Future<Map<String, dynamic>>
   getProfileRemainingProfileOptions() async {
     if (authToken == null) {
       throw Exception('Auth token missing');
@@ -902,7 +902,7 @@ class ApiClient {
     final source = payload is Map
         ? Map<String, dynamic>.from(payload)
         : <String, dynamic>{};
-    final options = <String, List<Map<String, dynamic>>>{};
+    final options = <String, dynamic>{};
 
     void addOptions(String key, List<String> aliases) {
       for (final alias in aliases) {
@@ -958,6 +958,12 @@ class ApiClient {
       'birthWeekdays',
       'weekdays',
     ]);
+    options['horoscope_rules'] = source['horoscope_rules'] is Map
+        ? Map<String, dynamic>.from(source['horoscope_rules'])
+        : <String, dynamic>{};
+    options['rashi_ashtakoota'] = source['rashi_ashtakoota'] is Map
+        ? Map<String, dynamic>.from(source['rashi_ashtakoota'])
+        : <String, dynamic>{};
 
     return options;
   }

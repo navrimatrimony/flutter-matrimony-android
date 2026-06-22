@@ -16,6 +16,21 @@ class EditFullProfileScreen extends StatefulWidget {
   State<EditFullProfileScreen> createState() => _EditFullProfileScreenState();
 }
 
+enum _EditProfileSection {
+  basic,
+  birth,
+  physical,
+  educationCareer,
+  maritalLifestyle,
+  familyDetails,
+  familyOverview,
+  allianceProperty,
+  horoscopeAstro,
+  aboutMe,
+}
+
+enum _UnsavedSectionAction { save, discard, cancel }
+
 class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   static const int _clearNumberSelection = -1;
   static const Duration _locationSearchDebounceDuration = Duration(
@@ -67,6 +82,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _educationCareerOptionsLoading = false;
   bool _maritalLifestyleOptionsLoading = false;
   bool _remainingProfileOptionsLoading = false;
+  _EditProfileSection? _expandedSection;
+  Map<String, dynamic>? _expandedSectionSnapshot;
+  Map<String, dynamic>? _lastLoadedProfile;
 
   String? _loadError;
   String? _optionsError;
@@ -178,6 +196,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _rashiLordOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _mangalDoshTypeOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _birthWeekdayOptions = <Map<String, dynamic>>[];
+  Map<String, dynamic> _horoscopeRules = <String, dynamic>{};
+  Map<String, dynamic> _rashiAshtakoota = <String, dynamic>{};
 
   @override
   void initState() {
@@ -247,6 +267,28 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (text.isEmpty || text.toLowerCase() == 'null') return null;
 
     return text;
+  }
+
+  Map<String, dynamic> _readMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+
+    return <String, dynamic>{};
+  }
+
+  List<Map<String, dynamic>> _readRows(dynamic value) {
+    if (value is! List) return <Map<String, dynamic>>[];
+
+    return value
+        .whereType<Map>()
+        .map((row) => Map<String, dynamic>.from(row))
+        .toList();
+  }
+
+  List<int> _readIntList(dynamic value) {
+    if (value is! List) return <int>[];
+
+    return value.map(_readInt).whereType<int>().toSet().toList(growable: false);
   }
 
   String _optionLabel(Map<String, dynamic> row, String fallbackPrefix) {
@@ -513,6 +555,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedBirthWeekday = _readText(profile['birth_weekday']);
     _aboutMeController.text =
         ApiClient.safeDisplayLabel(profile['narrative_about_me']) ?? '';
+    _lastLoadedProfile = Map<String, dynamic>.from(profile);
   }
 
   Future<void> _loadScreenData() async {
@@ -715,28 +758,26 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       final results = await ApiClient.getProfileRemainingProfileOptions();
       if (!mounted) return;
       setState(() {
-        _familyTypeOptions =
-            results['family_types'] ?? <Map<String, dynamic>>[];
-        _familyStatusOptions =
-            results['family_statuses'] ?? <Map<String, dynamic>>[];
-        _familyValueOptions =
-            results['family_values'] ?? <Map<String, dynamic>>[];
-        _familyOccupationOptions =
-            results['occupations'] ?? <Map<String, dynamic>>[];
-        _familyCustomOccupationOptions =
-            results['custom_occupations'] ?? <Map<String, dynamic>>[];
-        _rashiOptions = results['rashis'] ?? <Map<String, dynamic>>[];
-        _nakshatraOptions = results['nakshatras'] ?? <Map<String, dynamic>>[];
-        _ganOptions = results['gans'] ?? <Map<String, dynamic>>[];
-        _nadiOptions = results['nadis'] ?? <Map<String, dynamic>>[];
-        _yoniOptions = results['yonis'] ?? <Map<String, dynamic>>[];
-        _varnaOptions = results['varnas'] ?? <Map<String, dynamic>>[];
-        _vashyaOptions = results['vashyas'] ?? <Map<String, dynamic>>[];
-        _rashiLordOptions = results['rashi_lords'] ?? <Map<String, dynamic>>[];
-        _mangalDoshTypeOptions =
-            results['mangal_dosh_types'] ?? <Map<String, dynamic>>[];
-        _birthWeekdayOptions =
-            results['birth_weekdays'] ?? <Map<String, dynamic>>[];
+        _familyTypeOptions = _readRows(results['family_types']);
+        _familyStatusOptions = _readRows(results['family_statuses']);
+        _familyValueOptions = _readRows(results['family_values']);
+        _familyOccupationOptions = _readRows(results['occupations']);
+        _familyCustomOccupationOptions = _readRows(
+          results['custom_occupations'],
+        );
+        _rashiOptions = _readRows(results['rashis']);
+        _nakshatraOptions = _readRows(results['nakshatras']);
+        _ganOptions = _readRows(results['gans']);
+        _nadiOptions = _readRows(results['nadis']);
+        _yoniOptions = _readRows(results['yonis']);
+        _varnaOptions = _readRows(results['varnas']);
+        _vashyaOptions = _readRows(results['vashyas']);
+        _rashiLordOptions = _readRows(results['rashi_lords']);
+        _mangalDoshTypeOptions = _readRows(results['mangal_dosh_types']);
+        _birthWeekdayOptions = _readRows(results['birth_weekdays']);
+        _horoscopeRules = _readMap(results['horoscope_rules']);
+        _rashiAshtakoota = _readMap(results['rashi_ashtakoota']);
+        _applyHoroscopeDependencies();
       });
     } catch (_) {
       if (!mounted) return;
@@ -1402,6 +1443,216 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return selectedValue;
   }
 
+  List<Map<String, dynamic>> _horoscopeRuleRows(String key) {
+    return _readRows(_horoscopeRules[key]);
+  }
+
+  List<int> _horoscopeIdList(String groupKey, int? id) {
+    if (id == null) return <int>[];
+
+    final group = _readMap(_horoscopeRules[groupKey]);
+    return _readIntList(group[id.toString()]);
+  }
+
+  Map<String, dynamic>? _nakshatraAttributesFor(int? nakshatraId) {
+    if (nakshatraId == null) return null;
+
+    for (final row in _horoscopeRuleRows('nakshatra_attributes')) {
+      if (_readInt(row['nakshatra_id']) == nakshatraId) {
+        return row;
+      }
+    }
+
+    return null;
+  }
+
+  Map<String, dynamic>? _rashiRuleFor({
+    required int? nakshatraId,
+    int? charan,
+    int? rashiId,
+  }) {
+    if (nakshatraId == null) return null;
+
+    for (final row in _horoscopeRuleRows('rashi_rules')) {
+      if (_readInt(row['nakshatra_id']) != nakshatraId) continue;
+      if (charan != null && _readInt(row['charan']) != charan) continue;
+      if (rashiId != null && _readInt(row['rashi_id']) != rashiId) continue;
+
+      return row;
+    }
+
+    return null;
+  }
+
+  Map<String, dynamic> _rashiAshtakootaFor(int? rashiId) {
+    if (rashiId == null) return <String, dynamic>{};
+
+    return _readMap(_rashiAshtakoota[rashiId.toString()]);
+  }
+
+  List<Map<String, dynamic>> _optionsMatchingIds(
+    List<Map<String, dynamic>> options,
+    List<int> allowedIds,
+  ) {
+    if (allowedIds.isEmpty) return options;
+    final allowed = allowedIds.toSet();
+
+    return options.where((option) {
+      final id = _readInt(option['id']);
+      return id != null && allowed.contains(id);
+    }).toList();
+  }
+
+  List<int> _validCharansForSelection() {
+    if (_selectedNakshatraId == null || _selectedRashiId == null) {
+      return const [1, 2, 3, 4];
+    }
+
+    final charans = _horoscopeRuleRows('rashi_rules')
+        .where((row) {
+          return _readInt(row['nakshatra_id']) == _selectedNakshatraId &&
+              _readInt(row['rashi_id']) == _selectedRashiId;
+        })
+        .map((row) => _readInt(row['charan']))
+        .whereType<int>()
+        .toSet()
+        .toList();
+    charans.sort();
+
+    return charans.isEmpty ? const [1, 2, 3, 4] : charans;
+  }
+
+  List<Map<String, dynamic>> _rashiOptionsForSelection() {
+    return _optionsMatchingIds(
+      _rashiOptions,
+      _horoscopeIdList('distinct_rashi_ids_by_nakshatra', _selectedNakshatraId),
+    );
+  }
+
+  List<Map<String, dynamic>> _nakshatraOptionsForSelection() {
+    return _optionsMatchingIds(
+      _nakshatraOptions,
+      _horoscopeIdList('nakshatra_ids_by_rashi', _selectedRashiId),
+    );
+  }
+
+  List<Map<String, dynamic>> _yoniOptionsForSelection() {
+    final attrs = _nakshatraAttributesFor(_selectedNakshatraId);
+    final yoniId = _readInt(attrs?['yoni_id']);
+
+    return _optionsMatchingIds(
+      _yoniOptions,
+      yoniId == null ? <int>[] : [yoniId],
+    );
+  }
+
+  void _applyRashiAshtakootaSelection() {
+    final details = _rashiAshtakootaFor(_selectedRashiId);
+    _selectedVarnaId = _readInt(details['varna_id']);
+    _selectedVashyaId = _readInt(details['vashya_id']);
+    _selectedRashiLordId = _readInt(details['rashi_lord_id']);
+  }
+
+  void _applyHoroscopeDependencies() {
+    final selectedNakshatra = _selectedNakshatraId;
+    final selectedCharan = _selectedCharan;
+
+    if (selectedNakshatra != null) {
+      final attrs = _nakshatraAttributesFor(selectedNakshatra);
+      if (attrs != null) {
+        final ganId = _readInt(attrs['gan_id']);
+        final nadiId = _readInt(attrs['nadi_id']);
+        final yoniId = _readInt(attrs['yoni_id']);
+        _selectedGanId ??= ganId;
+        _selectedNadiId ??= nadiId;
+        if (yoniId != null &&
+            _selectedYoniId != null &&
+            _selectedYoniId != yoniId) {
+          _selectedYoniId = null;
+        }
+        _selectedYoniId ??= yoniId;
+      }
+
+      if (selectedCharan != null &&
+          selectedCharan >= 1 &&
+          selectedCharan <= 4) {
+        final rule = _rashiRuleFor(
+          nakshatraId: selectedNakshatra,
+          charan: selectedCharan,
+        );
+        if (rule != null && _selectedRashiId == null) {
+          _selectedRashiId = _readInt(rule['rashi_id']);
+        }
+      }
+
+      final allowedRashiIds = _horoscopeIdList(
+        'distinct_rashi_ids_by_nakshatra',
+        selectedNakshatra,
+      );
+      final selectedRashi = _selectedRashiId;
+      if (allowedRashiIds.isNotEmpty &&
+          selectedRashi != null &&
+          !allowedRashiIds.contains(selectedRashi)) {
+        _selectedRashiId = allowedRashiIds.first;
+      }
+
+      final validCharans = _validCharansForSelection();
+      final selectedCharanNow = _selectedCharan;
+      if (selectedCharanNow != null &&
+          validCharans.isNotEmpty &&
+          !validCharans.contains(selectedCharanNow)) {
+        _selectedCharan = validCharans.first;
+      }
+    } else {
+      _selectedGanId = null;
+      _selectedNadiId = null;
+      _selectedYoniId = null;
+    }
+
+    if (_selectedRashiId != null) {
+      final allowedNakshatraIds = _horoscopeIdList(
+        'nakshatra_ids_by_rashi',
+        _selectedRashiId,
+      );
+      final selectedNakshatraNow = _selectedNakshatraId;
+      if (allowedNakshatraIds.isNotEmpty &&
+          selectedNakshatraNow != null &&
+          !allowedNakshatraIds.contains(selectedNakshatraNow)) {
+        _selectedNakshatraId = null;
+        _selectedCharan = null;
+        _selectedGanId = null;
+        _selectedNadiId = null;
+        _selectedYoniId = null;
+      }
+    }
+
+    _applyRashiAshtakootaSelection();
+  }
+
+  void _selectRashi(int? value) {
+    setState(() {
+      _selectedRashiId = value;
+      _applyHoroscopeDependencies();
+    });
+  }
+
+  void _selectNakshatra(int? value) {
+    setState(() {
+      _selectedNakshatraId = value;
+      if (value == null) {
+        _selectedCharan = null;
+      }
+      _applyHoroscopeDependencies();
+    });
+  }
+
+  void _selectCharan(int? value) {
+    setState(() {
+      _selectedCharan = value;
+      _applyHoroscopeDependencies();
+    });
+  }
+
   bool _validateRequiredFields() {
     if (_fullNameController.text.trim().isEmpty) {
       _showMessage('कृपया full name भरा.');
@@ -1439,13 +1690,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return text.isEmpty ? null : text;
   }
 
-  Future<void> _saveProfile() async {
-    if (!_validateRequiredFields()) return;
-
-    setState(() {
-      _saving = true;
-    });
-
+  Map<String, dynamic> _buildProfilePayload() {
     final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
         ? _selectedCasteLabel!.trim()
         : _casteController.text.trim();
@@ -1524,34 +1769,58 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       ]);
     }
 
+    return payload;
+  }
+
+  Future<bool> _saveProfile({
+    bool navigateOnSuccess = true,
+    String successMessage = 'Profile update यशस्वी!',
+  }) async {
+    if (!_validateRequiredFields()) return false;
+
+    setState(() {
+      _saving = true;
+    });
+
+    final payload = _buildProfilePayload();
     Map<String, dynamic> response;
     try {
       response = await ApiClient.updateMatrimonyProfile(payload);
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) return false;
       setState(() {
         _saving = false;
       });
       _showMessage('Profile save करता आली नाही. कृपया पुन्हा प्रयत्न करा.');
-      return;
+      return false;
     }
 
-    if (!mounted) return;
+    if (!mounted) return false;
     setState(() {
       _saving = false;
     });
 
     if (response['success'] == true) {
       try {
-        await ApiClient.getMyProfile();
+        final refreshed = await ApiClient.getMyProfile();
+        final profile = refreshed['profile'];
+        if (profile is Map && mounted) {
+          setState(() {
+            _prefillProfile(Map<String, dynamic>.from(profile));
+          });
+        }
       } catch (_) {
         // Save already succeeded; the destination screen also performs a reload.
       }
-      if (!mounted) return;
-      _showMessage('Profile update यशस्वी!');
-      Navigator.pushReplacementNamed(context, '/view-profile');
+      if (!mounted) return false;
+      _showMessage(successMessage);
+      if (navigateOnSuccess) {
+        Navigator.pushReplacementNamed(context, '/view-profile');
+      }
+      return true;
     } else {
       _showMessage(response['message']?.toString() ?? 'Profile save failed');
+      return false;
     }
   }
 
@@ -1562,18 +1831,507 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  Widget _sectionCard({
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
+  List<_EditProfileSection> get _profileSections => const [
+    _EditProfileSection.basic,
+    _EditProfileSection.birth,
+    _EditProfileSection.physical,
+    _EditProfileSection.educationCareer,
+    _EditProfileSection.maritalLifestyle,
+    _EditProfileSection.familyDetails,
+    _EditProfileSection.familyOverview,
+    _EditProfileSection.allianceProperty,
+    _EditProfileSection.horoscopeAstro,
+    _EditProfileSection.aboutMe,
+  ];
+
+  String _sectionTitle(_EditProfileSection section) {
+    switch (section) {
+      case _EditProfileSection.basic:
+        return 'Basic details';
+      case _EditProfileSection.birth:
+        return 'Birth details';
+      case _EditProfileSection.physical:
+        return 'Physical details';
+      case _EditProfileSection.educationCareer:
+        return 'Education & Career';
+      case _EditProfileSection.maritalLifestyle:
+        return 'Marital & Lifestyle';
+      case _EditProfileSection.familyDetails:
+        return 'Family details';
+      case _EditProfileSection.familyOverview:
+        return 'Family overview';
+      case _EditProfileSection.allianceProperty:
+        return 'Alliance & Property';
+      case _EditProfileSection.horoscopeAstro:
+        return 'Horoscope / Astro';
+      case _EditProfileSection.aboutMe:
+        return 'About me';
+    }
+  }
+
+  IconData _sectionIcon(_EditProfileSection section) {
+    switch (section) {
+      case _EditProfileSection.basic:
+        return Icons.badge_outlined;
+      case _EditProfileSection.birth:
+        return Icons.event_available_outlined;
+      case _EditProfileSection.physical:
+        return Icons.accessibility_new_outlined;
+      case _EditProfileSection.educationCareer:
+        return Icons.school_outlined;
+      case _EditProfileSection.maritalLifestyle:
+        return Icons.favorite_border;
+      case _EditProfileSection.familyDetails:
+        return Icons.group_outlined;
+      case _EditProfileSection.familyOverview:
+        return Icons.home_outlined;
+      case _EditProfileSection.allianceProperty:
+        return Icons.real_estate_agent_outlined;
+      case _EditProfileSection.horoscopeAstro:
+        return Icons.star_border;
+      case _EditProfileSection.aboutMe:
+        return Icons.notes;
+    }
+  }
+
+  String? _summaryText(String? value, {int maxLength = 72}) {
+    final text = value?.trim();
+    if (text == null || text.isEmpty) return null;
+    if (text.toLowerCase().startsWith('location id:')) return null;
+
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength - 1).trimRight()}…';
+  }
+
+  String? _joinSummaryParts(
+    List<String?> parts, {
+    String separator = ' / ',
+    int maxLength = 90,
   }) {
+    final cleaned = parts
+        .map((value) => _summaryText(value, maxLength: maxLength))
+        .whereType<String>()
+        .toList();
+    if (cleaned.isEmpty) return null;
+
+    return _summaryText(cleaned.join(separator), maxLength: maxLength);
+  }
+
+  String _summaryFromParts(List<String?> parts) {
+    final cleaned = parts
+        .map((value) => _summaryText(value))
+        .whereType<String>()
+        .toList();
+    if (cleaned.isEmpty) return 'Not added yet';
+
+    return cleaned.take(4).join(' • ');
+  }
+
+  String? _controllerSummary(TextEditingController controller) {
+    return _summaryText(controller.text);
+  }
+
+  String? _ageSummary() {
+    final dob = DateTime.tryParse(_dobController.text.trim());
+    if (dob == null) return null;
+
+    final today = DateTime.now();
+    var years = today.year - dob.year;
+    if (today.month < dob.month ||
+        (today.month == dob.month && today.day < dob.day)) {
+      years--;
+    }
+    if (years <= 0) return null;
+
+    return '$years years';
+  }
+
+  String? _boolSummary(bool? value) {
+    if (value == null) return null;
+    return value ? 'Yes' : 'No';
+  }
+
+  String _sectionSummary(_EditProfileSection section) {
+    switch (section) {
+      case _EditProfileSection.basic:
+        return _summaryFromParts([
+          _controllerSummary(_fullNameController),
+          _joinSummaryParts([
+            _ageSummary(),
+            _labelForId(_genders, _selectedGenderId, AppStrings.brideGroom),
+          ], separator: ', '),
+          _joinSummaryParts([
+            _selectedReligionLabel ?? _controllerSummary(_religionController),
+            _selectedCasteLabel ?? _controllerSummary(_casteController),
+            _selectedSubCasteLabel ?? _controllerSummary(_subCasteController),
+          ]),
+          _selectedLocationLabel ?? _controllerSummary(_locationController),
+        ]);
+      case _EditProfileSection.birth:
+        return _summaryFromParts([
+          _controllerSummary(_birthPlaceController) ?? _selectedBirthPlaceLabel,
+          _controllerSummary(_birthTimeController),
+          _labelForId(
+            _motherTongueOptions,
+            _selectedMotherTongueId,
+            'Mother tongue',
+          ),
+        ]);
+      case _EditProfileSection.physical:
+        return _summaryFromParts([
+          _selectedHeightCm == null ? null : _heightLabel(_selectedHeightCm!),
+          _selectedWeightKg == null ? null : _weightLabel(_selectedWeightKg!),
+          _labelForId(_complexionOptions, _selectedComplexionId, 'Complexion'),
+        ]);
+      case _EditProfileSection.educationCareer:
+        return _summaryFromParts([
+          _controllerSummary(_educationController),
+          _selectedOccupationLabel ??
+              _labelForId(
+                _occupationOptions,
+                _selectedOccupationMasterId,
+                'Occupation',
+              ),
+          _controllerSummary(_workLocationController) ??
+              _selectedWorkLocationLabel,
+        ]);
+      case _EditProfileSection.maritalLifestyle:
+        return _summaryFromParts([
+          _labelForId(
+            _maritalStatusOptions,
+            _selectedMaritalStatusId,
+            'Marital status',
+          ),
+          _labelForId(_dietOptions, _selectedDietId, 'Diet'),
+          _joinSummaryParts([
+            _labelForId(
+              _smokingStatusOptions,
+              _selectedSmokingStatusId,
+              'Smoking status',
+            ),
+            _labelForId(
+              _drinkingStatusOptions,
+              _selectedDrinkingStatusId,
+              'Drinking status',
+            ),
+          ]),
+        ]);
+      case _EditProfileSection.familyDetails:
+        return _summaryFromParts([
+          _joinSummaryParts([
+            'Father',
+            _controllerSummary(_fatherNameController),
+            _selectedFatherOccupationLabel,
+          ], separator: ': '),
+          _joinSummaryParts([
+            'Mother',
+            _controllerSummary(_motherNameController),
+            _selectedMotherOccupationLabel,
+          ], separator: ': '),
+        ]);
+      case _EditProfileSection.familyOverview:
+        return _summaryFromParts([
+          _labelForId(_familyTypeOptions, _selectedFamilyTypeId, 'Family type'),
+          _labelForValue(
+            _familyStatusOptions,
+            _selectedFamilyStatus,
+            'Family status',
+          ),
+          _labelForValue(
+            _familyValueOptions,
+            _selectedFamilyValues,
+            'Family values',
+          ),
+          _boolSummary(_selectedHasSiblings),
+        ]);
+      case _EditProfileSection.allianceProperty:
+        return _summaryFromParts([
+          _otherRelativesController.text.trim().isEmpty
+              ? null
+              : 'Other relatives added',
+          _propertyDetailsController.text.trim().isEmpty
+              ? null
+              : 'Property added',
+        ]);
+      case _EditProfileSection.horoscopeAstro:
+        return _summaryFromParts([
+          _labelForId(_rashiOptions, _selectedRashiId, 'Rashi'),
+          _labelForId(_nakshatraOptions, _selectedNakshatraId, 'Nakshatra'),
+          _labelForId(_ganOptions, _selectedGanId, 'Gan'),
+        ]);
+      case _EditProfileSection.aboutMe:
+        return _summaryFromParts([
+          _summaryText(_aboutMeController.text, maxLength: 110),
+        ]);
+    }
+  }
+
+  Widget _sectionEditor(_EditProfileSection section) {
+    switch (section) {
+      case _EditProfileSection.basic:
+        return _buildBasicSection();
+      case _EditProfileSection.birth:
+        return _buildBirthSection();
+      case _EditProfileSection.physical:
+        return _buildPhysicalSection();
+      case _EditProfileSection.educationCareer:
+        return _buildEducationCareerSection();
+      case _EditProfileSection.maritalLifestyle:
+        return _buildMaritalLifestyleSection();
+      case _EditProfileSection.familyDetails:
+        return _buildFamilyDetailsSection();
+      case _EditProfileSection.familyOverview:
+        return _buildFamilyOverviewSection();
+      case _EditProfileSection.allianceProperty:
+        return _buildAlliancePropertySection();
+      case _EditProfileSection.horoscopeAstro:
+        return _buildHoroscopeAstroSection();
+      case _EditProfileSection.aboutMe:
+        return _buildAboutMeSection();
+    }
+  }
+
+  List<String> _sectionPayloadKeys(_EditProfileSection section) {
+    switch (section) {
+      case _EditProfileSection.basic:
+        return const [
+          'full_name',
+          'gender_id',
+          'date_of_birth',
+          'religion_id',
+          'caste_id',
+          'caste',
+          'location_id',
+          'sub_caste_id',
+        ];
+      case _EditProfileSection.birth:
+        return const [
+          'birth_time',
+          'birth_city_id',
+          'birth_place_text',
+          'mother_tongue_id',
+        ];
+      case _EditProfileSection.physical:
+        return const [
+          'height_cm',
+          'weight_kg',
+          'complexion_id',
+          'blood_group_id',
+          'physical_build_id',
+          'spectacles_lens',
+          'physical_condition',
+        ];
+      case _EditProfileSection.educationCareer:
+        return const [
+          'highest_education',
+          'education_slots',
+          'occupation_master_id',
+          'occupation_custom_id',
+          'company_name',
+          'work_location_text',
+        ];
+      case _EditProfileSection.maritalLifestyle:
+        return const [
+          'marital_status_id',
+          'has_children',
+          'diet_id',
+          'smoking_status_id',
+          'drinking_status_id',
+        ];
+      case _EditProfileSection.familyDetails:
+        return const [
+          'father_name',
+          'father_occupation',
+          'father_occupation_master_id',
+          'father_occupation_custom_id',
+          'father_extra_info',
+          'mother_name',
+          'mother_occupation',
+          'mother_occupation_master_id',
+          'mother_occupation_custom_id',
+          'mother_extra_info',
+        ];
+      case _EditProfileSection.familyOverview:
+        return const [
+          'family_type_id',
+          'family_status',
+          'family_values',
+          'has_siblings',
+        ];
+      case _EditProfileSection.allianceProperty:
+        return const ['other_relatives_text', 'property_details'];
+      case _EditProfileSection.horoscopeAstro:
+        return const [
+          'rashi_id',
+          'nakshatra_id',
+          'charan',
+          'gan_id',
+          'nadi_id',
+          'yoni_id',
+          'varna_id',
+          'vashya_id',
+          'rashi_lord_id',
+          'mangal_dosh_type_id',
+          'devak',
+          'kul',
+          'gotra',
+          'navras_name',
+          'birth_weekday',
+        ];
+      case _EditProfileSection.aboutMe:
+        return const ['narrative_about_me'];
+    }
+  }
+
+  Map<String, dynamic> _sectionSnapshot(_EditProfileSection section) {
+    final payload = _buildProfilePayload();
+    return <String, dynamic>{
+      for (final key in _sectionPayloadKeys(section))
+        key: payload.containsKey(key) ? payload[key] : null,
+    };
+  }
+
+  bool _sectionSnapshotsEqual(
+    Map<String, dynamic>? first,
+    Map<String, dynamic>? second,
+  ) {
+    if (first == null || second == null) return first == second;
+    return jsonEncode(first) == jsonEncode(second);
+  }
+
+  bool _expandedSectionHasChanges() {
+    final section = _expandedSection;
+    if (section == null) return false;
+
+    return !_sectionSnapshotsEqual(
+      _expandedSectionSnapshot,
+      _sectionSnapshot(section),
+    );
+  }
+
+  void _setExpandedSection(_EditProfileSection? section) {
+    setState(() {
+      _expandedSection = section;
+      _expandedSectionSnapshot = section == null
+          ? null
+          : _sectionSnapshot(section);
+    });
+  }
+
+  void _restoreLastLoadedProfile() {
+    final profile = _lastLoadedProfile;
+    if (profile == null) return;
+
+    setState(() {
+      _prefillProfile(Map<String, dynamic>.from(profile));
+    });
+  }
+
+  Future<_UnsavedSectionAction?> _askUnsavedSectionAction() {
+    return showDialog<_UnsavedSectionAction>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Unsaved changes'),
+          content: const Text(
+            'या section मधील बदल save करायचे का discard करायचे?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, _UnsavedSectionAction.cancel),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, _UnsavedSectionAction.discard),
+              child: const Text('Discard'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, _UnsavedSectionAction.save),
+              child: const Text('Save changes'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<bool> _resolvePendingSectionChanges() async {
+    if (!_expandedSectionHasChanges()) return true;
+
+    final action = await _askUnsavedSectionAction();
+    if (!mounted) return false;
+
+    switch (action) {
+      case _UnsavedSectionAction.save:
+        return _saveProfile(
+          navigateOnSuccess: false,
+          successMessage: 'Section save झाली.',
+        );
+      case _UnsavedSectionAction.discard:
+        _restoreLastLoadedProfile();
+        return true;
+      case _UnsavedSectionAction.cancel:
+      case null:
+        return false;
+    }
+  }
+
+  Future<void> _openSection(_EditProfileSection section) async {
+    if (_expandedSection == section) return;
+
+    final canLeaveCurrent = await _resolvePendingSectionChanges();
+    if (!mounted || !canLeaveCurrent) return;
+
+    _setExpandedSection(section);
+  }
+
+  Future<void> _cancelExpandedSection() async {
+    final canCollapse = await _resolvePendingSectionChanges();
+    if (!mounted || !canCollapse) return;
+
+    _setExpandedSection(null);
+  }
+
+  Future<void> _saveExpandedSection(_EditProfileSection section) async {
+    if (_expandedSection != section) return;
+
+    final saved = await _saveProfile(
+      navigateOnSuccess: false,
+      successMessage: '${_sectionTitle(section)} save झाले.',
+    );
+    if (!mounted || !saved) return;
+
+    _setExpandedSection(null);
+  }
+
+  Future<void> _handleBackPressed() async {
+    final canLeave = await _resolvePendingSectionChanges();
+    if (!mounted || !canLeave) return;
+
+    setState(() {
+      _expandedSection = null;
+      _expandedSectionSnapshot = null;
+    });
+    Navigator.of(context).pop();
+  }
+
+  Widget _buildSectionManagerCard(_EditProfileSection section) {
     final theme = Theme.of(context);
+    final isExpanded = _expandedSection == section;
+
     return Card(
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: isExpanded
+              ? theme.colorScheme.primary.withValues(alpha: 0.38)
+              : Colors.grey.shade200,
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1581,22 +2339,103 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: theme.colorScheme.primary),
-                const SizedBox(width: 10),
-                Text(
-                  title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
                   ),
+                  child: Icon(
+                    _sectionIcon(section),
+                    color: theme.colorScheme.primary,
+                    size: 21,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _sectionTitle(section),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _sectionSummary(section),
+                        maxLines: isExpanded ? 3 : 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey.shade700,
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: _saving
+                      ? null
+                      : () => isExpanded
+                            ? _cancelExpandedSection()
+                            : _openSection(section),
+                  icon: Icon(isExpanded ? Icons.close : Icons.edit_outlined),
+                  label: Text(isExpanded ? 'Cancel' : 'Edit'),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            ...children,
+            if (isExpanded) ...[
+              const SizedBox(height: 16),
+              Divider(color: Colors.grey.shade200, height: 1),
+              const SizedBox(height: 16),
+              _sectionEditor(section),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _saving ? null : _cancelExpandedSection,
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _saving
+                          ? null
+                          : () => _saveExpandedSection(section),
+                      child: _saving
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('Save section'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _sectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: children,
     );
   }
 
@@ -2174,24 +3013,28 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Widget _charanDropdown() {
+    final validCharans = _validCharansForSelection();
+    final currentCharan = _selectedCharan;
+    final selectedValue =
+        currentCharan != null && validCharans.contains(currentCharan)
+        ? currentCharan
+        : null;
+
     return DropdownButtonFormField<int>(
-      key: ValueKey('charan-${_selectedCharan ?? 'none'}'),
-      initialValue:
-          _selectedCharan != null &&
-              _selectedCharan! >= 1 &&
-              _selectedCharan! <= 4
-          ? _selectedCharan
-          : null,
+      key: ValueKey(
+        'charan-${validCharans.join('-')}-${selectedValue ?? 'none'}',
+      ),
+      initialValue: selectedValue,
       isExpanded: true,
-      items: const [
-        DropdownMenuItem<int>(value: 1, child: Text('1')),
-        DropdownMenuItem<int>(value: 2, child: Text('2')),
-        DropdownMenuItem<int>(value: 3, child: Text('3')),
-        DropdownMenuItem<int>(value: 4, child: Text('4')),
-      ],
-      onChanged: _saving
-          ? null
-          : (value) => setState(() => _selectedCharan = value),
+      items: validCharans
+          .map(
+            (charan) => DropdownMenuItem<int>(
+              value: charan,
+              child: Text(charan.toString()),
+            ),
+          )
+          .toList(),
+      onChanged: _saving ? null : _selectCharan,
       decoration: InputDecoration(
         labelText: 'Charan (Optional)',
         hintText: 'Optional',
@@ -2201,7 +3044,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             : IconButton(
                 tooltip: 'Clear charan',
                 icon: const Icon(Icons.close),
-                onPressed: () => setState(() => _selectedCharan = null),
+                onPressed: () => _selectCharan(null),
               ),
       ),
     );
@@ -2565,21 +3408,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _intDropdown(
           labelText: 'Rashi (Optional)',
           icon: Icons.brightness_3,
-          options: _rashiOptions,
+          options: _rashiOptionsForSelection(),
           selectedId: _selectedRashiId,
           fallbackPrefix: 'Rashi',
           loading: _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => _selectedRashiId = value),
+          onChanged: _selectRashi,
         ),
         const SizedBox(height: 14),
         _intDropdown(
           labelText: 'Nakshatra (Optional)',
           icon: Icons.star_border,
-          options: _nakshatraOptions,
+          options: _nakshatraOptionsForSelection(),
           selectedId: _selectedNakshatraId,
           fallbackPrefix: 'Nakshatra',
           loading: _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => _selectedNakshatraId = value),
+          onChanged: _selectNakshatra,
         ),
         const SizedBox(height: 14),
         _charanDropdown(),
@@ -2607,7 +3450,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _intDropdown(
           labelText: 'Yoni (Optional)',
           icon: Icons.spa,
-          options: _yoniOptions,
+          options: _yoniOptionsForSelection(),
           selectedId: _selectedYoniId,
           fallbackPrefix: 'Yoni',
           loading: _remainingProfileOptionsLoading,
@@ -2738,76 +3581,51 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Edit All Profile')),
-      body: SafeArea(
-        child: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : Column(
-                children: [
-                  if (_loadError != null)
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Text(
-                        _loadError!,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-                      child: Column(
-                        children: [
-                          _buildBasicSection(),
-                          _buildMaritalLifestyleSection(),
-                          _buildBirthSection(),
-                          _buildPhysicalSection(),
-                          _buildEducationCareerSection(),
-                          _buildFamilyDetailsSection(),
-                          _buildFamilyOverviewSection(),
-                          _buildAlliancePropertySection(),
-                          _buildHoroscopeAstroSection(),
-                          _buildAboutMeSection(),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surface,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.08),
-                          blurRadius: 18,
-                          offset: const Offset(0, -6),
+    return PopScope(
+      canPop: !_expandedSectionHasChanges(),
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _handleBackPressed();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Edit All Profile')),
+        body: SafeArea(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                  keyboardDismissBehavior:
+                      ScrollViewKeyboardDismissBehavior.onDrag,
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (_loadError != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Text(
+                            _loadError!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
                         ),
-                      ],
-                    ),
-                    child: SafeArea(
-                      top: false,
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _saving ? null : _saveProfile,
-                          child: _saving
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Save Profile'),
+                      Text(
+                        'Edit profile sections',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'एकावेळी एक section edit करा. Save केल्यानंतर profile fresh reload होईल.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ..._profileSections.map(_buildSectionManagerCard),
+                    ],
                   ),
-                ],
-              ),
+                ),
+        ),
       ),
     );
   }
