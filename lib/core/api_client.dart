@@ -968,6 +968,75 @@ class ApiClient {
     return options;
   }
 
+  static Future<Map<String, List<Map<String, dynamic>>>>
+  getProfilePartnerPreferenceOptions() async {
+    if (authToken == null) {
+      throw Exception('Auth token missing');
+    }
+
+    final url = Uri.parse(
+      ApiRoutes.baseUrl + ApiRoutes.profilePartnerPreferenceOptions,
+    );
+
+    final response = await http.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $authToken',
+      },
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw Exception(
+        'Partner preference options load failed: HTTP ${response.statusCode}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    final payload = decoded is Map
+        ? decoded['data'] ?? decoded['options'] ?? decoded
+        : null;
+    final source = payload is Map
+        ? Map<String, dynamic>.from(payload)
+        : <String, dynamic>{};
+    final options = <String, List<Map<String, dynamic>>>{};
+
+    void addOptions(String key, List<String> aliases) {
+      for (final alias in aliases) {
+        final rows = _safeOptionList(source[alias]);
+        if (rows.isNotEmpty) {
+          options[key] = rows;
+          return;
+        }
+      }
+      options[key] = <Map<String, dynamic>>[];
+    }
+
+    addOptions('marriage_type_preferences', const [
+      'marriage_type_preferences',
+      'marriageTypePreferences',
+      'marriage_type_preference',
+    ]);
+    addOptions('marital_statuses', const [
+      'marital_statuses',
+      'maritalStatuses',
+      'marital_status',
+    ]);
+    addOptions('partner_profile_with_children', const [
+      'partner_profile_with_children',
+      'partnerProfileWithChildren',
+      'partner_profile_children',
+    ]);
+    addOptions('preferred_profile_managed_by', const [
+      'preferred_profile_managed_by',
+      'preferredProfileManagedBy',
+      'profile_managed_by',
+    ]);
+    addOptions('diets', const ['diets', 'diet']);
+
+    return options;
+  }
+
   static Future<List<Map<String, dynamic>>> getCastes({
     required int religionId,
   }) async {

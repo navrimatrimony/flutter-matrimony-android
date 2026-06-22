@@ -27,6 +27,7 @@ enum _EditProfileSection {
   allianceProperty,
   horoscopeAstro,
   aboutMe,
+  partnerPreferences,
 }
 
 enum _UnsavedSectionAction { save, discard, cancel }
@@ -68,6 +69,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final TextEditingController _gotraController = TextEditingController();
   final TextEditingController _navrasNameController = TextEditingController();
   final TextEditingController _aboutMeController = TextEditingController();
+  final TextEditingController _expectationsController = TextEditingController();
 
   bool _loading = true;
   bool _saving = false;
@@ -82,15 +84,35 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _educationCareerOptionsLoading = false;
   bool _maritalLifestyleOptionsLoading = false;
   bool _remainingProfileOptionsLoading = false;
+  bool _partnerPreferenceOptionsLoading = false;
   _EditProfileSection? _expandedSection;
   Map<String, dynamic>? _expandedSectionSnapshot;
   Map<String, dynamic>? _lastLoadedProfile;
+  final ScrollController _scrollController = ScrollController();
+  final Map<_EditProfileSection, GlobalKey> _sectionCardKeys = {
+    _EditProfileSection.basic: GlobalKey(),
+    _EditProfileSection.birth: GlobalKey(),
+    _EditProfileSection.physical: GlobalKey(),
+    _EditProfileSection.educationCareer: GlobalKey(),
+    _EditProfileSection.maritalLifestyle: GlobalKey(),
+    _EditProfileSection.familyDetails: GlobalKey(),
+    _EditProfileSection.familyOverview: GlobalKey(),
+    _EditProfileSection.allianceProperty: GlobalKey(),
+    _EditProfileSection.horoscopeAstro: GlobalKey(),
+    _EditProfileSection.aboutMe: GlobalKey(),
+    _EditProfileSection.partnerPreferences: GlobalKey(),
+  };
+  Timer? _savedHighlightTimer;
+  _EditProfileSection? _savedFeedbackSection;
+  bool _savedHighlightOn = false;
+  bool _showSavedChip = false;
 
   String? _loadError;
   String? _optionsError;
   String? _educationCareerOptionsError;
   String? _maritalLifestyleOptionsError;
   String? _remainingProfileOptionsError;
+  String? _partnerPreferenceOptionsError;
   String? _selectedReligionLabel;
   String? _selectedCasteLabel;
   String? _selectedSubCasteLabel;
@@ -106,6 +128,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String? _selectedFamilyStatus;
   String? _selectedFamilyValues;
   String? _selectedBirthWeekday;
+  String? _selectedPartnerProfileWithChildren;
+  String? _selectedPreferredProfileManagedBy;
 
   int? _selectedGenderId;
   int? _selectedReligionId;
@@ -143,7 +167,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _selectedVashyaId;
   int? _selectedRashiLordId;
   int? _selectedMangalDoshTypeId;
+  int? _selectedPreferredAgeMin;
+  int? _selectedPreferredAgeMax;
+  int? _selectedPreferredHeightMinCm;
+  int? _selectedPreferredHeightMaxCm;
+  int? _selectedMarriageTypePreferenceId;
   int? _preferredStateId;
+  bool? _selectedWillingToRelocate;
 
   int _subCasteSearchRequest = 0;
   int _locationSearchRequest = 0;
@@ -196,6 +226,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _rashiLordOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _mangalDoshTypeOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _birthWeekdayOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _marriageTypePreferenceOptions =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _preferredMaritalStatusOptions =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _partnerProfileWithChildrenOptions =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _preferredProfileManagedByOptions =
+      <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _preferredDietOptions = <Map<String, dynamic>>[];
+  final Set<int> _selectedPreferredMaritalStatusIds = <int>{};
+  final Set<int> _selectedPreferredDietIds = <int>{};
   Map<String, dynamic> _horoscopeRules = <String, dynamic>{};
   Map<String, dynamic> _rashiAshtakoota = <String, dynamic>{};
 
@@ -215,6 +256,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _locationSearchDebounce?.cancel();
     _birthPlaceSearchDebounce?.cancel();
     _workLocationSearchDebounce?.cancel();
+    _savedHighlightTimer?.cancel();
+    _scrollController.dispose();
     _fullNameController.dispose();
     _dobController.dispose();
     _religionController.dispose();
@@ -239,6 +282,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _gotraController.dispose();
     _navrasNameController.dispose();
     _aboutMeController.dispose();
+    _expectationsController.dispose();
     super.dispose();
   }
 
@@ -286,9 +330,38 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   List<int> _readIntList(dynamic value) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isEmpty) return <int>[];
+      try {
+        final decoded = jsonDecode(trimmed);
+        if (decoded is List) {
+          return decoded
+              .map(_readInt)
+              .whereType<int>()
+              .toSet()
+              .toList(growable: false);
+        }
+      } catch (_) {
+        return trimmed
+            .split(',')
+            .map(_readInt)
+            .whereType<int>()
+            .toSet()
+            .toList(growable: false);
+      }
+    }
+
     if (value is! List) return <int>[];
 
-    return value.map(_readInt).whereType<int>().toSet().toList(growable: false);
+    return value
+        .map((item) {
+          if (item is Map) return _readInt(item['id']);
+          return _readInt(item);
+        })
+        .whereType<int>()
+        .toSet()
+        .toList(growable: false);
   }
 
   String _optionLabel(Map<String, dynamic> row, String fallbackPrefix) {
@@ -555,6 +628,41 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedBirthWeekday = _readText(profile['birth_weekday']);
     _aboutMeController.text =
         ApiClient.safeDisplayLabel(profile['narrative_about_me']) ?? '';
+    _selectedPreferredAgeMin = _readInt(profile['preferred_age_min']);
+    _selectedPreferredAgeMax = _readInt(profile['preferred_age_max']);
+    _selectedPreferredHeightMinCm = _readInt(
+      profile['preferred_height_min_cm'],
+    );
+    _selectedPreferredHeightMaxCm = _readInt(
+      profile['preferred_height_max_cm'],
+    );
+    _selectedMarriageTypePreferenceId = _readInt(
+      profile['marriage_type_preference_id'],
+    );
+    _selectedPartnerProfileWithChildren = _readText(
+      profile['partner_profile_with_children'],
+    );
+    _selectedPreferredProfileManagedBy = _readText(
+      profile['preferred_profile_managed_by'],
+    );
+    _selectedWillingToRelocate = _readBool(profile['willing_to_relocate']);
+    _selectedPreferredMaritalStatusIds
+      ..clear()
+      ..addAll(
+        _readIntList(
+          profile['preferred_marital_status_ids'] ??
+              profile['preferred_marital_statuses'],
+        ),
+      );
+    _selectedPreferredDietIds
+      ..clear()
+      ..addAll(
+        _readIntList(
+          profile['preferred_diet_ids'] ?? profile['preferred_diets'],
+        ),
+      );
+    _expectationsController.text =
+        ApiClient.safeDisplayLabel(profile['narrative_expectations']) ?? '';
     _lastLoadedProfile = Map<String, dynamic>.from(profile);
   }
 
@@ -577,6 +685,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _loadEducationCareerOptions(),
         _loadMaritalLifestyleOptions(),
         _loadRemainingProfileOptions(),
+        _loadPartnerPreferenceOptions(),
       ]);
     } catch (_) {
       if (!mounted) return;
@@ -789,6 +898,43 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (mounted) {
         setState(() {
           _remainingProfileOptionsLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadPartnerPreferenceOptions() async {
+    if (!mounted) return;
+    setState(() {
+      _partnerPreferenceOptionsLoading = true;
+      _partnerPreferenceOptionsError = null;
+    });
+
+    try {
+      final results = await ApiClient.getProfilePartnerPreferenceOptions();
+      if (!mounted) return;
+      setState(() {
+        _marriageTypePreferenceOptions =
+            results['marriage_type_preferences'] ?? <Map<String, dynamic>>[];
+        _preferredMaritalStatusOptions =
+            results['marital_statuses'] ?? <Map<String, dynamic>>[];
+        _partnerProfileWithChildrenOptions =
+            results['partner_profile_with_children'] ??
+            <Map<String, dynamic>>[];
+        _preferredProfileManagedByOptions =
+            results['preferred_profile_managed_by'] ?? <Map<String, dynamic>>[];
+        _preferredDietOptions = results['diets'] ?? <Map<String, dynamic>>[];
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _partnerPreferenceOptionsError =
+            'Partner preference options load करता आले नाहीत.';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _partnerPreferenceOptionsLoading = false;
         });
       }
     }
@@ -1443,6 +1589,46 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return selectedValue;
   }
 
+  List<int> _orderedSelectedIds(
+    List<Map<String, dynamic>> options,
+    Set<int> selectedIds,
+  ) {
+    if (selectedIds.isEmpty) return <int>[];
+
+    final ordered = <int>[];
+    for (final option in options) {
+      final id = _readInt(option['id']);
+      if (id != null && selectedIds.contains(id)) {
+        ordered.add(id);
+      }
+    }
+    for (final id in selectedIds) {
+      if (!ordered.contains(id)) {
+        ordered.add(id);
+      }
+    }
+
+    return ordered;
+  }
+
+  String? _labelsForIds(
+    List<Map<String, dynamic>> options,
+    Set<int> selectedIds,
+    String fallback,
+  ) {
+    if (selectedIds.isEmpty) return null;
+
+    final labels = _orderedSelectedIds(options, selectedIds)
+        .map((id) => _labelForId(options, id, fallback))
+        .whereType<String>()
+        .toList();
+    if (labels.isEmpty) return null;
+
+    final visible = labels.take(3).join(', ');
+    final remaining = labels.length - 3;
+    return remaining > 0 ? '$visible +$remaining' : visible;
+  }
+
   List<Map<String, dynamic>> _horoscopeRuleRows(String key) {
     return _readRows(_horoscopeRules[key]);
   }
@@ -1685,6 +1871,24 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return true;
   }
 
+  bool _validatePreferenceRanges() {
+    final ageMin = _selectedPreferredAgeMin;
+    final ageMax = _selectedPreferredAgeMax;
+    if (ageMin != null && ageMax != null && ageMin > ageMax) {
+      _showMessage('Preferred age range चुकीची आहे.');
+      return false;
+    }
+
+    final heightMin = _selectedPreferredHeightMinCm;
+    final heightMax = _selectedPreferredHeightMaxCm;
+    if (heightMin != null && heightMax != null && heightMin > heightMax) {
+      _showMessage('Preferred height range चुकीची आहे.');
+      return false;
+    }
+
+    return true;
+  }
+
   String? _nullableText(TextEditingController controller) {
     final text = controller.text.trim();
     return text.isEmpty ? null : text;
@@ -1761,6 +1965,23 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'navras_name': _nullableText(_navrasNameController),
       'birth_weekday': _selectedBirthWeekday,
       'narrative_about_me': _nullableText(_aboutMeController),
+      'preferred_age_min': _selectedPreferredAgeMin,
+      'preferred_age_max': _selectedPreferredAgeMax,
+      'preferred_height_min_cm': _selectedPreferredHeightMinCm,
+      'preferred_height_max_cm': _selectedPreferredHeightMaxCm,
+      'marriage_type_preference_id': _selectedMarriageTypePreferenceId,
+      'partner_profile_with_children': _selectedPartnerProfileWithChildren,
+      'preferred_profile_managed_by': _selectedPreferredProfileManagedBy,
+      'willing_to_relocate': _selectedWillingToRelocate,
+      'preferred_marital_status_ids': _orderedSelectedIds(
+        _preferredMaritalStatusOptions,
+        _selectedPreferredMaritalStatusIds,
+      ),
+      'preferred_diet_ids': _orderedSelectedIds(
+        _preferredDietOptions,
+        _selectedPreferredDietIds,
+      ),
+      'narrative_expectations': _nullableText(_expectationsController),
     };
 
     if (educationDegreeId != null) {
@@ -1777,6 +1998,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     String successMessage = 'Profile update यशस्वी!',
   }) async {
     if (!_validateRequiredFields()) return false;
+    if (!_validatePreferenceRanges()) return false;
 
     setState(() {
       _saving = true;
@@ -1842,6 +2064,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.allianceProperty,
     _EditProfileSection.horoscopeAstro,
     _EditProfileSection.aboutMe,
+    _EditProfileSection.partnerPreferences,
   ];
 
   String _sectionTitle(_EditProfileSection section) {
@@ -1866,6 +2089,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return 'Horoscope / Astro';
       case _EditProfileSection.aboutMe:
         return 'About me';
+      case _EditProfileSection.partnerPreferences:
+        return 'Partner Preferences';
     }
   }
 
@@ -1891,6 +2116,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return Icons.star_border;
       case _EditProfileSection.aboutMe:
         return Icons.notes;
+      case _EditProfileSection.partnerPreferences:
+        return Icons.tune_outlined;
     }
   }
 
@@ -1949,6 +2176,27 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String? _boolSummary(bool? value) {
     if (value == null) return null;
     return value ? 'Yes' : 'No';
+  }
+
+  String? _preferenceAgeSummary() {
+    final min = _selectedPreferredAgeMin;
+    final max = _selectedPreferredAgeMax;
+    if (min == null && max == null) return null;
+    if (min != null && max != null) return 'Age $min-$max';
+    if (min != null) return 'Age $min+';
+    return 'Age up to $max';
+  }
+
+  String? _preferenceHeightSummary() {
+    final min = _selectedPreferredHeightMinCm;
+    final max = _selectedPreferredHeightMaxCm;
+    if (min == null && max == null) return null;
+    if (min != null && max != null) {
+      return 'Height ${_heightLabel(min).split(' (').first}-'
+          '${_heightLabel(max).split(' (').first}';
+    }
+    if (min != null) return 'Height ${_heightLabel(min).split(' (').first}+';
+    return 'Height up to ${_heightLabel(max!).split(' (').first}';
   }
 
   String _sectionSummary(_EditProfileSection section) {
@@ -2063,6 +2311,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _summaryFromParts([
           _summaryText(_aboutMeController.text, maxLength: 110),
         ]);
+      case _EditProfileSection.partnerPreferences:
+        return _summaryFromParts([
+          _preferenceAgeSummary(),
+          _preferenceHeightSummary(),
+          _labelForId(
+            _marriageTypePreferenceOptions,
+            _selectedMarriageTypePreferenceId,
+            'Marriage type',
+          ),
+          _labelsForIds(
+            _preferredDietOptions,
+            _selectedPreferredDietIds,
+            'Diet',
+          ),
+        ]);
     }
   }
 
@@ -2088,6 +2351,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _buildHoroscopeAstroSection();
       case _EditProfileSection.aboutMe:
         return _buildAboutMeSection();
+      case _EditProfileSection.partnerPreferences:
+        return _buildPartnerPreferencesSection();
     }
   }
 
@@ -2180,6 +2445,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ];
       case _EditProfileSection.aboutMe:
         return const ['narrative_about_me'];
+      case _EditProfileSection.partnerPreferences:
+        return const [
+          'preferred_age_min',
+          'preferred_age_max',
+          'preferred_height_min_cm',
+          'preferred_height_max_cm',
+          'marriage_type_preference_id',
+          'partner_profile_with_children',
+          'preferred_profile_managed_by',
+          'willing_to_relocate',
+          'preferred_marital_status_ids',
+          'preferred_diet_ids',
+          'narrative_expectations',
+        ];
     }
   }
 
@@ -2295,6 +2574,58 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _setExpandedSection(null);
   }
 
+  void _scrollToSectionAfterLayout(_EditProfileSection section) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final sectionContext = _sectionCardKeys[section]?.currentContext;
+      if (sectionContext == null) return;
+
+      Scrollable.ensureVisible(
+        sectionContext,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+        alignment: 0.08,
+      );
+    });
+  }
+
+  void _startSavedSectionFeedback(_EditProfileSection section) {
+    _savedHighlightTimer?.cancel();
+    setState(() {
+      _savedFeedbackSection = section;
+      _savedHighlightOn = true;
+      _showSavedChip = true;
+    });
+
+    _scrollToSectionAfterLayout(section);
+
+    var ticks = 0;
+    _savedHighlightTimer = Timer.periodic(const Duration(milliseconds: 420), (
+      timer,
+    ) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      ticks++;
+      if (ticks >= 6) {
+        timer.cancel();
+        setState(() {
+          _savedFeedbackSection = null;
+          _savedHighlightOn = false;
+          _showSavedChip = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _savedHighlightOn = !_savedHighlightOn;
+      });
+    });
+  }
+
   Future<void> _saveExpandedSection(_EditProfileSection section) async {
     if (_expandedSection != section) return;
 
@@ -2305,6 +2636,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (!mounted || !saved) return;
 
     _setExpandedSection(null);
+    _startSavedSectionFeedback(section);
   }
 
   Future<void> _handleBackPressed() async {
@@ -2321,17 +2653,34 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   Widget _buildSectionManagerCard(_EditProfileSection section) {
     final theme = Theme.of(context);
     final isExpanded = _expandedSection == section;
+    final isSavedFeedback = _savedFeedbackSection == section;
+    final showSavedPulse = isSavedFeedback && _savedHighlightOn;
+    final borderColor = showSavedPulse
+        ? theme.colorScheme.primary
+        : isExpanded
+        ? theme.colorScheme.primary.withValues(alpha: 0.38)
+        : Colors.grey.shade200;
 
-    return Card(
+    return AnimatedContainer(
+      key: _sectionCardKeys[section],
+      duration: const Duration(milliseconds: 260),
+      curve: Curves.easeInOut,
       margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      shape: RoundedRectangleBorder(
+      decoration: BoxDecoration(
+        color: showSavedPulse
+            ? theme.colorScheme.primary.withValues(alpha: 0.07)
+            : theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: isExpanded
-              ? theme.colorScheme.primary.withValues(alpha: 0.38)
-              : Colors.grey.shade200,
-        ),
+        border: Border.all(color: borderColor),
+        boxShadow: showSavedPulse
+            ? [
+                BoxShadow(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.16),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -2374,6 +2723,37 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                           color: Colors.grey.shade700,
                           height: 1.3,
                         ),
+                      ),
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 180),
+                        child: isSavedFeedback && _showSavedChip
+                            ? Padding(
+                                key: const ValueKey('saved-chip'),
+                                padding: const EdgeInsets.only(top: 8),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    'Saved',
+                                    style: theme.textTheme.labelMedium
+                                        ?.copyWith(
+                                          color: theme.colorScheme.primary,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                  ),
+                                ),
+                              )
+                            : const SizedBox.shrink(
+                                key: ValueKey('saved-chip-empty'),
+                              ),
                       ),
                     ],
                   ),
@@ -2624,6 +3004,98 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         hintText: 'Optional',
         prefixIcon: Icon(icon),
       ),
+    );
+  }
+
+  Widget _numberPickerField({
+    required String labelText,
+    required IconData icon,
+    required int? selectedValue,
+    required List<int> values,
+    required String Function(int value) labelBuilder,
+    required ValueChanged<int?> onChanged,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: _saving
+          ? null
+          : () async {
+              final value = await _pickNumber(
+                title: labelText,
+                values: values,
+                selected: selectedValue,
+                labelBuilder: labelBuilder,
+              );
+              if (!mounted || value == null) return;
+              onChanged(value == _clearNumberSelection ? null : value);
+            },
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: labelText,
+          prefixIcon: Icon(icon),
+          border: const OutlineInputBorder(),
+        ),
+        child: Text(
+          selectedValue == null ? 'Not selected' : labelBuilder(selectedValue),
+        ),
+      ),
+    );
+  }
+
+  Widget _multiSelectChips({
+    required String labelText,
+    required IconData icon,
+    required List<Map<String, dynamic>> options,
+    required Set<int> selectedIds,
+    required String fallbackPrefix,
+    required ValueChanged<Set<int>> onChanged,
+    bool loading = false,
+  }) {
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: labelText,
+        prefixIcon: Icon(icon),
+        border: const OutlineInputBorder(),
+        helperText: loading
+            ? AppStrings.loading
+            : options.isEmpty
+            ? 'Options available झाल्यावर निवडा.'
+            : null,
+        suffixIcon: selectedIds.isEmpty || _saving
+            ? null
+            : IconButton(
+                tooltip: 'Clear',
+                icon: const Icon(Icons.close),
+                onPressed: () => onChanged(<int>{}),
+              ),
+      ),
+      child: options.isEmpty
+          ? const Text('Not selected')
+          : Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: options.map((option) {
+                final id = _readInt(option['id']);
+                if (id == null) return const SizedBox.shrink();
+                final isSelected = selectedIds.contains(id);
+
+                return FilterChip(
+                  label: Text(_optionLabel(option, fallbackPrefix)),
+                  selected: isSelected,
+                  onSelected: _saving
+                      ? null
+                      : (selected) {
+                          final next = Set<int>.from(selectedIds);
+                          if (selected) {
+                            next.add(id);
+                          } else {
+                            next.remove(id);
+                          }
+                          onChanged(next);
+                        },
+                );
+              }).toList(),
+            ),
     );
   }
 
@@ -3579,6 +4051,170 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
+  Widget _buildPartnerPreferencesSection() {
+    final ageValues = List<int>.generate(63, (index) => 18 + index);
+
+    return _sectionCard(
+      title: 'Partner Preferences',
+      icon: Icons.tune_outlined,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: _numberPickerField(
+                labelText: 'Preferred age min',
+                icon: Icons.cake_outlined,
+                selectedValue: _selectedPreferredAgeMin,
+                values: ageValues,
+                labelBuilder: (value) => '$value years',
+                onChanged: (value) =>
+                    setState(() => _selectedPreferredAgeMin = value),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _numberPickerField(
+                labelText: 'Preferred age max',
+                icon: Icons.cake,
+                selectedValue: _selectedPreferredAgeMax,
+                values: ageValues,
+                labelBuilder: (value) => '$value years',
+                onChanged: (value) =>
+                    setState(() => _selectedPreferredAgeMax = value),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: _numberPickerField(
+                labelText: 'Preferred height min',
+                icon: Icons.straighten,
+                selectedValue: _selectedPreferredHeightMinCm,
+                values: _heightValues(),
+                labelBuilder: _heightLabel,
+                onChanged: (value) =>
+                    setState(() => _selectedPreferredHeightMinCm = value),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _numberPickerField(
+                labelText: 'Preferred height max',
+                icon: Icons.straighten,
+                selectedValue: _selectedPreferredHeightMaxCm,
+                values: _heightValues(),
+                labelBuilder: _heightLabel,
+                onChanged: (value) =>
+                    setState(() => _selectedPreferredHeightMaxCm = value),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Marriage type preference (Optional)',
+          icon: Icons.favorite_border,
+          options: _marriageTypePreferenceOptions,
+          selectedId: _selectedMarriageTypePreferenceId,
+          fallbackPrefix: 'Marriage type',
+          loading: _partnerPreferenceOptionsLoading,
+          onChanged: (value) =>
+              setState(() => _selectedMarriageTypePreferenceId = value),
+        ),
+        const SizedBox(height: 14),
+        _multiSelectChips(
+          labelText: 'Preferred marital statuses (Optional)',
+          icon: Icons.favorite_border,
+          options: _preferredMaritalStatusOptions,
+          selectedIds: _selectedPreferredMaritalStatusIds,
+          fallbackPrefix: 'Marital status',
+          loading: _partnerPreferenceOptionsLoading,
+          onChanged: (value) {
+            setState(() {
+              _selectedPreferredMaritalStatusIds
+                ..clear()
+                ..addAll(value);
+            });
+          },
+        ),
+        const SizedBox(height: 14),
+        _stringDropdown(
+          labelText: 'Partner profile with children (Optional)',
+          icon: Icons.child_care_outlined,
+          options: _partnerProfileWithChildrenOptions,
+          selectedValue: _selectedPartnerProfileWithChildren,
+          fallbackPrefix: 'With children',
+          loading: _partnerPreferenceOptionsLoading,
+          onChanged: (value) =>
+              setState(() => _selectedPartnerProfileWithChildren = value),
+        ),
+        const SizedBox(height: 14),
+        _stringDropdown(
+          labelText: 'Preferred profile managed by (Optional)',
+          icon: Icons.manage_accounts_outlined,
+          options: _preferredProfileManagedByOptions,
+          selectedValue: _selectedPreferredProfileManagedBy,
+          fallbackPrefix: 'Managed by',
+          loading: _partnerPreferenceOptionsLoading,
+          onChanged: (value) =>
+              setState(() => _selectedPreferredProfileManagedBy = value),
+        ),
+        const SizedBox(height: 14),
+        _boolDropdown(
+          labelText: 'Willing to relocate (Optional)',
+          icon: Icons.flight_takeoff_outlined,
+          selectedValue: _selectedWillingToRelocate,
+          onChanged: (value) =>
+              setState(() => _selectedWillingToRelocate = value),
+        ),
+        const SizedBox(height: 14),
+        _multiSelectChips(
+          labelText: 'Preferred diet (Optional)',
+          icon: Icons.restaurant_outlined,
+          options: _preferredDietOptions,
+          selectedIds: _selectedPreferredDietIds,
+          fallbackPrefix: 'Diet',
+          loading: _partnerPreferenceOptionsLoading,
+          onChanged: (value) {
+            setState(() {
+              _selectedPreferredDietIds
+                ..clear()
+                ..addAll(value);
+            });
+          },
+        ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _expectationsController,
+          maxLines: 5,
+          textInputAction: TextInputAction.newline,
+          decoration: const InputDecoration(
+            labelText: 'Expectations (Optional)',
+            helperText: 'Partner बद्दल अपेक्षा थोडक्यात लिहा.',
+            alignLabelWithHint: true,
+            prefixIcon: Icon(Icons.notes_outlined),
+          ),
+        ),
+        if (_partnerPreferenceOptionsLoading)
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: LinearProgressIndicator(),
+          ),
+        if (_partnerPreferenceOptionsError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              _partnerPreferenceOptionsError!,
+              style: TextStyle(color: Colors.amber.shade900),
+            ),
+          ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -3593,6 +4229,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           child: _loading
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
+                  controller: _scrollController,
                   keyboardDismissBehavior:
                       ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
