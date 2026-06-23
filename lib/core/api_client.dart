@@ -336,6 +336,10 @@ class ApiClient {
     return _resolvePhotoValueFromMap(profile, const ['url', 'path']);
   }
 
+  static String? normalizeProfilePhotoUrl(dynamic rawValue) {
+    return _resolvePhotoValue(rawValue);
+  }
+
   static String? _resolvePhotoValueFromMap(
     Map<String, dynamic> data,
     List<String> keys, {

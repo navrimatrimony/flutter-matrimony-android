@@ -52,6 +52,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   int _activeMainNavIndex = _navMatches;
   int _selectedConnectTabIndex = 0;
   final Set<int> _sendingInterestIds = <int>{};
+  final Set<String> _failedPhotoUrls = <String>{};
   List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
 
   final TextEditingController _ageFromController = TextEditingController();
@@ -108,7 +109,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
       if (statusCode == 404) {
         setState(() {
-          _errorMessage = '❌ प्रोफाइल सापडली नाही.';
+          _errorMessage = _emptyProfilesMessage(prefixIcon: true);
           _isLoading = false;
         });
         return;
@@ -122,7 +123,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       } else {
         setState(() {
           _profiles = [];
-          _errorMessage = '❌ प्रोफाइल सापडली नाही.';
+          _errorMessage = _emptyProfilesMessage(prefixIcon: true);
           _isLoading = false;
         });
       }
@@ -181,9 +182,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         _moreSectionsLoading = false;
         _moreSections = ok
             ? sections
-                .whereType<Map>()
-                .map((row) => Map<String, dynamic>.from(row))
-                .toList()
+                  .whereType<Map>()
+                  .map((row) => Map<String, dynamic>.from(row))
+                  .toList()
             : <Map<String, dynamic>>[];
         _viewerContext = viewerContext is Map
             ? Map<String, dynamic>.from(viewerContext)
@@ -544,11 +545,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
               ? '${tabs[tabIndex]} (${_profiles.length})'
               : tabs[tabIndex];
           return ChoiceChip(
-            label: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             selected: selected,
             showCheckmark: false,
             selectedColor: _brandColor,
@@ -587,8 +584,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     final background = selected
         ? _brandSoft
         : hasActiveFilters
-            ? const Color(0xFFFFE4E6)
-            : const Color(0xFFF7F0EC);
+        ? const Color(0xFFFFE4E6)
+        : const Color(0xFFF7F0EC);
 
     return Tooltip(
       message: AppStrings.matchesFilter,
@@ -633,9 +630,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Color(0xFFF0E5E1)),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFF0E5E1))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -700,9 +695,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       hintText: hint,
       filled: true,
       fillColor: const Color(0xFFFCFBFA),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(14),
         borderSide: const BorderSide(color: Color(0xFFE4D8D2)),
@@ -763,8 +756,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
             title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             subtitle:
                 hierarchy != null && hierarchy.isNotEmpty && hierarchy != label
-                    ? Text(hierarchy, maxLines: 1, overflow: TextOverflow.ellipsis)
-                    : null,
+                ? Text(hierarchy, maxLines: 1, overflow: TextOverflow.ellipsis)
+                : null,
             onTap: () => _selectLocation(location),
           );
         },
@@ -831,10 +824,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
     final profiles = _profileRows();
     if (profiles.isEmpty && _selectedTabIndex != 4) {
-      return const Center(
+      return Center(
         child: Text(
-          'प्रोफाइल सापडली नाही.',
-          style: TextStyle(fontSize: 16),
+          _emptyProfilesMessage(),
+          style: const TextStyle(fontSize: 16),
+          textAlign: TextAlign.center,
         ),
       );
     }
@@ -1128,7 +1122,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   }
 
   Widget _buildRecentVisitorsEmptyCard(Map<String, dynamic> section) {
-    final locked = _displayBool(section['locked']) == true ||
+    final locked =
+        _displayBool(section['locked']) == true ||
         _displayBool(section['requires_upgrade']) == true;
 
     return Container(
@@ -1273,7 +1268,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   }
 
   Widget _buildRecentVisitorTeaserCard(Map<String, dynamic> teaser) {
-    final headline = _displayString(teaser['headline']) ??
+    final headline =
+        _displayString(teaser['headline']) ??
         (AppStrings.isMarathi ? 'लॉक केलेली भेट' : 'Locked visitor');
     final lines = _teaserLines(teaser).take(2).toList();
     final viewedSummary = _displayString(teaser['viewed_summary']);
@@ -1629,7 +1625,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
               ),
               const Spacer(),
               Text(
-                viewedAt ?? (AppStrings.isMarathi ? 'अलीकडे पाहिले' : 'Viewed recently'),
+                viewedAt ??
+                    (AppStrings.isMarathi
+                        ? 'अलीकडे पाहिले'
+                        : 'Viewed recently'),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -1910,8 +1909,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
   Widget _buildMatchCard(Map<String, dynamic> profile) {
     final data = _cardData(profile);
-    final cardHeight =
-        (MediaQuery.sizeOf(context).height * 0.58).clamp(390.0, 520.0).toDouble();
+    final cardHeight = (MediaQuery.sizeOf(context).height * 0.58)
+        .clamp(390.0, 520.0)
+        .toDouble();
 
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
@@ -1979,6 +1979,15 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       fit: BoxFit.cover,
       alignment: Alignment.topCenter,
       errorBuilder: (context, error, stackTrace) {
+        final failedUrl = data.photoUrl;
+        if (failedUrl != null && !_failedPhotoUrls.contains(failedUrl)) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            setState(() {
+              _failedPhotoUrls.add(failedUrl);
+            });
+          });
+        }
         return _buildPhotoPlaceholder();
       },
     );
@@ -2026,15 +2035,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (data.premium)
-          _buildGlassBadge(
-            'Premium',
-            Icons.workspace_premium,
-            _premiumGold,
-          ),
+          _buildGlassBadge('Premium', Icons.workspace_premium, _premiumGold),
         const Spacer(),
-        if (data.verified)
-          _buildGlassIcon(Icons.verified, _trustGreen),
-        if (data.photoCount > 0) ...[
+        if (data.verified) _buildGlassIcon(Icons.verified, _trustGreen),
+        if (data.photoUrl != null && data.photoCount > 0) ...[
           const SizedBox(width: 8),
           _buildGlassBadge('${data.photoCount}', Icons.photo_library, null),
         ],
@@ -2082,7 +2086,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   }
 
   Widget _buildCardOverlay(Map<String, dynamic> profile, _MatchCardData data) {
-    final communityLine = _joinNonEmpty([data.heightLabel, data.communityLabel]);
+    final communityLine = _joinNonEmpty([
+      data.heightLabel,
+      data.communityLabel,
+    ]);
     final workLine = _joinNonEmpty([data.occupationLabel, data.educationLabel]);
     final chips = _statusChips(data);
 
@@ -2155,8 +2162,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
           Icons.compare_arrows,
           _brandColor,
         ),
-      if (data.hasAstro) _buildStatusChip('Astro', Icons.auto_awesome, _premiumGold),
-      if (data.verified) _buildStatusChip('Verified', Icons.verified, _trustGreen),
+      if (data.hasAstro)
+        _buildStatusChip('Astro', Icons.auto_awesome, _premiumGold),
+      if (data.verified)
+        _buildStatusChip('Verified', Icons.verified, _trustGreen),
       if (data.premium)
         _buildStatusChip('Premium', Icons.workspace_premium, _premiumGold),
     ];
@@ -2193,7 +2202,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   ) {
     final canSend = _canSendInterest(profile);
     final sent = _interestSent(profile);
-    final busy = data.profileId != null && _sendingInterestIds.contains(data.profileId);
+    final busy =
+        data.profileId != null && _sendingInterestIds.contains(data.profileId);
     final ctaLabel = sent ? AppStrings.interestSent : AppStrings.sendInterest;
 
     return Container(
@@ -2208,7 +2218,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
           Expanded(
             child: InkWell(
               borderRadius: BorderRadius.circular(16),
-              onTap: canSend && !busy ? () => _sendInterestFromCard(profile) : null,
+              onTap: canSend && !busy
+                  ? () => _sendInterestFromCard(profile)
+                  : null,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                 child: Column(
@@ -2297,12 +2309,15 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   ) {
     final canSend = _canSendInterest(profile);
     final sent = _interestSent(profile);
-    final busy = data.profileId != null && _sendingInterestIds.contains(data.profileId);
+    final busy =
+        data.profileId != null && _sendingInterestIds.contains(data.profileId);
 
     return SizedBox(
       height: 28,
       child: OutlinedButton.icon(
-        onPressed: canSend && !busy ? () => _sendInterestFromCard(profile) : null,
+        onPressed: canSend && !busy
+            ? () => _sendInterestFromCard(profile)
+            : null,
         icon: busy
             ? const SizedBox(
                 width: 12,
@@ -2318,7 +2333,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         style: OutlinedButton.styleFrom(
           foregroundColor: sent ? Colors.grey.shade600 : _brandColor,
           side: BorderSide(
-            color: sent ? Colors.grey.shade300 : _brandColor.withValues(alpha: 0.45),
+            color: sent
+                ? Colors.grey.shade300
+                : _brandColor.withValues(alpha: 0.45),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 8),
           textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
@@ -2431,7 +2448,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       if (!mounted) return;
 
       final statusCode = _displayInt(response['statusCode']);
-      final success = _displayBool(response['success']) == true ||
+      final success =
+          _displayBool(response['success']) == true ||
           statusCode == 200 ||
           statusCode == 409;
 
@@ -2525,37 +2543,50 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   }
 
   List<Map<String, dynamic>> _profileRows() {
-    return _profiles
-        .map(_safeMap)
-        .whereType<Map<String, dynamic>>()
-        .toList();
+    return _profiles.map(_safeMap).whereType<Map<String, dynamic>>().toList();
   }
 
   _MatchCardData _cardData(Map<String, dynamic> profile) {
     final display = _safeMap(profile['display']);
     final card = _safeMap(display?['card']) ?? _safeMap(display?['hero']);
 
-    final age = _displayInt(card?['age']) ??
+    final age =
+        _displayInt(card?['age']) ??
         _calculateAge(_displayString(profile['date_of_birth']));
-    final ageLabel = _displayString(card?['age_label']) ??
+    final ageLabel =
+        _displayString(card?['age_label']) ??
         (age != null ? AppStrings.years(age) : null);
-    final name = _displayString(card?['name']) ??
+    final name =
+        _displayString(card?['name']) ??
         ApiClient.safeDisplayLabel(profile['full_name']) ??
         ApiClient.safeDisplayLabel(profile['name']) ??
         'नाव उपलब्ध नाही';
-    final photoUrl = _displayString(card?['primary_photo_url']) ??
-        ApiClient.resolveProfilePhotoUrl(profile);
-    final heightLabel = _displayString(card?['height_label']) ??
+    final primaryPhotoUrl = ApiClient.normalizeProfilePhotoUrl(
+      _displayString(card?['primary_photo_url']),
+    );
+    final resolvedPhotoUrl =
+        primaryPhotoUrl ?? ApiClient.resolveProfilePhotoUrl(profile);
+    final photoUrl =
+        resolvedPhotoUrl != null && _failedPhotoUrls.contains(resolvedPhotoUrl)
+        ? null
+        : resolvedPhotoUrl;
+    final heightLabel =
+        _displayString(card?['height_label']) ??
         ApiClient.profileHeightLabel(profile);
-    final communityLabel = _displayString(card?['community_label']) ??
+    final communityLabel =
+        _displayString(card?['community_label']) ??
         ApiClient.profileCommunityLabel(profile);
-    final educationLabel = _displayString(card?['education_label']) ??
+    final educationLabel =
+        _displayString(card?['education_label']) ??
         ApiClient.profileEducationLabel(profile);
-    final occupationLabel = _displayString(card?['occupation_label']) ??
+    final occupationLabel =
+        _displayString(card?['occupation_label']) ??
         ApiClient.profileOccupationLabel(profile);
-    final locationLabel = _displayString(card?['location_label']) ??
+    final locationLabel =
+        _displayString(card?['location_label']) ??
         ApiClient.profileLocationLabel(profile, allowIdFallback: false);
-    final photoCount = _displayInt(card?['photo_count']) ?? 0;
+    final rawPhotoCount = _displayInt(card?['photo_count']) ?? 0;
+    final photoCount = photoUrl == null ? 0 : rawPhotoCount;
 
     return _MatchCardData(
       profileId: _displayInt(profile['id']),
@@ -2586,7 +2617,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     final profileId = _displayInt(profile['id']);
     return _displayBool(actions?['interest_sent']) == true ||
         _displayBool(actions?['is_interested']) == true ||
-        (profileId != null && ApiClient.sentInterestProfileIds.contains(profileId));
+        (profileId != null &&
+            ApiClient.sentInterestProfileIds.contains(profileId));
   }
 
   bool _canSendInterest(Map<String, dynamic> profile) {
@@ -2636,6 +2668,13 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       if (['false', '0', 'no'].contains(normalized)) return false;
     }
     return null;
+  }
+
+  String _emptyProfilesMessage({bool prefixIcon = false}) {
+    final message = AppStrings.isMarathi
+        ? 'प्रोफाइल सापडली नाही. Filters कमी करून पुन्हा प्रयत्न करा.'
+        : 'No profiles found. Try reducing filters and search again.';
+    return prefixIcon ? '❌ $message' : message;
   }
 
   List<String> _teaserLines(Map<String, dynamic> teaser) {
