@@ -224,6 +224,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             _fallbackIncomeLabel(profile, 'family_income', 'family_income'),
       );
     }
+    _addDisplayItem(familyItems, 'Siblings', _fallbackSiblingsLabel(profile));
 
     return [
       if (basicItems.isNotEmpty)
@@ -286,6 +287,37 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
         ApiClient.safeDisplayLabel(profile['${prefix}_amount']) ??
         ApiClient.safeDisplayLabel(profile[legacyKey]);
     return amount == null ? null : '$currency$amount';
+  }
+
+  String? _fallbackSiblingsLabel(Map<String, dynamic> profile) {
+    final rows = profile['siblings'];
+    if (rows is! List || rows.isEmpty) return null;
+
+    var brothers = 0;
+    var sisters = 0;
+    var others = 0;
+    for (final row in rows) {
+      if (row is! Map) continue;
+      switch (ApiClient.safeDisplayLabel(row['relation_type'])) {
+        case 'brother':
+          brothers++;
+          break;
+        case 'sister':
+          sisters++;
+          break;
+        default:
+          others++;
+          break;
+      }
+    }
+
+    final parts = <String>[
+      if (brothers > 0) '$brothers Brother${brothers == 1 ? '' : 's'}',
+      if (sisters > 0) '$sisters Sister${sisters == 1 ? '' : 's'}',
+      if (others > 0) '$others Sibling${others == 1 ? '' : 's'}',
+    ];
+
+    return parts.isEmpty ? null : parts.join(', ');
   }
 
   void _addDisplayItem(

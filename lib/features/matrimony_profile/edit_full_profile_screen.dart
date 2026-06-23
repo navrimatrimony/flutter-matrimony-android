@@ -25,6 +25,7 @@ enum _EditProfileSection {
   maritalLifestyle,
   familyDetails,
   familyOverview,
+  siblings,
   allianceProperty,
   horoscopeAstro,
   aboutMe,
@@ -33,6 +34,64 @@ enum _EditProfileSection {
 }
 
 enum _UnsavedSectionAction { save, discard, cancel }
+
+class _SiblingEditRow {
+  _SiblingEditRow({
+    this.id,
+    this.relationType,
+    this.maritalStatus,
+    String? name,
+    String? occupation,
+    String? addressLine,
+    String? notes,
+    this.sortOrder = 0,
+  }) : nameController = TextEditingController(text: name ?? ''),
+       occupationController = TextEditingController(text: occupation ?? ''),
+       addressLineController = TextEditingController(text: addressLine ?? ''),
+       notesController = TextEditingController(text: notes ?? '');
+
+  int? id;
+  String? relationType;
+  String? maritalStatus;
+  int sortOrder;
+  final TextEditingController nameController;
+  final TextEditingController occupationController;
+  final TextEditingController addressLineController;
+  final TextEditingController notesController;
+
+  bool get hasData {
+    return relationType != null ||
+        nameController.text.trim().isNotEmpty ||
+        occupationController.text.trim().isNotEmpty ||
+        addressLineController.text.trim().isNotEmpty ||
+        notesController.text.trim().isNotEmpty;
+  }
+
+  Map<String, dynamic> toPayload(int index) {
+    return <String, dynamic>{
+      if (id != null) 'id': id,
+      'relation_type': relationType,
+      'name': _textOrNull(nameController),
+      'marital_status': maritalStatus,
+      'occupation': _textOrNull(occupationController),
+      'address_line': _textOrNull(addressLineController),
+      'notes': _textOrNull(notesController),
+      'sort_order': index,
+    };
+  }
+
+  void dispose() {
+    nameController.dispose();
+    occupationController.dispose();
+    addressLineController.dispose();
+    notesController.dispose();
+  }
+
+  static String? _textOrNull(TextEditingController controller) {
+    final text = controller.text.trim();
+    return text.isEmpty ? null : text;
+  }
+}
 
 class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   static const int _clearNumberSelection = -1;
@@ -111,6 +170,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.maritalLifestyle: GlobalKey(),
     _EditProfileSection.familyDetails: GlobalKey(),
     _EditProfileSection.familyOverview: GlobalKey(),
+    _EditProfileSection.siblings: GlobalKey(),
     _EditProfileSection.allianceProperty: GlobalKey(),
     _EditProfileSection.horoscopeAstro: GlobalKey(),
     _EditProfileSection.aboutMe: GlobalKey(),
@@ -283,6 +343,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final Set<int> _selectedPreferredStateIds = <int>{};
   final Set<int> _selectedPreferredDistrictIds = <int>{};
   final Set<int> _selectedPreferredTalukaIds = <int>{};
+  final List<_SiblingEditRow> _siblingRows = <_SiblingEditRow>[];
   bool _preferredLocationsTouched = false;
   Map<String, dynamic> _horoscopeRules = <String, dynamic>{};
   Map<String, dynamic> _rashiAshtakoota = <String, dynamic>{};
@@ -337,6 +398,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _navrasNameController.dispose();
     _aboutMeController.dispose();
     _expectationsController.dispose();
+    _disposeSiblingRows();
     super.dispose();
   }
 
@@ -404,6 +466,74 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         .whereType<Map>()
         .map((row) => Map<String, dynamic>.from(row))
         .toList();
+  }
+
+  void _disposeSiblingRows() {
+    for (final row in _siblingRows) {
+      row.dispose();
+    }
+    _siblingRows.clear();
+  }
+
+  void _prefillSiblings(dynamic value) {
+    _disposeSiblingRows();
+    for (final row in _readRows(value)) {
+      _siblingRows.add(
+        _SiblingEditRow(
+          id: _readInt(row['id']),
+          relationType: _readSiblingRelationType(row['relation_type']),
+          maritalStatus: _readSiblingMaritalStatus(row['marital_status']),
+          name: ApiClient.safeDisplayLabel(row['name']),
+          occupation:
+              ApiClient.safeDisplayLabel(row['occupation']) ??
+              ApiClient.safeDisplayLabel(row['occupation_master_label']) ??
+              ApiClient.safeDisplayLabel(row['occupation_custom_label']),
+          addressLine:
+              ApiClient.safeDisplayLabel(row['address_line']) ??
+              ApiClient.safeDisplayLabel(row['city_label']),
+          notes: ApiClient.safeDisplayLabel(row['notes']),
+          sortOrder: _readInt(row['sort_order']) ?? _siblingRows.length,
+        ),
+      );
+    }
+    if (_selectedHasSiblings == null && _siblingRows.isNotEmpty) {
+      _selectedHasSiblings = true;
+    }
+  }
+
+  String? _readSiblingRelationType(dynamic value) {
+    final text = _readText(value);
+    if (text == null) return null;
+    return const [
+          'brother',
+          'sister',
+          'brother_wife',
+          'sister_husband',
+        ].contains(text)
+        ? text
+        : null;
+  }
+
+  String? _readSiblingMaritalStatus(dynamic value) {
+    final text = _readText(value);
+    if (text == null) return null;
+    return const ['unmarried', 'married'].contains(text) ? text : null;
+  }
+
+  List<Map<String, dynamic>> _siblingRelationOptions() {
+    return const <Map<String, dynamic>>[
+      {'value': 'brother', 'label': 'Brother'},
+      {'value': 'sister', 'label': 'Sister'},
+      {'value': 'brother_wife', 'label': "Brother's wife"},
+      {'value': 'sister_husband', 'label': "Sister's husband"},
+    ];
+  }
+
+  List<Map<String, dynamic>> _siblingMaritalStatusOptions() {
+    return const <Map<String, dynamic>>[
+      {'value': 'unmarried', 'label': 'Unmarried'},
+      {'value': 'married', 'label': 'Married'},
+    ];
   }
 
   List<int> _readIntList(dynamic value) {
@@ -926,6 +1056,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _selectedIncomeCurrencyId;
     _familyIncomePrivate = _readBool(profile['family_income_private']) ?? false;
     _selectedHasSiblings = _readBool(profile['has_siblings']);
+    _prefillSiblings(profile['siblings']);
     _otherRelativesController.text =
         ApiClient.safeDisplayLabel(profile['other_relatives_text']) ?? '';
     _propertyDetailsController.text =
@@ -2442,7 +2573,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     };
   }
 
-  Map<String, dynamic> _buildProfilePayload() {
+  List<Map<String, dynamic>> _siblingsPayload() {
+    if (_selectedHasSiblings == false) return const <Map<String, dynamic>>[];
+
+    final rows = <Map<String, dynamic>>[];
+    for (var index = 0; index < _siblingRows.length; index++) {
+      final row = _siblingRows[index];
+      if (!row.hasData) continue;
+      rows.add(row.toPayload(index));
+    }
+
+    return rows;
+  }
+
+  Map<String, dynamic> _buildProfilePayload({bool includeSiblings = false}) {
     final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
         ? _selectedCasteLabel!.trim()
         : _casteController.text.trim();
@@ -2588,6 +2732,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'narrative_expectations': _nullableText(_expectationsController),
     };
 
+    if (includeSiblings) {
+      payload['siblings'] = _siblingsPayload();
+    }
+
     if (educationDegreeId != null) {
       payload['education_slots'] = jsonEncode([
         {'t': 'd', 'id': educationDegreeId},
@@ -2600,6 +2748,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   Future<bool> _saveProfile({
     bool navigateOnSuccess = true,
     String successMessage = 'Profile update यशस्वी!',
+    _EditProfileSection? section,
   }) async {
     if (!_validateRequiredFields()) return false;
     if (!_validatePreferenceRanges()) return false;
@@ -2609,7 +2758,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       _saving = true;
     });
 
-    final payload = _buildProfilePayload();
+    final payload = _buildProfilePayload(
+      includeSiblings: section == _EditProfileSection.siblings,
+    );
     Map<String, dynamic> response;
     try {
       response = await ApiClient.updateMatrimonyProfile(payload);
@@ -2666,6 +2817,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.maritalLifestyle,
     _EditProfileSection.familyDetails,
     _EditProfileSection.familyOverview,
+    _EditProfileSection.siblings,
     _EditProfileSection.allianceProperty,
     _EditProfileSection.horoscopeAstro,
     _EditProfileSection.aboutMe,
@@ -2689,6 +2841,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return 'Family details';
       case _EditProfileSection.familyOverview:
         return 'Family overview';
+      case _EditProfileSection.siblings:
+        return 'Siblings';
       case _EditProfileSection.allianceProperty:
         return 'Alliance & Property';
       case _EditProfileSection.horoscopeAstro:
@@ -2718,6 +2872,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return Icons.group_outlined;
       case _EditProfileSection.familyOverview:
         return Icons.home_outlined;
+      case _EditProfileSection.siblings:
+        return Icons.people_alt_outlined;
       case _EditProfileSection.allianceProperty:
         return Icons.real_estate_agent_outlined;
       case _EditProfileSection.horoscopeAstro:
@@ -2969,7 +3125,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             maxAmountController: _familyIncomeMaxAmountController,
             private: _familyIncomePrivate,
           ),
+        ]);
+      case _EditProfileSection.siblings:
+        return _summaryFromParts([
           _boolSummary(_selectedHasSiblings),
+          _siblingRows.isEmpty ? null : '${_siblingRows.length} row(s)',
         ]);
       case _EditProfileSection.allianceProperty:
         return _summaryFromParts([
@@ -3043,6 +3203,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _buildFamilyDetailsSection();
       case _EditProfileSection.familyOverview:
         return _buildFamilyOverviewSection();
+      case _EditProfileSection.siblings:
+        return _buildSiblingsSection();
       case _EditProfileSection.allianceProperty:
         return _buildAlliancePropertySection();
       case _EditProfileSection.horoscopeAstro:
@@ -3138,8 +3300,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'family_income_max_amount',
           'family_income_currency_id',
           'family_income_private',
-          'has_siblings',
         ];
+      case _EditProfileSection.siblings:
+        return const ['has_siblings', 'siblings'];
       case _EditProfileSection.allianceProperty:
         return const ['other_relatives_text', 'property_details'];
       case _EditProfileSection.horoscopeAstro:
@@ -3193,7 +3356,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Map<String, dynamic> _sectionSnapshot(_EditProfileSection section) {
-    final payload = _buildProfilePayload();
+    final payload = _buildProfilePayload(
+      includeSiblings: section == _EditProfileSection.siblings,
+    );
     return <String, dynamic>{
       for (final key in _sectionPayloadKeys(section))
         key: payload.containsKey(key) ? payload[key] : null,
@@ -3278,6 +3443,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _saveProfile(
           navigateOnSuccess: false,
           successMessage: 'Section save झाली.',
+          section: _expandedSection,
         );
       case _UnsavedSectionAction.discard:
         _restoreLastLoadedProfile();
@@ -3362,6 +3528,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final saved = await _saveProfile(
       navigateOnSuccess: false,
       successMessage: '${_sectionTitle(section)} save झाले.',
+      section: section,
     );
     if (!mounted || !saved) return;
 
@@ -5144,15 +5311,159 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           private: _familyIncomePrivate,
           onPrivateChanged: (value) => _familyIncomePrivate = value,
         ),
-        const SizedBox(height: 14),
+      ],
+    );
+  }
+
+  Widget _buildSiblingsSection() {
+    return _sectionCard(
+      title: 'Siblings',
+      icon: Icons.people_alt_outlined,
+      children: [
         _boolDropdown(
-          labelText: 'Has siblings (Optional)',
+          labelText: 'Has siblings? (Optional)',
           icon: Icons.people,
           selectedValue: _selectedHasSiblings,
           onChanged: (value) => setState(() => _selectedHasSiblings = value),
         ),
+        if (_selectedHasSiblings == true) ...[
+          const SizedBox(height: 14),
+          for (var index = 0; index < _siblingRows.length; index++) ...[
+            _buildSiblingRowEditor(index, _siblingRows[index]),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _saving ? null : () => _addSibling('brother'),
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  label: const Text('Add brother'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _saving ? null : () => _addSibling('sister'),
+                  icon: const Icon(Icons.person_add_alt_1_outlined),
+                  label: const Text('Add sister'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
+  }
+
+  Widget _buildSiblingRowEditor(int index, _SiblingEditRow row) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Sibling ${index + 1}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Remove',
+                onPressed: _saving ? null : () => _removeSibling(index),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _stringDropdown(
+            labelText: 'Relation',
+            icon: Icons.people_outline,
+            options: _siblingRelationOptions(),
+            selectedValue: row.relationType,
+            fallbackPrefix: 'Relation',
+            loading: false,
+            onChanged: (value) => setState(() => row.relationType = value),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.nameController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Name (Optional)',
+              prefixIcon: Icon(Icons.person_outline),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _stringDropdown(
+            labelText: 'Marital status (Optional)',
+            icon: Icons.favorite_border,
+            options: _siblingMaritalStatusOptions(),
+            selectedValue: row.maritalStatus,
+            fallbackPrefix: 'Marital status',
+            loading: false,
+            onChanged: (value) => setState(() => row.maritalStatus = value),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.occupationController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Occupation (Optional)',
+              prefixIcon: Icon(Icons.work_outline),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.addressLineController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Address / City (Optional)',
+              prefixIcon: Icon(Icons.location_on_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.notesController,
+            maxLines: 2,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Notes (Optional)',
+              prefixIcon: Icon(Icons.notes_outlined),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addSibling(String relationType) {
+    setState(() {
+      _selectedHasSiblings = true;
+      _siblingRows.add(
+        _SiblingEditRow(
+          relationType: relationType,
+          maritalStatus: 'unmarried',
+          sortOrder: _siblingRows.length,
+        ),
+      );
+    });
+  }
+
+  void _removeSibling(int index) {
+    setState(() {
+      final removed = _siblingRows.removeAt(index);
+      removed.dispose();
+    });
   }
 
   Widget _buildAlliancePropertySection() {
