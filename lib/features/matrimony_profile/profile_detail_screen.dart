@@ -1258,7 +1258,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(top: 6, bottom: 4),
+      padding: const EdgeInsets.only(top: 4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1267,7 +1267,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               Expanded(
                 child: Text(
                   'More profiles you may like',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF2E2220),
                   ),
@@ -1282,13 +1282,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           SizedBox(
-            height: 232,
+            height: 142,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: _suggestedProfiles.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 12),
+              separatorBuilder: (context, index) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
                 return _buildSuggestedProfileCard(_suggestedProfiles[index]);
               },
@@ -1309,10 +1309,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final location = _suggestedLocation(profile);
 
     return SizedBox(
-      width: 156,
+      width: 110,
       child: Material(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: profileId == null
@@ -1334,7 +1334,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           color: const Color(0xFFF1E7E3),
                           child: const Icon(
                             Icons.person_outline,
-                            size: 42,
+                            size: 30,
                             color: Color(0xFF9B1B46),
                           ),
                         );
@@ -1353,16 +1353,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       ),
                     ),
                     Positioned(
-                      left: 10,
-                      right: 10,
-                      bottom: 10,
+                      left: 8,
+                      right: 8,
+                      bottom: 8,
                       child: Text(
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Colors.white,
-                          fontSize: 16,
+                          fontSize: 12,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -1371,7 +1371,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1383,17 +1383,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         style: const TextStyle(
                           fontWeight: FontWeight.w700,
                           color: Color(0xFF2E2220),
+                          fontSize: 12,
                         ),
                       ),
                     if (location != null) ...[
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
                         location,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.grey.shade700,
-                          fontSize: 12,
+                          fontSize: 10,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -1470,7 +1471,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   double _bottomContentPadding() {
-    return _shouldShowSendInterestButton() ? 132 : 38;
+    return _shouldShowSendInterestButton() ? 96 : 20;
   }
 
   Widget _buildSectionTitle(String title) {
