@@ -143,6 +143,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final basicItems = <ProfileDisplayItemData>[];
     final birthItems = <ProfileDisplayItemData>[];
     final careerItems = <ProfileDisplayItemData>[];
+    final familyItems = <ProfileDisplayItemData>[];
 
     _addDisplayItem(basicItems, AppStrings.name, profile['full_name']);
     _addDisplayItem(
@@ -207,6 +208,22 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       'Work Location',
       profile['work_location_label'] ?? profile['work_location_text'],
     );
+    if (!_readBool(profile['income_private'])) {
+      _addDisplayItem(
+        careerItems,
+        'Annual Income',
+        profile['income_display_label'] ??
+            _fallbackIncomeLabel(profile, 'income', 'annual_income'),
+      );
+    }
+    if (!_readBool(profile['family_income_private'])) {
+      _addDisplayItem(
+        familyItems,
+        'Family Income',
+        profile['family_income_display_label'] ??
+            _fallbackIncomeLabel(profile, 'family_income', 'family_income'),
+      );
+    }
 
     return [
       if (basicItems.isNotEmpty)
@@ -227,7 +244,48 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           title: 'Career & Education',
           items: careerItems,
         ),
+      if (familyItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'family',
+          title: 'Family Details',
+          items: familyItems,
+        ),
     ];
+  }
+
+  bool _readBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+
+    final text = value?.toString().trim().toLowerCase();
+    return text == '1' || text == 'true' || text == 'yes' || text == 'y';
+  }
+
+  String? _fallbackIncomeLabel(
+    Map<String, dynamic> profile,
+    String prefix,
+    String legacyKey,
+  ) {
+    final valueType = ApiClient.safeDisplayLabel(
+      profile['${prefix}_value_type'],
+    );
+    if (valueType == 'undisclosed') return null;
+
+    final currency =
+        ApiClient.safeDisplayLabel(profile['${prefix}_currency_symbol']) ?? '₹';
+    if (valueType == 'range') {
+      final min = ApiClient.safeDisplayLabel(profile['${prefix}_min_amount']);
+      final max = ApiClient.safeDisplayLabel(profile['${prefix}_max_amount']);
+      if (min != null && max != null) return '$currency$min - $currency$max';
+      if (min != null) return '$currency$min+';
+      if (max != null) return 'Up to $currency$max';
+      return null;
+    }
+
+    final amount =
+        ApiClient.safeDisplayLabel(profile['${prefix}_amount']) ??
+        ApiClient.safeDisplayLabel(profile[legacyKey]);
+    return amount == null ? null : '$currency$amount';
   }
 
   void _addDisplayItem(

@@ -53,6 +53,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final TextEditingController _birthPlaceController = TextEditingController();
   final TextEditingController _companyNameController = TextEditingController();
   final TextEditingController _workLocationController = TextEditingController();
+  final TextEditingController _incomeAmountController = TextEditingController();
+  final TextEditingController _incomeMinAmountController =
+      TextEditingController();
+  final TextEditingController _incomeMaxAmountController =
+      TextEditingController();
   final TextEditingController _fatherNameController = TextEditingController();
   final TextEditingController _fatherOccupationController =
       TextEditingController();
@@ -62,6 +67,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final TextEditingController _motherOccupationController =
       TextEditingController();
   final TextEditingController _motherExtraInfoController =
+      TextEditingController();
+  final TextEditingController _familyIncomeAmountController =
+      TextEditingController();
+  final TextEditingController _familyIncomeMinAmountController =
+      TextEditingController();
+  final TextEditingController _familyIncomeMaxAmountController =
       TextEditingController();
   final TextEditingController _otherRelativesController =
       TextEditingController();
@@ -129,8 +140,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String? _selectedWorkLocationLabel;
   String? _selectedSpectaclesLens;
   String? _selectedPhysicalCondition;
+  String? _selectedIncomePeriod;
+  String? _selectedIncomeValueType;
   String? _selectedFamilyStatus;
   String? _selectedFamilyValues;
+  String? _selectedFamilyIncomePeriod;
+  String? _selectedFamilyIncomeValueType;
   String? _selectedBirthWeekday;
   String? _selectedPartnerProfileWithChildren;
   String? _selectedPreferredProfileManagedBy;
@@ -155,11 +170,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _selectedEducationDegreeId;
   int? _selectedOccupationMasterId;
   int? _selectedOccupationCustomId;
+  int? _selectedIncomeCurrencyId;
   int? _selectedFatherOccupationMasterId;
   int? _selectedFatherOccupationCustomId;
   int? _selectedMotherOccupationMasterId;
   int? _selectedMotherOccupationCustomId;
   int? _selectedFamilyTypeId;
+  int? _selectedFamilyIncomeCurrencyId;
   bool? _selectedHasSiblings;
   int? _selectedRashiId;
   int? _selectedNakshatraId;
@@ -181,6 +198,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _preferredStateId;
   bool? _selectedWillingToRelocate;
   bool? _selectedPreferredIntercaste;
+  bool _incomePrivate = false;
+  bool _familyIncomePrivate = false;
 
   int _subCasteSearchRequest = 0;
   int _locationSearchRequest = 0;
@@ -216,6 +235,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _occupationOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _customOccupationOptions =
       <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _incomeCurrencyOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _familyTypeOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _familyStatusOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _familyValueOptions = <Map<String, dynamic>>[];
@@ -297,12 +317,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _birthPlaceController.dispose();
     _companyNameController.dispose();
     _workLocationController.dispose();
+    _incomeAmountController.dispose();
+    _incomeMinAmountController.dispose();
+    _incomeMaxAmountController.dispose();
     _fatherNameController.dispose();
     _fatherOccupationController.dispose();
     _fatherExtraInfoController.dispose();
     _motherNameController.dispose();
     _motherOccupationController.dispose();
     _motherExtraInfoController.dispose();
+    _familyIncomeAmountController.dispose();
+    _familyIncomeMinAmountController.dispose();
+    _familyIncomeMaxAmountController.dispose();
     _otherRelativesController.dispose();
     _propertyDetailsController.dispose();
     _devakController.dispose();
@@ -339,6 +365,29 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (text.isEmpty || text.toLowerCase() == 'null') return null;
 
     return text;
+  }
+
+  String _readAmountText(dynamic value) {
+    final text = _readText(value);
+    if (text == null) return '';
+
+    final parsed = double.tryParse(text);
+    if (parsed == null) return text;
+    if (parsed == parsed.roundToDouble()) {
+      return parsed.toInt().toString();
+    }
+
+    return parsed.toString();
+  }
+
+  num? _nullableNumber(TextEditingController controller) {
+    final text = controller.text.trim().replaceAll(',', '');
+    if (text.isEmpty) return null;
+
+    final intValue = int.tryParse(text);
+    if (intValue != null) return intValue;
+
+    return double.tryParse(text);
   }
 
   Map<String, dynamic> _readMap(dynamic value) {
@@ -792,6 +841,26 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ApiClient.safeDisplayLabel(profile['company_name']) ?? '';
     _workLocationController.text =
         ApiClient.safeDisplayLabel(profile['work_location_text']) ?? '';
+    _selectedIncomeValueType = _readText(profile['income_value_type']);
+    _selectedIncomePeriod = _readText(profile['income_period']);
+    final incomeAmount = _readAmountText(
+      profile['income_amount'] ?? profile['annual_income'],
+    );
+    _incomeAmountController.text = incomeAmount;
+    _incomeMinAmountController.text = _readAmountText(
+      profile['income_min_amount'],
+    );
+    _incomeMaxAmountController.text = _readAmountText(
+      profile['income_max_amount'],
+    );
+    if (_selectedIncomeValueType == null && incomeAmount.isNotEmpty) {
+      _selectedIncomeValueType = 'exact';
+    }
+    if (_selectedIncomeValueType != null && _selectedIncomePeriod == null) {
+      _selectedIncomePeriod = 'annual';
+    }
+    _selectedIncomeCurrencyId = _readInt(profile['income_currency_id']);
+    _incomePrivate = _readBool(profile['income_private']) ?? false;
     _selectedWorkLocationLabel =
         ApiClient.safeDisplayLabel(profile['work_location_label']) ??
         ApiClient.safeDisplayLabel(profile['work_location_text']);
@@ -830,6 +899,32 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedFamilyTypeId = _readInt(profile['family_type_id']);
     _selectedFamilyStatus = _readText(profile['family_status']);
     _selectedFamilyValues = _readText(profile['family_values']);
+    _selectedFamilyIncomeValueType = _readText(
+      profile['family_income_value_type'],
+    );
+    _selectedFamilyIncomePeriod = _readText(profile['family_income_period']);
+    final familyIncomeAmount = _readAmountText(
+      profile['family_income_amount'] ?? profile['family_income'],
+    );
+    _familyIncomeAmountController.text = familyIncomeAmount;
+    _familyIncomeMinAmountController.text = _readAmountText(
+      profile['family_income_min_amount'],
+    );
+    _familyIncomeMaxAmountController.text = _readAmountText(
+      profile['family_income_max_amount'],
+    );
+    if (_selectedFamilyIncomeValueType == null &&
+        familyIncomeAmount.isNotEmpty) {
+      _selectedFamilyIncomeValueType = 'exact';
+    }
+    if (_selectedFamilyIncomeValueType != null &&
+        _selectedFamilyIncomePeriod == null) {
+      _selectedFamilyIncomePeriod = 'annual';
+    }
+    _selectedFamilyIncomeCurrencyId =
+        _readInt(profile['family_income_currency_id']) ??
+        _selectedIncomeCurrencyId;
+    _familyIncomePrivate = _readBool(profile['family_income_private']) ?? false;
     _selectedHasSiblings = _readBool(profile['has_siblings']);
     _otherRelativesController.text =
         ApiClient.safeDisplayLabel(profile['other_relatives_text']) ?? '';
@@ -1101,6 +1196,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _occupationOptions = results['occupations'] ?? <Map<String, dynamic>>[];
         _customOccupationOptions =
             results['custom_occupations'] ?? <Map<String, dynamic>>[];
+        _incomeCurrencyOptions =
+            results['currencies'] ?? <Map<String, dynamic>>[];
         _syncSelectedEducationFromText();
       });
     } catch (_) {
@@ -1170,6 +1267,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _familyCustomOccupationOptions = _readRows(
           results['custom_occupations'],
         );
+        final currencies = _readRows(results['currencies']);
+        if (currencies.isNotEmpty) {
+          _incomeCurrencyOptions = currencies;
+        }
         _rashiOptions = _readRows(results['rashis']);
         _nakshatraOptions = _readRows(results['nakshatras']);
         _ganOptions = _readRows(results['gans']);
@@ -2235,9 +2336,110 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return true;
   }
 
+  bool _validateIncomeFields() {
+    bool validateOne({
+      required String title,
+      required String? valueType,
+      required TextEditingController amountController,
+      required TextEditingController minAmountController,
+      required TextEditingController maxAmountController,
+    }) {
+      if (valueType == 'exact' || valueType == 'approximate') {
+        if (_nullableNumber(amountController) == null) {
+          _showMessage('$title amount भरा.');
+          return false;
+        }
+      }
+      if (valueType == 'range') {
+        final minAmount = _nullableNumber(minAmountController);
+        final maxAmount = _nullableNumber(maxAmountController);
+        if (minAmount == null || maxAmount == null) {
+          _showMessage('$title range amount भरा.');
+          return false;
+        }
+        if (minAmount > maxAmount) {
+          _showMessage('$title range चुकीची आहे.');
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+    return validateOne(
+          title: 'Personal income',
+          valueType: _selectedIncomeValueType,
+          amountController: _incomeAmountController,
+          minAmountController: _incomeMinAmountController,
+          maxAmountController: _incomeMaxAmountController,
+        ) &&
+        validateOne(
+          title: 'Family income',
+          valueType: _selectedFamilyIncomeValueType,
+          amountController: _familyIncomeAmountController,
+          minAmountController: _familyIncomeMinAmountController,
+          maxAmountController: _familyIncomeMaxAmountController,
+        );
+  }
+
   String? _nullableText(TextEditingController controller) {
     final text = controller.text.trim();
     return text.isEmpty ? null : text;
+  }
+
+  bool _incomeHasPayload({
+    required String? valueType,
+    required TextEditingController amountController,
+    required TextEditingController minAmountController,
+    required TextEditingController maxAmountController,
+    required bool private,
+  }) {
+    return valueType != null ||
+        amountController.text.trim().isNotEmpty ||
+        minAmountController.text.trim().isNotEmpty ||
+        maxAmountController.text.trim().isNotEmpty ||
+        private;
+  }
+
+  Map<String, dynamic> _incomePayload({
+    required String prefix,
+    required String? period,
+    required String? valueType,
+    required TextEditingController amountController,
+    required TextEditingController minAmountController,
+    required TextEditingController maxAmountController,
+    required int? currencyId,
+    required bool private,
+  }) {
+    if (!_incomeHasPayload(
+      valueType: valueType,
+      amountController: amountController,
+      minAmountController: minAmountController,
+      maxAmountController: maxAmountController,
+      private: private,
+    )) {
+      return const <String, dynamic>{};
+    }
+
+    final amount = _nullableNumber(amountController);
+    final minAmount = _nullableNumber(minAmountController);
+    final maxAmount = _nullableNumber(maxAmountController);
+    final effectivePeriod = period ?? 'annual';
+    final singleAmount = valueType == 'exact' || valueType == 'approximate'
+        ? amount
+        : null;
+
+    return <String, dynamic>{
+      if (prefix == 'income') 'annual_income': singleAmount,
+      if (prefix == 'family_income') 'family_income': singleAmount,
+      '${prefix}_period': effectivePeriod,
+      '${prefix}_value_type': valueType,
+      '${prefix}_amount': singleAmount,
+      '${prefix}_min_amount': valueType == 'range' ? minAmount : null,
+      '${prefix}_max_amount': valueType == 'range' ? maxAmount : null,
+      '${prefix}_currency_id': currencyId,
+      '${prefix}_private': private,
+    };
   }
 
   Map<String, dynamic> _buildProfilePayload() {
@@ -2280,6 +2482,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'occupation_custom_id': _selectedOccupationCustomId,
       'company_name': _nullableText(_companyNameController),
       'work_location_text': _nullableText(_workLocationController),
+      ..._incomePayload(
+        prefix: 'income',
+        period: _selectedIncomePeriod,
+        valueType: _selectedIncomeValueType,
+        amountController: _incomeAmountController,
+        minAmountController: _incomeMinAmountController,
+        maxAmountController: _incomeMaxAmountController,
+        currencyId: _selectedIncomeCurrencyId,
+        private: _incomePrivate,
+      ),
       'father_name': _nullableText(_fatherNameController),
       'father_occupation': _nullableText(_fatherOccupationController),
       'father_occupation_master_id': _selectedFatherOccupationMasterId,
@@ -2293,6 +2505,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'family_type_id': _selectedFamilyTypeId,
       'family_status': _selectedFamilyStatus,
       'family_values': _selectedFamilyValues,
+      ..._incomePayload(
+        prefix: 'family_income',
+        period: _selectedFamilyIncomePeriod,
+        valueType: _selectedFamilyIncomeValueType,
+        amountController: _familyIncomeAmountController,
+        minAmountController: _familyIncomeMinAmountController,
+        maxAmountController: _familyIncomeMaxAmountController,
+        currencyId: _selectedFamilyIncomeCurrencyId,
+        private: _familyIncomePrivate,
+      ),
       'has_siblings': _selectedHasSiblings,
       'other_relatives_text': _nullableText(_otherRelativesController),
       'property_details': _nullableText(_propertyDetailsController),
@@ -2381,6 +2603,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }) async {
     if (!_validateRequiredFields()) return false;
     if (!_validatePreferenceRanges()) return false;
+    if (!_validateIncomeFields()) return false;
 
     setState(() {
       _saving = true;
@@ -2601,6 +2824,34 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return '₹${(value / 100000).toStringAsFixed(1)}L';
   }
 
+  String? _editableIncomeSummary({
+    required String? valueType,
+    required TextEditingController amountController,
+    required TextEditingController minAmountController,
+    required TextEditingController maxAmountController,
+    required bool private,
+  }) {
+    if (private) return 'Hidden';
+    if (valueType == 'undisclosed') return 'Undisclosed';
+
+    String amountLabel(TextEditingController controller) {
+      final value = _nullableNumber(controller);
+      if (value == null) return '';
+      return _incomeLabel(value.round());
+    }
+
+    if (valueType == 'range') {
+      final min = amountLabel(minAmountController);
+      final max = amountLabel(maxAmountController);
+      if (min.isEmpty && max.isEmpty) return null;
+      if (min.isNotEmpty && max.isNotEmpty) return '$min-$max';
+      return min.isNotEmpty ? '$min+' : 'Up to $max';
+    }
+
+    final amount = amountLabel(amountController);
+    return amount.isEmpty ? null : amount;
+  }
+
   String? _preferenceIncomeSummary() {
     final min = _selectedPreferredIncomeMin;
     final max = _selectedPreferredIncomeMax;
@@ -2656,6 +2907,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               ),
           _controllerSummary(_workLocationController) ??
               _selectedWorkLocationLabel,
+          _editableIncomeSummary(
+            valueType: _selectedIncomeValueType,
+            amountController: _incomeAmountController,
+            minAmountController: _incomeMinAmountController,
+            maxAmountController: _incomeMaxAmountController,
+            private: _incomePrivate,
+          ),
         ]);
       case _EditProfileSection.maritalLifestyle:
         return _summaryFromParts([
@@ -2703,6 +2961,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _familyValueOptions,
             _selectedFamilyValues,
             'Family values',
+          ),
+          _editableIncomeSummary(
+            valueType: _selectedFamilyIncomeValueType,
+            amountController: _familyIncomeAmountController,
+            minAmountController: _familyIncomeMinAmountController,
+            maxAmountController: _familyIncomeMaxAmountController,
+            private: _familyIncomePrivate,
           ),
           _boolSummary(_selectedHasSiblings),
         ]);
@@ -2830,6 +3095,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'occupation_custom_id',
           'company_name',
           'work_location_text',
+          'annual_income',
+          'income_period',
+          'income_value_type',
+          'income_amount',
+          'income_min_amount',
+          'income_max_amount',
+          'income_currency_id',
+          'income_private',
         ];
       case _EditProfileSection.maritalLifestyle:
         return const [
@@ -2857,6 +3130,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'family_type_id',
           'family_status',
           'family_values',
+          'family_income',
+          'family_income_period',
+          'family_income_value_type',
+          'family_income_amount',
+          'family_income_min_amount',
+          'family_income_max_amount',
+          'family_income_currency_id',
+          'family_income_private',
           'has_siblings',
         ];
       case _EditProfileSection.allianceProperty:
@@ -4349,6 +4630,143 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
+  List<Map<String, dynamic>> _incomeValueTypeOptions() => const [
+    {'key': 'exact', 'label': 'Exact'},
+    {'key': 'approximate', 'label': 'Approximate'},
+    {'key': 'range', 'label': 'Range'},
+    {'key': 'undisclosed', 'label': 'Undisclosed'},
+  ];
+
+  List<Map<String, dynamic>> _incomePeriodOptions() => const [
+    {'key': 'annual', 'label': 'Annual'},
+    {'key': 'monthly', 'label': 'Monthly'},
+    {'key': 'weekly', 'label': 'Weekly'},
+    {'key': 'daily', 'label': 'Daily'},
+  ];
+
+  Widget _incomeEditor({
+    required String title,
+    required String? valueType,
+    required ValueChanged<String?> onValueTypeChanged,
+    required String? period,
+    required ValueChanged<String?> onPeriodChanged,
+    required TextEditingController amountController,
+    required TextEditingController minAmountController,
+    required TextEditingController maxAmountController,
+    required int? currencyId,
+    required ValueChanged<int?> onCurrencyChanged,
+    required bool private,
+    required ValueChanged<bool> onPrivateChanged,
+  }) {
+    final showSingleAmount = valueType == 'exact' || valueType == 'approximate';
+    final showRange = valueType == 'range';
+
+    Widget amountField({
+      required TextEditingController controller,
+      required String labelText,
+    }) {
+      return TextField(
+        controller: controller,
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        decoration: InputDecoration(
+          labelText: labelText,
+          prefixIcon: const Icon(Icons.currency_rupee),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _stringDropdown(
+                labelText: 'Income type',
+                icon: Icons.payments_outlined,
+                options: _incomeValueTypeOptions(),
+                selectedValue: valueType,
+                fallbackPrefix: 'Income type',
+                loading: false,
+                onChanged: (value) {
+                  setState(() {
+                    onValueTypeChanged(value);
+                    if (value != null && period == null) {
+                      onPeriodChanged('annual');
+                    }
+                  });
+                },
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _stringDropdown(
+                labelText: 'Period',
+                icon: Icons.calendar_month_outlined,
+                options: _incomePeriodOptions(),
+                selectedValue: period,
+                fallbackPrefix: 'Period',
+                loading: false,
+                onChanged: (value) => setState(() => onPeriodChanged(value)),
+              ),
+            ),
+          ],
+        ),
+        if (showSingleAmount) ...[
+          const SizedBox(height: 14),
+          amountField(controller: amountController, labelText: 'Amount'),
+        ],
+        if (showRange) ...[
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: amountField(
+                  controller: minAmountController,
+                  labelText: 'Minimum amount',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: amountField(
+                  controller: maxAmountController,
+                  labelText: 'Maximum amount',
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: 'Currency',
+          icon: Icons.currency_exchange,
+          options: _incomeCurrencyOptions,
+          selectedId: currencyId,
+          fallbackPrefix: 'Currency',
+          loading:
+              _educationCareerOptionsLoading || _remainingProfileOptionsLoading,
+          onChanged: (value) => setState(() => onCurrencyChanged(value)),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Keep private'),
+          value: private,
+          onChanged: _saving
+              ? null
+              : (value) => setState(() => onPrivateChanged(value)),
+        ),
+      ],
+    );
+  }
+
   Widget _charanDropdown() {
     final validCharans = _validCharansForSelection();
     final currentCharan = _selectedCharan;
@@ -4437,6 +4855,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           fallbackPrefix: 'Location',
           loading: _workLocationSearching,
           onSelect: _selectWorkLocation,
+        ),
+        const SizedBox(height: 18),
+        _incomeEditor(
+          title: 'Personal income',
+          valueType: _selectedIncomeValueType,
+          onValueTypeChanged: (value) => _selectedIncomeValueType = value,
+          period: _selectedIncomePeriod,
+          onPeriodChanged: (value) => _selectedIncomePeriod = value,
+          amountController: _incomeAmountController,
+          minAmountController: _incomeMinAmountController,
+          maxAmountController: _incomeMaxAmountController,
+          currencyId: _selectedIncomeCurrencyId,
+          onCurrencyChanged: (value) => _selectedIncomeCurrencyId = value,
+          private: _incomePrivate,
+          onPrivateChanged: (value) => _incomePrivate = value,
         ),
         if (_educationCareerOptionsError != null)
           Padding(
@@ -4695,6 +5128,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           fallbackPrefix: 'Family values',
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedFamilyValues = value),
+        ),
+        const SizedBox(height: 18),
+        _incomeEditor(
+          title: 'Family income',
+          valueType: _selectedFamilyIncomeValueType,
+          onValueTypeChanged: (value) => _selectedFamilyIncomeValueType = value,
+          period: _selectedFamilyIncomePeriod,
+          onPeriodChanged: (value) => _selectedFamilyIncomePeriod = value,
+          amountController: _familyIncomeAmountController,
+          minAmountController: _familyIncomeMinAmountController,
+          maxAmountController: _familyIncomeMaxAmountController,
+          currencyId: _selectedFamilyIncomeCurrencyId,
+          onCurrencyChanged: (value) => _selectedFamilyIncomeCurrencyId = value,
+          private: _familyIncomePrivate,
+          onPrivateChanged: (value) => _familyIncomePrivate = value,
         ),
         const SizedBox(height: 14),
         _boolDropdown(

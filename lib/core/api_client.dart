@@ -807,6 +807,11 @@ class ApiClient {
       'customOccupations',
       'occupation_custom',
     ]);
+    addOptions('currencies', const [
+      'currencies',
+      'income_currencies',
+      'incomeCurrencies',
+    ]);
 
     return options;
   }
@@ -943,6 +948,11 @@ class ApiClient {
       'custom_occupations',
       'customOccupations',
       'occupation_custom',
+    ]);
+    addOptions('currencies', const [
+      'currencies',
+      'income_currencies',
+      'incomeCurrencies',
     ]);
     addOptions('rashis', const ['rashis', 'rashi']);
     addOptions('nakshatras', const ['nakshatras', 'nakshatra']);
