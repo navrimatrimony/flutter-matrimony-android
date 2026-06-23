@@ -1033,6 +1033,19 @@ class ApiClient {
       'profile_managed_by',
     ]);
     addOptions('diets', const ['diets', 'diet']);
+    addOptions('religions', const ['religions', 'religion']);
+    addOptions('castes', const ['castes', 'caste']);
+    addOptions('education_degrees', const [
+      'education_degrees',
+      'educationDegrees',
+      'educations',
+      'education',
+    ]);
+    addOptions('occupation_categories', const [
+      'occupation_categories',
+      'occupationCategories',
+    ]);
+    addOptions('occupations', const ['occupations', 'occupation']);
 
     return options;
   }
