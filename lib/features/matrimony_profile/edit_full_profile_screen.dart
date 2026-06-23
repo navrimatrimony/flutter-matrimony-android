@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
 import '../../core/app_language.dart';
 import '../../core/app_strings.dart';
+import '../photo/photo_upload_screen.dart';
 
 class EditFullProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? initialProfile;
@@ -28,6 +29,7 @@ enum _EditProfileSection {
   horoscopeAstro,
   aboutMe,
   partnerPreferences,
+  photo,
 }
 
 enum _UnsavedSectionAction { save, discard, cancel }
@@ -46,6 +48,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final TextEditingController _subCasteController = TextEditingController();
   final TextEditingController _educationController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
+  final TextEditingController _addressLineController = TextEditingController();
   final TextEditingController _birthTimeController = TextEditingController();
   final TextEditingController _birthPlaceController = TextEditingController();
   final TextEditingController _companyNameController = TextEditingController();
@@ -101,6 +104,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.horoscopeAstro: GlobalKey(),
     _EditProfileSection.aboutMe: GlobalKey(),
     _EditProfileSection.partnerPreferences: GlobalKey(),
+    _EditProfileSection.photo: GlobalKey(),
   };
   Timer? _savedHighlightTimer;
   _EditProfileSection? _savedFeedbackSection;
@@ -288,6 +292,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _subCasteController.dispose();
     _educationController.dispose();
     _locationController.dispose();
+    _addressLineController.dispose();
     _birthTimeController.dispose();
     _birthPlaceController.dispose();
     _companyNameController.dispose();
@@ -751,6 +756,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       allowIdFallback: false,
     );
     _locationController.text = _selectedLocationLabel ?? '';
+    _addressLineController.text =
+        ApiClient.safeDisplayLabel(profile['address_line']) ?? '';
     _preferredStateId = _profileLocationStateId(profile);
 
     _birthTimeController.text = _readText(profile['birth_time']) ?? '';
@@ -2251,6 +2258,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'caste': casteLabel,
       'highest_education': educationText,
       'location_id': _selectedLocationId,
+      'address_line': _nullableText(_addressLineController),
       'sub_caste_id': _selectedSubCasteId,
       'birth_time': _nullableText(_birthTimeController),
       'birth_city_id': _selectedBirthCityId,
@@ -2439,6 +2447,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.horoscopeAstro,
     _EditProfileSection.aboutMe,
     _EditProfileSection.partnerPreferences,
+    _EditProfileSection.photo,
   ];
 
   String _sectionTitle(_EditProfileSection section) {
@@ -2465,6 +2474,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return 'About me';
       case _EditProfileSection.partnerPreferences:
         return 'Partner Preferences';
+      case _EditProfileSection.photo:
+        return 'Photo';
     }
   }
 
@@ -2492,6 +2503,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return Icons.notes;
       case _EditProfileSection.partnerPreferences:
         return Icons.tune_outlined;
+      case _EditProfileSection.photo:
+        return Icons.photo_camera_outlined;
     }
   }
 
@@ -2614,6 +2627,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _selectedSubCasteLabel ?? _controllerSummary(_subCasteController),
           ]),
           _selectedLocationLabel ?? _controllerSummary(_locationController),
+          _controllerSummary(_addressLineController),
         ]);
       case _EditProfileSection.birth:
         return _summaryFromParts([
@@ -2738,6 +2752,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ),
           _preferredLocationSummary(),
         ]);
+      case _EditProfileSection.photo:
+        return ApiClient.resolveProfilePhotoUrl(
+                  _lastLoadedProfile ?? ApiClient.currentUserProfile,
+                ) !=
+                null
+            ? 'Photo uploaded'
+            : 'Photo not uploaded yet';
     }
   }
 
@@ -2765,6 +2786,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _buildAboutMeSection();
       case _EditProfileSection.partnerPreferences:
         return _buildPartnerPreferencesSection();
+      case _EditProfileSection.photo:
+        return _buildPhotoSection();
     }
   }
 
@@ -2779,6 +2802,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'caste_id',
           'caste',
           'location_id',
+          'address_line',
           'sub_caste_id',
         ];
       case _EditProfileSection.birth:
@@ -2882,6 +2906,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'preferred_taluka_ids',
           'narrative_expectations',
         ];
+      case _EditProfileSection.photo:
+        return const [];
     }
   }
 
@@ -3062,6 +3088,29 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _startSavedSectionFeedback(section);
   }
 
+  Future<void> _openPhotoManager() async {
+    final canLeaveCurrent = await _resolvePendingSectionChanges();
+    if (!mounted || !canLeaveCurrent) return;
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const PhotoUploadScreen()),
+    );
+    if (!mounted) return;
+
+    try {
+      final refreshed = await ApiClient.getMyProfile();
+      final profile = refreshed['profile'];
+      if (profile is Map && mounted) {
+        setState(() {
+          _prefillProfile(Map<String, dynamic>.from(profile));
+        });
+      }
+    } catch (_) {
+      setState(() {});
+    }
+  }
+
   Future<void> _handleBackPressed() async {
     final canLeave = await _resolvePendingSectionChanges();
     if (!mounted || !canLeave) return;
@@ -3076,6 +3125,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   Widget _buildSectionManagerCard(_EditProfileSection section) {
     final theme = Theme.of(context);
     final isExpanded = _expandedSection == section;
+    final isPhotoSection = section == _EditProfileSection.photo;
     final isSavedFeedback = _savedFeedbackSection == section;
     final showSavedPulse = isSavedFeedback && _savedHighlightOn;
     const successColor = Color(0xFF15803D);
@@ -3184,11 +3234,25 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 TextButton.icon(
                   onPressed: _saving
                       ? null
-                      : () => isExpanded
+                      : () => isPhotoSection
+                            ? _openPhotoManager()
+                            : isExpanded
                             ? _cancelExpandedSection()
                             : _openSection(section),
-                  icon: Icon(isExpanded ? Icons.close : Icons.edit_outlined),
-                  label: Text(isExpanded ? 'Cancel' : 'Edit'),
+                  icon: Icon(
+                    isPhotoSection
+                        ? Icons.photo_library_outlined
+                        : isExpanded
+                        ? Icons.close
+                        : Icons.edit_outlined,
+                  ),
+                  label: Text(
+                    isPhotoSection
+                        ? 'Manage'
+                        : isExpanded
+                        ? 'Cancel'
+                        : 'Edit',
+                  ),
                 ),
               ],
             ),
@@ -4090,6 +4154,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           loading: _locationSearching,
           onSelect: _selectLocation,
         ),
+        const SizedBox(height: 14),
+        TextField(
+          controller: _addressLineController,
+          textInputAction: TextInputAction.next,
+          decoration: const InputDecoration(
+            labelText: 'Address line (Optional)',
+            prefixIcon: Icon(Icons.home_outlined),
+          ),
+        ),
       ],
     );
   }
@@ -4843,6 +4916,62 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             labelText: 'About me (Optional)',
             alignLabelWithHint: true,
             prefixIcon: Icon(Icons.edit),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhotoSection() {
+    final photoUrl = ApiClient.resolveProfilePhotoUrl(
+      _lastLoadedProfile ?? ApiClient.currentUserProfile,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            ClipOval(
+              child: Container(
+                width: 72,
+                height: 72,
+                color: Colors.grey.shade100,
+                child: photoUrl == null
+                    ? Icon(
+                        Icons.person_outline,
+                        color: Colors.grey.shade600,
+                        size: 36,
+                      )
+                    : Image.network(
+                        photoUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Icon(
+                          Icons.person_outline,
+                          color: Colors.grey.shade600,
+                          size: 36,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                photoUrl == null
+                    ? 'No profile photo uploaded yet.'
+                    : 'Profile photo uploaded.',
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _saving ? null : _openPhotoManager,
+            icon: const Icon(Icons.photo_camera_outlined),
+            label: const Text('Open photo manager'),
           ),
         ),
       ],
