@@ -3231,29 +3231,23 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                TextButton.icon(
-                  onPressed: _saving
-                      ? null
-                      : () => isPhotoSection
-                            ? _openPhotoManager()
-                            : isExpanded
-                            ? _cancelExpandedSection()
-                            : _openSection(section),
-                  icon: Icon(
-                    isPhotoSection
-                        ? Icons.photo_library_outlined
-                        : isExpanded
-                        ? Icons.close
-                        : Icons.edit_outlined,
-                  ),
-                  label: Text(
-                    isPhotoSection
-                        ? 'Manage'
-                        : isExpanded
-                        ? 'Cancel'
-                        : 'Edit',
-                  ),
-                ),
+                isPhotoSection
+                    ? FilledButton.icon(
+                        onPressed: _saving ? null : _openPhotoManager,
+                        icon: const Icon(Icons.photo_library_outlined),
+                        label: const Text('Manage'),
+                      )
+                    : TextButton.icon(
+                        onPressed: _saving
+                            ? null
+                            : () => isExpanded
+                                  ? _cancelExpandedSection()
+                                  : _openSection(section),
+                        icon: Icon(
+                          isExpanded ? Icons.close : Icons.edit_outlined,
+                        ),
+                        label: Text(isExpanded ? 'Cancel' : 'Edit'),
+                      ),
               ],
             ),
             if (isExpanded) ...[

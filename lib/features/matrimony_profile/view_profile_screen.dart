@@ -156,6 +156,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       ApiClient.profileCommunityLabel(profile),
     );
     _addDisplayItem(basicItems, AppStrings.location, location);
+    _addDisplayItem(basicItems, 'Address Line', profile['address_line']);
     _addDisplayItem(
       basicItems,
       'Mother Tongue',
