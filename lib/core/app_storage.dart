@@ -4,17 +4,16 @@ import 'app_language.dart';
 
 class AppStorage {
   AppStorage._secure()
-      : _secureStorage = const FlutterSecureStorage(),
-        _memory = null;
+    : _secureStorage = const FlutterSecureStorage(),
+      _memory = null;
 
-  AppStorage.memory()
-      : _secureStorage = null,
-        _memory = <String, String>{};
+  AppStorage.memory() : _secureStorage = null, _memory = <String, String>{};
 
   static AppStorage instance = AppStorage._secure();
 
   static const String _authTokenKey = 'auth_token';
   static const String _languageKey = 'app_language';
+  static const String _onboardingDraftKey = 'smart_onboarding_draft';
 
   final FlutterSecureStorage? _secureStorage;
   final Map<String, String>? _memory;
@@ -69,6 +68,18 @@ class AppStorage {
 
   Future<void> clearLanguage() {
     return _delete(_languageKey);
+  }
+
+  Future<String?> readOnboardingDraftJson() {
+    return _read(_onboardingDraftKey);
+  }
+
+  Future<void> saveOnboardingDraftJson(String value) {
+    return _write(_onboardingDraftKey, value);
+  }
+
+  Future<void> clearOnboardingDraftJson() {
+    return _delete(_onboardingDraftKey);
   }
 
   Future<void> clearSessionButKeepLanguage() {

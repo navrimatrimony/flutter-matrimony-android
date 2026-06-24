@@ -8,6 +8,7 @@ import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/create_profile_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
+import 'features/onboarding/smart_onboarding_screen.dart';
 
 // RouteObserver for RouteAware lifecycle management
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
@@ -84,9 +85,7 @@ class MyApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
             borderSide: BorderSide(color: Colors.grey.shade300),
@@ -106,6 +105,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/create-profile': (context) => const CreateMatrimonyProfileScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
+        '/smart-onboarding': (context) => const SmartOnboardingScreen(),
       },
     );
   }
@@ -146,8 +146,6 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: CircularProgressIndicator()),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

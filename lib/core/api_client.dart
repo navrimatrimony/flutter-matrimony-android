@@ -38,6 +38,115 @@ class ApiClient {
     return data;
   }
 
+  static String _requireAuthToken() {
+    final token = authToken;
+    if (token == null || token.isEmpty) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+
+    return token;
+  }
+
+  static Map<String, String> _jsonHeaders({bool authenticated = false}) {
+    final headers = <String, String>{
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    };
+
+    if (authenticated) {
+      headers['Authorization'] = 'Bearer ${_requireAuthToken()}';
+    }
+
+    return headers;
+  }
+
+  static Map<String, String> _acceptHeaders({bool authenticated = false}) {
+    final headers = <String, String>{'Accept': 'application/json'};
+
+    if (authenticated) {
+      headers['Authorization'] = 'Bearer ${_requireAuthToken()}';
+    }
+
+    return headers;
+  }
+
+  static Map<String, String> _queryParameters(Map<String, dynamic>? source) {
+    if (source == null || source.isEmpty) return <String, String>{};
+
+    final query = <String, String>{};
+    source.forEach((key, value) {
+      if (value == null) return;
+      final text = value.toString().trim();
+      if (text.isEmpty) return;
+      query[key] = text;
+    });
+
+    return query;
+  }
+
+  static Uri _apiUri(String route, {Map<String, dynamic>? query}) {
+    final base = Uri.parse(ApiRoutes.baseUrl + route);
+    final queryParameters = _queryParameters(query);
+    if (queryParameters.isEmpty) return base;
+
+    return base.replace(queryParameters: queryParameters);
+  }
+
+  static Map<String, dynamic> _compactBody(Map<String, dynamic> source) {
+    final body = <String, dynamic>{};
+
+    source.forEach((key, value) {
+      if (value == null) return;
+      if (value is String && value.trim().isEmpty) return;
+      body[key] = value;
+    });
+
+    return body;
+  }
+
+  static Future<Map<String, dynamic>> _getJson(
+    String route, {
+    bool authenticated = false,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await http.get(
+      _apiUri(route, query: query),
+      headers: _acceptHeaders(authenticated: authenticated),
+    );
+
+    return _decodeResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> _postJson(
+    String route,
+    Map<String, dynamic> body, {
+    bool authenticated = false,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await http.post(
+      _apiUri(route, query: query),
+      headers: _jsonHeaders(authenticated: authenticated),
+      body: jsonEncode(_compactBody(body)),
+    );
+
+    return _decodeResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> _patchJson(
+    String route,
+    Map<String, dynamic> body, {
+    bool authenticated = false,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await http.patch(
+      _apiUri(route, query: query),
+      headers: _jsonHeaders(authenticated: authenticated),
+      body: jsonEncode(_compactBody(body)),
+    );
+
+    return _decodeResponse(response);
+  }
+
   static List<Map<String, dynamic>> _safeMapList(dynamic value) {
     final List<dynamic> rows;
 
@@ -535,9 +644,25 @@ class ApiClient {
     int? preferredStateId,
     String? preferredStateName,
     int limit = 20,
+    int page = 1,
+    String? locale,
+    String? type,
+    bool useOnboardingEndpoint = false,
   }) async {
     final trimmedQuery = query.trim();
     if (trimmedQuery.length < 2) return <Map<String, dynamic>>[];
+
+    if (useOnboardingEndpoint) {
+      final data = await searchLocationsForOnboarding(
+        query: trimmedQuery,
+        page: page,
+        limit: limit,
+        locale: locale,
+        preferredStateId: preferredStateId,
+        type: type,
+      );
+      return _safeMapList(data);
+    }
 
     final safeLimit = limit.clamp(1, 50);
     final normalizedPreferredName = preferredStateName?.trim();
@@ -1099,6 +1224,10 @@ class ApiClient {
   static Future<List<Map<String, dynamic>>> searchSubCastes({
     required int casteId,
     required String query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+    bool useOnboardingEndpoint = false,
   }) async {
     if (authToken == null) {
       throw Exception('Auth token missing');
@@ -1106,6 +1235,17 @@ class ApiClient {
 
     final trimmedQuery = query.trim();
     if (trimmedQuery.length < 2) return <Map<String, dynamic>>[];
+
+    if (useOnboardingEndpoint) {
+      final data = await searchSubCastesForOnboarding(
+        casteId: casteId,
+        query: trimmedQuery,
+        page: page,
+        limit: limit,
+        locale: locale,
+      );
+      return _safeMapList(data);
+    }
 
     final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.subCastes).replace(
       queryParameters: {'caste_id': casteId.toString(), 'q': trimmedQuery},
@@ -1148,6 +1288,387 @@ class ApiClient {
     } catch (_) {
       return <Map<String, dynamic>>[];
     }
+  }
+
+  static Future<Map<String, dynamic>> sendMobileOtp({
+    required String mobile,
+    required bool termsAccepted,
+    required bool privacyAccepted,
+    String? locale,
+    String channel = 'sms',
+    String purpose = 'login_or_register',
+    String? termsVersion,
+    String? privacyVersion,
+    bool? whatsappAlertsOptIn,
+  }) {
+    return _postJson(ApiRoutes.mobileOtpSend, {
+      'mobile': mobile,
+      'locale': locale,
+      'channel': channel,
+      'purpose': purpose,
+      'terms_accepted': termsAccepted,
+      'privacy_accepted': privacyAccepted,
+      'terms_version': termsVersion,
+      'privacy_version': privacyVersion,
+      'whatsapp_alerts_opt_in': whatsappAlertsOptIn,
+    });
+  }
+
+  static Future<Map<String, dynamic>> verifyMobileOtp({
+    required String challengeId,
+    required String mobile,
+    required String otp,
+  }) async {
+    final data = await _postJson(ApiRoutes.mobileOtpVerify, {
+      'challenge_id': challengeId,
+      'mobile': mobile,
+      'otp': otp,
+    });
+
+    final token =
+        data['token']?.toString() ??
+        ((data['data'] is Map) ? data['data']['token']?.toString() : null);
+    if (data['statusCode'] == 200 && token != null && token.isNotEmpty) {
+      authToken = token;
+      await AppStorage.instance.saveAuthToken(token);
+    }
+
+    return data;
+  }
+
+  static Future<Map<String, dynamic>> updateAccountDetails({
+    required String creatorName,
+    String? email,
+    String? locale,
+    String? password,
+    String? passwordConfirmation,
+    bool? whatsappAlertsOptIn,
+  }) {
+    return _patchJson(ApiRoutes.accountDetails, {
+      'creator_name': creatorName,
+      'email': email,
+      'locale': locale,
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+      'whatsapp_alerts_opt_in': whatsappAlertsOptIn,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> startOnboarding({
+    required String profileForWhom,
+  }) {
+    return _postJson(ApiRoutes.onboardingStart, {
+      'profile_for_whom': profileForWhom,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> getOnboardingStatus({String? locale}) {
+    return _getJson(
+      ApiRoutes.onboardingStatus,
+      authenticated: true,
+      query: {'locale': locale},
+    );
+  }
+
+  static Future<Map<String, dynamic>> getOnboardingDraft({String? locale}) {
+    return _getJson(
+      ApiRoutes.onboardingDraft,
+      authenticated: true,
+      query: {'locale': locale},
+    );
+  }
+
+  static Future<Map<String, dynamic>> saveOnboardingDraftStep({
+    required String step,
+    required Map<String, dynamic> data,
+  }) {
+    return _patchJson(ApiRoutes.onboardingDraftStep(step), {
+      'data': data,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> saveOnboardingProfileStep({
+    required String step,
+    required Map<String, dynamic> data,
+  }) {
+    return _postJson(ApiRoutes.onboardingProfileSaveStep, {
+      'step': step,
+      'data': data,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> getActivationChecklist({String? locale}) {
+    return _getJson(
+      ApiRoutes.onboardingActivationChecklist,
+      authenticated: true,
+      query: {'locale': locale},
+    );
+  }
+
+  static Future<Map<String, dynamic>> getOnboardingBootstrap({String? locale}) {
+    return _getJson(
+      ApiRoutes.onboardingLookupsBootstrap,
+      authenticated: true,
+      query: {'locale': locale},
+    );
+  }
+
+  static String _onboardingLookupRoute(String lookup) {
+    switch (lookup) {
+      case 'religions':
+      case 'religion':
+        return ApiRoutes.onboardingLookupsReligions;
+      case 'castes':
+      case 'caste':
+        return ApiRoutes.onboardingLookupsCastes;
+      case 'sub-castes':
+      case 'sub_castes':
+      case 'subCaste':
+        return ApiRoutes.onboardingLookupsSubCastes;
+      case 'locations':
+      case 'location':
+        return ApiRoutes.onboardingLookupsLocations;
+      case 'education':
+      case 'educations':
+        return ApiRoutes.onboardingLookupsEducation;
+      case 'working-with':
+      case 'working_with':
+        return ApiRoutes.onboardingLookupsWorkingWith;
+      case 'occupations':
+      case 'occupation':
+        return ApiRoutes.onboardingLookupsOccupations;
+      case 'income-options':
+      case 'income_options':
+        return ApiRoutes.onboardingLookupsIncomeOptions;
+      case 'diet':
+        return ApiRoutes.onboardingLookupsDiet;
+      case 'smoking':
+        return ApiRoutes.onboardingLookupsSmoking;
+      case 'drinking':
+        return ApiRoutes.onboardingLookupsDrinking;
+    }
+
+    return lookup.startsWith('/') ? lookup : '/onboarding/lookups/$lookup';
+  }
+
+  static Future<Map<String, dynamic>> searchOnboardingLookup({
+    required String lookup,
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+    Map<String, dynamic>? filters,
+  }) {
+    return _getJson(
+      _onboardingLookupRoute(lookup),
+      authenticated: true,
+      query: <String, dynamic>{
+        'q': query,
+        'page': page,
+        'limit': limit,
+        'locale': locale,
+        ...?filters,
+      },
+    );
+  }
+
+  static Future<Map<String, dynamic>> searchReligions({
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+  }) {
+    return searchOnboardingLookup(
+      lookup: 'religions',
+      query: query,
+      page: page,
+      limit: limit,
+      locale: locale,
+    );
+  }
+
+  static Future<Map<String, dynamic>> searchCastes({
+    required int religionId,
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+  }) {
+    return searchOnboardingLookup(
+      lookup: 'castes',
+      query: query,
+      page: page,
+      limit: limit,
+      locale: locale,
+      filters: {'religion_id': religionId},
+    );
+  }
+
+  static Future<Map<String, dynamic>> searchSubCastesForOnboarding({
+    required int casteId,
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+  }) {
+    return searchOnboardingLookup(
+      lookup: 'sub-castes',
+      query: query,
+      page: page,
+      limit: limit,
+      locale: locale,
+      filters: {'caste_id': casteId},
+    );
+  }
+
+  static Future<Map<String, dynamic>> searchLocationsForOnboarding({
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+    int? preferredStateId,
+    String? type,
+  }) {
+    return searchOnboardingLookup(
+      lookup: 'locations',
+      query: query,
+      page: page,
+      limit: limit,
+      locale: locale,
+      filters: {'preferred_state_id': preferredStateId, 'type': type},
+    );
+  }
+
+  static Future<Map<String, dynamic>> submitLocationSuggestion(
+    Map<String, dynamic> body,
+  ) {
+    return _postJson(
+      ApiRoutes.onboardingLocationSuggestions,
+      body,
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> searchEducation({
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+    int? categoryId,
+  }) {
+    return searchOnboardingLookup(
+      lookup: 'education',
+      query: query,
+      page: page,
+      limit: limit,
+      locale: locale,
+      filters: {'category_id': categoryId},
+    );
+  }
+
+  static Future<Map<String, dynamic>> submitEducationSuggestion(
+    Map<String, dynamic> body,
+  ) {
+    return _postJson(
+      ApiRoutes.onboardingEducationSuggestions,
+      body,
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> getWorkingWithOptions({
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+  }) {
+    return searchOnboardingLookup(
+      lookup: 'working-with',
+      query: query,
+      page: page,
+      limit: limit,
+      locale: locale,
+    );
+  }
+
+  static Future<Map<String, dynamic>> searchOccupations({
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+    int? workingWithId,
+    int? categoryId,
+  }) {
+    return searchOnboardingLookup(
+      lookup: 'occupations',
+      query: query,
+      page: page,
+      limit: limit,
+      locale: locale,
+      filters: {'working_with_id': workingWithId, 'category_id': categoryId},
+    );
+  }
+
+  static Future<Map<String, dynamic>> submitOccupationSuggestion(
+    Map<String, dynamic> body,
+  ) {
+    return _postJson(
+      ApiRoutes.onboardingOccupationSuggestions,
+      body,
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> getIncomeOptions({String? locale}) {
+    return _getJson(
+      ApiRoutes.onboardingLookupsIncomeOptions,
+      authenticated: true,
+      query: {'locale': locale},
+    );
+  }
+
+  static Future<Map<String, dynamic>> getLifestyleLookup({
+    required String type,
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+  }) {
+    return searchOnboardingLookup(
+      lookup: type,
+      query: query,
+      page: page,
+      limit: limit,
+      locale: locale,
+    );
+  }
+
+  static Future<Map<String, dynamic>> previewAutoPreferenceDraft({
+    String? locale,
+  }) {
+    return _getJson(
+      ApiRoutes.onboardingPreferenceAutoDraftPreview,
+      authenticated: true,
+      query: {'locale': locale},
+    );
+  }
+
+  static Future<Map<String, dynamic>> generateAutoPreferenceDraft({
+    bool forceRegenerate = false,
+  }) {
+    return _postJson(ApiRoutes.onboardingPreferenceAutoDraft, {
+      'force_regenerate': forceRegenerate,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> getAutoPreferenceDraftStatus({
+    String? locale,
+  }) {
+    return _getJson(
+      ApiRoutes.onboardingPreferenceAutoDraftStatus,
+      authenticated: true,
+      query: {'locale': locale},
+    );
   }
 
   static Future<Map<String, dynamic>> getMyProfile() async {

@@ -1,0 +1,105 @@
+import 'package:flutter/material.dart';
+
+import '../models/onboarding_option.dart';
+import '../models/paged_lookup_response.dart';
+import 'smart_picker_panel.dart';
+
+class OnboardingPickerField extends StatelessWidget {
+  const OnboardingPickerField({
+    super.key,
+    required this.label,
+    required this.loadPage,
+    required this.onChanged,
+    this.selectedItems = const <OnboardingOption>[],
+    this.multiSelect = false,
+    this.placeholder,
+    this.searchHint,
+    this.itemSubtitleBuilder,
+    this.allowRequestToAdd = false,
+    this.onRequestToAdd,
+    this.enabled = true,
+  });
+
+  final String label;
+  final Future<PagedLookupResponse> Function(String query, int page, int limit)
+  loadPage;
+  final ValueChanged<List<OnboardingOption>> onChanged;
+  final List<OnboardingOption> selectedItems;
+  final bool multiSelect;
+  final String? placeholder;
+  final String? searchHint;
+  final SmartPickerSubtitleBuilder? itemSubtitleBuilder;
+  final bool allowRequestToAdd;
+  final VoidCallback? onRequestToAdd;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final hasSelection = selectedItems.isNotEmpty;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: enabled ? () => _openPanel(context) : null,
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: label,
+          suffixIcon: Icon(
+            Icons.chevron_right,
+            color: enabled ? colorScheme.primary : Colors.grey,
+          ),
+          enabled: enabled,
+        ),
+        child: hasSelection
+            ? Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: selectedItems.map((item) {
+                  if (!multiSelect) {
+                    return Text(
+                      item.label,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    );
+                  }
+
+                  return InputChip(
+                    label: Text(item.label),
+                    onDeleted: enabled
+                        ? () {
+                            onChanged(
+                              selectedItems
+                                  .where(
+                                    (selected) =>
+                                        selected.identity != item.identity,
+                                  )
+                                  .toList(),
+                            );
+                          }
+                        : null,
+                  );
+                }).toList(),
+              )
+            : Text(
+                placeholder ?? 'Select',
+                style: TextStyle(color: Colors.grey.shade700),
+              ),
+      ),
+    );
+  }
+
+  Future<void> _openPanel(BuildContext context) {
+    return SmartPickerPanel.show(
+      context,
+      title: label,
+      loadPage: loadPage,
+      onChanged: onChanged,
+      selectedItems: selectedItems,
+      multiSelect: multiSelect,
+      searchHint: searchHint,
+      itemSubtitleBuilder: itemSubtitleBuilder,
+      allowRequestToAdd: allowRequestToAdd,
+      onRequestToAdd: onRequestToAdd,
+    );
+  }
+}
