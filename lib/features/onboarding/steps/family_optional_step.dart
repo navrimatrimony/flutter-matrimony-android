@@ -32,6 +32,9 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   final TextEditingController _fatherInfoController = TextEditingController();
   final TextEditingController _motherNameController = TextEditingController();
   final TextEditingController _motherInfoController = TextEditingController();
+  final TextEditingController _brothersCountController =
+      TextEditingController();
+  final TextEditingController _sistersCountController = TextEditingController();
 
   OnboardingOption? _fatherOccupation;
   OnboardingOption? _motherOccupation;
@@ -55,6 +58,8 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     _fatherInfoController.dispose();
     _motherNameController.dispose();
     _motherInfoController.dispose();
+    _brothersCountController.dispose();
+    _sistersCountController.dispose();
     super.dispose();
   }
 
@@ -66,6 +71,10 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     _motherNameController.text = onboardingText(data['mother_name']) ?? '';
     _motherInfoController.text =
         onboardingText(data['mother_extra_info']) ?? '';
+    _brothersCountController.text =
+        onboardingInt(data['brothers_count'])?.toString() ?? '';
+    _sistersCountController.text =
+        onboardingInt(data['sisters_count'])?.toString() ?? '';
     _fatherOccupation =
         optionFromData(data['father_occupation_option']) ??
         _placeholder(data['father_occupation_master_id'], 'Occupation');
@@ -107,6 +116,8 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
         'mother_name': _motherNameController.text.trim(),
         'mother_occupation_master_id': _motherOccupation?.intId,
         'mother_extra_info': _motherInfoController.text.trim(),
+        'brothers_count': onboardingInt(_brothersCountController.text),
+        'sisters_count': onboardingInt(_sistersCountController.text),
       }),
       saveProfile: true,
     );
@@ -172,11 +183,35 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
             labelText: _t('Mother notes optional', 'आईची माहिती optional'),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: _brothersCountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: _t('Brothers count', 'भावांची संख्या'),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: TextField(
+                controller: _sistersCountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: _t('Sisters count', 'बहिणींची संख्या'),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
         Text(
           _t(
-            'Brothers/sisters count and native location are not accepted by the current onboarding backend contract.',
-            'सध्याच्या onboarding backend contract मध्ये brothers/sisters count आणि native location accepted नाहीत.',
+            'Sibling counts are saved to onboarding draft only. Detailed siblings remain in Edit Profile.',
+            'Sibling count onboarding draft मध्येच save होतो. Detailed siblings Edit Profile मध्ये आहेत.',
           ),
           style: Theme.of(context).textTheme.bodySmall,
         ),

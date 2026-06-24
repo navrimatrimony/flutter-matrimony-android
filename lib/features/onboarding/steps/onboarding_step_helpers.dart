@@ -5,6 +5,7 @@ typedef OnboardingStepSaver =
       String step,
       Map<String, dynamic> data, {
       bool saveProfile,
+      bool advance,
     });
 
 int? onboardingInt(dynamic value) {

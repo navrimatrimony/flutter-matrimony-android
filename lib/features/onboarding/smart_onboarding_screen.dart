@@ -541,6 +541,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     String step,
     Map<String, dynamic> data, {
     bool saveProfile = true,
+    bool advance = true,
   }) async {
     if (!_isAuthenticated) {
       setState(() {
@@ -623,9 +624,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       setState(() {
         _loading = false;
         _message = _t('Saved.', 'Save झाले.');
-        _step = step == 'photo'
-            ? _SmartOnboardingStep.activation
-            : _nextProfileStep(_step);
+        if (advance) {
+          _step = step == 'photo'
+              ? _SmartOnboardingStep.activation
+              : _nextProfileStep(_step);
+        }
       });
       await _saveLocalDraft();
       return true;

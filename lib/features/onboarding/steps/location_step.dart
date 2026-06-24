@@ -32,8 +32,14 @@ class LocationStep extends StatefulWidget {
 class _LocationStepState extends State<LocationStep> {
   final TextEditingController _addressLineController = TextEditingController();
   OnboardingOption? _location;
+  int? _pendingLocationRequestId;
+  String? _pendingLocationLabel;
+  String? _pendingLocationStatus;
+  String? _pendingLocationType;
 
   bool get _mr => widget.locale == 'mr';
+  bool get _hasPendingLocation =>
+      _pendingLocationRequestId != null || _pendingLocationStatus == 'pending';
 
   @override
   void initState() {
@@ -54,11 +60,17 @@ class _LocationStepState extends State<LocationStep> {
   }
 
   void _prefill() {
-    _addressLineController.text =
-        onboardingText(widget.data['address_line']) ?? '';
+    final data = widget.data;
+    _addressLineController.text = onboardingText(data['address_line']) ?? '';
     _location =
-        optionFromData(widget.data['location_option']) ??
-        _placeholder(widget.data['location_id']);
+        optionFromData(data['location_option']) ??
+        _placeholder(data['location_id']);
+    _pendingLocationRequestId = onboardingInt(
+      data['pending_location_request_id'],
+    );
+    _pendingLocationLabel = onboardingText(data['pending_location_label']);
+    _pendingLocationStatus = onboardingText(data['pending_location_status']);
+    _pendingLocationType = onboardingText(data['pending_location_type']);
   }
 
   String _t(String en, String mr) => _mr ? mr : en;
@@ -107,6 +119,12 @@ class _LocationStepState extends State<LocationStep> {
     final payload = compactPayload({
       'location_id': location.intId,
       'address_line': _addressLineController.text.trim(),
+    });
+    payload.addAll(const {
+      'pending_location_request_id': null,
+      'pending_location_label': null,
+      'pending_location_status': null,
+      'pending_location_type': null,
     });
 
     await widget.onSave('location', payload, saveProfile: true);
@@ -203,20 +221,52 @@ class _LocationStepState extends State<LocationStep> {
                   );
                   if (!context.mounted) return;
                   Navigator.pop(context);
-                  widget.onMessage(
-                    response['success'] == true
-                        ? _t(
-                            'Location request submitted. It will not make the profile searchable until approved.',
-                            'Location request submit झाली. Approved होईपर्यंत profile searchable होणार नाही.',
-                          )
-                        : readableApiError(
-                            response,
-                            _t(
-                              'Could not submit request.',
-                              'Request submit झाली नाही.',
-                            ),
-                          ),
+                  if (response['success'] != true) {
+                    widget.onMessage(
+                      readableApiError(
+                        response,
+                        _t(
+                          'Could not submit request.',
+                          'Request submit झाली नाही.',
+                        ),
+                      ),
+                    );
+                    return;
+                  }
+
+                  final request = response['request'];
+                  final requestMap = request is Map
+                      ? Map<String, dynamic>.from(request)
+                      : <String, dynamic>{};
+                  final submittedLabel =
+                      onboardingText(requestMap['label']) ?? name.text.trim();
+                  final draftPayload = <String, dynamic>{
+                    'location_id': null,
+                    'pending_location_request_id': onboardingInt(
+                      requestMap['id'],
+                    ),
+                    'pending_location_label': submittedLabel,
+                    'pending_location_status':
+                        onboardingText(requestMap['status']) ?? 'pending',
+                    'pending_location_type':
+                        onboardingText(requestMap['type']) ?? type.value,
+                  };
+                  final saved = await widget.onSave(
+                    'location',
+                    draftPayload,
+                    saveProfile: false,
+                    advance: false,
                   );
+                  if (!mounted || !saved) return;
+                  setState(() {
+                    _location = null;
+                    _pendingLocationRequestId = onboardingInt(requestMap['id']);
+                    _pendingLocationLabel = submittedLabel;
+                    _pendingLocationStatus =
+                        onboardingText(requestMap['status']) ?? 'pending';
+                    _pendingLocationType =
+                        onboardingText(requestMap['type']) ?? type.value;
+                  });
                 },
                 child: Text(_t('Submit', 'Submit')),
               ),
@@ -266,6 +316,10 @@ class _LocationStepState extends State<LocationStep> {
         ),
       ),
       children: [
+        if (_hasPendingLocation) ...[
+          _pendingLocationCard(context),
+          const SizedBox(height: 12),
+        ],
         OnboardingPickerField(
           label: _t('Current location', 'सध्याचे ठिकाण'),
           selectedItems: _location == null ? const [] : [_location!],
@@ -298,6 +352,51 @@ class _LocationStepState extends State<LocationStep> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _pendingLocationCard(BuildContext context) {
+    final label =
+        _pendingLocationLabel ?? _t('Requested location', 'Requested location');
+    final type = _pendingLocationType;
+    final requestId = _pendingLocationRequestId;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange.shade300),
+        color: Colors.orange.shade50,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.pending_actions, color: Colors.orange),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  [
+                    if (type != null) type,
+                    if (requestId != null) '#$requestId',
+                    _t(
+                      'Approval pending; profile will not be searchable until approved.',
+                      'Approval pending आहे; approved होईपर्यंत profile searchable होणार नाही.',
+                    ),
+                  ].join(' • '),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

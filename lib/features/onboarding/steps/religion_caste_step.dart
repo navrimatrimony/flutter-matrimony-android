@@ -65,15 +65,19 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
         optionFromData(data['sub_caste_option']) ??
         _placeholderOption(data['sub_caste_id'], 'Sub-caste');
     _religionStrictness = _strictnessFromValue(
-      data['same_religion_expected'],
+      data['religion_strictness'] ??
+          data['same_religion_required'] ??
+          data['same_religion_expected'],
       CommunityStrictness.preferred,
     );
     _casteStrictness = _strictnessFromValue(
-      data['same_caste_expected'],
+      data['caste_strictness'] ??
+          data['same_caste_required'] ??
+          data['same_caste_expected'],
       CommunityStrictness.preferred,
     );
     _subCasteStrictness = _strictnessFromValue(
-      data['same_sub_caste_required'],
+      data['sub_caste_strictness'] ?? data['same_sub_caste_required'],
       CommunityStrictness.open,
     );
   }
@@ -91,19 +95,29 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     CommunityStrictness fallback,
   ) {
     if (value == null) return fallback;
+    final text = onboardingText(value)?.toLowerCase().replaceAll('-', '_');
+    switch (text) {
+      case 'required':
+      case 'must_match':
+        return CommunityStrictness.required;
+      case 'preferred':
+        return CommunityStrictness.preferred;
+      case 'open':
+        return CommunityStrictness.open;
+    }
     return onboardingBool(value) == true
         ? CommunityStrictness.required
         : CommunityStrictness.open;
   }
 
-  bool? _strictnessToBackend(CommunityStrictness value) {
+  String _strictnessToBackend(CommunityStrictness value) {
     switch (value) {
       case CommunityStrictness.required:
-        return true;
+        return 'required';
       case CommunityStrictness.open:
-        return false;
+        return 'open';
       case CommunityStrictness.preferred:
-        return null;
+        return 'preferred';
     }
   }
 
@@ -163,9 +177,9 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
       'religion_id': _religion?.intId,
       'caste_id': _caste?.intId,
       'sub_caste_id': _subCaste?.intId,
-      'same_religion_expected': _strictnessToBackend(_religionStrictness),
-      'same_caste_expected': _strictnessToBackend(_casteStrictness),
-      'same_sub_caste_required': _strictnessToBackend(_subCasteStrictness),
+      'religion_strictness': _strictnessToBackend(_religionStrictness),
+      'caste_strictness': _strictnessToBackend(_casteStrictness),
+      'sub_caste_strictness': _strictnessToBackend(_subCasteStrictness),
     };
 
     await widget.onSave('religion_caste', payload, saveProfile: true);
