@@ -193,6 +193,57 @@ class _ChildEditRow {
   }
 }
 
+class _AddressEditRow {
+  _AddressEditRow({
+    this.id,
+    this.addressTypeKey,
+    String? addressLine,
+    String? locationLabel,
+    this.locationId,
+  }) : addressLineController = TextEditingController(text: addressLine ?? ''),
+       locationController = TextEditingController(text: locationLabel ?? ''),
+       selectedLocationLabel = locationLabel;
+
+  int? id;
+  String? addressTypeKey;
+  int? locationId;
+  String? selectedLocationLabel;
+  bool locationSearching = false;
+  List<Map<String, dynamic>> locationSuggestions = <Map<String, dynamic>>[];
+  final TextEditingController addressLineController;
+  final TextEditingController locationController;
+
+  bool get hasData {
+    return id != null ||
+        addressLineController.text.trim().isNotEmpty ||
+        locationController.text.trim().isNotEmpty ||
+        locationId != null;
+  }
+
+  Map<String, dynamic> toPayload(String defaultTypeKey) {
+    return <String, dynamic>{
+      if (id != null) 'id': id,
+      'address_type_key': _stringOrNull(addressTypeKey) ?? defaultTypeKey,
+      'address_line': _textOrNull(addressLineController),
+      'location_id': locationId,
+    };
+  }
+
+  void dispose() {
+    addressLineController.dispose();
+    locationController.dispose();
+  }
+
+  static String? _textOrNull(TextEditingController controller) {
+    return _stringOrNull(controller.text);
+  }
+
+  static String? _stringOrNull(String? value) {
+    final text = value?.trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+}
+
 class _SiblingEditRow {
   _SiblingEditRow({
     this.id,
@@ -371,6 +422,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     milliseconds: 400,
   );
   static const String _defaultPreferredStateName = 'Maharashtra';
+  static const List<Map<String, String>> _addressTypeOptions = [
+    {'key': 'current', 'label': 'Current'},
+    {'key': 'permanent', 'label': 'Permanent'},
+    {'key': 'native', 'label': 'Native'},
+    {'key': 'work', 'label': 'Work'},
+    {'key': 'other', 'label': 'Other'},
+  ];
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
@@ -422,7 +480,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _religionsLoading = false;
   bool _castesLoading = false;
   bool _subCasteSearching = false;
-  bool _locationSearching = false;
   bool _birthPlaceSearching = false;
   bool _workLocationSearching = false;
   bool _optionsLoading = false;
@@ -536,13 +593,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _familyIncomePrivate = false;
 
   int _subCasteSearchRequest = 0;
-  int _locationSearchRequest = 0;
   int _birthPlaceSearchRequest = 0;
   int _workLocationSearchRequest = 0;
+  int _addressLocationSearchRequest = 0;
   int _allianceLocationSearchRequest = 0;
-  Timer? _locationSearchDebounce;
   Timer? _birthPlaceSearchDebounce;
   Timer? _workLocationSearchDebounce;
+  Timer? _addressLocationSearchDebounce;
   Timer? _allianceLocationSearchDebounce;
 
   List<Map<String, dynamic>> _genders = <Map<String, dynamic>>[];
@@ -551,7 +608,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _castes = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _casteSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _subCasteSuggestions = <Map<String, dynamic>>[];
-  List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _birthPlaceSuggestions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _workLocationSuggestions =
       <Map<String, dynamic>>[];
@@ -622,6 +678,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final Set<int> _selectedPreferredTalukaIds = <int>{};
   final List<_MarriageEditRow> _marriageRows = <_MarriageEditRow>[];
   final List<_ChildEditRow> _childRows = <_ChildEditRow>[];
+  final List<_AddressEditRow> _selfAddressRows = <_AddressEditRow>[];
+  final List<_AddressEditRow> _parentsAddressRows = <_AddressEditRow>[];
   final List<_SiblingEditRow> _siblingRows = <_SiblingEditRow>[];
   final List<_RelativeEditRow> _relativeRows = <_RelativeEditRow>[];
   final List<_AllianceNetworkEditRow> _allianceNetworkRows =
@@ -643,9 +701,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   @override
   void dispose() {
-    _locationSearchDebounce?.cancel();
     _birthPlaceSearchDebounce?.cancel();
     _workLocationSearchDebounce?.cancel();
+    _addressLocationSearchDebounce?.cancel();
     _allianceLocationSearchDebounce?.cancel();
     _savedHighlightTimer?.cancel();
     _scrollController.dispose();
@@ -683,6 +741,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _expectationsController.dispose();
     _disposeMarriageRows();
     _disposeChildRows();
+    _disposeAddressRows(_selfAddressRows);
+    _disposeAddressRows(_parentsAddressRows);
     _disposeSiblingRows();
     _disposeRelativeRows();
     _disposeAllianceNetworkRows();
@@ -776,6 +836,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _childRows.clear();
   }
 
+  void _disposeAddressRows(List<_AddressEditRow> rows) {
+    for (final row in rows) {
+      row.dispose();
+    }
+    rows.clear();
+  }
+
   void _clearChildrenSelection() {
     _selectedHasChildren = false;
     _disposeChildRows();
@@ -837,6 +904,86 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (_selectedHasChildren == null && _childRows.isNotEmpty) {
       _selectedHasChildren = true;
     }
+  }
+
+  String? _addressLocationLabel(Map<String, dynamic> row) {
+    return ApiClient.safeDisplayLabel(row['location_label']) ??
+        ApiClient.safeDisplayLabel(row['display']) ??
+        _joinSummaryParts([
+          ApiClient.safeDisplayLabel(row['city_label']),
+          ApiClient.safeDisplayLabel(row['taluka_label']),
+          ApiClient.safeDisplayLabel(row['district_label']),
+          ApiClient.safeDisplayLabel(row['state_label']),
+        ], separator: ', ');
+  }
+
+  _AddressEditRow _addressRowFromMap(
+    Map<String, dynamic> row,
+    String defaultTypeKey,
+  ) {
+    return _AddressEditRow(
+      id: _readInt(row['id']),
+      addressTypeKey:
+          _readText(row['address_type_key']) ??
+          _readText(row['address_type']) ??
+          defaultTypeKey,
+      addressLine: ApiClient.safeDisplayLabel(row['address_line']),
+      locationId: _readInt(row['location_id']) ?? _readInt(row['city_id']),
+      locationLabel: _addressLocationLabel(row),
+    );
+  }
+
+  void _prefillAddressRows(Map<String, dynamic> profile) {
+    _disposeAddressRows(_selfAddressRows);
+    _disposeAddressRows(_parentsAddressRows);
+
+    final selfRows = _readRows(profile['self_addresses']);
+    if (selfRows.isEmpty) {
+      _selfAddressRows.add(
+        _AddressEditRow(
+          addressTypeKey: 'current',
+          addressLine: ApiClient.safeDisplayLabel(profile['address_line']),
+          locationId: _readInt(profile['location_id']),
+          locationLabel:
+              ApiClient.safeDisplayLabel(profile['location_label']) ??
+              ApiClient.profileLocationLabel(profile, allowIdFallback: false),
+        ),
+      );
+    } else {
+      for (final row in selfRows) {
+        _selfAddressRows.add(_addressRowFromMap(row, 'current'));
+      }
+    }
+
+    final parentsRows = _readRows(profile['parents_addresses']);
+    if (parentsRows.isEmpty) {
+      _parentsAddressRows.add(_AddressEditRow(addressTypeKey: 'permanent'));
+    } else {
+      for (final row in parentsRows) {
+        _parentsAddressRows.add(_addressRowFromMap(row, 'permanent'));
+      }
+    }
+
+    _syncCurrentAddressFromSelfRows();
+  }
+
+  _AddressEditRow? _currentSelfAddressRow() {
+    for (final row in _selfAddressRows) {
+      if ((row.addressTypeKey ?? '').trim() == 'current') {
+        return row;
+      }
+    }
+    return _selfAddressRows.isNotEmpty ? _selfAddressRows.first : null;
+  }
+
+  void _syncCurrentAddressFromSelfRows() {
+    final current = _currentSelfAddressRow();
+    if (current == null) return;
+
+    _selectedLocationId = current.locationId;
+    _selectedLocationLabel = current.selectedLocationLabel;
+    _locationController.text = current.selectedLocationLabel ?? '';
+    _addressLineController.text = current.addressLineController.text;
   }
 
   void _prefillSiblings(dynamic value) {
@@ -1440,6 +1587,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _addressLineController.text =
         ApiClient.safeDisplayLabel(profile['address_line']) ?? '';
     _preferredStateId = _profileLocationStateId(profile);
+    _prefillAddressRows(profile);
 
     _birthTimeController.text = _readText(profile['birth_time']) ?? '';
     _selectedBirthCityId = _readInt(profile['birth_city_id']);
@@ -2161,67 +2309,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     FocusScope.of(context).unfocus();
   }
 
-  void _scheduleLocationSearch(String query) {
-    _locationSearchDebounce?.cancel();
-    final requestId = ++_locationSearchRequest;
-    final trimmedQuery = query.trim();
-
-    setState(() {
-      if (_selectedLocationLabel == null ||
-          trimmedQuery != _selectedLocationLabel) {
-        _selectedLocationId = null;
-        _selectedLocationLabel = null;
-      }
-      if (trimmedQuery.length < 2) {
-        _locationSearching = false;
-        _locationSuggestions = <Map<String, dynamic>>[];
-      } else {
-        _locationSearching = true;
-      }
-    });
-
-    if (trimmedQuery.length < 2) {
-      return;
-    }
-
-    _locationSearchDebounce = Timer(_locationSearchDebounceDuration, () {
-      _runLocationSearch(trimmedQuery, requestId);
-    });
-  }
-
-  Future<void> _runLocationSearch(String trimmedQuery, int requestId) async {
-    try {
-      final results = await _searchLocationOptions(trimmedQuery);
-      if (!mounted || requestId != _locationSearchRequest) return;
-      setState(() {
-        _locationSuggestions = results;
-        _locationSearching = false;
-      });
-    } catch (_) {
-      if (!mounted || requestId != _locationSearchRequest) return;
-      setState(() {
-        _locationSearching = false;
-        _locationSuggestions = <Map<String, dynamic>>[];
-      });
-    }
-  }
-
-  void _selectLocation(Map<String, dynamic> location) {
-    final locationId = ApiClient.locationIdFrom(location);
-    if (locationId == null) return;
-
-    final label = _locationLabel(location);
-    setState(() {
-      _selectedLocationId = locationId;
-      _selectedLocationLabel = label;
-      _locationController.text = label;
-      _locationSuggestions = <Map<String, dynamic>>[];
-      _locationSearching = false;
-      _preferredStateId = _locationStateId(location) ?? _preferredStateId;
-    });
-    FocusScope.of(context).unfocus();
-  }
-
   void _onEducationChanged(String query) {
     setState(() {
       if (_selectedEducationDegreeLabel == null ||
@@ -2475,6 +2562,97 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       _workLocationController.text = label;
       _workLocationSuggestions = <Map<String, dynamic>>[];
       _workLocationSearching = false;
+    });
+    FocusScope.of(context).unfocus();
+  }
+
+  bool _addressRowsContain(_AddressEditRow row) {
+    return _selfAddressRows.contains(row) || _parentsAddressRows.contains(row);
+  }
+
+  void _scheduleAddressLocationSearch(_AddressEditRow row, String query) {
+    if (!_addressRowsContain(row)) return;
+
+    _addressLocationSearchDebounce?.cancel();
+    final requestId = ++_addressLocationSearchRequest;
+    final trimmedQuery = query.trim();
+
+    setState(() {
+      if (row.selectedLocationLabel == null ||
+          trimmedQuery != row.selectedLocationLabel) {
+        row.locationId = null;
+        row.selectedLocationLabel = null;
+        if (_currentSelfAddressRow() == row) {
+          _syncCurrentAddressFromSelfRows();
+        }
+      }
+      if (trimmedQuery.length < 2) {
+        row.locationSearching = false;
+        row.locationSuggestions = <Map<String, dynamic>>[];
+      } else {
+        row.locationSearching = true;
+      }
+    });
+
+    if (trimmedQuery.length < 2) {
+      return;
+    }
+
+    _addressLocationSearchDebounce = Timer(
+      _locationSearchDebounceDuration,
+      () => _runAddressLocationSearch(row, trimmedQuery, requestId),
+    );
+  }
+
+  Future<void> _runAddressLocationSearch(
+    _AddressEditRow row,
+    String trimmedQuery,
+    int requestId,
+  ) async {
+    try {
+      final results = await _searchLocationOptions(trimmedQuery);
+      if (!mounted ||
+          requestId != _addressLocationSearchRequest ||
+          !_addressRowsContain(row)) {
+        return;
+      }
+      setState(() {
+        row.locationSuggestions = results;
+        row.locationSearching = false;
+      });
+    } catch (_) {
+      if (!mounted ||
+          requestId != _addressLocationSearchRequest ||
+          !_addressRowsContain(row)) {
+        return;
+      }
+      setState(() {
+        row.locationSearching = false;
+        row.locationSuggestions = <Map<String, dynamic>>[];
+      });
+    }
+  }
+
+  void _selectAddressLocation(
+    _AddressEditRow row,
+    Map<String, dynamic> location,
+  ) {
+    if (!_addressRowsContain(row)) return;
+
+    final locationId = ApiClient.locationIdFrom(location);
+    if (locationId == null) return;
+
+    final label = _locationLabel(location);
+    setState(() {
+      row.locationId = locationId;
+      row.selectedLocationLabel = label;
+      row.locationController.text = label;
+      row.locationSuggestions = <Map<String, dynamic>>[];
+      row.locationSearching = false;
+      if (_currentSelfAddressRow() == row) {
+        _preferredStateId = _locationStateId(location) ?? _preferredStateId;
+        _syncCurrentAddressFromSelfRows();
+      }
     });
     FocusScope.of(context).unfocus();
   }
@@ -3043,7 +3221,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       _showMessage('कृपया education भरा.');
       return false;
     }
-    if (_selectedLocationId == null) {
+    final currentAddressLocationId =
+        _currentSelfAddressRow()?.locationId ?? _selectedLocationId;
+    if (currentAddressLocationId == null) {
       _showMessage('कृपया suggestions मधून location निवडा.');
       return false;
     }
@@ -3214,6 +3394,19 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return rows;
   }
 
+  List<Map<String, dynamic>> _addressRowsPayload(
+    List<_AddressEditRow> source,
+    String defaultTypeKey,
+  ) {
+    final rows = <Map<String, dynamic>>[];
+    for (final row in source) {
+      if (!row.hasData) continue;
+      rows.add(row.toPayload(defaultTypeKey));
+    }
+
+    return rows;
+  }
+
   List<Map<String, dynamic>> _marriagesPayload() {
     final statusKey = _currentMaritalStatusKey();
     if (!_maritalStatusShowsDetails(statusKey)) {
@@ -3303,6 +3496,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Map<String, dynamic> _buildProfilePayload({
+    bool includeSelfAddresses = false,
+    bool includeParentsAddresses = false,
     bool includeSiblings = false,
     bool includeRelatives = false,
     bool includeAllianceNetworks = false,
@@ -3317,6 +3512,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _findEducationDegreeIdByText(educationText);
     final statusKey = _currentMaritalStatusKey();
     final maritalChildrenEligible = _maritalStatusShowsDetails(statusKey);
+    final currentAddress = _currentSelfAddressRow();
+    final currentLocationId = currentAddress?.locationId ?? _selectedLocationId;
+    final currentAddressLine = currentAddress == null
+        ? _nullableText(_addressLineController)
+        : _nullableText(currentAddress.addressLineController);
 
     final payload = <String, dynamic>{
       'full_name': _fullNameController.text.trim(),
@@ -3326,8 +3526,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'caste_id': _selectedCasteId,
       'caste': casteLabel,
       'highest_education': educationText,
-      'location_id': _selectedLocationId,
-      'address_line': _nullableText(_addressLineController),
+      'location_id': currentLocationId,
+      'address_line': currentAddressLine,
       'sub_caste_id': _selectedSubCasteId,
       'birth_time': _nullableText(_birthTimeController),
       'birth_city_id': _selectedBirthCityId,
@@ -3455,6 +3655,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'narrative_expectations': _nullableText(_expectationsController),
     };
 
+    if (includeSelfAddresses) {
+      payload['self_addresses'] = _addressRowsPayload(
+        _selfAddressRows,
+        'current',
+      );
+    }
+
+    if (includeParentsAddresses) {
+      payload['parents_addresses'] = _addressRowsPayload(
+        _parentsAddressRows,
+        'permanent',
+      );
+    }
+
     if (includeSiblings) {
       payload['siblings'] = _siblingsPayload();
     }
@@ -3495,6 +3709,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     });
 
     final payload = _buildProfilePayload(
+      includeSelfAddresses: section == _EditProfileSection.basic,
+      includeParentsAddresses: section == _EditProfileSection.familyDetails,
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
       includeAllianceNetworks: section == _EditProfileSection.allianceNetwork,
@@ -3673,6 +3889,30 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return _summaryText(controller.text);
   }
 
+  String _addressTypeLabel(String? key) {
+    for (final row in _addressTypeOptions) {
+      if (row['key'] == key) return row['label'] ?? key ?? 'Address';
+    }
+    final text = key?.trim();
+    if (text == null || text.isEmpty) return 'Address';
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
+  String? _addressRowsSummary(List<_AddressEditRow> rows) {
+    final filledRows = rows.where((row) => row.hasData).toList();
+    if (filledRows.isEmpty) return null;
+
+    final first = filledRows.first;
+    final firstLabel = _joinSummaryParts([
+      _addressTypeLabel(first.addressTypeKey),
+      first.selectedLocationLabel,
+      first.addressLineController.text,
+    ], separator: ', ');
+    if (filledRows.length == 1) return firstLabel;
+
+    return _joinSummaryParts(['${filledRows.length} address rows', firstLabel]);
+  }
+
   String? _ageSummary() {
     final dob = DateTime.tryParse(_dobController.text.trim());
     if (dob == null) return null;
@@ -3782,8 +4022,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _selectedCasteLabel ?? _controllerSummary(_casteController),
             _selectedSubCasteLabel ?? _controllerSummary(_subCasteController),
           ]),
-          _selectedLocationLabel ?? _controllerSummary(_locationController),
-          _controllerSummary(_addressLineController),
+          _addressRowsSummary(_selfAddressRows) ??
+              _selectedLocationLabel ??
+              _controllerSummary(_locationController),
         ]);
       case _EditProfileSection.birth:
         return _summaryFromParts([
@@ -3867,6 +4108,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _controllerSummary(_motherNameController),
             _selectedMotherOccupationLabel,
           ], separator: ': '),
+          _addressRowsSummary(_parentsAddressRows),
         ]);
       case _EditProfileSection.familyOverview:
         return _summaryFromParts([
@@ -4019,6 +4261,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'caste',
           'location_id',
           'address_line',
+          'self_addresses',
           'sub_caste_id',
         ];
       case _EditProfileSection.birth:
@@ -4077,6 +4320,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'mother_occupation_master_id',
           'mother_occupation_custom_id',
           'mother_extra_info',
+          'parents_addresses',
         ];
       case _EditProfileSection.familyOverview:
         return const [
@@ -4152,6 +4396,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Map<String, dynamic> _sectionSnapshot(_EditProfileSection section) {
     final payload = _buildProfilePayload(
+      includeSelfAddresses: section == _EditProfileSection.basic,
+      includeParentsAddresses: section == _EditProfileSection.familyDetails,
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
       includeAllianceNetworks: section == _EditProfileSection.allianceNetwork,
@@ -5508,6 +5754,171 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     });
   }
 
+  void _addAddressRow(List<_AddressEditRow> rows, String defaultTypeKey) {
+    setState(() {
+      rows.add(_AddressEditRow(addressTypeKey: defaultTypeKey));
+    });
+  }
+
+  void _removeAddressRow(List<_AddressEditRow> rows, _AddressEditRow row) {
+    setState(() {
+      rows.remove(row);
+      row.dispose();
+      _syncCurrentAddressFromSelfRows();
+    });
+  }
+
+  Widget _buildAddressRepeater({
+    required String title,
+    required List<_AddressEditRow> rows,
+    required String defaultTypeKey,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: _saving
+                  ? null
+                  : () => _addAddressRow(rows, defaultTypeKey),
+              icon: const Icon(Icons.add_location_alt_outlined),
+              label: const Text('Add'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        if (rows.isEmpty)
+          OutlinedButton.icon(
+            onPressed: _saving
+                ? null
+                : () => _addAddressRow(rows, defaultTypeKey),
+            icon: const Icon(Icons.add_location_alt_outlined),
+            label: const Text('Add address'),
+          )
+        else
+          ...rows.map((row) {
+            final index = rows.indexOf(row);
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: index == rows.length - 1 ? 0 : 14,
+              ),
+              child: _buildAddressRowEditor(
+                row: row,
+                rows: rows,
+                defaultTypeKey: defaultTypeKey,
+                rowLabel: 'Address ${index + 1}',
+              ),
+            );
+          }),
+      ],
+    );
+  }
+
+  Widget _buildAddressRowEditor({
+    required _AddressEditRow row,
+    required List<_AddressEditRow> rows,
+    required String defaultTypeKey,
+    required String rowLabel,
+  }) {
+    final selectedType =
+        _addressTypeOptions.any((option) => option['key'] == row.addressTypeKey)
+        ? row.addressTypeKey
+        : defaultTypeKey;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Theme.of(context).dividerColor),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  rowLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Remove address',
+                onPressed: _saving ? null : () => _removeAddressRow(rows, row),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          DropdownButtonFormField<String>(
+            initialValue: selectedType,
+            isExpanded: true,
+            items: _addressTypeOptions
+                .map(
+                  (option) => DropdownMenuItem<String>(
+                    value: option['key'],
+                    child: Text(option['label'] ?? option['key'] ?? 'Address'),
+                  ),
+                )
+                .toList(),
+            onChanged: _saving
+                ? null
+                : (value) {
+                    setState(() {
+                      row.addressTypeKey = value ?? defaultTypeKey;
+                      _syncCurrentAddressFromSelfRows();
+                    });
+                  },
+            decoration: const InputDecoration(
+              labelText: 'Address type',
+              prefixIcon: Icon(Icons.bookmark_border),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.addressLineController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Address line (Optional)',
+              prefixIcon: Icon(Icons.home_outlined),
+            ),
+            onChanged: (_) {
+              if (_currentSelfAddressRow() == row) {
+                _syncCurrentAddressFromSelfRows();
+              }
+            },
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.locationController,
+            decoration: const InputDecoration(
+              labelText: 'Location',
+              hintText: 'Search city or village',
+              prefixIcon: Icon(Icons.location_on_outlined),
+            ),
+            onChanged: (value) => _scheduleAddressLocationSearch(row, value),
+          ),
+          _buildSuggestions(
+            suggestions: row.locationSuggestions,
+            fallbackPrefix: 'Location',
+            loading: row.locationSearching,
+            onSelect: (location) => _selectAddressLocation(row, location),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildBasicSection() {
     final selectedGenderValue =
         _genders.any((row) => _readInt(row['id']) == _selectedGenderId)
@@ -5615,29 +6026,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           loading: _subCasteSearching,
           onSelect: _selectSubCaste,
         ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _locationController,
-          decoration: const InputDecoration(
-            labelText: 'Current location',
-            prefixIcon: Icon(Icons.location_on_outlined),
-          ),
-          onChanged: _scheduleLocationSearch,
-        ),
-        _buildSuggestions(
-          suggestions: _locationSuggestions,
-          fallbackPrefix: 'Location',
-          loading: _locationSearching,
-          onSelect: _selectLocation,
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _addressLineController,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Address line (Optional)',
-            prefixIcon: Icon(Icons.home_outlined),
-          ),
+        const SizedBox(height: 18),
+        _buildAddressRepeater(
+          title: 'Self addresses',
+          rows: _selfAddressRows,
+          defaultTypeKey: 'current',
         ),
       ],
     );
@@ -6291,6 +6684,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             labelText: 'Mother extra info (Optional)',
             prefixIcon: Icon(Icons.notes),
           ),
+        ),
+        const SizedBox(height: 18),
+        _buildAddressRepeater(
+          title: 'Parents addresses',
+          rows: _parentsAddressRows,
+          defaultTypeKey: 'permanent',
         ),
       ],
     );

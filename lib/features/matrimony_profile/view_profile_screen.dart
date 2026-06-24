@@ -161,7 +161,15 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       ApiClient.profileCommunityLabel(profile),
     );
     _addDisplayItem(basicItems, AppStrings.location, location);
-    _addDisplayItem(basicItems, 'Address Line', profile['address_line']);
+    final selfAddressLabel = _fallbackAddressRowsLabel(
+      profile,
+      'self_addresses',
+    );
+    if (selfAddressLabel != null) {
+      _addDisplayItem(basicItems, 'Self Addresses', selfAddressLabel);
+    } else {
+      _addDisplayItem(basicItems, 'Address Line', profile['address_line']);
+    }
     _addDisplayItem(
       basicItems,
       'Mother Tongue',
@@ -242,6 +250,11 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
         );
       }
     }
+    _addDisplayItem(
+      familyItems,
+      'Parents Addresses',
+      _fallbackAddressRowsLabel(profile, 'parents_addresses'),
+    );
     _addDisplayItem(familyItems, 'Siblings', _fallbackSiblingsLabel(profile));
     _addDisplayItem(familyItems, 'Relatives', _fallbackRelativesLabel(profile));
     _addDisplayItem(
@@ -293,6 +306,33 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       'separated',
       'widowed',
     }.contains(maritalStatusKey);
+  }
+
+  String? _fallbackAddressRowsLabel(Map<String, dynamic> profile, String key) {
+    final raw = profile[key];
+    if (raw is! List) return null;
+
+    final rows = raw
+        .whereType<Map>()
+        .map((row) {
+          final map = Map<String, dynamic>.from(row);
+          final type =
+              ApiClient.safeDisplayLabel(map['address_type_label']) ??
+              ApiClient.safeDisplayLabel(map['address_type_key']);
+          final location =
+              ApiClient.safeDisplayLabel(map['location_label']) ??
+              ApiClient.safeDisplayLabel(map['display']);
+          final line = ApiClient.safeDisplayLabel(map['address_line']);
+          return [type, location, line]
+              .whereType<String>()
+              .where((value) => value.trim().isNotEmpty)
+              .join(': ');
+        })
+        .where((value) => value.trim().isNotEmpty)
+        .toList();
+
+    if (rows.isEmpty) return null;
+    return rows.take(3).join('; ');
   }
 
   String? _fallbackIncomeLabel(
