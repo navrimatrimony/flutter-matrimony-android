@@ -105,10 +105,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       _profile,
       allowIdFallback: false,
     );
-    final displaySections = _displaySections();
-    final visibleSections = displaySections.isNotEmpty
-        ? displaySections
-        : _fallbackDisplaySections(_profile!, location);
+    final visibleSections = _ownProfileDisplaySections(_profile!, location);
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -136,14 +133,30 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
         .toList();
   }
 
+  List<ProfileDisplaySectionData> _ownProfileDisplaySections(
+    Map<String, dynamic> profile,
+    String? location,
+  ) {
+    final rawSections = _fallbackDisplaySections(profile, location);
+    return rawSections.isNotEmpty ? rawSections : _displaySections();
+  }
+
   List<ProfileDisplaySectionData> _fallbackDisplaySections(
     Map<String, dynamic> profile,
     String? location,
   ) {
     final basicItems = <ProfileDisplayItemData>[];
-    final birthItems = <ProfileDisplayItemData>[];
+    final physicalItems = <ProfileDisplayItemData>[];
     final careerItems = <ProfileDisplayItemData>[];
     final familyItems = <ProfileDisplayItemData>[];
+    final siblingItems = <ProfileDisplayItemData>[];
+    final relativeItems = <ProfileDisplayItemData>[];
+    final allianceItems = <ProfileDisplayItemData>[];
+    final propertyItems = <ProfileDisplayItemData>[];
+    final horoscopeItems = <ProfileDisplayItemData>[];
+    final aboutItems = <ProfileDisplayItemData>[];
+    final preferenceItems = <ProfileDisplayItemData>[];
+    final photoItems = <ProfileDisplayItemData>[];
     final maritalStatusKey = ApiClient.safeDisplayLabel(
       profile['marital_status_key'],
     );
@@ -154,6 +167,11 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       basicItems,
       AppStrings.dateOfBirth,
       profile['date_of_birth'],
+    );
+    _addDisplayItem(
+      basicItems,
+      'Gender',
+      profile['gender_label'] ?? profile['gender_name'] ?? profile['gender'],
     );
     _addDisplayItem(
       basicItems,
@@ -175,31 +193,67 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       'Mother Tongue',
       profile['mother_tongue_label'],
     );
+    _addDisplayItem(basicItems, 'Birth Time', profile['birth_time']);
     _addDisplayItem(
       basicItems,
-      'Height',
-      ApiClient.profileHeightLabel(profile),
-    );
-    _addDisplayItem(
-      basicItems,
-      'Weight',
-      profile['weight_kg'] == null ? null : '${profile['weight_kg']} kg',
-    );
-    _addDisplayItem(basicItems, 'Complexion', profile['complexion_label']);
-    _addDisplayItem(basicItems, 'Blood Group', profile['blood_group_label']);
-    _addDisplayItem(
-      basicItems,
-      'Physical Build',
-      profile['physical_build_label'],
-    );
-
-    _addDisplayItem(birthItems, 'Birth Time', profile['birth_time']);
-    _addDisplayItem(
-      birthItems,
       'Birth Place',
       profile['birth_place_label'] ??
           profile['birth_place_text'] ??
           profile['birth_place'],
+    );
+    _addDisplayItem(
+      basicItems,
+      'Marital Status',
+      profile['marital_status_label'] ?? profile['marital_status_key'],
+    );
+    _addDisplayItem(basicItems, 'Has Children', profile['has_children']);
+    if (showMarriageChildren) {
+      _addDisplayItem(
+        basicItems,
+        'Marriage History',
+        _fallbackMarriageHistoryLabel(profile, maritalStatusKey),
+      );
+      if (_readBool(profile['has_children'])) {
+        _addDisplayItem(
+          basicItems,
+          'Children',
+          _fallbackChildrenLabel(profile),
+        );
+      }
+    }
+    _addDisplayItem(
+      physicalItems,
+      'Height',
+      ApiClient.profileHeightLabel(profile),
+    );
+    _addDisplayItem(
+      physicalItems,
+      'Weight',
+      profile['weight_kg'] == null ? null : '${profile['weight_kg']} kg',
+    );
+    _addDisplayItem(physicalItems, 'Complexion', profile['complexion_label']);
+    _addDisplayItem(physicalItems, 'Blood Group', profile['blood_group_label']);
+    _addDisplayItem(
+      physicalItems,
+      'Physical Build',
+      profile['physical_build_label'],
+    );
+    _addDisplayItem(
+      physicalItems,
+      'Spectacles / Lens',
+      profile['spectacles_lens'],
+    );
+    _addDisplayItem(
+      physicalItems,
+      'Physical Condition',
+      profile['physical_condition'],
+    );
+    _addDisplayItem(physicalItems, 'Diet', profile['diet_label']);
+    _addDisplayItem(physicalItems, 'Smoking', profile['smoking_status_label']);
+    _addDisplayItem(
+      physicalItems,
+      'Drinking',
+      profile['drinking_status_label'],
     );
 
     _addDisplayItem(
@@ -220,73 +274,255 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       'Work Location',
       profile['work_location_label'] ?? profile['work_location_text'],
     );
-    if (!_readBool(profile['income_private'])) {
-      _addDisplayItem(
-        careerItems,
-        'Annual Income',
-        profile['income_display_label'] ??
-            _fallbackIncomeLabel(profile, 'income', 'annual_income'),
-      );
-    }
-    if (!_readBool(profile['family_income_private'])) {
-      _addDisplayItem(
-        familyItems,
-        'Family Income',
-        profile['family_income_display_label'] ??
-            _fallbackIncomeLabel(profile, 'family_income', 'family_income'),
-      );
-    }
-    if (showMarriageChildren) {
-      _addDisplayItem(
-        familyItems,
-        'Marriage History',
-        _fallbackMarriageHistoryLabel(profile, maritalStatusKey),
-      );
-      if (_readBool(profile['has_children'])) {
-        _addDisplayItem(
-          familyItems,
-          'Children',
-          _fallbackChildrenLabel(profile),
-        );
-      }
-    }
+    _addDisplayItem(
+      careerItems,
+      'Annual Income',
+      _fallbackIncomeLabel(profile, 'income', 'annual_income') ??
+          profile['income_display_label'],
+    );
+    _addDisplayItem(familyItems, 'Father', _parentSummary(profile, 'father'));
+    _addPhoneDisplayItem(
+      familyItems,
+      'Father Contact 1',
+      profile['father_contact_1'],
+    );
+    _addPhoneDisplayItem(
+      familyItems,
+      'Father Contact 2',
+      profile['father_contact_2'],
+    );
+    _addPhoneDisplayItem(
+      familyItems,
+      'Father Contact 3',
+      profile['father_contact_3'],
+    );
+    _addDisplayItem(familyItems, 'Mother', _parentSummary(profile, 'mother'));
+    _addPhoneDisplayItem(
+      familyItems,
+      'Mother Contact 1',
+      profile['mother_contact_1'],
+    );
+    _addPhoneDisplayItem(
+      familyItems,
+      'Mother Contact 2',
+      profile['mother_contact_2'],
+    );
+    _addPhoneDisplayItem(
+      familyItems,
+      'Mother Contact 3',
+      profile['mother_contact_3'],
+    );
+    _addDisplayItem(
+      familyItems,
+      'Family Income',
+      _fallbackIncomeLabel(profile, 'family_income', 'family_income') ??
+          profile['family_income_display_label'],
+    );
+    _addDisplayItem(familyItems, 'Family Type', profile['family_type_label']);
+    _addDisplayItem(familyItems, 'Family Status', profile['family_status']);
+    _addDisplayItem(familyItems, 'Family Values', profile['family_values']);
     _addDisplayItem(
       familyItems,
       'Parents Addresses',
       _fallbackAddressRowsLabel(profile, 'parents_addresses'),
     );
-    _addDisplayItem(familyItems, 'Siblings', _fallbackSiblingsLabel(profile));
-    _addDisplayItem(familyItems, 'Relatives', _fallbackRelativesLabel(profile));
+    _addDisplayItem(siblingItems, 'Siblings', _fallbackSiblingsLabel(profile));
     _addDisplayItem(
-      familyItems,
+      relativeItems,
+      'Relatives',
+      _fallbackRelativesLabel(profile),
+    );
+    _addDisplayItem(
+      allianceItems,
       'Alliance Network',
       _fallbackAllianceNetworksLabel(profile),
     );
+    _addDisplayItem(
+      allianceItems,
+      'Other Relatives',
+      profile['other_relatives_text'],
+    );
+    _addDisplayItem(
+      propertyItems,
+      'Property Details',
+      profile['property_details'],
+    );
+
+    _addDisplayItem(horoscopeItems, 'Rashi', profile['rashi_label']);
+    _addDisplayItem(horoscopeItems, 'Nakshatra', profile['nakshatra_label']);
+    _addDisplayItem(horoscopeItems, 'Charan', profile['charan']);
+    _addDisplayItem(horoscopeItems, 'Gan', profile['gan_label']);
+    _addDisplayItem(horoscopeItems, 'Nadi', profile['nadi_label']);
+    _addDisplayItem(horoscopeItems, 'Yoni', profile['yoni_label']);
+    _addDisplayItem(horoscopeItems, 'Varna', profile['varna_label']);
+    _addDisplayItem(horoscopeItems, 'Vashya', profile['vashya_label']);
+    _addDisplayItem(horoscopeItems, 'Rashi Lord', profile['rashi_lord_label']);
+    _addDisplayItem(
+      horoscopeItems,
+      'Mangal Dosh',
+      profile['mangal_dosh_type_label'],
+    );
+    _addDisplayItem(horoscopeItems, 'Devak', profile['devak']);
+    _addDisplayItem(horoscopeItems, 'Kul', profile['kul']);
+    _addDisplayItem(horoscopeItems, 'Gotra', profile['gotra']);
+    _addDisplayItem(horoscopeItems, 'Navras Name', profile['navras_name']);
+    _addDisplayItem(horoscopeItems, 'Birth Weekday', profile['birth_weekday']);
+
+    _addDisplayItem(aboutItems, 'About Me', profile['narrative_about_me']);
+    _addDisplayItem(
+      aboutItems,
+      'Expectations',
+      profile['narrative_expectations'],
+    );
+
+    _addDisplayItem(
+      preferenceItems,
+      'Age Range',
+      _rangeLabel(profile['preferred_age_min'], profile['preferred_age_max']),
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Height Range',
+      _rangeLabel(
+        profile['preferred_height_min_cm'],
+        profile['preferred_height_max_cm'],
+        suffix: ' cm',
+      ),
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Income Range',
+      profile['preferred_income_label'] ??
+          _rangeLabel(
+            profile['preferred_income_min'],
+            profile['preferred_income_max'],
+            prefix: '₹',
+          ),
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Marriage Type',
+      profile['marriage_type_preference_label'],
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Partner With Children',
+      profile['partner_profile_with_children_label'],
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Profile Managed By',
+      profile['preferred_profile_managed_by_label'],
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Willing To Relocate',
+      profile['willing_to_relocate'],
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Preferred Marital Status',
+      _joinDisplayValues(profile['preferred_marital_status_labels']),
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Preferred Diet',
+      _joinDisplayValues(profile['preferred_diet_labels']),
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Preferred Religion',
+      _joinDisplayValues(profile['preferred_religion_labels']),
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Preferred Caste',
+      _joinDisplayValues(profile['preferred_caste_labels']),
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Preferred Education',
+      _joinDisplayValues(profile['preferred_education_degree_labels']),
+    );
+    _addDisplayItem(
+      preferenceItems,
+      'Preferred Occupation',
+      _joinDisplayValues(profile['preferred_occupation_master_labels']),
+    );
+    _addDisplayItem(photoItems, 'Photo Status', _photoStatusLabel(profile));
 
     return [
       if (basicItems.isNotEmpty)
         ProfileDisplaySectionData(
-          key: 'basic',
-          title: 'Basic Details',
+          key: 'basic-info',
+          title: 'Basic Information',
           items: basicItems,
         ),
-      if (birthItems.isNotEmpty)
+      if (physicalItems.isNotEmpty)
         ProfileDisplaySectionData(
-          key: 'birth_details',
-          title: 'Birth Details',
-          items: birthItems,
+          key: 'physical',
+          title: 'Physical',
+          items: physicalItems,
         ),
       if (careerItems.isNotEmpty)
         ProfileDisplaySectionData(
-          key: 'career_education',
-          title: 'Career & Education',
+          key: 'education-career',
+          title: 'Education & Career',
           items: careerItems,
         ),
       if (familyItems.isNotEmpty)
         ProfileDisplaySectionData(
-          key: 'family',
+          key: 'family-details',
           title: 'Family Details',
           items: familyItems,
+        ),
+      if (siblingItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'siblings',
+          title: 'Siblings',
+          items: siblingItems,
+        ),
+      if (relativeItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'relatives',
+          title: 'Relatives',
+          items: relativeItems,
+        ),
+      if (allianceItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'alliance',
+          title: 'Alliance',
+          items: allianceItems,
+        ),
+      if (propertyItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'property',
+          title: 'Property',
+          items: propertyItems,
+        ),
+      if (horoscopeItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'horoscope',
+          title: 'Horoscope',
+          items: horoscopeItems,
+        ),
+      if (aboutItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'about-me',
+          title: 'About Me',
+          items: aboutItems,
+        ),
+      if (preferenceItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'about-preferences',
+          title: 'Partner Preferences',
+          items: preferenceItems,
+        ),
+      if (photoItems.isNotEmpty)
+        ProfileDisplaySectionData(
+          key: 'photo',
+          title: 'Photo',
+          items: photoItems,
         ),
     ];
   }
@@ -306,6 +542,73 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       'separated',
       'widowed',
     }.contains(maritalStatusKey);
+  }
+
+  String? _parentSummary(Map<String, dynamic> profile, String prefix) {
+    final name = ApiClient.safeDisplayLabel(profile['${prefix}_name']);
+    final occupation =
+        ApiClient.safeDisplayLabel(
+          profile['${prefix}_occupation_master_label'],
+        ) ??
+        ApiClient.safeDisplayLabel(
+          profile['${prefix}_occupation_custom_label'],
+        ) ??
+        ApiClient.safeDisplayLabel(profile['${prefix}_occupation']);
+    final extra = ApiClient.safeDisplayLabel(profile['${prefix}_extra_info']);
+    final parts = [
+      name,
+      occupation,
+      extra,
+    ].whereType<String>().where((value) => value.trim().isNotEmpty).toList();
+
+    return parts.isEmpty ? null : parts.join(' - ');
+  }
+
+  String? _photoStatusLabel(Map<String, dynamic> profile) {
+    if (ApiClient.resolveProfilePhotoUrl(profile) != null) {
+      return 'Photo uploaded';
+    }
+
+    final status = ApiClient.safeDisplayLabel(profile['photo_status']);
+    if (status != null) return status;
+
+    final approved = profile['photo_approved'];
+    if (approved == false || approved == 0 || approved == '0') {
+      return 'Photo pending or not approved';
+    }
+
+    return 'No approved photo';
+  }
+
+  String? _joinDisplayValues(dynamic value) {
+    if (value is List) {
+      final parts = value
+          .map(ApiClient.safeDisplayLabel)
+          .whereType<String>()
+          .where((item) => item.trim().isNotEmpty)
+          .toList();
+
+      return parts.isEmpty ? null : parts.join(', ');
+    }
+
+    return ApiClient.safeDisplayLabel(value);
+  }
+
+  String? _rangeLabel(
+    dynamic min,
+    dynamic max, {
+    String prefix = '',
+    String suffix = '',
+  }) {
+    final minText = ApiClient.safeDisplayLabel(min);
+    final maxText = ApiClient.safeDisplayLabel(max);
+    if (minText == null && maxText == null) return null;
+    if (minText != null && maxText != null) {
+      return '$prefix$minText$suffix - $prefix$maxText$suffix';
+    }
+    if (minText != null) return '$prefix$minText$suffix+';
+
+    return 'Up to $prefix$maxText$suffix';
   }
 
   String? _fallbackAddressRowsLabel(Map<String, dynamic> profile, String key) {
@@ -366,31 +669,38 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final rows = profile['siblings'];
     if (rows is! List || rows.isEmpty) return null;
 
-    var brothers = 0;
-    var sisters = 0;
-    var others = 0;
-    for (final row in rows) {
+    final parts = <String>[];
+    for (final row in rows.take(3)) {
       if (row is! Map) continue;
-      switch (ApiClient.safeDisplayLabel(row['relation_type'])) {
-        case 'brother':
-          brothers++;
-          break;
-        case 'sister':
-          sisters++;
-          break;
-        default:
-          others++;
-          break;
-      }
+      final relation =
+          ApiClient.safeDisplayLabel(row['relation_type_label']) ??
+          _siblingRelationLabel(
+            ApiClient.safeDisplayLabel(row['relation_type']),
+          );
+      final name = ApiClient.safeDisplayLabel(row['name']);
+      final maritalStatus =
+          ApiClient.safeDisplayLabel(row['marital_status_label']) ??
+          _siblingMaritalStatusLabel(
+            ApiClient.safeDisplayLabel(row['marital_status']),
+          );
+      final occupation =
+          ApiClient.safeDisplayLabel(row['occupation']) ??
+          ApiClient.safeDisplayLabel(row['occupation_master_label']) ??
+          ApiClient.safeDisplayLabel(row['occupation_custom_label']);
+      final location =
+          ApiClient.safeDisplayLabel(row['address_line']) ??
+          ApiClient.safeDisplayLabel(row['city_label']);
+      final item = [relation, name, maritalStatus, occupation, location]
+          .whereType<String>()
+          .where((value) => value.trim().isNotEmpty)
+          .join(' - ');
+      if (item.isNotEmpty) parts.add(item);
     }
 
-    final parts = <String>[
-      if (brothers > 0) '$brothers Brother${brothers == 1 ? '' : 's'}',
-      if (sisters > 0) '$sisters Sister${sisters == 1 ? '' : 's'}',
-      if (others > 0) '$others Sibling${others == 1 ? '' : 's'}',
-    ];
+    final remaining = rows.length - parts.length;
+    if (remaining > 0) parts.add('+$remaining more');
 
-    return parts.isEmpty ? null : parts.join(', ');
+    return parts.isEmpty ? null : parts.join('; ');
   }
 
   String? _fallbackMarriageHistoryLabel(
@@ -566,6 +876,32 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     }
   }
 
+  String? _siblingRelationLabel(String? value) {
+    switch (value) {
+      case 'brother':
+        return 'Brother';
+      case 'sister':
+        return 'Sister';
+      case 'brother_wife':
+        return "Brother's wife";
+      case 'sister_husband':
+        return "Sister's husband";
+      default:
+        return value;
+    }
+  }
+
+  String? _siblingMaritalStatusLabel(String? value) {
+    switch (value) {
+      case 'married':
+        return 'Married';
+      case 'unmarried':
+        return 'Unmarried';
+      default:
+        return value;
+    }
+  }
+
   String? _relativeRelationLabel(String? value) {
     switch (value) {
       case 'paternal_grandfather':
@@ -609,6 +945,26 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     dynamic value,
   ) {
     final displayValue = ApiClient.safeDisplayLabel(value);
+    if (displayValue == null || displayValue.isEmpty) return;
+
+    items.add(ProfileDisplayItemData(label: label, value: displayValue));
+  }
+
+  String? _phoneDisplayText(dynamic value) {
+    if (value == null || value is Map || value is List) return null;
+
+    final text = value.toString().trim();
+    if (text.isEmpty || text.toLowerCase() == 'null') return null;
+
+    return text;
+  }
+
+  void _addPhoneDisplayItem(
+    List<ProfileDisplayItemData> items,
+    String label,
+    dynamic value,
+  ) {
+    final displayValue = _phoneDisplayText(value);
     if (displayValue == null || displayValue.isEmpty) return;
 
     items.add(ProfileDisplayItemData(label: label, value: displayValue));

@@ -19,17 +19,14 @@ class EditFullProfileScreen extends StatefulWidget {
 
 enum _EditProfileSection {
   basic,
-  birth,
   physical,
   educationCareer,
-  maritalLifestyle,
   familyDetails,
-  familyOverview,
   siblings,
   relatives,
-  allianceNetwork,
-  allianceProperty,
-  horoscopeAstro,
+  alliance,
+  property,
+  horoscope,
   aboutMe,
   partnerPreferences,
   photo,
@@ -456,6 +453,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       TextEditingController();
   final TextEditingController _fatherContact2Controller =
       TextEditingController();
+  final TextEditingController _fatherContact3Controller =
+      TextEditingController();
   final TextEditingController _motherNameController = TextEditingController();
   final TextEditingController _motherOccupationController =
       TextEditingController();
@@ -464,6 +463,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final TextEditingController _motherContact1Controller =
       TextEditingController();
   final TextEditingController _motherContact2Controller =
+      TextEditingController();
+  final TextEditingController _motherContact3Controller =
       TextEditingController();
   final TextEditingController _familyIncomeAmountController =
       TextEditingController();
@@ -495,22 +496,29 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _maritalLifestyleOptionsLoading = false;
   bool _remainingProfileOptionsLoading = false;
   bool _partnerPreferenceOptionsLoading = false;
+  bool _showFatherContact2 = false;
+  bool _showFatherContact3 = false;
+  bool _showMotherContact2 = false;
+  bool _showMotherContact3 = false;
+  bool _fatherContact2Removed = false;
+  bool _fatherContact3Removed = false;
+  bool _motherContact2Removed = false;
+  bool _motherContact3Removed = false;
+  int _parentContactMaxSlots = 2;
   _EditProfileSection? _expandedSection;
   Map<String, dynamic>? _expandedSectionSnapshot;
   Map<String, dynamic>? _lastLoadedProfile;
   final ScrollController _scrollController = ScrollController();
   final Map<_EditProfileSection, GlobalKey> _sectionCardKeys = {
     _EditProfileSection.basic: GlobalKey(),
-    _EditProfileSection.birth: GlobalKey(),
     _EditProfileSection.physical: GlobalKey(),
     _EditProfileSection.educationCareer: GlobalKey(),
-    _EditProfileSection.maritalLifestyle: GlobalKey(),
     _EditProfileSection.familyDetails: GlobalKey(),
-    _EditProfileSection.familyOverview: GlobalKey(),
     _EditProfileSection.siblings: GlobalKey(),
     _EditProfileSection.relatives: GlobalKey(),
-    _EditProfileSection.allianceProperty: GlobalKey(),
-    _EditProfileSection.horoscopeAstro: GlobalKey(),
+    _EditProfileSection.alliance: GlobalKey(),
+    _EditProfileSection.property: GlobalKey(),
+    _EditProfileSection.horoscope: GlobalKey(),
     _EditProfileSection.aboutMe: GlobalKey(),
     _EditProfileSection.partnerPreferences: GlobalKey(),
     _EditProfileSection.photo: GlobalKey(),
@@ -735,11 +743,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _fatherExtraInfoController.dispose();
     _fatherContact1Controller.dispose();
     _fatherContact2Controller.dispose();
+    _fatherContact3Controller.dispose();
     _motherNameController.dispose();
     _motherOccupationController.dispose();
     _motherExtraInfoController.dispose();
     _motherContact1Controller.dispose();
     _motherContact2Controller.dispose();
+    _motherContact3Controller.dispose();
     _familyIncomeAmountController.dispose();
     _familyIncomeMinAmountController.dispose();
     _familyIncomeMaxAmountController.dispose();
@@ -788,6 +798,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return text;
   }
 
+  String _phoneText(dynamic value) {
+    if (value == null || value is Map || value is List) return '';
+
+    final text = value.toString().trim();
+    if (text.isEmpty || text.toLowerCase() == 'null') return '';
+
+    return text;
+  }
+
   String _readAmountText(dynamic value) {
     final text = _readText(value);
     if (text == null) return '';
@@ -825,6 +844,27 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         .whereType<Map>()
         .map((row) => Map<String, dynamic>.from(row))
         .toList();
+  }
+
+  int _parentContactSlotsFromProfile(Map<String, dynamic> profile) {
+    final explicit = _readInt(profile['parent_contact_max_slots']);
+    if (explicit != null && explicit >= 3) return 3;
+    if (profile.containsKey('father_contact_3') ||
+        profile.containsKey('mother_contact_3')) {
+      return 3;
+    }
+
+    return 2;
+  }
+
+  bool get _supportsParentContact3 => _parentContactMaxSlots >= 3;
+
+  bool _shouldSendOptionalParentContact(
+    TextEditingController controller,
+    bool visible,
+    bool removed,
+  ) {
+    return visible || controller.text.trim().isNotEmpty || removed;
   }
 
   void _disposeSiblingRows() {
@@ -1668,26 +1708,43 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedWorkLocationLabel =
         ApiClient.safeDisplayLabel(profile['work_location_label']) ??
         ApiClient.safeDisplayLabel(profile['work_location_text']);
+    _parentContactMaxSlots = _parentContactSlotsFromProfile(profile);
     _fatherNameController.text =
         ApiClient.safeDisplayLabel(profile['father_name']) ?? '';
     _fatherOccupationController.text =
         ApiClient.safeDisplayLabel(profile['father_occupation']) ?? '';
     _fatherExtraInfoController.text =
         ApiClient.safeDisplayLabel(profile['father_extra_info']) ?? '';
-    _fatherContact1Controller.text =
-        ApiClient.safeDisplayLabel(profile['father_contact_1']) ?? '';
-    _fatherContact2Controller.text =
-        ApiClient.safeDisplayLabel(profile['father_contact_2']) ?? '';
+    _fatherContact1Controller.text = _phoneText(profile['father_contact_1']);
+    _fatherContact2Controller.text = _phoneText(profile['father_contact_2']);
+    _fatherContact3Controller.text = _supportsParentContact3
+        ? _phoneText(profile['father_contact_3'])
+        : '';
+    _showFatherContact3 =
+        _supportsParentContact3 &&
+        _fatherContact3Controller.text.trim().isNotEmpty;
+    _showFatherContact2 =
+        _fatherContact2Controller.text.trim().isNotEmpty || _showFatherContact3;
+    _fatherContact2Removed = false;
+    _fatherContact3Removed = false;
     _motherNameController.text =
         ApiClient.safeDisplayLabel(profile['mother_name']) ?? '';
     _motherOccupationController.text =
         ApiClient.safeDisplayLabel(profile['mother_occupation']) ?? '';
     _motherExtraInfoController.text =
         ApiClient.safeDisplayLabel(profile['mother_extra_info']) ?? '';
-    _motherContact1Controller.text =
-        ApiClient.safeDisplayLabel(profile['mother_contact_1']) ?? '';
-    _motherContact2Controller.text =
-        ApiClient.safeDisplayLabel(profile['mother_contact_2']) ?? '';
+    _motherContact1Controller.text = _phoneText(profile['mother_contact_1']);
+    _motherContact2Controller.text = _phoneText(profile['mother_contact_2']);
+    _motherContact3Controller.text = _supportsParentContact3
+        ? _phoneText(profile['mother_contact_3'])
+        : '';
+    _showMotherContact3 =
+        _supportsParentContact3 &&
+        _motherContact3Controller.text.trim().isNotEmpty;
+    _showMotherContact2 =
+        _motherContact2Controller.text.trim().isNotEmpty || _showMotherContact3;
+    _motherContact2Removed = false;
+    _motherContact3Removed = false;
     _selectedFatherOccupationMasterId = _readInt(
       profile['father_occupation_master_id'],
     );
@@ -3678,9 +3735,37 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     if (includeParentContacts) {
       payload['father_contact_1'] = _nullableText(_fatherContact1Controller);
-      payload['father_contact_2'] = _nullableText(_fatherContact2Controller);
       payload['mother_contact_1'] = _nullableText(_motherContact1Controller);
-      payload['mother_contact_2'] = _nullableText(_motherContact2Controller);
+      if (_shouldSendOptionalParentContact(
+        _fatherContact2Controller,
+        _showFatherContact2,
+        _fatherContact2Removed,
+      )) {
+        payload['father_contact_2'] = _nullableText(_fatherContact2Controller);
+      }
+      if (_supportsParentContact3 &&
+          _shouldSendOptionalParentContact(
+            _fatherContact3Controller,
+            _showFatherContact3,
+            _fatherContact3Removed,
+          )) {
+        payload['father_contact_3'] = _nullableText(_fatherContact3Controller);
+      }
+      if (_shouldSendOptionalParentContact(
+        _motherContact2Controller,
+        _showMotherContact2,
+        _motherContact2Removed,
+      )) {
+        payload['mother_contact_2'] = _nullableText(_motherContact2Controller);
+      }
+      if (_supportsParentContact3 &&
+          _shouldSendOptionalParentContact(
+            _motherContact3Controller,
+            _showMotherContact3,
+            _motherContact3Removed,
+          )) {
+        payload['mother_contact_3'] = _nullableText(_motherContact3Controller);
+      }
     }
 
     if (includeSelfAddresses) {
@@ -3742,8 +3827,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       includeParentContacts: section == _EditProfileSection.familyDetails,
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
-      includeAllianceNetworks: section == _EditProfileSection.allianceNetwork,
-      includeMarriageChildren: section == _EditProfileSection.maritalLifestyle,
+      includeAllianceNetworks: section == _EditProfileSection.alliance,
+      includeMarriageChildren: section == _EditProfileSection.basic,
     );
     Map<String, dynamic> response;
     try {
@@ -3795,17 +3880,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   List<_EditProfileSection> get _profileSections => const [
     _EditProfileSection.basic,
-    _EditProfileSection.birth,
     _EditProfileSection.physical,
     _EditProfileSection.educationCareer,
-    _EditProfileSection.maritalLifestyle,
     _EditProfileSection.familyDetails,
-    _EditProfileSection.familyOverview,
     _EditProfileSection.siblings,
     _EditProfileSection.relatives,
-    _EditProfileSection.allianceNetwork,
-    _EditProfileSection.allianceProperty,
-    _EditProfileSection.horoscopeAstro,
+    _EditProfileSection.alliance,
+    _EditProfileSection.property,
+    _EditProfileSection.horoscope,
     _EditProfileSection.aboutMe,
     _EditProfileSection.partnerPreferences,
     _EditProfileSection.photo,
@@ -3814,31 +3896,25 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String _sectionTitle(_EditProfileSection section) {
     switch (section) {
       case _EditProfileSection.basic:
-        return 'Basic details';
-      case _EditProfileSection.birth:
-        return 'Birth details';
+        return 'Basic Information';
       case _EditProfileSection.physical:
-        return 'Physical details';
+        return 'Physical';
       case _EditProfileSection.educationCareer:
         return 'Education & Career';
-      case _EditProfileSection.maritalLifestyle:
-        return 'Marital & Lifestyle';
       case _EditProfileSection.familyDetails:
-        return 'Family details';
-      case _EditProfileSection.familyOverview:
-        return 'Family overview';
+        return 'Family Details';
       case _EditProfileSection.siblings:
         return 'Siblings';
       case _EditProfileSection.relatives:
         return 'Relatives';
-      case _EditProfileSection.allianceNetwork:
-        return 'Alliance Network';
-      case _EditProfileSection.allianceProperty:
-        return 'Alliance & Property';
-      case _EditProfileSection.horoscopeAstro:
-        return 'Horoscope / Astro';
+      case _EditProfileSection.alliance:
+        return 'Alliance';
+      case _EditProfileSection.property:
+        return 'Property';
+      case _EditProfileSection.horoscope:
+        return 'Horoscope';
       case _EditProfileSection.aboutMe:
-        return 'About me';
+        return 'About Me';
       case _EditProfileSection.partnerPreferences:
         return 'Partner Preferences';
       case _EditProfileSection.photo:
@@ -3850,27 +3926,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     switch (section) {
       case _EditProfileSection.basic:
         return Icons.badge_outlined;
-      case _EditProfileSection.birth:
-        return Icons.event_available_outlined;
       case _EditProfileSection.physical:
         return Icons.accessibility_new_outlined;
       case _EditProfileSection.educationCareer:
         return Icons.school_outlined;
-      case _EditProfileSection.maritalLifestyle:
-        return Icons.favorite_border;
       case _EditProfileSection.familyDetails:
         return Icons.group_outlined;
-      case _EditProfileSection.familyOverview:
-        return Icons.home_outlined;
       case _EditProfileSection.siblings:
         return Icons.people_alt_outlined;
       case _EditProfileSection.relatives:
         return Icons.people_outline;
-      case _EditProfileSection.allianceNetwork:
+      case _EditProfileSection.alliance:
         return Icons.account_tree_outlined;
-      case _EditProfileSection.allianceProperty:
+      case _EditProfileSection.property:
         return Icons.real_estate_agent_outlined;
-      case _EditProfileSection.horoscopeAstro:
+      case _EditProfileSection.horoscope:
         return Icons.star_border;
       case _EditProfileSection.aboutMe:
         return Icons.notes;
@@ -4040,6 +4110,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String _sectionSummary(_EditProfileSection section) {
     switch (section) {
       case _EditProfileSection.basic:
+        final statusKey = _currentMaritalStatusKey();
+        final showMarriageChildren = _maritalStatusShowsDetails(statusKey);
         return _summaryFromParts([
           _controllerSummary(_fullNameController),
           _joinSummaryParts([
@@ -4054,9 +4126,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _addressRowsSummary(_selfAddressRows) ??
               _selectedLocationLabel ??
               _controllerSummary(_locationController),
-        ]);
-      case _EditProfileSection.birth:
-        return _summaryFromParts([
           _controllerSummary(_birthPlaceController) ?? _selectedBirthPlaceLabel,
           _controllerSummary(_birthTimeController),
           _labelForId(
@@ -4064,12 +4133,39 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _selectedMotherTongueId,
             'Mother tongue',
           ),
+          _labelForId(
+            _maritalStatusOptions,
+            _selectedMaritalStatusId,
+            'Marital status',
+          ),
+          showMarriageChildren
+              ? _joinSummaryParts([
+                  'Children',
+                  _boolSummary(_selectedHasChildren),
+                  _selectedHasChildren == true && _childRows.isNotEmpty
+                      ? '${_childRows.length} row(s)'
+                      : null,
+                ], separator: ': ')
+              : null,
         ]);
       case _EditProfileSection.physical:
         return _summaryFromParts([
           _selectedHeightCm == null ? null : _heightLabel(_selectedHeightCm!),
           _selectedWeightKg == null ? null : _weightLabel(_selectedWeightKg!),
           _labelForId(_complexionOptions, _selectedComplexionId, 'Complexion'),
+          _labelForId(_dietOptions, _selectedDietId, 'Diet'),
+          _joinSummaryParts([
+            _labelForId(
+              _smokingStatusOptions,
+              _selectedSmokingStatusId,
+              'Smoking status',
+            ),
+            _labelForId(
+              _drinkingStatusOptions,
+              _selectedDrinkingStatusId,
+              'Drinking status',
+            ),
+          ]),
         ]);
       case _EditProfileSection.educationCareer:
         return _summaryFromParts([
@@ -4090,41 +4186,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             private: _incomePrivate,
           ),
         ]);
-      case _EditProfileSection.maritalLifestyle:
-        final statusKey = _currentMaritalStatusKey();
-        final showMarriageChildren = _maritalStatusShowsDetails(statusKey);
-        return _summaryFromParts([
-          _labelForId(
-            _maritalStatusOptions,
-            _selectedMaritalStatusId,
-            'Marital status',
-          ),
-          showMarriageChildren && _marriageRows.isNotEmpty
-              ? _controllerSummary(_marriageRows.first.marriageYearController)
-              : null,
-          showMarriageChildren
-              ? _joinSummaryParts([
-                  'Children',
-                  _boolSummary(_selectedHasChildren),
-                  _selectedHasChildren == true && _childRows.isNotEmpty
-                      ? '${_childRows.length} row(s)'
-                      : null,
-                ], separator: ': ')
-              : null,
-          _labelForId(_dietOptions, _selectedDietId, 'Diet'),
-          _joinSummaryParts([
-            _labelForId(
-              _smokingStatusOptions,
-              _selectedSmokingStatusId,
-              'Smoking status',
-            ),
-            _labelForId(
-              _drinkingStatusOptions,
-              _selectedDrinkingStatusId,
-              'Drinking status',
-            ),
-          ]),
-        ]);
       case _EditProfileSection.familyDetails:
         return _summaryFromParts([
           _joinSummaryParts([
@@ -4138,9 +4199,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _selectedMotherOccupationLabel,
           ], separator: ': '),
           _addressRowsSummary(_parentsAddressRows),
-        ]);
-      case _EditProfileSection.familyOverview:
-        return _summaryFromParts([
           _labelForId(_familyTypeOptions, _selectedFamilyTypeId, 'Family type'),
           _labelForValue(
             _familyStatusOptions,
@@ -4176,8 +4234,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   'Relation',
                 ),
         ]);
-      case _EditProfileSection.allianceNetwork:
+      case _EditProfileSection.alliance:
         return _summaryFromParts([
+          _otherRelativesController.text.trim().isEmpty
+              ? null
+              : 'Other relatives added',
           _allianceNetworkRows.isEmpty
               ? null
               : '${_allianceNetworkRows.length} row(s)',
@@ -4187,16 +4248,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   _allianceNetworkRows.first.surnameController,
                 ),
         ]);
-      case _EditProfileSection.allianceProperty:
+      case _EditProfileSection.property:
         return _summaryFromParts([
-          _otherRelativesController.text.trim().isEmpty
-              ? null
-              : 'Other relatives added',
           _propertyDetailsController.text.trim().isEmpty
               ? null
               : 'Property added',
         ]);
-      case _EditProfileSection.horoscopeAstro:
+      case _EditProfileSection.horoscope:
         return _summaryFromParts([
           _labelForId(_rashiOptions, _selectedRashiId, 'Rashi'),
           _labelForId(_nakshatraOptions, _selectedNakshatraId, 'Nakshatra'),
@@ -4243,31 +4301,67 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
   }
 
+  Widget _buildBasicInformationSection() {
+    return Column(
+      children: [
+        _buildBasicSection(),
+        const SizedBox(height: 14),
+        _buildBirthSection(),
+        const SizedBox(height: 14),
+        _buildMaritalLifestyleSection(),
+      ],
+    );
+  }
+
+  Widget _buildPhysicalWizardSection() {
+    return Column(
+      children: [
+        _buildPhysicalSection(),
+        const SizedBox(height: 14),
+        _buildLifestyleChoicesSection(),
+      ],
+    );
+  }
+
+  Widget _buildFamilyDetailsWizardSection() {
+    return Column(
+      children: [
+        _buildFamilyDetailsSection(),
+        const SizedBox(height: 14),
+        _buildFamilyOverviewSection(),
+      ],
+    );
+  }
+
+  Widget _buildAllianceSection() {
+    return Column(
+      children: [
+        _buildAlliancePropertySection(),
+        const SizedBox(height: 14),
+        _buildAllianceNetworkSection(),
+      ],
+    );
+  }
+
   Widget _sectionEditor(_EditProfileSection section) {
     switch (section) {
       case _EditProfileSection.basic:
-        return _buildBasicSection();
-      case _EditProfileSection.birth:
-        return _buildBirthSection();
+        return _buildBasicInformationSection();
       case _EditProfileSection.physical:
-        return _buildPhysicalSection();
+        return _buildPhysicalWizardSection();
       case _EditProfileSection.educationCareer:
         return _buildEducationCareerSection();
-      case _EditProfileSection.maritalLifestyle:
-        return _buildMaritalLifestyleSection();
       case _EditProfileSection.familyDetails:
-        return _buildFamilyDetailsSection();
-      case _EditProfileSection.familyOverview:
-        return _buildFamilyOverviewSection();
+        return _buildFamilyDetailsWizardSection();
       case _EditProfileSection.siblings:
         return _buildSiblingsSection();
       case _EditProfileSection.relatives:
         return _buildRelativesSection();
-      case _EditProfileSection.allianceNetwork:
-        return _buildAllianceNetworkSection();
-      case _EditProfileSection.allianceProperty:
-        return _buildAlliancePropertySection();
-      case _EditProfileSection.horoscopeAstro:
+      case _EditProfileSection.alliance:
+        return _buildAllianceSection();
+      case _EditProfileSection.property:
+        return _buildPropertySection();
+      case _EditProfileSection.horoscope:
         return _buildHoroscopeAstroSection();
       case _EditProfileSection.aboutMe:
         return _buildAboutMeSection();
@@ -4285,6 +4379,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'full_name',
           'gender_id',
           'date_of_birth',
+          'birth_time',
+          'birth_city_id',
+          'birth_place_text',
           'religion_id',
           'caste_id',
           'caste',
@@ -4292,13 +4389,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'address_line',
           'self_addresses',
           'sub_caste_id',
-        ];
-      case _EditProfileSection.birth:
-        return const [
-          'birth_time',
-          'birth_city_id',
-          'birth_place_text',
           'mother_tongue_id',
+          'marital_status_id',
+          'has_children',
+          'marriages',
+          'children',
         ];
       case _EditProfileSection.physical:
         return const [
@@ -4309,6 +4404,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'physical_build_id',
           'spectacles_lens',
           'physical_condition',
+          'diet_id',
+          'smoking_status_id',
+          'drinking_status_id',
         ];
       case _EditProfileSection.educationCareer:
         return const [
@@ -4327,16 +4425,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'income_currency_id',
           'income_private',
         ];
-      case _EditProfileSection.maritalLifestyle:
-        return const [
-          'marital_status_id',
-          'has_children',
-          'marriages',
-          'children',
-          'diet_id',
-          'smoking_status_id',
-          'drinking_status_id',
-        ];
       case _EditProfileSection.familyDetails:
         return const [
           'father_name',
@@ -4346,6 +4434,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'father_extra_info',
           'father_contact_1',
           'father_contact_2',
+          'father_contact_3',
           'mother_name',
           'mother_occupation',
           'mother_occupation_master_id',
@@ -4353,10 +4442,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'mother_extra_info',
           'mother_contact_1',
           'mother_contact_2',
+          'mother_contact_3',
           'parents_addresses',
-        ];
-      case _EditProfileSection.familyOverview:
-        return const [
           'family_type_id',
           'family_status',
           'family_values',
@@ -4373,11 +4460,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return const ['has_siblings', 'siblings'];
       case _EditProfileSection.relatives:
         return const ['relatives'];
-      case _EditProfileSection.allianceNetwork:
-        return const ['alliance_networks'];
-      case _EditProfileSection.allianceProperty:
-        return const ['other_relatives_text', 'property_details'];
-      case _EditProfileSection.horoscopeAstro:
+      case _EditProfileSection.alliance:
+        return const ['other_relatives_text', 'alliance_networks'];
+      case _EditProfileSection.property:
+        return const ['property_details'];
+      case _EditProfileSection.horoscope:
         return const [
           'rashi_id',
           'nakshatra_id',
@@ -4434,8 +4521,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       includeParentContacts: section == _EditProfileSection.familyDetails,
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
-      includeAllianceNetworks: section == _EditProfileSection.allianceNetwork,
-      includeMarriageChildren: section == _EditProfileSection.maritalLifestyle,
+      includeAllianceNetworks: section == _EditProfileSection.alliance,
+      includeMarriageChildren: section == _EditProfileSection.basic,
     );
     return <String, dynamic>{
       for (final key in _sectionPayloadKeys(section))
@@ -5486,7 +5573,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final showStatusDetails = _maritalStatusShowsDetails(statusKey);
 
     return _sectionCard(
-      title: 'Marital & Lifestyle',
+      title: 'Marital status and children',
       icon: Icons.favorite_border,
       children: [
         _intDropdown(
@@ -5513,7 +5600,28 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _buildChildrenEditor(),
           ],
         ],
-        const SizedBox(height: 14),
+        if (_maritalLifestyleOptionsLoading)
+          const Padding(
+            padding: EdgeInsets.only(top: 12),
+            child: LinearProgressIndicator(),
+          ),
+        if (_maritalLifestyleOptionsError != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
+              _maritalLifestyleOptionsError!,
+              style: TextStyle(color: Colors.amber.shade900),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildLifestyleChoicesSection() {
+    return _sectionCard(
+      title: 'Lifestyle',
+      icon: Icons.restaurant_outlined,
+      children: [
         _intDropdown(
           labelText: 'Diet (Optional)',
           icon: Icons.restaurant_outlined,
@@ -6649,23 +6757,135 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
+  void _addParentContactSlot({required bool father}) {
+    setState(() {
+      if (father) {
+        if (!_showFatherContact2) {
+          _showFatherContact2 = true;
+          _fatherContact2Removed = false;
+        } else if (_supportsParentContact3) {
+          _showFatherContact3 = true;
+          _fatherContact3Removed = false;
+        }
+      } else {
+        if (!_showMotherContact2) {
+          _showMotherContact2 = true;
+          _motherContact2Removed = false;
+        } else if (_supportsParentContact3) {
+          _showMotherContact3 = true;
+          _motherContact3Removed = false;
+        }
+      }
+    });
+  }
+
+  void _removeParentContactSlot({required bool father, required int slot}) {
+    setState(() {
+      final contact2Controller = father
+          ? _fatherContact2Controller
+          : _motherContact2Controller;
+      final contact3Controller = father
+          ? _fatherContact3Controller
+          : _motherContact3Controller;
+      final showContact3 = father ? _showFatherContact3 : _showMotherContact3;
+
+      if (slot == 2) {
+        if (showContact3 && contact3Controller.text.trim().isNotEmpty) {
+          contact2Controller.text = contact3Controller.text;
+          contact3Controller.clear();
+          if (father) {
+            _showFatherContact2 = true;
+            _showFatherContact3 = false;
+            _fatherContact2Removed = false;
+            _fatherContact3Removed = true;
+          } else {
+            _showMotherContact2 = true;
+            _showMotherContact3 = false;
+            _motherContact2Removed = false;
+            _motherContact3Removed = true;
+          }
+        } else {
+          contact2Controller.clear();
+          contact3Controller.clear();
+          if (father) {
+            _showFatherContact2 = false;
+            _showFatherContact3 = false;
+            _fatherContact2Removed = true;
+            _fatherContact3Removed = true;
+          } else {
+            _showMotherContact2 = false;
+            _showMotherContact3 = false;
+            _motherContact2Removed = true;
+            _motherContact3Removed = true;
+          }
+        }
+        return;
+      }
+
+      contact3Controller.clear();
+      if (father) {
+        _showFatherContact3 = false;
+        _fatherContact3Removed = true;
+      } else {
+        _showMotherContact3 = false;
+        _motherContact3Removed = true;
+      }
+    });
+  }
+
   Widget _buildParentContactFields({
     required String title,
+    required bool father,
     required TextEditingController contact1Controller,
     required TextEditingController contact2Controller,
+    required TextEditingController contact3Controller,
+    required bool showContact2,
+    required bool showContact3,
   }) {
-    Widget contactField(TextEditingController controller, String label) {
-      return TextField(
-        controller: controller,
-        keyboardType: TextInputType.phone,
-        textInputAction: TextInputAction.next,
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: 'Optional',
-          prefixIcon: const Icon(Icons.call_outlined),
-        ),
+    Widget contactRow(
+      TextEditingController controller,
+      String label, {
+      VoidCallback? onAdd,
+      VoidCallback? onRemove,
+    }) {
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: TextField(
+              controller: controller,
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: label,
+                hintText: 'Optional',
+                prefixIcon: const Icon(Icons.call_outlined),
+              ),
+            ),
+          ),
+          if (onAdd != null) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: 'Add contact',
+              onPressed: onAdd,
+              icon: const Icon(Icons.add_circle_outline),
+            ),
+          ],
+          if (onRemove != null) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: 'Remove contact',
+              onPressed: onRemove,
+              icon: const Icon(Icons.remove_circle_outline),
+            ),
+          ],
+        ],
       );
     }
+
+    final canAddContact2 = !showContact2;
+    final canAddContact3 =
+        showContact2 && _supportsParentContact3 && !showContact3;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -6677,9 +6897,32 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 12),
-        contactField(contact1Controller, 'Contact 1'),
-        const SizedBox(height: 14),
-        contactField(contact2Controller, 'Contact 2'),
+        contactRow(
+          contact1Controller,
+          'Contact 1',
+          onAdd: canAddContact2
+              ? () => _addParentContactSlot(father: father)
+              : null,
+        ),
+        if (showContact2) ...[
+          const SizedBox(height: 14),
+          contactRow(
+            contact2Controller,
+            'Contact 2',
+            onAdd: canAddContact3
+                ? () => _addParentContactSlot(father: father)
+                : null,
+            onRemove: () => _removeParentContactSlot(father: father, slot: 2),
+          ),
+        ],
+        if (_supportsParentContact3 && showContact3) ...[
+          const SizedBox(height: 14),
+          contactRow(
+            contact3Controller,
+            'Contact 3',
+            onRemove: () => _removeParentContactSlot(father: father, slot: 3),
+          ),
+        ],
       ],
     );
   }
@@ -6724,8 +6967,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         const SizedBox(height: 18),
         _buildParentContactFields(
           title: 'Father contact numbers',
+          father: true,
           contact1Controller: _fatherContact1Controller,
           contact2Controller: _fatherContact2Controller,
+          contact3Controller: _fatherContact3Controller,
+          showContact2: _showFatherContact2,
+          showContact3: _showFatherContact3,
         ),
         const SizedBox(height: 14),
         TextField(
@@ -6763,8 +7010,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         const SizedBox(height: 18),
         _buildParentContactFields(
           title: 'Mother contact numbers',
+          father: false,
           contact1Controller: _motherContact1Controller,
           contact2Controller: _motherContact2Controller,
+          contact3Controller: _motherContact3Controller,
+          showContact2: _showMotherContact2,
+          showContact3: _showMotherContact3,
         ),
         const SizedBox(height: 18),
         _buildAddressRepeater(
@@ -7223,8 +7474,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildAlliancePropertySection() {
     return _sectionCard(
-      title: 'Alliance & Property',
-      icon: Icons.home_outlined,
+      title: 'Alliance details',
+      icon: Icons.account_tree_outlined,
       children: [
         TextField(
           controller: _otherRelativesController,
@@ -7236,7 +7487,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             prefixIcon: Icon(Icons.people_outline),
           ),
         ),
-        const SizedBox(height: 14),
+      ],
+    );
+  }
+
+  Widget _buildPropertySection() {
+    return _sectionCard(
+      title: 'Property',
+      icon: Icons.real_estate_agent_outlined,
+      children: [
         TextField(
           controller: _propertyDetailsController,
           maxLines: 3,
@@ -7253,7 +7512,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildHoroscopeAstroSection() {
     return _sectionCard(
-      title: 'Horoscope / Astro',
+      title: 'Horoscope',
       icon: Icons.star_border,
       children: [
         _intDropdown(
