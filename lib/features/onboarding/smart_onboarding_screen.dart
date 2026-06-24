@@ -652,8 +652,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
   void _showStepMessage(String message) {
     setState(() {
-      _message = null;
-      _error = message;
+      _message = message;
+      _error = null;
     });
   }
 
@@ -879,7 +879,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           enabled: !_loading && !otpSent,
           keyboardType: TextInputType.phone,
           decoration: InputDecoration(
-            labelText: _t('WhatsApp mobile number *', 'WhatsApp मोबाइल नंबर *'),
+            labelText: _t('Mobile number *', 'मोबाइल नंबर *'),
             prefixText: '+91 ',
           ),
         ),
