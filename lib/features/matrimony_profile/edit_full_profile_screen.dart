@@ -24,7 +24,6 @@ enum _EditProfileSection {
   familyDetails,
   siblings,
   relatives,
-  alliance,
   property,
   horoscope,
   aboutMe,
@@ -516,7 +515,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.familyDetails: GlobalKey(),
     _EditProfileSection.siblings: GlobalKey(),
     _EditProfileSection.relatives: GlobalKey(),
-    _EditProfileSection.alliance: GlobalKey(),
     _EditProfileSection.property: GlobalKey(),
     _EditProfileSection.horoscope: GlobalKey(),
     _EditProfileSection.aboutMe: GlobalKey(),
@@ -571,6 +569,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _selectedPhysicalBuildId;
   int? _selectedMaritalStatusId;
   bool? _selectedHasChildren;
+  bool _showIncomeGroup = false;
+  bool _showFamilyIncomeGroup = false;
   int? _selectedDietId;
   int? _selectedSmokingStatusId;
   int? _selectedDrinkingStatusId;
@@ -1660,7 +1660,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedPhysicalCondition = _readText(profile['physical_condition']);
     _selectedMaritalStatusId = _readInt(profile['marital_status_id']);
     _selectedMaritalStatusKey = _readText(profile['marital_status_key']);
-    _selectedHasChildren = _readBool(profile['has_children']);
+    _selectedHasChildren = _readBool(profile['has_children']) ?? false;
     _prefillMarriages(profile['marriages']);
     _prefillChildren(profile['children']);
     final maritalStatusKey = _currentMaritalStatusKey();
@@ -1697,10 +1697,24 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _incomeMaxAmountController.text = _readAmountText(
       profile['income_max_amount'],
     );
-    if (_selectedIncomeValueType == null && incomeAmount.isNotEmpty) {
-      _selectedIncomeValueType = 'exact';
+    _showIncomeGroup = _incomeHasSavedValue(
+      valueType: _selectedIncomeValueType,
+      amountText: _incomeAmountController.text,
+      minAmountText: _incomeMinAmountController.text,
+      maxAmountText: _incomeMaxAmountController.text,
+      private: _readBool(profile['income_private']) ?? false,
+    );
+    if (_showIncomeGroup && _selectedIncomeValueType == null) {
+      if (incomeAmount.isNotEmpty) {
+        _selectedIncomeValueType = 'exact';
+      } else if (_incomeMinAmountController.text.trim().isNotEmpty ||
+          _incomeMaxAmountController.text.trim().isNotEmpty) {
+        _selectedIncomeValueType = 'range';
+      } else {
+        _selectedIncomeValueType = 'undisclosed';
+      }
     }
-    if (_selectedIncomeValueType != null && _selectedIncomePeriod == null) {
+    if (_showIncomeGroup && _selectedIncomePeriod == null) {
       _selectedIncomePeriod = 'annual';
     }
     _selectedIncomeCurrencyId = _readInt(profile['income_currency_id']);
@@ -1782,20 +1796,35 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _familyIncomeMaxAmountController.text = _readAmountText(
       profile['family_income_max_amount'],
     );
-    if (_selectedFamilyIncomeValueType == null &&
-        familyIncomeAmount.isNotEmpty) {
-      _selectedFamilyIncomeValueType = 'exact';
+    _showFamilyIncomeGroup = _incomeHasSavedValue(
+      valueType: _selectedFamilyIncomeValueType,
+      amountText: _familyIncomeAmountController.text,
+      minAmountText: _familyIncomeMinAmountController.text,
+      maxAmountText: _familyIncomeMaxAmountController.text,
+      private: _readBool(profile['family_income_private']) ?? false,
+    );
+    if (_showFamilyIncomeGroup && _selectedFamilyIncomeValueType == null) {
+      if (familyIncomeAmount.isNotEmpty) {
+        _selectedFamilyIncomeValueType = 'exact';
+      } else if (_familyIncomeMinAmountController.text.trim().isNotEmpty ||
+          _familyIncomeMaxAmountController.text.trim().isNotEmpty) {
+        _selectedFamilyIncomeValueType = 'range';
+      } else {
+        _selectedFamilyIncomeValueType = 'undisclosed';
+      }
     }
-    if (_selectedFamilyIncomeValueType != null &&
-        _selectedFamilyIncomePeriod == null) {
+    if (_showFamilyIncomeGroup && _selectedFamilyIncomePeriod == null) {
       _selectedFamilyIncomePeriod = 'annual';
     }
     _selectedFamilyIncomeCurrencyId =
         _readInt(profile['family_income_currency_id']) ??
         _selectedIncomeCurrencyId;
     _familyIncomePrivate = _readBool(profile['family_income_private']) ?? false;
-    _selectedHasSiblings = _readBool(profile['has_siblings']);
+    _selectedHasSiblings = _readBool(profile['has_siblings']) ?? false;
     _prefillSiblings(profile['siblings']);
+    if (_siblingRows.isNotEmpty) {
+      _selectedHasSiblings = true;
+    }
     _prefillRelatives(profile['relatives']);
     _prefillAllianceNetworks(profile['alliance_networks']);
     _otherRelativesController.text =
@@ -1850,8 +1879,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedPreferredProfileManagedBy = _readText(
       profile['preferred_profile_managed_by'],
     );
-    _selectedWillingToRelocate = _readBool(profile['willing_to_relocate']);
-    _selectedPreferredIntercaste = _readBool(profile['preferred_intercaste']);
+    _selectedWillingToRelocate =
+        _readBool(profile['willing_to_relocate']) ?? false;
+    _selectedPreferredIntercaste =
+        _readBool(profile['preferred_intercaste']) ?? false;
     final savedPreferredMaritalStatusIds = _readIntList(
       profile['preferred_marital_status_ids'] ??
           profile['preferred_marital_statuses'],
@@ -2070,6 +2101,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             results['custom_occupations'] ?? <Map<String, dynamic>>[];
         _incomeCurrencyOptions =
             results['currencies'] ?? <Map<String, dynamic>>[];
+        _ensureDefaultCurrencySelections();
         _syncSelectedEducationFromText();
       });
     } catch (_) {
@@ -2147,6 +2179,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         final currencies = _readRows(results['currencies']);
         if (currencies.isNotEmpty) {
           _incomeCurrencyOptions = currencies;
+          _ensureDefaultCurrencySelections();
         }
         _rashiOptions = _readRows(results['rashis']);
         _nakshatraOptions = _readRows(results['nakshatras']);
@@ -2972,6 +3005,55 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return null;
   }
 
+  int? _defaultCurrencyId() {
+    if (_incomeCurrencyOptions.isEmpty) return null;
+
+    for (final option in _incomeCurrencyOptions) {
+      final code = _readText(option['code'])?.toUpperCase();
+      final symbol = _readText(option['symbol']);
+      final label = _optionLabel(option, 'Currency').toUpperCase();
+      if (code == 'INR' || symbol == '₹' || label.contains('INR')) {
+        return _readInt(option['id']);
+      }
+    }
+
+    return _readInt(_incomeCurrencyOptions.first['id']);
+  }
+
+  void _ensureDefaultCurrencySelections() {
+    final defaultCurrencyId = _defaultCurrencyId();
+    if (defaultCurrencyId == null) return;
+
+    _selectedIncomeCurrencyId ??= defaultCurrencyId;
+    _selectedFamilyIncomeCurrencyId ??= _selectedIncomeCurrencyId;
+  }
+
+  String _currencyLabel(int? currencyId) {
+    for (final option in _incomeCurrencyOptions) {
+      if (_readInt(option['id']) != currencyId) continue;
+
+      return _readText(option['symbol']) ??
+          _readText(option['code']) ??
+          _optionLabel(option, 'Currency');
+    }
+
+    return '₹';
+  }
+
+  bool _incomeHasSavedValue({
+    required String? valueType,
+    required String amountText,
+    required String minAmountText,
+    required String maxAmountText,
+    required bool private,
+  }) {
+    final hasAmount =
+        amountText.trim().isNotEmpty ||
+        minAmountText.trim().isNotEmpty ||
+        maxAmountText.trim().isNotEmpty;
+    return hasAmount || valueType == 'undisclosed' || private;
+  }
+
   String? _labelForValue(
     List<Map<String, dynamic>> options,
     String? selectedValue,
@@ -3335,18 +3417,23 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   bool _validateIncomeFields() {
     bool validateOne({
       required String title,
+      required bool enabled,
       required String? valueType,
       required TextEditingController amountController,
       required TextEditingController minAmountController,
       required TextEditingController maxAmountController,
     }) {
-      if (valueType == 'exact' || valueType == 'approximate') {
+      if (!enabled) return true;
+
+      final effectiveValueType = valueType ?? 'approximate';
+      if (effectiveValueType == 'exact' ||
+          effectiveValueType == 'approximate') {
         if (_nullableNumber(amountController) == null) {
           _showMessage('$title amount भरा.');
           return false;
         }
       }
-      if (valueType == 'range') {
+      if (effectiveValueType == 'range') {
         final minAmount = _nullableNumber(minAmountController);
         final maxAmount = _nullableNumber(maxAmountController);
         if (minAmount == null || maxAmount == null) {
@@ -3364,6 +3451,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     return validateOne(
           title: 'Personal income',
+          enabled: _showIncomeGroup,
           valueType: _selectedIncomeValueType,
           amountController: _incomeAmountController,
           minAmountController: _incomeMinAmountController,
@@ -3371,6 +3459,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ) &&
         validateOne(
           title: 'Family income',
+          enabled: _showFamilyIncomeGroup,
           valueType: _selectedFamilyIncomeValueType,
           amountController: _familyIncomeAmountController,
           minAmountController: _familyIncomeMinAmountController,
@@ -3384,12 +3473,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   bool _incomeHasPayload({
+    required bool enabled,
     required String? valueType,
     required TextEditingController amountController,
     required TextEditingController minAmountController,
     required TextEditingController maxAmountController,
     required bool private,
   }) {
+    if (!enabled) return false;
+
     return valueType != null ||
         amountController.text.trim().isNotEmpty ||
         minAmountController.text.trim().isNotEmpty ||
@@ -3399,6 +3491,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Map<String, dynamic> _incomePayload({
     required String prefix,
+    required bool enabled,
     required String? period,
     required String? valueType,
     required TextEditingController amountController,
@@ -3408,6 +3501,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     required bool private,
   }) {
     if (!_incomeHasPayload(
+      enabled: enabled,
       valueType: valueType,
       amountController: amountController,
       minAmountController: minAmountController,
@@ -3421,7 +3515,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final minAmount = _nullableNumber(minAmountController);
     final maxAmount = _nullableNumber(maxAmountController);
     final effectivePeriod = period ?? 'annual';
-    final singleAmount = valueType == 'exact' || valueType == 'approximate'
+    final effectiveValueType = valueType ?? 'approximate';
+    final singleAmount =
+        effectiveValueType == 'exact' || effectiveValueType == 'approximate'
         ? amount
         : null;
 
@@ -3429,10 +3525,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (prefix == 'income') 'annual_income': singleAmount,
       if (prefix == 'family_income') 'family_income': singleAmount,
       '${prefix}_period': effectivePeriod,
-      '${prefix}_value_type': valueType,
+      '${prefix}_value_type': effectiveValueType,
       '${prefix}_amount': singleAmount,
-      '${prefix}_min_amount': valueType == 'range' ? minAmount : null,
-      '${prefix}_max_amount': valueType == 'range' ? maxAmount : null,
+      '${prefix}_min_amount': effectiveValueType == 'range' ? minAmount : null,
+      '${prefix}_max_amount': effectiveValueType == 'range' ? maxAmount : null,
       '${prefix}_currency_id': currencyId,
       '${prefix}_private': private,
     };
@@ -3567,8 +3663,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (_childRows.isEmpty) {
         _childRows.add(_ChildEditRow(sortOrder: 0));
       }
-    } else {
-      _disposeChildRows();
     }
   }
 
@@ -3629,6 +3723,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'work_location_text': _nullableText(_workLocationController),
       ..._incomePayload(
         prefix: 'income',
+        enabled: _showIncomeGroup,
         period: _selectedIncomePeriod,
         valueType: _selectedIncomeValueType,
         amountController: _incomeAmountController,
@@ -3652,6 +3747,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'family_values': _selectedFamilyValues,
       ..._incomePayload(
         prefix: 'family_income',
+        enabled: _showFamilyIncomeGroup,
         period: _selectedFamilyIncomePeriod,
         valueType: _selectedFamilyIncomeValueType,
         amountController: _familyIncomeAmountController,
@@ -3827,7 +3923,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       includeParentContacts: section == _EditProfileSection.familyDetails,
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
-      includeAllianceNetworks: section == _EditProfileSection.alliance,
+      includeAllianceNetworks: section == _EditProfileSection.relatives,
       includeMarriageChildren: section == _EditProfileSection.basic,
     );
     Map<String, dynamic> response;
@@ -3885,7 +3981,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.familyDetails,
     _EditProfileSection.siblings,
     _EditProfileSection.relatives,
-    _EditProfileSection.alliance,
     _EditProfileSection.property,
     _EditProfileSection.horoscope,
     _EditProfileSection.aboutMe,
@@ -3907,8 +4002,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return 'Siblings';
       case _EditProfileSection.relatives:
         return 'Relatives';
-      case _EditProfileSection.alliance:
-        return 'Alliance';
       case _EditProfileSection.property:
         return 'Property';
       case _EditProfileSection.horoscope:
@@ -3936,8 +4029,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return Icons.people_alt_outlined;
       case _EditProfileSection.relatives:
         return Icons.people_outline;
-      case _EditProfileSection.alliance:
-        return Icons.account_tree_outlined;
       case _EditProfileSection.property:
         return Icons.real_estate_agent_outlined;
       case _EditProfileSection.horoscope:
@@ -4009,7 +4100,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     ], separator: ', ');
     if (filledRows.length == 1) return firstLabel;
 
-    return _joinSummaryParts(['${filledRows.length} address rows', firstLabel]);
+    return _joinSummaryParts([
+      '${filledRows.length} address${filledRows.length == 1 ? '' : 'es'}',
+      firstLabel,
+    ]);
   }
 
   String? _ageSummary() {
@@ -4143,7 +4237,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   'Children',
                   _boolSummary(_selectedHasChildren),
                   _selectedHasChildren == true && _childRows.isNotEmpty
-                      ? '${_childRows.length} row(s)'
+                      ? '${_childRows.length} child${_childRows.length == 1 ? '' : 'ren'}'
                       : null,
                 ], separator: ': ')
               : null,
@@ -4178,13 +4272,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               ),
           _controllerSummary(_workLocationController) ??
               _selectedWorkLocationLabel,
-          _editableIncomeSummary(
-            valueType: _selectedIncomeValueType,
-            amountController: _incomeAmountController,
-            minAmountController: _incomeMinAmountController,
-            maxAmountController: _incomeMaxAmountController,
-            private: _incomePrivate,
-          ),
+          _showIncomeGroup
+              ? _editableIncomeSummary(
+                  valueType: _selectedIncomeValueType,
+                  amountController: _incomeAmountController,
+                  minAmountController: _incomeMinAmountController,
+                  maxAmountController: _incomeMaxAmountController,
+                  private: _incomePrivate,
+                )
+              : null,
         ]);
       case _EditProfileSection.familyDetails:
         return _summaryFromParts([
@@ -4210,22 +4306,28 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _selectedFamilyValues,
             'Family values',
           ),
-          _editableIncomeSummary(
-            valueType: _selectedFamilyIncomeValueType,
-            amountController: _familyIncomeAmountController,
-            minAmountController: _familyIncomeMinAmountController,
-            maxAmountController: _familyIncomeMaxAmountController,
-            private: _familyIncomePrivate,
-          ),
+          _showFamilyIncomeGroup
+              ? _editableIncomeSummary(
+                  valueType: _selectedFamilyIncomeValueType,
+                  amountController: _familyIncomeAmountController,
+                  minAmountController: _familyIncomeMinAmountController,
+                  maxAmountController: _familyIncomeMaxAmountController,
+                  private: _familyIncomePrivate,
+                )
+              : null,
         ]);
       case _EditProfileSection.siblings:
         return _summaryFromParts([
-          _boolSummary(_selectedHasSiblings),
-          _siblingRows.isEmpty ? null : '${_siblingRows.length} row(s)',
+          _selectedHasSiblings == true ? 'Siblings added' : 'No siblings',
+          _siblingRows.isEmpty
+              ? null
+              : '${_siblingRows.length} sibling${_siblingRows.length == 1 ? '' : 's'}',
         ]);
       case _EditProfileSection.relatives:
         return _summaryFromParts([
-          _relativeRows.isEmpty ? null : '${_relativeRows.length} row(s)',
+          _relativeRows.isEmpty
+              ? null
+              : '${_relativeRows.length} relative${_relativeRows.length == 1 ? '' : 's'}',
           _relativeRows.isEmpty
               ? null
               : _labelForValue(
@@ -4233,15 +4335,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   _relativeRows.first.relationType,
                   'Relation',
                 ),
-        ]);
-      case _EditProfileSection.alliance:
-        return _summaryFromParts([
           _otherRelativesController.text.trim().isEmpty
               ? null
               : 'Other relatives added',
           _allianceNetworkRows.isEmpty
               ? null
-              : '${_allianceNetworkRows.length} row(s)',
+              : '${_allianceNetworkRows.length} alliance famil${_allianceNetworkRows.length == 1 ? 'y' : 'ies'}',
           _allianceNetworkRows.isEmpty
               ? null
               : _controllerSummary(
@@ -4333,16 +4432,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
-  Widget _buildAllianceSection() {
-    return Column(
-      children: [
-        _buildAlliancePropertySection(),
-        const SizedBox(height: 14),
-        _buildAllianceNetworkSection(),
-      ],
-    );
-  }
-
   Widget _sectionEditor(_EditProfileSection section) {
     switch (section) {
       case _EditProfileSection.basic:
@@ -4357,8 +4446,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _buildSiblingsSection();
       case _EditProfileSection.relatives:
         return _buildRelativesSection();
-      case _EditProfileSection.alliance:
-        return _buildAllianceSection();
       case _EditProfileSection.property:
         return _buildPropertySection();
       case _EditProfileSection.horoscope:
@@ -4459,9 +4546,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       case _EditProfileSection.siblings:
         return const ['has_siblings', 'siblings'];
       case _EditProfileSection.relatives:
-        return const ['relatives'];
-      case _EditProfileSection.alliance:
-        return const ['other_relatives_text', 'alliance_networks'];
+        return const ['relatives', 'other_relatives_text', 'alliance_networks'];
       case _EditProfileSection.property:
         return const ['property_details'];
       case _EditProfileSection.horoscope:
@@ -4521,7 +4606,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       includeParentContacts: section == _EditProfileSection.familyDetails,
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
-      includeAllianceNetworks: section == _EditProfileSection.alliance,
+      includeAllianceNetworks: section == _EditProfileSection.relatives,
       includeMarriageChildren: section == _EditProfileSection.basic,
     );
     return <String, dynamic>{
@@ -4739,6 +4824,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final theme = Theme.of(context);
     final isExpanded = _expandedSection == section;
     final isPhotoSection = section == _EditProfileSection.photo;
+    final showSiblingsHeaderSwitch =
+        section == _EditProfileSection.siblings && isExpanded;
     final isSavedFeedback = _savedFeedbackSection == section;
     final showSavedPulse = isSavedFeedback && _savedHighlightOn;
     const successColor = Color(0xFF15803D);
@@ -4844,6 +4931,25 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                if (showSiblingsHeaderSwitch) ...[
+                  Text(
+                    _selectedHasSiblings == true ? 'ON' : 'OFF',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: _selectedHasSiblings == true
+                          ? theme.colorScheme.primary
+                          : Colors.grey.shade600,
+                    ),
+                  ),
+                  Switch.adaptive(
+                    value: _selectedHasSiblings == true,
+                    onChanged: _saving
+                        ? null
+                        : (value) =>
+                              setState(() => _selectedHasSiblings = value),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 isPhotoSection
                     ? FilledButton.icon(
                         onPressed: _saving ? null : _openPhotoManager,
@@ -5066,36 +5172,125 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
-  Widget _boolDropdown({
-    required String labelText,
+  Widget _compactSwitchRow({
+    required String title,
+    String? subtitle,
     required IconData icon,
-    required bool? selectedValue,
-    required ValueChanged<bool?> onChanged,
+    required bool value,
+    required ValueChanged<bool> onChanged,
   }) {
-    final selectedKey = selectedValue == null ? -1 : (selectedValue ? 1 : 0);
+    final theme = Theme.of(context);
 
-    return DropdownButtonFormField<int>(
-      key: ValueKey('$labelText-${selectedValue?.toString() ?? 'none'}'),
-      initialValue: selectedKey,
-      isExpanded: true,
-      items: const [
-        DropdownMenuItem<int>(value: -1, child: Text('Not selected')),
-        DropdownMenuItem<int>(value: 0, child: Text('No')),
-        DropdownMenuItem<int>(value: 1, child: Text('Yes')),
-      ],
-      onChanged: _saving
-          ? null
-          : (value) {
-              if (value == null || value < 0) {
-                onChanged(null);
-              } else {
-                onChanged(value == 1);
-              }
-            },
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: 'Optional',
-        prefixIcon: Icon(icon),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (subtitle != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          Text(
+            value ? 'ON' : 'OFF',
+            style: theme.textTheme.labelMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: value ? theme.colorScheme.primary : Colors.grey.shade600,
+            ),
+          ),
+          Switch.adaptive(value: value, onChanged: _saving ? null : onChanged),
+        ],
+      ),
+    );
+  }
+
+  Widget _connectedToggleGroup({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required List<Widget> children,
+  }) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: theme.colorScheme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                value ? 'ON' : 'OFF',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: value
+                      ? theme.colorScheme.primary
+                      : Colors.grey.shade600,
+                ),
+              ),
+              Switch.adaptive(
+                value: value,
+                onChanged: _saving ? null : onChanged,
+              ),
+            ],
+          ),
+          if (value && children.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            ...children,
+          ],
+        ],
       ),
     );
   }
@@ -5589,16 +5784,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           const SizedBox(height: 14),
           _buildMarriageHistoryEditor(),
           const SizedBox(height: 14),
-          _boolDropdown(
-            labelText: 'Has children (Optional)',
+          _connectedToggleGroup(
+            title: 'Children',
+            subtitle: _selectedHasChildren == true
+                ? '${_childRows.length} child detail${_childRows.length == 1 ? '' : 's'}'
+                : 'No children',
             icon: Icons.child_care_outlined,
-            selectedValue: _selectedHasChildren,
+            value: _selectedHasChildren == true,
             onChanged: (value) => setState(() => _setHasChildren(value)),
+            children: [_buildChildrenEditor()],
           ),
-          if (_selectedHasChildren == true) ...[
-            const SizedBox(height: 14),
-            _buildChildrenEditor(),
-          ],
         ],
         if (_maritalLifestyleOptionsLoading)
           const Padding(
@@ -5783,26 +5978,19 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Children',
-                style: TextStyle(fontWeight: FontWeight.w800),
-              ),
-            ),
-            OutlinedButton.icon(
-              onPressed: _saving ? null : _addChild,
-              icon: const Icon(Icons.add),
-              label: const Text('Add'),
-            ),
-          ],
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: _saving ? null : _addChild,
+            icon: const Icon(Icons.add),
+            label: const Text('Add child'),
+          ),
         ),
         if (_childRows.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              'No child rows added.',
+              'No children added.',
               style: TextStyle(color: Colors.grey.shade700),
             ),
           )
@@ -6380,8 +6568,33 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     {'key': 'daily', 'label': 'Daily'},
   ];
 
+  void _setPersonalIncomeGroupEnabled(bool value) {
+    setState(() {
+      _showIncomeGroup = value;
+      if (value) {
+        _selectedIncomeValueType ??= 'approximate';
+        _selectedIncomePeriod ??= 'annual';
+        _selectedIncomeCurrencyId ??= _defaultCurrencyId();
+      }
+    });
+  }
+
+  void _setFamilyIncomeGroupEnabled(bool value) {
+    setState(() {
+      _showFamilyIncomeGroup = value;
+      if (value) {
+        _selectedFamilyIncomeValueType ??= 'approximate';
+        _selectedFamilyIncomePeriod ??= 'annual';
+        _selectedFamilyIncomeCurrencyId ??=
+            _selectedIncomeCurrencyId ?? _defaultCurrencyId();
+      }
+    });
+  }
+
   Widget _incomeEditor({
     required String title,
+    required bool enabled,
+    required ValueChanged<bool> onEnabledChanged,
     required String? valueType,
     required ValueChanged<String?> onValueTypeChanged,
     required String? period,
@@ -6394,8 +6607,42 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     required bool private,
     required ValueChanged<bool> onPrivateChanged,
   }) {
-    final showSingleAmount = valueType == 'exact' || valueType == 'approximate';
-    final showRange = valueType == 'range';
+    final effectiveValueType = valueType ?? 'approximate';
+    final effectivePeriod = period ?? 'annual';
+    final effectiveCurrencyId = currencyId ?? _defaultCurrencyId();
+    final showSingleAmount =
+        effectiveValueType == 'exact' || effectiveValueType == 'approximate';
+    final showRange = effectiveValueType == 'range';
+    final currencyText = _currencyLabel(effectiveCurrencyId);
+    final subtitle = enabled
+        ? _editableIncomeSummary(
+                valueType: effectiveValueType,
+                amountController: amountController,
+                minAmountController: minAmountController,
+                maxAmountController: maxAmountController,
+                private: private,
+              ) ??
+              'Add income details'
+        : 'Not added';
+
+    String incomeTypeLabel(String key) {
+      return switch (key) {
+        'exact' => 'Exact',
+        'approximate' => 'Approximate income',
+        'range' => 'Range',
+        'undisclosed' => 'Undisclosed',
+        _ => key,
+      };
+    }
+
+    String periodLabel(String key) {
+      return switch (key) {
+        'monthly' => 'monthly',
+        'weekly' => 'weekly',
+        'daily' => 'daily',
+        _ => 'annual',
+      };
+    }
 
     Widget amountField({
       required TextEditingController controller,
@@ -6407,58 +6654,96 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         textInputAction: TextInputAction.next,
         decoration: InputDecoration(
           labelText: labelText,
-          prefixIcon: const Icon(Icons.currency_rupee),
+          suffixIcon: PopupMenuButton<int>(
+            enabled: _incomeCurrencyOptions.isNotEmpty && !_saving,
+            initialValue: effectiveCurrencyId,
+            tooltip: 'Currency',
+            onSelected: (value) {
+              setState(() => onCurrencyChanged(value));
+            },
+            itemBuilder: (context) => _incomeCurrencyOptions
+                .map((option) {
+                  final id = _readInt(option['id']);
+                  if (id == null) return null;
+                  return PopupMenuItem<int>(
+                    value: id,
+                    child: Text(_optionLabel(option, 'Currency')),
+                  );
+                })
+                .whereType<PopupMenuItem<int>>()
+                .toList(),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Center(
+                widthFactor: 1,
+                child: Text(
+                  currencyText,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+          ),
         ),
       );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return _connectedToggleGroup(
+      title: '$title (Optional)',
+      subtitle: subtitle,
+      icon: Icons.payments_outlined,
+      value: enabled,
+      onChanged: onEnabledChanged,
       children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _incomeValueTypeOptions().map((option) {
+            final key = _readText(option['key']);
+            if (key == null) return const SizedBox.shrink();
+
+            return ChoiceChip(
+              label: Text(incomeTypeLabel(key)),
+              selected: effectiveValueType == key,
+              onSelected: _saving
+                  ? null
+                  : (selected) {
+                      if (!selected) return;
+                      setState(() {
+                        onValueTypeChanged(key);
+                        if (period == null) {
+                          onPeriodChanged('annual');
+                        }
+                        if (currencyId == null) {
+                          onCurrencyChanged(_defaultCurrencyId());
+                        }
+                      });
+                    },
+            );
+          }).toList(),
         ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: _stringDropdown(
-                labelText: 'Income type',
-                icon: Icons.payments_outlined,
-                options: _incomeValueTypeOptions(),
-                selectedValue: valueType,
-                fallbackPrefix: 'Income type',
-                loading: false,
-                onChanged: (value) {
-                  setState(() {
-                    onValueTypeChanged(value);
-                    if (value != null && period == null) {
-                      onPeriodChanged('annual');
-                    }
-                  });
-                },
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _stringDropdown(
-                labelText: 'Period',
-                icon: Icons.calendar_month_outlined,
-                options: _incomePeriodOptions(),
-                selectedValue: period,
-                fallbackPrefix: 'Period',
-                loading: false,
-                onChanged: (value) => setState(() => onPeriodChanged(value)),
-              ),
-            ),
-          ],
+        const SizedBox(height: 14),
+        _stringDropdown(
+          labelText: 'Income period',
+          icon: Icons.calendar_month_outlined,
+          options: _incomePeriodOptions(),
+          selectedValue: effectivePeriod,
+          fallbackPrefix: 'Period',
+          loading: false,
+          onChanged: (value) => setState(() {
+            onPeriodChanged(value ?? 'annual');
+            if (currencyId == null) {
+              onCurrencyChanged(_defaultCurrencyId());
+            }
+          }),
         ),
         if (showSingleAmount) ...[
           const SizedBox(height: 14),
-          amountField(controller: amountController, labelText: 'Amount'),
+          amountField(
+            controller: amountController,
+            labelText: effectiveValueType == 'exact'
+                ? 'Exact ${periodLabel(effectivePeriod)} income'
+                : 'Approximate ${periodLabel(effectivePeriod)} income',
+          ),
         ],
         if (showRange) ...[
           const SizedBox(height: 14),
@@ -6480,17 +6765,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             ],
           ),
         ],
-        const SizedBox(height: 14),
-        _intDropdown(
-          labelText: 'Currency',
-          icon: Icons.currency_exchange,
-          options: _incomeCurrencyOptions,
-          selectedId: currencyId,
-          fallbackPrefix: 'Currency',
-          loading:
-              _educationCareerOptionsLoading || _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => onCurrencyChanged(value)),
-        ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text('Keep ${title.toLowerCase()} private'),
@@ -6595,6 +6869,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         const SizedBox(height: 18),
         _incomeEditor(
           title: 'Personal income',
+          enabled: _showIncomeGroup,
+          onEnabledChanged: _setPersonalIncomeGroupEnabled,
           valueType: _selectedIncomeValueType,
           onValueTypeChanged: (value) => _selectedIncomeValueType = value,
           period: _selectedIncomePeriod,
@@ -7064,6 +7340,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         const SizedBox(height: 18),
         _incomeEditor(
           title: 'Family income',
+          enabled: _showFamilyIncomeGroup,
+          onEnabledChanged: _setFamilyIncomeGroupEnabled,
           valueType: _selectedFamilyIncomeValueType,
           onValueTypeChanged: (value) => _selectedFamilyIncomeValueType = value,
           period: _selectedFamilyIncomePeriod,
@@ -7081,42 +7359,34 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Widget _buildSiblingsSection() {
-    return _sectionCard(
-      title: 'Siblings',
-      icon: Icons.people_alt_outlined,
+    if (_selectedHasSiblings != true) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _boolDropdown(
-          labelText: 'Has siblings? (Optional)',
-          icon: Icons.people,
-          selectedValue: _selectedHasSiblings,
-          onChanged: (value) => setState(() => _selectedHasSiblings = value),
-        ),
-        if (_selectedHasSiblings == true) ...[
-          const SizedBox(height: 14),
-          for (var index = 0; index < _siblingRows.length; index++) ...[
-            _buildSiblingRowEditor(index, _siblingRows[index]),
-            const SizedBox(height: 12),
-          ],
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _saving ? null : () => _addSibling('brother'),
-                  icon: const Icon(Icons.person_add_alt_1_outlined),
-                  label: const Text('Add brother'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _saving ? null : () => _addSibling('sister'),
-                  icon: const Icon(Icons.person_add_alt_1_outlined),
-                  label: const Text('Add sister'),
-                ),
-              ),
-            ],
-          ),
+        for (var index = 0; index < _siblingRows.length; index++) ...[
+          _buildSiblingRowEditor(index, _siblingRows[index]),
+          const SizedBox(height: 12),
         ],
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _saving ? null : () => _addSibling('brother'),
+                icon: const Icon(Icons.person_add_alt_1_outlined),
+                label: const Text('Add brother'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _saving ? null : () => _addSibling('sister'),
+                icon: const Icon(Icons.person_add_alt_1_outlined),
+                label: const Text('Add sister'),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -7232,37 +7502,45 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Widget _buildRelativesSection() {
-    return _sectionCard(
-      title: 'Relatives',
-      icon: Icons.people_outline,
+    return Column(
       children: [
-        for (var index = 0; index < _relativeRows.length; index++) ...[
-          _buildRelativeRowEditor(index, _relativeRows[index]),
-          const SizedBox(height: 12),
-        ],
-        Row(
+        _sectionCard(
+          title: 'Family relatives',
+          icon: Icons.people_outline,
           children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _saving
-                    ? null
-                    : () => _addRelative('paternal_uncle'),
-                icon: const Icon(Icons.person_add_alt_1_outlined),
-                label: const Text('Add paternal'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _saving
-                    ? null
-                    : () => _addRelative('maternal_uncle'),
-                icon: const Icon(Icons.person_add_alt_1_outlined),
-                label: const Text('Add maternal'),
-              ),
+            for (var index = 0; index < _relativeRows.length; index++) ...[
+              _buildRelativeRowEditor(index, _relativeRows[index]),
+              const SizedBox(height: 12),
+            ],
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _saving
+                        ? null
+                        : () => _addRelative('paternal_uncle'),
+                    icon: const Icon(Icons.person_add_alt_1_outlined),
+                    label: const Text('Add paternal'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _saving
+                        ? null
+                        : () => _addRelative('maternal_uncle'),
+                    icon: const Icon(Icons.person_add_alt_1_outlined),
+                    label: const Text('Add maternal'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+        const SizedBox(height: 14),
+        _buildAlliancePropertySection(),
+        const SizedBox(height: 14),
+        _buildAllianceNetworkSection(),
       ],
     );
   }
@@ -7380,7 +7658,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           child: OutlinedButton.icon(
             onPressed: _saving ? null : _addAllianceNetwork,
             icon: const Icon(Icons.add),
-            label: const Text('Add alliance row'),
+            label: const Text('Add alliance family'),
           ),
         ),
       ],
@@ -7406,7 +7684,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Alliance row ${index + 1}',
+                  'Alliance family ${index + 1}',
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -7924,10 +8202,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             },
           ),
         const SizedBox(height: 14),
-        _boolDropdown(
-          labelText: 'Preferred intercaste (Optional)',
+        _compactSwitchRow(
+          title: 'Open to intercaste matches',
           icon: Icons.diversity_3_outlined,
-          selectedValue: _selectedPreferredIntercaste,
+          value: _selectedPreferredIntercaste == true,
           onChanged: (value) =>
               setState(() => _selectedPreferredIntercaste = value),
         ),
@@ -8013,10 +8291,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               setState(() => _selectedPreferredProfileManagedBy = value),
         ),
         const SizedBox(height: 14),
-        _boolDropdown(
-          labelText: 'Willing to relocate (Optional)',
+        _compactSwitchRow(
+          title: 'Willing to relocate',
           icon: Icons.flight_takeoff_outlined,
-          selectedValue: _selectedWillingToRelocate,
+          value: _selectedWillingToRelocate == true,
           onChanged: (value) =>
               setState(() => _selectedWillingToRelocate = value),
         ),

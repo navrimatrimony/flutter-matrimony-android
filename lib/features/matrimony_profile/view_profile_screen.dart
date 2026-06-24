@@ -151,7 +151,6 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final familyItems = <ProfileDisplayItemData>[];
     final siblingItems = <ProfileDisplayItemData>[];
     final relativeItems = <ProfileDisplayItemData>[];
-    final allianceItems = <ProfileDisplayItemData>[];
     final propertyItems = <ProfileDisplayItemData>[];
     final horoscopeItems = <ProfileDisplayItemData>[];
     final aboutItems = <ProfileDisplayItemData>[];
@@ -206,20 +205,13 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       'Marital Status',
       profile['marital_status_label'] ?? profile['marital_status_key'],
     );
-    _addDisplayItem(basicItems, 'Has Children', profile['has_children']);
     if (showMarriageChildren) {
       _addDisplayItem(
         basicItems,
         'Marriage History',
         _fallbackMarriageHistoryLabel(profile, maritalStatusKey),
       );
-      if (_readBool(profile['has_children'])) {
-        _addDisplayItem(
-          basicItems,
-          'Children',
-          _fallbackChildrenLabel(profile),
-        );
-      }
+      _addDisplayItem(basicItems, 'Children', _fallbackChildrenLabel(profile));
     }
     _addDisplayItem(
       physicalItems,
@@ -278,7 +270,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       careerItems,
       'Annual Income',
       _fallbackIncomeLabel(profile, 'income', 'annual_income') ??
-          profile['income_display_label'],
+          profile['income_display_label'] ??
+          'Not added',
     );
     _addDisplayItem(familyItems, 'Father', _parentSummary(profile, 'father'));
     _addPhoneDisplayItem(
@@ -316,7 +309,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       familyItems,
       'Family Income',
       _fallbackIncomeLabel(profile, 'family_income', 'family_income') ??
-          profile['family_income_display_label'],
+          profile['family_income_display_label'] ??
+          'Not added',
     );
     _addDisplayItem(familyItems, 'Family Type', profile['family_type_label']);
     _addDisplayItem(familyItems, 'Family Status', profile['family_status']);
@@ -333,12 +327,12 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       _fallbackRelativesLabel(profile),
     );
     _addDisplayItem(
-      allianceItems,
+      relativeItems,
       'Alliance Network',
       _fallbackAllianceNetworksLabel(profile),
     );
     _addDisplayItem(
-      allianceItems,
+      relativeItems,
       'Other Relatives',
       profile['other_relatives_text'],
     );
@@ -487,12 +481,6 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           key: 'relatives',
           title: 'Relatives',
           items: relativeItems,
-        ),
-      if (allianceItems.isNotEmpty)
-        ProfileDisplaySectionData(
-          key: 'alliance',
-          title: 'Alliance',
-          items: allianceItems,
         ),
       if (propertyItems.isNotEmpty)
         ProfileDisplaySectionData(
@@ -655,7 +643,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final valueType = ApiClient.safeDisplayLabel(
       profile['${prefix}_value_type'],
     );
-    if (valueType == 'undisclosed') return null;
+    if (valueType == 'undisclosed') return 'Undisclosed';
 
     final currency =
         ApiClient.safeDisplayLabel(profile['${prefix}_currency_symbol']) ?? '₹';
@@ -671,12 +659,15 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final amount =
         _scalarDisplayText(profile['${prefix}_amount']) ??
         _scalarDisplayText(profile[legacyKey]);
-    return amount == null ? null : '$currency$amount';
+    if (amount == null) return null;
+    if (valueType == 'approximate') return 'Approx. $currency$amount';
+
+    return '$currency$amount';
   }
 
   String? _fallbackSiblingsLabel(Map<String, dynamic> profile) {
     final rows = profile['siblings'];
-    if (rows is! List || rows.isEmpty) return null;
+    if (rows is! List || rows.isEmpty) return 'No siblings';
 
     final parts = <String>[];
     for (final row in rows.take(3)) {
@@ -709,7 +700,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final remaining = rows.length - parts.length;
     if (remaining > 0) parts.add('+$remaining more');
 
-    return parts.isEmpty ? null : parts.join('; ');
+    final countLabel = '${rows.length} sibling${rows.length == 1 ? '' : 's'}';
+    return parts.isEmpty ? countLabel : '$countLabel - ${parts.join('; ')}';
   }
 
   String? _fallbackMarriageHistoryLabel(
@@ -760,7 +752,9 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
   String? _fallbackChildrenLabel(Map<String, dynamic> profile) {
     final rows = profile['children'];
-    if (rows is! List || rows.isEmpty) return null;
+    if (rows is! List || rows.isEmpty || !_readBool(profile['has_children'])) {
+      return 'No children';
+    }
 
     final parts = <String>[];
     var index = 0;
@@ -788,7 +782,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final remaining = rows.length - parts.length;
     if (remaining > 0) parts.add('+$remaining more');
 
-    return parts.isEmpty ? null : parts.join('; ');
+    final countLabel = '${rows.length} child${rows.length == 1 ? '' : 'ren'}';
+    return parts.isEmpty ? countLabel : '$countLabel - ${parts.join('; ')}';
   }
 
   String? _fallbackRelativesLabel(Map<String, dynamic> profile) {
