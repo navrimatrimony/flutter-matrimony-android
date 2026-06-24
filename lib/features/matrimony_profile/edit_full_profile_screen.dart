@@ -452,10 +452,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       TextEditingController();
   final TextEditingController _fatherExtraInfoController =
       TextEditingController();
+  final TextEditingController _fatherContact1Controller =
+      TextEditingController();
+  final TextEditingController _fatherContact2Controller =
+      TextEditingController();
   final TextEditingController _motherNameController = TextEditingController();
   final TextEditingController _motherOccupationController =
       TextEditingController();
   final TextEditingController _motherExtraInfoController =
+      TextEditingController();
+  final TextEditingController _motherContact1Controller =
+      TextEditingController();
+  final TextEditingController _motherContact2Controller =
       TextEditingController();
   final TextEditingController _familyIncomeAmountController =
       TextEditingController();
@@ -725,9 +733,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _fatherNameController.dispose();
     _fatherOccupationController.dispose();
     _fatherExtraInfoController.dispose();
+    _fatherContact1Controller.dispose();
+    _fatherContact2Controller.dispose();
     _motherNameController.dispose();
     _motherOccupationController.dispose();
     _motherExtraInfoController.dispose();
+    _motherContact1Controller.dispose();
+    _motherContact2Controller.dispose();
     _familyIncomeAmountController.dispose();
     _familyIncomeMinAmountController.dispose();
     _familyIncomeMaxAmountController.dispose();
@@ -1662,12 +1674,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ApiClient.safeDisplayLabel(profile['father_occupation']) ?? '';
     _fatherExtraInfoController.text =
         ApiClient.safeDisplayLabel(profile['father_extra_info']) ?? '';
+    _fatherContact1Controller.text =
+        ApiClient.safeDisplayLabel(profile['father_contact_1']) ?? '';
+    _fatherContact2Controller.text =
+        ApiClient.safeDisplayLabel(profile['father_contact_2']) ?? '';
     _motherNameController.text =
         ApiClient.safeDisplayLabel(profile['mother_name']) ?? '';
     _motherOccupationController.text =
         ApiClient.safeDisplayLabel(profile['mother_occupation']) ?? '';
     _motherExtraInfoController.text =
         ApiClient.safeDisplayLabel(profile['mother_extra_info']) ?? '';
+    _motherContact1Controller.text =
+        ApiClient.safeDisplayLabel(profile['mother_contact_1']) ?? '';
+    _motherContact2Controller.text =
+        ApiClient.safeDisplayLabel(profile['mother_contact_2']) ?? '';
     _selectedFatherOccupationMasterId = _readInt(
       profile['father_occupation_master_id'],
     );
@@ -3498,6 +3518,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   Map<String, dynamic> _buildProfilePayload({
     bool includeSelfAddresses = false,
     bool includeParentsAddresses = false,
+    bool includeParentContacts = false,
     bool includeSiblings = false,
     bool includeRelatives = false,
     bool includeAllianceNetworks = false,
@@ -3655,6 +3676,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'narrative_expectations': _nullableText(_expectationsController),
     };
 
+    if (includeParentContacts) {
+      payload['father_contact_1'] = _nullableText(_fatherContact1Controller);
+      payload['father_contact_2'] = _nullableText(_fatherContact2Controller);
+      payload['mother_contact_1'] = _nullableText(_motherContact1Controller);
+      payload['mother_contact_2'] = _nullableText(_motherContact2Controller);
+    }
+
     if (includeSelfAddresses) {
       payload['self_addresses'] = _addressRowsPayload(
         _selfAddressRows,
@@ -3711,6 +3739,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final payload = _buildProfilePayload(
       includeSelfAddresses: section == _EditProfileSection.basic,
       includeParentsAddresses: section == _EditProfileSection.familyDetails,
+      includeParentContacts: section == _EditProfileSection.familyDetails,
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
       includeAllianceNetworks: section == _EditProfileSection.allianceNetwork,
@@ -4315,11 +4344,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'father_occupation_master_id',
           'father_occupation_custom_id',
           'father_extra_info',
+          'father_contact_1',
+          'father_contact_2',
           'mother_name',
           'mother_occupation',
           'mother_occupation_master_id',
           'mother_occupation_custom_id',
           'mother_extra_info',
+          'mother_contact_1',
+          'mother_contact_2',
           'parents_addresses',
         ];
       case _EditProfileSection.familyOverview:
@@ -4398,6 +4431,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final payload = _buildProfilePayload(
       includeSelfAddresses: section == _EditProfileSection.basic,
       includeParentsAddresses: section == _EditProfileSection.familyDetails,
+      includeParentContacts: section == _EditProfileSection.familyDetails,
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
       includeAllianceNetworks: section == _EditProfileSection.allianceNetwork,
@@ -6615,6 +6649,41 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
+  Widget _buildParentContactFields({
+    required String title,
+    required TextEditingController contact1Controller,
+    required TextEditingController contact2Controller,
+  }) {
+    Widget contactField(TextEditingController controller, String label) {
+      return TextField(
+        controller: controller,
+        keyboardType: TextInputType.phone,
+        textInputAction: TextInputAction.next,
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: 'Optional',
+          prefixIcon: const Icon(Icons.call_outlined),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        contactField(contact1Controller, 'Contact 1'),
+        const SizedBox(height: 14),
+        contactField(contact2Controller, 'Contact 2'),
+      ],
+    );
+  }
+
   Widget _buildFamilyDetailsSection() {
     return _sectionCard(
       title: 'Family details',
@@ -6652,6 +6721,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             prefixIcon: Icon(Icons.notes),
           ),
         ),
+        const SizedBox(height: 18),
+        _buildParentContactFields(
+          title: 'Father contact numbers',
+          contact1Controller: _fatherContact1Controller,
+          contact2Controller: _fatherContact2Controller,
+        ),
         const SizedBox(height: 14),
         TextField(
           controller: _motherNameController,
@@ -6684,6 +6759,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             labelText: 'Mother extra info (Optional)',
             prefixIcon: Icon(Icons.notes),
           ),
+        ),
+        const SizedBox(height: 18),
+        _buildParentContactFields(
+          title: 'Mother contact numbers',
+          contact1Controller: _motherContact1Controller,
+          contact2Controller: _motherContact2Controller,
         ),
         const SizedBox(height: 18),
         _buildAddressRepeater(
