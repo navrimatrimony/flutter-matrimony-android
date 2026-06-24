@@ -90,6 +90,34 @@ class _MarriageEditRow {
     };
   }
 
+  Map<String, dynamic> toStatusPayload(
+    String? statusKey,
+    int? maritalStatusId,
+  ) {
+    return <String, dynamic>{
+      if (id != null) 'id': id,
+      'marital_status_id': maritalStatusId,
+      'marriage_year': _intOrNull(marriageYearController),
+      'separation_year': statusKey == 'separated'
+          ? _intOrNull(separationYearController)
+          : null,
+      'divorce_year': statusKey == 'divorced' || statusKey == 'annulled'
+          ? _intOrNull(divorceYearController)
+          : null,
+      'spouse_death_year': statusKey == 'widowed'
+          ? _intOrNull(spouseDeathYearController)
+          : null,
+      'divorce_status':
+          statusKey == 'divorced' ||
+              statusKey == 'annulled' ||
+              statusKey == 'separated'
+          ? divorceStatus
+          : null,
+      'remarriage_reason': null,
+      'notes': null,
+    };
+  }
+
   void dispose() {
     marriageYearController.dispose();
     separationYearController.dispose();
@@ -748,6 +776,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _childRows.clear();
   }
 
+  void _clearChildrenSelection() {
+    _selectedHasChildren = false;
+    _disposeChildRows();
+  }
+
   void _disposeRelativeRows() {
     for (final row in _relativeRows) {
       row.dispose();
@@ -764,22 +797,27 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   void _prefillMarriages(dynamic value) {
     _disposeMarriageRows();
-    for (final row in _readRows(value)) {
-      _marriageRows.add(
-        _MarriageEditRow(
-          id: _readInt(row['id']),
-          marriageYear: _readText(row['marriage_year']),
-          separationYear: _readText(row['separation_year']),
-          divorceYear: _readText(row['divorce_year']),
-          spouseDeathYear: _readText(row['spouse_death_year']),
-          divorceStatus: _readDivorceStatus(row['divorce_status']),
-          remarriageReason: ApiClient.safeDisplayLabel(
-            row['remarriage_reason'],
-          ),
-          notes: ApiClient.safeDisplayLabel(row['notes']),
-        ),
-      );
-    }
+    final rows = _readRows(value);
+    if (rows.isEmpty) return;
+
+    rows.sort((a, b) {
+      final aId = _readInt(a['id']) ?? 0;
+      final bId = _readInt(b['id']) ?? 0;
+      return bId.compareTo(aId);
+    });
+    final row = rows.first;
+    _marriageRows.add(
+      _MarriageEditRow(
+        id: _readInt(row['id']),
+        marriageYear: _readText(row['marriage_year']),
+        separationYear: _readText(row['separation_year']),
+        divorceYear: _readText(row['divorce_year']),
+        spouseDeathYear: _readText(row['spouse_death_year']),
+        divorceStatus: _readDivorceStatus(row['divorce_status']),
+        remarriageReason: ApiClient.safeDisplayLabel(row['remarriage_reason']),
+        notes: ApiClient.safeDisplayLabel(row['notes']),
+      ),
+    );
   }
 
   void _prefillChildren(dynamic value) {
@@ -1425,6 +1463,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedHasChildren = _readBool(profile['has_children']);
     _prefillMarriages(profile['marriages']);
     _prefillChildren(profile['children']);
+    final maritalStatusKey = _currentMaritalStatusKey();
+    if (maritalStatusKey == 'never_married') {
+      _clearChildrenSelection();
+    } else if (_maritalStatusShowsDetails(maritalStatusKey)) {
+      _ensureMarriageDetailRow();
+      if (_selectedHasChildren != true) {
+        _disposeChildRows();
+      }
+    }
     _selectedDietId = _readInt(profile['diet_id']);
     _selectedSmokingStatusId = _readInt(profile['smoking_status_id']);
     _selectedDrinkingStatusId = _readInt(profile['drinking_status_id']);
@@ -2432,6 +2479,93 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     FocusScope.of(context).unfocus();
   }
 
+  void _scheduleAllianceLocationSearch(
+    _AllianceNetworkEditRow row,
+    String query,
+  ) {
+    _allianceLocationSearchDebounce?.cancel();
+    final requestId = ++_allianceLocationSearchRequest;
+    final trimmedQuery = query.trim();
+
+    setState(() {
+      if (row.selectedLocationLabel == null ||
+          trimmedQuery != row.selectedLocationLabel) {
+        row.cityId = null;
+        row.stateId = null;
+        row.districtId = null;
+        row.talukaId = null;
+        row.selectedLocationLabel = null;
+      }
+      if (trimmedQuery.length < 2) {
+        row.locationSearching = false;
+        row.locationSuggestions = <Map<String, dynamic>>[];
+      } else {
+        row.locationSearching = true;
+      }
+    });
+
+    if (trimmedQuery.length < 2) {
+      return;
+    }
+
+    _allianceLocationSearchDebounce = Timer(
+      _locationSearchDebounceDuration,
+      () => _runAllianceLocationSearch(row, trimmedQuery, requestId),
+    );
+  }
+
+  Future<void> _runAllianceLocationSearch(
+    _AllianceNetworkEditRow row,
+    String trimmedQuery,
+    int requestId,
+  ) async {
+    try {
+      final results = await _searchLocationOptions(trimmedQuery);
+      if (!mounted ||
+          requestId != _allianceLocationSearchRequest ||
+          !_allianceNetworkRows.contains(row)) {
+        return;
+      }
+      setState(() {
+        row.locationSuggestions = results;
+        row.locationSearching = false;
+      });
+    } catch (_) {
+      if (!mounted ||
+          requestId != _allianceLocationSearchRequest ||
+          !_allianceNetworkRows.contains(row)) {
+        return;
+      }
+      setState(() {
+        row.locationSearching = false;
+        row.locationSuggestions = <Map<String, dynamic>>[];
+      });
+    }
+  }
+
+  void _selectAllianceLocation(
+    _AllianceNetworkEditRow row,
+    Map<String, dynamic> location,
+  ) {
+    if (!_allianceNetworkRows.contains(row)) return;
+
+    final locationId = ApiClient.locationIdFrom(location);
+    if (locationId == null) return;
+
+    final label = _locationLabel(location);
+    setState(() {
+      row.cityId = locationId;
+      row.stateId = _locationStateId(location);
+      row.districtId = _locationDistrictId(location);
+      row.talukaId = _locationTalukaId(location);
+      row.selectedLocationLabel = label;
+      row.locationController.text = label;
+      row.locationSuggestions = <Map<String, dynamic>>[];
+      row.locationSearching = false;
+    });
+    FocusScope.of(context).unfocus();
+  }
+
   TimeOfDay _initialBirthTime() {
     final match = RegExp(
       r'^(\d{1,2}):(\d{2})',
@@ -3070,22 +3204,33 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return rows;
   }
 
-  List<Map<String, dynamic>> _marriagesPayload() {
-    if (_isNeverMarriedStatus(_selectedMaritalStatusId)) {
-      return const <Map<String, dynamic>>[];
-    }
-
+  List<Map<String, dynamic>> _allianceNetworksPayload() {
     final rows = <Map<String, dynamic>>[];
-    for (final row in _marriageRows) {
+    for (final row in _allianceNetworkRows) {
       if (!row.hasData) continue;
-      rows.add(row.toPayload(_selectedMaritalStatusId));
+      rows.add(row.toPayload());
     }
 
     return rows;
   }
 
+  List<Map<String, dynamic>> _marriagesPayload() {
+    final statusKey = _currentMaritalStatusKey();
+    if (!_maritalStatusShowsDetails(statusKey)) {
+      return const <Map<String, dynamic>>[];
+    }
+
+    final row = _ensureMarriageDetailRow();
+    return <Map<String, dynamic>>[
+      row.toStatusPayload(statusKey, _selectedMaritalStatusId),
+    ];
+  }
+
   List<Map<String, dynamic>> _childrenPayload() {
-    if (_selectedHasChildren == false) return const <Map<String, dynamic>>[];
+    if (!_maritalStatusShowsDetails(_currentMaritalStatusKey()) ||
+        _selectedHasChildren != true) {
+      return const <Map<String, dynamic>>[];
+    }
 
     final rows = <Map<String, dynamic>>[];
     for (var index = 0; index < _childRows.length; index++) {
@@ -3107,13 +3252,60 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return id == _selectedMaritalStatusId ? _selectedMaritalStatusKey : null;
   }
 
-  bool _isNeverMarriedStatus(int? id) {
-    return _maritalStatusKeyForId(id) == 'never_married';
+  String? _currentMaritalStatusKey() {
+    return _maritalStatusKeyForId(_selectedMaritalStatusId) ??
+        _selectedMaritalStatusKey;
+  }
+
+  bool _maritalStatusShowsDetails(String? statusKey) {
+    return const {
+      'divorced',
+      'annulled',
+      'separated',
+      'widowed',
+    }.contains(statusKey);
+  }
+
+  _MarriageEditRow _ensureMarriageDetailRow() {
+    if (_marriageRows.isEmpty) {
+      _marriageRows.add(_MarriageEditRow());
+    }
+    return _marriageRows.first;
+  }
+
+  void _setMaritalStatus(int? value) {
+    final changed = value != _selectedMaritalStatusId;
+    _selectedMaritalStatusId = value;
+    _selectedMaritalStatusKey = _maritalStatusKeyForId(value);
+
+    if (changed) {
+      _clearChildrenSelection();
+    }
+    if (_maritalStatusShowsDetails(_selectedMaritalStatusKey)) {
+      _ensureMarriageDetailRow();
+    }
+  }
+
+  void _setHasChildren(bool? value) {
+    if (!_maritalStatusShowsDetails(_currentMaritalStatusKey())) {
+      _clearChildrenSelection();
+      return;
+    }
+
+    _selectedHasChildren = value;
+    if (value == true) {
+      if (_childRows.isEmpty) {
+        _childRows.add(_ChildEditRow(sortOrder: 0));
+      }
+    } else {
+      _disposeChildRows();
+    }
   }
 
   Map<String, dynamic> _buildProfilePayload({
     bool includeSiblings = false,
     bool includeRelatives = false,
+    bool includeAllianceNetworks = false,
     bool includeMarriageChildren = false,
   }) {
     final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
@@ -3123,6 +3315,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final educationDegreeId =
         _selectedEducationDegreeId ??
         _findEducationDegreeIdByText(educationText);
+    final statusKey = _currentMaritalStatusKey();
+    final maritalChildrenEligible = _maritalStatusShowsDetails(statusKey);
 
     final payload = <String, dynamic>{
       'full_name': _fullNameController.text.trim(),
@@ -3147,7 +3341,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'spectacles_lens': _selectedSpectaclesLens,
       'physical_condition': _selectedPhysicalCondition,
       'marital_status_id': _selectedMaritalStatusId,
-      'has_children': _selectedHasChildren,
+      'has_children': maritalChildrenEligible ? _selectedHasChildren : false,
       'diet_id': _selectedDietId,
       'smoking_status_id': _selectedSmokingStatusId,
       'drinking_status_id': _selectedDrinkingStatusId,
@@ -3269,6 +3463,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       payload['relatives'] = _relativesPayload();
     }
 
+    if (includeAllianceNetworks) {
+      payload['alliance_networks'] = _allianceNetworksPayload();
+    }
+
     if (includeMarriageChildren) {
       payload['marriages'] = _marriagesPayload();
       payload['children'] = _childrenPayload();
@@ -3299,6 +3497,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final payload = _buildProfilePayload(
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
+      includeAllianceNetworks: section == _EditProfileSection.allianceNetwork,
       includeMarriageChildren: section == _EditProfileSection.maritalLifestyle,
     );
     Map<String, dynamic> response;
@@ -3359,6 +3558,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.familyOverview,
     _EditProfileSection.siblings,
     _EditProfileSection.relatives,
+    _EditProfileSection.allianceNetwork,
     _EditProfileSection.allianceProperty,
     _EditProfileSection.horoscopeAstro,
     _EditProfileSection.aboutMe,
@@ -3386,6 +3586,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return 'Siblings';
       case _EditProfileSection.relatives:
         return 'Relatives';
+      case _EditProfileSection.allianceNetwork:
+        return 'Alliance Network';
       case _EditProfileSection.allianceProperty:
         return 'Alliance & Property';
       case _EditProfileSection.horoscopeAstro:
@@ -3419,6 +3621,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return Icons.people_alt_outlined;
       case _EditProfileSection.relatives:
         return Icons.people_outline;
+      case _EditProfileSection.allianceNetwork:
+        return Icons.account_tree_outlined;
       case _EditProfileSection.allianceProperty:
         return Icons.real_estate_agent_outlined;
       case _EditProfileSection.horoscopeAstro:
@@ -3617,20 +3821,26 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ),
         ]);
       case _EditProfileSection.maritalLifestyle:
+        final statusKey = _currentMaritalStatusKey();
+        final showMarriageChildren = _maritalStatusShowsDetails(statusKey);
         return _summaryFromParts([
           _labelForId(
             _maritalStatusOptions,
             _selectedMaritalStatusId,
             'Marital status',
           ),
-          _marriageRows.isEmpty
-              ? null
-              : '${_marriageRows.length} marriage row(s)',
-          _joinSummaryParts([
-            'Children',
-            _boolSummary(_selectedHasChildren),
-            _childRows.isEmpty ? null : '${_childRows.length} row(s)',
-          ], separator: ': '),
+          showMarriageChildren && _marriageRows.isNotEmpty
+              ? _controllerSummary(_marriageRows.first.marriageYearController)
+              : null,
+          showMarriageChildren
+              ? _joinSummaryParts([
+                  'Children',
+                  _boolSummary(_selectedHasChildren),
+                  _selectedHasChildren == true && _childRows.isNotEmpty
+                      ? '${_childRows.length} row(s)'
+                      : null,
+                ], separator: ': ')
+              : null,
           _labelForId(_dietOptions, _selectedDietId, 'Diet'),
           _joinSummaryParts([
             _labelForId(
@@ -3693,6 +3903,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   _relativeRelationOptions(),
                   _relativeRows.first.relationType,
                   'Relation',
+                ),
+        ]);
+      case _EditProfileSection.allianceNetwork:
+        return _summaryFromParts([
+          _allianceNetworkRows.isEmpty
+              ? null
+              : '${_allianceNetworkRows.length} row(s)',
+          _allianceNetworkRows.isEmpty
+              ? null
+              : _controllerSummary(
+                  _allianceNetworkRows.first.surnameController,
                 ),
         ]);
       case _EditProfileSection.allianceProperty:
@@ -3771,6 +3992,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _buildSiblingsSection();
       case _EditProfileSection.relatives:
         return _buildRelativesSection();
+      case _EditProfileSection.allianceNetwork:
+        return _buildAllianceNetworkSection();
       case _EditProfileSection.allianceProperty:
         return _buildAlliancePropertySection();
       case _EditProfileSection.horoscopeAstro:
@@ -3873,6 +4096,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return const ['has_siblings', 'siblings'];
       case _EditProfileSection.relatives:
         return const ['relatives'];
+      case _EditProfileSection.allianceNetwork:
+        return const ['alliance_networks'];
       case _EditProfileSection.allianceProperty:
         return const ['other_relatives_text', 'property_details'];
       case _EditProfileSection.horoscopeAstro:
@@ -3929,6 +4154,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final payload = _buildProfilePayload(
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
+      includeAllianceNetworks: section == _EditProfileSection.allianceNetwork,
       includeMarriageChildren: section == _EditProfileSection.maritalLifestyle,
     );
     return <String, dynamic>{
@@ -4976,6 +5202,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Widget _buildMaritalLifestyleSection() {
+    final statusKey = _currentMaritalStatusKey();
+    final showStatusDetails = _maritalStatusShowsDetails(statusKey);
+
     return _sectionCard(
       title: 'Marital & Lifestyle',
       icon: Icons.favorite_border,
@@ -4987,23 +5216,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           selectedId: _selectedMaritalStatusId,
           fallbackPrefix: 'Marital status',
           loading: _maritalLifestyleOptionsLoading,
-          onChanged: (value) => setState(() {
-            _selectedMaritalStatusId = value;
-            _selectedMaritalStatusKey = _maritalStatusKeyForId(value);
-          }),
+          onChanged: (value) => setState(() => _setMaritalStatus(value)),
         ),
-        const SizedBox(height: 14),
-        _buildMarriageHistoryEditor(),
-        const SizedBox(height: 14),
-        _boolDropdown(
-          labelText: 'Has children (Optional)',
-          icon: Icons.child_care_outlined,
-          selectedValue: _selectedHasChildren,
-          onChanged: (value) => setState(() => _selectedHasChildren = value),
-        ),
-        if (_selectedHasChildren == true) ...[
+        if (showStatusDetails) ...[
           const SizedBox(height: 14),
-          _buildChildrenEditor(),
+          _buildMarriageHistoryEditor(),
+          const SizedBox(height: 14),
+          _boolDropdown(
+            labelText: 'Has children (Optional)',
+            icon: Icons.child_care_outlined,
+            selectedValue: _selectedHasChildren,
+            onChanged: (value) => setState(() => _setHasChildren(value)),
+          ),
+          if (_selectedHasChildren == true) ...[
+            const SizedBox(height: 14),
+            _buildChildrenEditor(),
+          ],
         ],
         const SizedBox(height: 14),
         _intDropdown(
@@ -5055,55 +5283,27 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Widget _buildMarriageHistoryEditor() {
-    final neverMarried = _isNeverMarriedStatus(_selectedMaritalStatusId);
+    final statusKey = _currentMaritalStatusKey();
+    if (!_maritalStatusShowsDetails(statusKey)) {
+      return const SizedBox.shrink();
+    }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Marriage history',
-                style: TextStyle(fontWeight: FontWeight.w800),
-              ),
-            ),
-            OutlinedButton.icon(
-              onPressed: _saving || neverMarried ? null : _addMarriage,
-              icon: const Icon(Icons.add),
-              label: const Text('Add'),
-            ),
-          ],
-        ),
-        if (neverMarried)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'No marriage history rows.',
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
-          )
-        else if (_marriageRows.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              'No marriage history rows added.',
-              style: TextStyle(color: Colors.grey.shade700),
-            ),
-          )
-        else ...[
-          const SizedBox(height: 10),
-          for (var index = 0; index < _marriageRows.length; index++) ...[
-            _buildMarriageRowEditor(index, _marriageRows[index]),
-            const SizedBox(height: 12),
-          ],
-        ],
-      ],
-    );
+    return _buildMarriageRowEditor(_ensureMarriageDetailRow(), statusKey);
   }
 
-  Widget _buildMarriageRowEditor(int index, _MarriageEditRow row) {
+  Widget _buildMarriageRowEditor(_MarriageEditRow row, String? statusKey) {
     final theme = Theme.of(context);
+    final showDivorceFields =
+        statusKey == 'divorced' || statusKey == 'annulled';
+    final showSeparatedFields = statusKey == 'separated';
+    final showLegalStatus = showDivorceFields || showSeparatedFields;
+    final showWidowFields = statusKey == 'widowed';
+    final title = switch (statusKey) {
+      'annulled' => 'Annulment details',
+      'separated' => 'Separation details',
+      'widowed' => 'Widowhood details',
+      _ => 'Divorce details',
+    };
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -5118,16 +5318,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Marriage ${index + 1}',
+                  title,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-              ),
-              IconButton(
-                tooltip: 'Remove',
-                onPressed: _saving ? null : () => _removeMarriage(index),
-                icon: const Icon(Icons.delete_outline),
               ),
             ],
           ),
@@ -5141,72 +5336,59 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               prefixIcon: Icon(Icons.calendar_month_outlined),
             ),
           ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: row.separationYearController,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Separation year (Optional)',
-              prefixIcon: Icon(Icons.event_busy_outlined),
+          if (showDivorceFields) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: row.divorceYearController,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: statusKey == 'annulled'
+                    ? 'Annulment year (Optional)'
+                    : 'Divorce year (Optional)',
+                prefixIcon: const Icon(Icons.gavel_outlined),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: row.divorceYearController,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Divorce year (Optional)',
-              prefixIcon: Icon(Icons.gavel_outlined),
+          ],
+          if (showSeparatedFields) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: row.separationYearController,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Separation year (Optional)',
+                prefixIcon: Icon(Icons.event_busy_outlined),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: row.spouseDeathYearController,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Spouse death year (Optional)',
-              prefixIcon: Icon(Icons.event_outlined),
+          ],
+          if (showWidowFields) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: row.spouseDeathYearController,
+              keyboardType: TextInputType.number,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Spouse death year (Optional)',
+                prefixIcon: Icon(Icons.event_outlined),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _stringDropdown(
-            labelText: 'Legal status (Optional)',
-            icon: Icons.verified_outlined,
-            options: _divorceStatusOptions(),
-            selectedValue: row.divorceStatus,
-            fallbackPrefix: 'Legal status',
-            loading: false,
-            onChanged: (value) => setState(() => row.divorceStatus = value),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: row.notesController,
-            maxLines: 2,
-            textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Notes (Optional)',
-              prefixIcon: Icon(Icons.notes_outlined),
+          ],
+          if (showLegalStatus) ...[
+            const SizedBox(height: 12),
+            _stringDropdown(
+              labelText: 'Legal status (Optional)',
+              icon: Icons.verified_outlined,
+              options: _divorceStatusOptions(),
+              selectedValue: row.divorceStatus,
+              fallbackPrefix: 'Legal status',
+              loading: false,
+              onChanged: (value) => setState(() => row.divorceStatus = value),
             ),
-          ),
+          ],
         ],
       ),
     );
-  }
-
-  void _addMarriage() {
-    setState(() {
-      _marriageRows.add(_MarriageEditRow());
-    });
-  }
-
-  void _removeMarriage(int index) {
-    setState(() {
-      final removed = _marriageRows.removeAt(index);
-      removed.dispose();
-    });
   }
 
   Widget _buildChildrenEditor() {
@@ -5312,6 +5494,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   void _addChild() {
+    if (!_maritalStatusShowsDetails(_currentMaritalStatusKey())) return;
     setState(() {
       _selectedHasChildren = true;
       _childRows.add(_ChildEditRow(sortOrder: _childRows.length));
@@ -6448,6 +6631,112 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   void _removeRelative(int index) {
     setState(() {
       final removed = _relativeRows.removeAt(index);
+      removed.dispose();
+    });
+  }
+
+  Widget _buildAllianceNetworkSection() {
+    return _sectionCard(
+      title: 'Alliance Network',
+      icon: Icons.account_tree_outlined,
+      children: [
+        for (var index = 0; index < _allianceNetworkRows.length; index++) ...[
+          _buildAllianceNetworkRowEditor(index, _allianceNetworkRows[index]),
+          const SizedBox(height: 12),
+        ],
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _saving ? null : _addAllianceNetwork,
+            icon: const Icon(Icons.add),
+            label: const Text('Add alliance row'),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAllianceNetworkRowEditor(
+    int index,
+    _AllianceNetworkEditRow row,
+  ) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Alliance row ${index + 1}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Remove',
+                onPressed: _saving ? null : () => _removeAllianceNetwork(index),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: row.surnameController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Surname',
+              prefixIcon: Icon(Icons.badge_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.locationController,
+            textInputAction: TextInputAction.next,
+            onChanged: (value) => _scheduleAllianceLocationSearch(row, value),
+            decoration: const InputDecoration(
+              labelText: 'City / Location (Optional)',
+              prefixIcon: Icon(Icons.location_on_outlined),
+            ),
+          ),
+          _buildSuggestions(
+            suggestions: row.locationSuggestions,
+            fallbackPrefix: 'Location',
+            loading: row.locationSearching,
+            onSelect: (location) => _selectAllianceLocation(row, location),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.notesController,
+            maxLines: 2,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Notes (Optional)',
+              prefixIcon: Icon(Icons.notes_outlined),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addAllianceNetwork() {
+    setState(() {
+      _allianceNetworkRows.add(_AllianceNetworkEditRow());
+    });
+  }
+
+  void _removeAllianceNetwork(int index) {
+    setState(() {
+      final removed = _allianceNetworkRows.removeAt(index);
       removed.dispose();
     });
   }

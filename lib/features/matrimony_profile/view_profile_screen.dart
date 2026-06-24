@@ -144,6 +144,10 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final birthItems = <ProfileDisplayItemData>[];
     final careerItems = <ProfileDisplayItemData>[];
     final familyItems = <ProfileDisplayItemData>[];
+    final maritalStatusKey = ApiClient.safeDisplayLabel(
+      profile['marital_status_key'],
+    );
+    final showMarriageChildren = _showsMarriageChildren(maritalStatusKey);
 
     _addDisplayItem(basicItems, AppStrings.name, profile['full_name']);
     _addDisplayItem(
@@ -224,14 +228,27 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             _fallbackIncomeLabel(profile, 'family_income', 'family_income'),
       );
     }
-    _addDisplayItem(
-      familyItems,
-      'Marriage History',
-      _fallbackMarriageHistoryLabel(profile),
-    );
-    _addDisplayItem(familyItems, 'Children', _fallbackChildrenLabel(profile));
+    if (showMarriageChildren) {
+      _addDisplayItem(
+        familyItems,
+        'Marriage History',
+        _fallbackMarriageHistoryLabel(profile, maritalStatusKey),
+      );
+      if (_readBool(profile['has_children'])) {
+        _addDisplayItem(
+          familyItems,
+          'Children',
+          _fallbackChildrenLabel(profile),
+        );
+      }
+    }
     _addDisplayItem(familyItems, 'Siblings', _fallbackSiblingsLabel(profile));
     _addDisplayItem(familyItems, 'Relatives', _fallbackRelativesLabel(profile));
+    _addDisplayItem(
+      familyItems,
+      'Alliance Network',
+      _fallbackAllianceNetworksLabel(profile),
+    );
 
     return [
       if (basicItems.isNotEmpty)
@@ -267,6 +284,15 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
     final text = value?.toString().trim().toLowerCase();
     return text == '1' || text == 'true' || text == 'yes' || text == 'y';
+  }
+
+  bool _showsMarriageChildren(String? maritalStatusKey) {
+    return const {
+      'divorced',
+      'annulled',
+      'separated',
+      'widowed',
+    }.contains(maritalStatusKey);
   }
 
   String? _fallbackIncomeLabel(
@@ -327,36 +353,48 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     return parts.isEmpty ? null : parts.join(', ');
   }
 
-  String? _fallbackMarriageHistoryLabel(Map<String, dynamic> profile) {
+  String? _fallbackMarriageHistoryLabel(
+    Map<String, dynamic> profile,
+    String? maritalStatusKey,
+  ) {
     final rows = profile['marriages'];
     if (rows is! List || rows.isEmpty) return null;
 
     final parts = <String>[];
-    for (final row in rows.take(3)) {
+    for (final row in rows.take(1)) {
       if (row is! Map) continue;
       final marriageYear = ApiClient.safeDisplayLabel(row['marriage_year']);
-      final separationYear = ApiClient.safeDisplayLabel(row['separation_year']);
-      final divorceYear = ApiClient.safeDisplayLabel(row['divorce_year']);
-      final spouseDeathYear = ApiClient.safeDisplayLabel(
-        row['spouse_death_year'],
-      );
+      final separationYear = maritalStatusKey == 'separated'
+          ? ApiClient.safeDisplayLabel(row['separation_year'])
+          : null;
+      final divorceYear =
+          maritalStatusKey == 'divorced' || maritalStatusKey == 'annulled'
+          ? ApiClient.safeDisplayLabel(row['divorce_year'])
+          : null;
+      final spouseDeathYear = maritalStatusKey == 'widowed'
+          ? ApiClient.safeDisplayLabel(row['spouse_death_year'])
+          : null;
       final legalStatus =
-          ApiClient.safeDisplayLabel(row['divorce_status_label']) ??
-          _divorceStatusLabel(
-            ApiClient.safeDisplayLabel(row['divorce_status']),
-          );
+          maritalStatusKey == 'divorced' ||
+              maritalStatusKey == 'annulled' ||
+              maritalStatusKey == 'separated'
+          ? ApiClient.safeDisplayLabel(row['divorce_status_label']) ??
+                _divorceStatusLabel(
+                  ApiClient.safeDisplayLabel(row['divorce_status']),
+                )
+          : null;
       final item = [
         if (marriageYear != null) 'Marriage $marriageYear',
         if (separationYear != null) 'Separated $separationYear',
-        if (divorceYear != null) 'Divorce $divorceYear',
+        if (divorceYear != null)
+          maritalStatusKey == 'annulled'
+              ? 'Annulment $divorceYear'
+              : 'Divorce $divorceYear',
         if (spouseDeathYear != null) 'Spouse death $spouseDeathYear',
         legalStatus,
       ].whereType<String>().join(' - ');
       if (item.isNotEmpty) parts.add(item);
     }
-
-    final remaining = rows.length - parts.length;
-    if (remaining > 0) parts.add('+$remaining more');
 
     return parts.isEmpty ? null : parts.join('; ');
   }
@@ -418,6 +456,37 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           .whereType<String>()
           .where((value) => value.trim().isNotEmpty)
           .join(' - ');
+      if (item.isNotEmpty) parts.add(item);
+    }
+
+    final remaining = rows.length - parts.length;
+    if (remaining > 0) parts.add('+$remaining more');
+
+    return parts.isEmpty ? null : parts.join('; ');
+  }
+
+  String? _fallbackAllianceNetworksLabel(Map<String, dynamic> profile) {
+    final rows = profile['alliance_networks'];
+    if (rows is! List || rows.isEmpty) return null;
+
+    final parts = <String>[];
+    for (final row in rows.take(3)) {
+      if (row is! Map) continue;
+      final surname = ApiClient.safeDisplayLabel(row['surname']);
+      final location =
+          [
+                ApiClient.safeDisplayLabel(row['city_label']),
+                ApiClient.safeDisplayLabel(row['taluka_label']),
+                ApiClient.safeDisplayLabel(row['district_label']),
+                ApiClient.safeDisplayLabel(row['state_label']),
+              ]
+              .whereType<String>()
+              .where((value) => value.trim().isNotEmpty)
+              .join(', ');
+      final item = [
+        surname,
+        if (location.isNotEmpty) location,
+      ].whereType<String>().join(' - ');
       if (item.isNotEmpty) parts.add(item);
     }
 
