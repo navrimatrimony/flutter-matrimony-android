@@ -225,6 +225,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       );
     }
     _addDisplayItem(familyItems, 'Siblings', _fallbackSiblingsLabel(profile));
+    _addDisplayItem(familyItems, 'Relatives', _fallbackRelativesLabel(profile));
 
     return [
       if (basicItems.isNotEmpty)
@@ -318,6 +319,76 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     ];
 
     return parts.isEmpty ? null : parts.join(', ');
+  }
+
+  String? _fallbackRelativesLabel(Map<String, dynamic> profile) {
+    final rows = profile['relatives'];
+    if (rows is! List || rows.isEmpty) return null;
+
+    final parts = <String>[];
+    for (final row in rows.take(3)) {
+      if (row is! Map) continue;
+      final relation =
+          ApiClient.safeDisplayLabel(row['relation_type_label']) ??
+          _relativeRelationLabel(
+            ApiClient.safeDisplayLabel(row['relation_type']),
+          );
+      final name = ApiClient.safeDisplayLabel(row['name']);
+      final occupation =
+          ApiClient.safeDisplayLabel(row['occupation']) ??
+          ApiClient.safeDisplayLabel(row['occupation_master_label']) ??
+          ApiClient.safeDisplayLabel(row['occupation_custom_label']);
+      final location =
+          ApiClient.safeDisplayLabel(row['address_line']) ??
+          ApiClient.safeDisplayLabel(row['city_label']);
+      final item = [relation, name, occupation, location]
+          .whereType<String>()
+          .where((value) => value.trim().isNotEmpty)
+          .join(' - ');
+      if (item.isNotEmpty) parts.add(item);
+    }
+
+    final remaining = rows.length - parts.length;
+    if (remaining > 0) parts.add('+$remaining more');
+
+    return parts.isEmpty ? null : parts.join('; ');
+  }
+
+  String? _relativeRelationLabel(String? value) {
+    switch (value) {
+      case 'paternal_grandfather':
+        return 'Paternal Grandfather';
+      case 'paternal_grandmother':
+        return 'Paternal Grandmother';
+      case 'paternal_uncle':
+        return 'Paternal Uncle';
+      case 'wife_paternal_uncle':
+        return 'Wife of Paternal Uncle';
+      case 'paternal_aunt':
+        return 'Paternal Aunt';
+      case 'husband_paternal_aunt':
+        return 'Husband of Paternal Aunt';
+      case 'Cousin':
+        return 'Cousin';
+      case 'maternal_address_ajol':
+        return 'Maternal address (Ajol)';
+      case 'maternal_grandfather':
+        return 'Maternal Grandfather';
+      case 'maternal_grandmother':
+        return 'Maternal Grandmother';
+      case 'maternal_uncle':
+        return 'Maternal Uncle';
+      case 'wife_maternal_uncle':
+        return "Maternal Uncle's wife";
+      case 'maternal_aunt':
+        return 'Maternal Aunt';
+      case 'husband_maternal_aunt':
+        return 'Husband of Maternal Aunt';
+      case 'maternal_cousin':
+        return 'Cousin';
+      default:
+        return value;
+    }
   }
 
   void _addDisplayItem(

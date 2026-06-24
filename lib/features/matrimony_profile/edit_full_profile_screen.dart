@@ -26,6 +26,7 @@ enum _EditProfileSection {
   familyDetails,
   familyOverview,
   siblings,
+  relatives,
   allianceProperty,
   horoscopeAstro,
   aboutMe,
@@ -77,6 +78,59 @@ class _SiblingEditRow {
       'address_line': _textOrNull(addressLineController),
       'notes': _textOrNull(notesController),
       'sort_order': index,
+    };
+  }
+
+  void dispose() {
+    nameController.dispose();
+    occupationController.dispose();
+    addressLineController.dispose();
+    notesController.dispose();
+  }
+
+  static String? _textOrNull(TextEditingController controller) {
+    final text = controller.text.trim();
+    return text.isEmpty ? null : text;
+  }
+}
+
+class _RelativeEditRow {
+  _RelativeEditRow({
+    this.id,
+    this.relationType,
+    String? name,
+    String? occupation,
+    String? addressLine,
+    String? notes,
+  }) : nameController = TextEditingController(text: name ?? ''),
+       occupationController = TextEditingController(text: occupation ?? ''),
+       addressLineController = TextEditingController(text: addressLine ?? ''),
+       notesController = TextEditingController(text: notes ?? '');
+
+  int? id;
+  String? relationType;
+  final TextEditingController nameController;
+  final TextEditingController occupationController;
+  final TextEditingController addressLineController;
+  final TextEditingController notesController;
+
+  bool get hasData {
+    return relationType != null ||
+        nameController.text.trim().isNotEmpty ||
+        occupationController.text.trim().isNotEmpty ||
+        addressLineController.text.trim().isNotEmpty ||
+        notesController.text.trim().isNotEmpty;
+  }
+
+  Map<String, dynamic> toPayload() {
+    final addressOnly = relationType == 'maternal_address_ajol';
+    return <String, dynamic>{
+      if (id != null) 'id': id,
+      'relation_type': relationType,
+      'name': addressOnly ? null : _textOrNull(nameController),
+      'occupation': addressOnly ? null : _textOrNull(occupationController),
+      'address_line': _textOrNull(addressLineController),
+      'notes': addressOnly ? null : _textOrNull(notesController),
     };
   }
 
@@ -171,6 +225,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.familyDetails: GlobalKey(),
     _EditProfileSection.familyOverview: GlobalKey(),
     _EditProfileSection.siblings: GlobalKey(),
+    _EditProfileSection.relatives: GlobalKey(),
     _EditProfileSection.allianceProperty: GlobalKey(),
     _EditProfileSection.horoscopeAstro: GlobalKey(),
     _EditProfileSection.aboutMe: GlobalKey(),
@@ -344,6 +399,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final Set<int> _selectedPreferredDistrictIds = <int>{};
   final Set<int> _selectedPreferredTalukaIds = <int>{};
   final List<_SiblingEditRow> _siblingRows = <_SiblingEditRow>[];
+  final List<_RelativeEditRow> _relativeRows = <_RelativeEditRow>[];
   bool _preferredLocationsTouched = false;
   Map<String, dynamic> _horoscopeRules = <String, dynamic>{};
   Map<String, dynamic> _rashiAshtakoota = <String, dynamic>{};
@@ -399,6 +455,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _aboutMeController.dispose();
     _expectationsController.dispose();
     _disposeSiblingRows();
+    _disposeRelativeRows();
     super.dispose();
   }
 
@@ -475,6 +532,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _siblingRows.clear();
   }
 
+  void _disposeRelativeRows() {
+    for (final row in _relativeRows) {
+      row.dispose();
+    }
+    _relativeRows.clear();
+  }
+
   void _prefillSiblings(dynamic value) {
     _disposeSiblingRows();
     for (final row in _readRows(value)) {
@@ -501,6 +565,27 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
   }
 
+  void _prefillRelatives(dynamic value) {
+    _disposeRelativeRows();
+    for (final row in _readRows(value)) {
+      _relativeRows.add(
+        _RelativeEditRow(
+          id: _readInt(row['id']),
+          relationType: _readRelativeRelationType(row['relation_type']),
+          name: ApiClient.safeDisplayLabel(row['name']),
+          occupation:
+              ApiClient.safeDisplayLabel(row['occupation']) ??
+              ApiClient.safeDisplayLabel(row['occupation_master_label']) ??
+              ApiClient.safeDisplayLabel(row['occupation_custom_label']),
+          addressLine:
+              ApiClient.safeDisplayLabel(row['address_line']) ??
+              ApiClient.safeDisplayLabel(row['city_label']),
+          notes: ApiClient.safeDisplayLabel(row['notes']),
+        ),
+      );
+    }
+  }
+
   String? _readSiblingRelationType(dynamic value) {
     final text = _readText(value);
     if (text == null) return null;
@@ -510,6 +595,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'brother_wife',
           'sister_husband',
         ].contains(text)
+        ? text
+        : null;
+  }
+
+  String? _readRelativeRelationType(dynamic value) {
+    final text = _readText(value);
+    if (text == null) return null;
+    return _relativeRelationOptions().any(
+          (row) => _readText(row['value']) == text,
+        )
         ? text
         : null;
   }
@@ -533,6 +628,26 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return const <Map<String, dynamic>>[
       {'value': 'unmarried', 'label': 'Unmarried'},
       {'value': 'married', 'label': 'Married'},
+    ];
+  }
+
+  List<Map<String, dynamic>> _relativeRelationOptions() {
+    return const <Map<String, dynamic>>[
+      {'value': 'paternal_grandfather', 'label': 'Paternal Grandfather'},
+      {'value': 'paternal_grandmother', 'label': 'Paternal Grandmother'},
+      {'value': 'paternal_uncle', 'label': 'Paternal Uncle'},
+      {'value': 'wife_paternal_uncle', 'label': 'Wife of Paternal Uncle'},
+      {'value': 'paternal_aunt', 'label': 'Paternal Aunt'},
+      {'value': 'husband_paternal_aunt', 'label': 'Husband of Paternal Aunt'},
+      {'value': 'Cousin', 'label': 'Cousin'},
+      {'value': 'maternal_address_ajol', 'label': 'Maternal address (Ajol)'},
+      {'value': 'maternal_grandfather', 'label': 'Maternal Grandfather'},
+      {'value': 'maternal_grandmother', 'label': 'Maternal Grandmother'},
+      {'value': 'maternal_uncle', 'label': 'Maternal Uncle'},
+      {'value': 'wife_maternal_uncle', 'label': "Maternal Uncle's wife"},
+      {'value': 'maternal_aunt', 'label': 'Maternal Aunt'},
+      {'value': 'husband_maternal_aunt', 'label': 'Husband of Maternal Aunt'},
+      {'value': 'maternal_cousin', 'label': 'Cousin'},
     ];
   }
 
@@ -1057,6 +1172,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _familyIncomePrivate = _readBool(profile['family_income_private']) ?? false;
     _selectedHasSiblings = _readBool(profile['has_siblings']);
     _prefillSiblings(profile['siblings']);
+    _prefillRelatives(profile['relatives']);
     _otherRelativesController.text =
         ApiClient.safeDisplayLabel(profile['other_relatives_text']) ?? '';
     _propertyDetailsController.text =
@@ -2586,7 +2702,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return rows;
   }
 
-  Map<String, dynamic> _buildProfilePayload({bool includeSiblings = false}) {
+  List<Map<String, dynamic>> _relativesPayload() {
+    final rows = <Map<String, dynamic>>[];
+    for (final row in _relativeRows) {
+      if (!row.hasData) continue;
+      rows.add(row.toPayload());
+    }
+
+    return rows;
+  }
+
+  Map<String, dynamic> _buildProfilePayload({
+    bool includeSiblings = false,
+    bool includeRelatives = false,
+  }) {
     final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
         ? _selectedCasteLabel!.trim()
         : _casteController.text.trim();
@@ -2736,6 +2865,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       payload['siblings'] = _siblingsPayload();
     }
 
+    if (includeRelatives) {
+      payload['relatives'] = _relativesPayload();
+    }
+
     if (educationDegreeId != null) {
       payload['education_slots'] = jsonEncode([
         {'t': 'd', 'id': educationDegreeId},
@@ -2760,6 +2893,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     final payload = _buildProfilePayload(
       includeSiblings: section == _EditProfileSection.siblings,
+      includeRelatives: section == _EditProfileSection.relatives,
     );
     Map<String, dynamic> response;
     try {
@@ -2818,6 +2952,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _EditProfileSection.familyDetails,
     _EditProfileSection.familyOverview,
     _EditProfileSection.siblings,
+    _EditProfileSection.relatives,
     _EditProfileSection.allianceProperty,
     _EditProfileSection.horoscopeAstro,
     _EditProfileSection.aboutMe,
@@ -2843,6 +2978,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return 'Family overview';
       case _EditProfileSection.siblings:
         return 'Siblings';
+      case _EditProfileSection.relatives:
+        return 'Relatives';
       case _EditProfileSection.allianceProperty:
         return 'Alliance & Property';
       case _EditProfileSection.horoscopeAstro:
@@ -2874,6 +3011,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return Icons.home_outlined;
       case _EditProfileSection.siblings:
         return Icons.people_alt_outlined;
+      case _EditProfileSection.relatives:
+        return Icons.people_outline;
       case _EditProfileSection.allianceProperty:
         return Icons.real_estate_agent_outlined;
       case _EditProfileSection.horoscopeAstro:
@@ -3131,6 +3270,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _boolSummary(_selectedHasSiblings),
           _siblingRows.isEmpty ? null : '${_siblingRows.length} row(s)',
         ]);
+      case _EditProfileSection.relatives:
+        return _summaryFromParts([
+          _relativeRows.isEmpty ? null : '${_relativeRows.length} row(s)',
+          _relativeRows.isEmpty
+              ? null
+              : _labelForValue(
+                  _relativeRelationOptions(),
+                  _relativeRows.first.relationType,
+                  'Relation',
+                ),
+        ]);
       case _EditProfileSection.allianceProperty:
         return _summaryFromParts([
           _otherRelativesController.text.trim().isEmpty
@@ -3205,6 +3355,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _buildFamilyOverviewSection();
       case _EditProfileSection.siblings:
         return _buildSiblingsSection();
+      case _EditProfileSection.relatives:
+        return _buildRelativesSection();
       case _EditProfileSection.allianceProperty:
         return _buildAlliancePropertySection();
       case _EditProfileSection.horoscopeAstro:
@@ -3303,6 +3455,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ];
       case _EditProfileSection.siblings:
         return const ['has_siblings', 'siblings'];
+      case _EditProfileSection.relatives:
+        return const ['relatives'];
       case _EditProfileSection.allianceProperty:
         return const ['other_relatives_text', 'property_details'];
       case _EditProfileSection.horoscopeAstro:
@@ -3358,6 +3512,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   Map<String, dynamic> _sectionSnapshot(_EditProfileSection section) {
     final payload = _buildProfilePayload(
       includeSiblings: section == _EditProfileSection.siblings,
+      includeRelatives: section == _EditProfileSection.relatives,
     );
     return <String, dynamic>{
       for (final key in _sectionPayloadKeys(section))
@@ -5462,6 +5617,141 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   void _removeSibling(int index) {
     setState(() {
       final removed = _siblingRows.removeAt(index);
+      removed.dispose();
+    });
+  }
+
+  Widget _buildRelativesSection() {
+    return _sectionCard(
+      title: 'Relatives',
+      icon: Icons.people_outline,
+      children: [
+        for (var index = 0; index < _relativeRows.length; index++) ...[
+          _buildRelativeRowEditor(index, _relativeRows[index]),
+          const SizedBox(height: 12),
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _saving
+                    ? null
+                    : () => _addRelative('paternal_uncle'),
+                icon: const Icon(Icons.person_add_alt_1_outlined),
+                label: const Text('Add paternal'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _saving
+                    ? null
+                    : () => _addRelative('maternal_uncle'),
+                icon: const Icon(Icons.person_add_alt_1_outlined),
+                label: const Text('Add maternal'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRelativeRowEditor(int index, _RelativeEditRow row) {
+    final theme = Theme.of(context);
+    final addressOnly = row.relationType == 'maternal_address_ajol';
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Relative ${index + 1}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Remove',
+                onPressed: _saving ? null : () => _removeRelative(index),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _stringDropdown(
+            labelText: 'Relation',
+            icon: Icons.people_outline,
+            options: _relativeRelationOptions(),
+            selectedValue: row.relationType,
+            fallbackPrefix: 'Relation',
+            loading: false,
+            onChanged: (value) => setState(() => row.relationType = value),
+          ),
+          if (!addressOnly) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: row.nameController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Name (Optional)',
+                prefixIcon: Icon(Icons.person_outline),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: row.occupationController,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Occupation (Optional)',
+                prefixIcon: Icon(Icons.work_outline),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.addressLineController,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Address / City (Optional)',
+              prefixIcon: Icon(Icons.location_on_outlined),
+            ),
+          ),
+          if (!addressOnly) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: row.notesController,
+              maxLines: 2,
+              textInputAction: TextInputAction.next,
+              decoration: const InputDecoration(
+                labelText: 'Notes (Optional)',
+                prefixIcon: Icon(Icons.notes_outlined),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  void _addRelative(String relationType) {
+    setState(() {
+      _relativeRows.add(_RelativeEditRow(relationType: relationType));
+    });
+  }
+
+  void _removeRelative(int index) {
+    setState(() {
+      final removed = _relativeRows.removeAt(index);
       removed.dispose();
     });
   }
