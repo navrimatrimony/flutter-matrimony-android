@@ -224,6 +224,12 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
             _fallbackIncomeLabel(profile, 'family_income', 'family_income'),
       );
     }
+    _addDisplayItem(
+      familyItems,
+      'Marriage History',
+      _fallbackMarriageHistoryLabel(profile),
+    );
+    _addDisplayItem(familyItems, 'Children', _fallbackChildrenLabel(profile));
     _addDisplayItem(familyItems, 'Siblings', _fallbackSiblingsLabel(profile));
     _addDisplayItem(familyItems, 'Relatives', _fallbackRelativesLabel(profile));
 
@@ -321,6 +327,73 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     return parts.isEmpty ? null : parts.join(', ');
   }
 
+  String? _fallbackMarriageHistoryLabel(Map<String, dynamic> profile) {
+    final rows = profile['marriages'];
+    if (rows is! List || rows.isEmpty) return null;
+
+    final parts = <String>[];
+    for (final row in rows.take(3)) {
+      if (row is! Map) continue;
+      final marriageYear = ApiClient.safeDisplayLabel(row['marriage_year']);
+      final separationYear = ApiClient.safeDisplayLabel(row['separation_year']);
+      final divorceYear = ApiClient.safeDisplayLabel(row['divorce_year']);
+      final spouseDeathYear = ApiClient.safeDisplayLabel(
+        row['spouse_death_year'],
+      );
+      final legalStatus =
+          ApiClient.safeDisplayLabel(row['divorce_status_label']) ??
+          _divorceStatusLabel(
+            ApiClient.safeDisplayLabel(row['divorce_status']),
+          );
+      final item = [
+        if (marriageYear != null) 'Marriage $marriageYear',
+        if (separationYear != null) 'Separated $separationYear',
+        if (divorceYear != null) 'Divorce $divorceYear',
+        if (spouseDeathYear != null) 'Spouse death $spouseDeathYear',
+        legalStatus,
+      ].whereType<String>().join(' - ');
+      if (item.isNotEmpty) parts.add(item);
+    }
+
+    final remaining = rows.length - parts.length;
+    if (remaining > 0) parts.add('+$remaining more');
+
+    return parts.isEmpty ? null : parts.join('; ');
+  }
+
+  String? _fallbackChildrenLabel(Map<String, dynamic> profile) {
+    final rows = profile['children'];
+    if (rows is! List || rows.isEmpty) return null;
+
+    final parts = <String>[];
+    var index = 0;
+    for (final row in rows.take(3)) {
+      if (row is! Map) continue;
+      index++;
+      final name =
+          ApiClient.safeDisplayLabel(row['child_name']) ?? 'Child $index';
+      final age = ApiClient.safeDisplayLabel(row['age']);
+      final gender =
+          ApiClient.safeDisplayLabel(row['gender_label']) ??
+          _childGenderLabel(ApiClient.safeDisplayLabel(row['gender']));
+      final livingWith = ApiClient.safeDisplayLabel(
+        row['child_living_with_label'],
+      );
+      final item = [
+        name,
+        if (age != null) '$age years',
+        gender,
+        livingWith,
+      ].whereType<String>().join(' - ');
+      if (item.isNotEmpty) parts.add(item);
+    }
+
+    final remaining = rows.length - parts.length;
+    if (remaining > 0) parts.add('+$remaining more');
+
+    return parts.isEmpty ? null : parts.join('; ');
+  }
+
   String? _fallbackRelativesLabel(Map<String, dynamic> profile) {
     final rows = profile['relatives'];
     if (rows is! List || rows.isEmpty) return null;
@@ -352,6 +425,36 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     if (remaining > 0) parts.add('+$remaining more');
 
     return parts.isEmpty ? null : parts.join('; ');
+  }
+
+  String? _divorceStatusLabel(String? value) {
+    switch (value) {
+      case 'pending':
+        return 'Pending';
+      case 'finalized':
+        return 'Finalized';
+      case 'mutual':
+        return 'Mutual';
+      case 'contested':
+        return 'Contested';
+      default:
+        return value;
+    }
+  }
+
+  String? _childGenderLabel(String? value) {
+    switch (value) {
+      case 'male':
+        return 'Male';
+      case 'female':
+        return 'Female';
+      case 'other':
+        return 'Other';
+      case 'prefer_not_say':
+        return 'Prefer not to say';
+      default:
+        return value;
+    }
   }
 
   String? _relativeRelationLabel(String? value) {

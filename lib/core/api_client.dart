@@ -865,6 +865,11 @@ class ApiClient {
       'maritalStatuses',
       'marital_status',
     ]);
+    addOptions('child_living_with', const [
+      'child_living_with',
+      'childLivingWith',
+      'child_living_with_options',
+    ]);
     addOptions('diets', const ['diets', 'diet']);
     addOptions('smoking_statuses', const [
       'smoking_statuses',

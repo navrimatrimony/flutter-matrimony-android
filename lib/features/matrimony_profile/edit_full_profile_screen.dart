@@ -27,6 +27,7 @@ enum _EditProfileSection {
   familyOverview,
   siblings,
   relatives,
+  allianceNetwork,
   allianceProperty,
   horoscopeAstro,
   aboutMe,
@@ -35,6 +36,134 @@ enum _EditProfileSection {
 }
 
 enum _UnsavedSectionAction { save, discard, cancel }
+
+class _MarriageEditRow {
+  _MarriageEditRow({
+    this.id,
+    this.divorceStatus,
+    String? marriageYear,
+    String? separationYear,
+    String? divorceYear,
+    String? spouseDeathYear,
+    this.remarriageReason,
+    String? notes,
+  }) : marriageYearController = TextEditingController(text: marriageYear ?? ''),
+       separationYearController = TextEditingController(
+         text: separationYear ?? '',
+       ),
+       divorceYearController = TextEditingController(text: divorceYear ?? ''),
+       spouseDeathYearController = TextEditingController(
+         text: spouseDeathYear ?? '',
+       ),
+       notesController = TextEditingController(text: notes ?? '');
+
+  int? id;
+  String? divorceStatus;
+  String? remarriageReason;
+  final TextEditingController marriageYearController;
+  final TextEditingController separationYearController;
+  final TextEditingController divorceYearController;
+  final TextEditingController spouseDeathYearController;
+  final TextEditingController notesController;
+
+  bool get hasData {
+    return marriageYearController.text.trim().isNotEmpty ||
+        separationYearController.text.trim().isNotEmpty ||
+        divorceYearController.text.trim().isNotEmpty ||
+        spouseDeathYearController.text.trim().isNotEmpty ||
+        (divorceStatus != null && divorceStatus!.trim().isNotEmpty) ||
+        (remarriageReason != null && remarriageReason!.trim().isNotEmpty) ||
+        notesController.text.trim().isNotEmpty;
+  }
+
+  Map<String, dynamic> toPayload(int? maritalStatusId) {
+    return <String, dynamic>{
+      if (id != null) 'id': id,
+      'marital_status_id': maritalStatusId,
+      'marriage_year': _intOrNull(marriageYearController),
+      'separation_year': _intOrNull(separationYearController),
+      'divorce_year': _intOrNull(divorceYearController),
+      'spouse_death_year': _intOrNull(spouseDeathYearController),
+      'divorce_status': divorceStatus,
+      'remarriage_reason': _stringOrNull(remarriageReason),
+      'notes': _textOrNull(notesController),
+    };
+  }
+
+  void dispose() {
+    marriageYearController.dispose();
+    separationYearController.dispose();
+    divorceYearController.dispose();
+    spouseDeathYearController.dispose();
+    notesController.dispose();
+  }
+
+  static int? _intOrNull(TextEditingController controller) {
+    final text = controller.text.trim();
+    if (text.isEmpty) return null;
+    return int.tryParse(text);
+  }
+
+  static String? _textOrNull(TextEditingController controller) {
+    return _stringOrNull(controller.text);
+  }
+
+  static String? _stringOrNull(String? value) {
+    final text = value?.trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+}
+
+class _ChildEditRow {
+  _ChildEditRow({
+    this.id,
+    this.childName,
+    this.gender,
+    String? age,
+    this.childLivingWithId,
+    this.sortOrder = 0,
+  }) : ageController = TextEditingController(text: age ?? '');
+
+  int? id;
+  String? childName;
+  String? gender;
+  int? childLivingWithId;
+  int sortOrder;
+  final TextEditingController ageController;
+
+  bool get hasData {
+    return (childName != null && childName!.trim().isNotEmpty) ||
+        (gender != null && gender!.trim().isNotEmpty) ||
+        ageController.text.trim().isNotEmpty ||
+        childLivingWithId != null;
+  }
+
+  Map<String, dynamic> toPayload(int index) {
+    return <String, dynamic>{
+      if (id != null) 'id': id,
+      'child_name': _stringOrNull(childName),
+      'gender': gender,
+      'age': _intOrNull(ageController),
+      'child_living_with_id': childLivingWithId,
+      'sort_order': index,
+    };
+  }
+
+  void dispose() {
+    ageController.dispose();
+  }
+
+  static int? _intOrNull(TextEditingController controller) {
+    final text = controller.text.trim();
+    if (text.isEmpty) return null;
+    return int.tryParse(text);
+  }
+
+  static String? _stringOrNull(String? value) {
+    final text = value?.trim();
+    return text == null || text.isEmpty ? null : text;
+  }
+}
 
 class _SiblingEditRow {
   _SiblingEditRow({
@@ -138,6 +267,67 @@ class _RelativeEditRow {
     nameController.dispose();
     occupationController.dispose();
     addressLineController.dispose();
+    notesController.dispose();
+  }
+
+  static String? _textOrNull(TextEditingController controller) {
+    final text = controller.text.trim();
+    return text.isEmpty ? null : text;
+  }
+}
+
+class _AllianceNetworkEditRow {
+  _AllianceNetworkEditRow({
+    this.id,
+    String? surname,
+    String? locationLabel,
+    this.cityId,
+    this.stateId,
+    this.districtId,
+    this.talukaId,
+    String? notes,
+  }) : surnameController = TextEditingController(text: surname ?? ''),
+       locationController = TextEditingController(text: locationLabel ?? ''),
+       notesController = TextEditingController(text: notes ?? ''),
+       selectedLocationLabel = locationLabel;
+
+  int? id;
+  int? cityId;
+  int? stateId;
+  int? districtId;
+  int? talukaId;
+  String? selectedLocationLabel;
+  bool locationSearching = false;
+  List<Map<String, dynamic>> locationSuggestions = <Map<String, dynamic>>[];
+  final TextEditingController surnameController;
+  final TextEditingController locationController;
+  final TextEditingController notesController;
+
+  bool get hasData {
+    return surnameController.text.trim().isNotEmpty ||
+        locationController.text.trim().isNotEmpty ||
+        cityId != null ||
+        stateId != null ||
+        districtId != null ||
+        talukaId != null ||
+        notesController.text.trim().isNotEmpty;
+  }
+
+  Map<String, dynamic> toPayload() {
+    return <String, dynamic>{
+      if (id != null) 'id': id,
+      'surname': _textOrNull(surnameController),
+      'city_id': cityId,
+      'state_id': stateId,
+      'district_id': districtId,
+      'taluka_id': talukaId,
+      'notes': _textOrNull(notesController),
+    };
+  }
+
+  void dispose() {
+    surnameController.dispose();
+    locationController.dispose();
     notesController.dispose();
   }
 
@@ -262,6 +452,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String? _selectedFamilyIncomePeriod;
   String? _selectedFamilyIncomeValueType;
   String? _selectedBirthWeekday;
+  String? _selectedMaritalStatusKey;
   String? _selectedPartnerProfileWithChildren;
   String? _selectedPreferredProfileManagedBy;
 
@@ -320,9 +511,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int _locationSearchRequest = 0;
   int _birthPlaceSearchRequest = 0;
   int _workLocationSearchRequest = 0;
+  int _allianceLocationSearchRequest = 0;
   Timer? _locationSearchDebounce;
   Timer? _birthPlaceSearchDebounce;
   Timer? _workLocationSearchDebounce;
+  Timer? _allianceLocationSearchDebounce;
 
   List<Map<String, dynamic>> _genders = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _religions = <Map<String, dynamic>>[];
@@ -342,6 +535,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _physicalConditionOptions =
       <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _maritalStatusOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _childLivingWithOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _dietOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _smokingStatusOptions = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _drinkingStatusOptions = <Map<String, dynamic>>[];
@@ -398,8 +592,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final Set<int> _selectedPreferredStateIds = <int>{};
   final Set<int> _selectedPreferredDistrictIds = <int>{};
   final Set<int> _selectedPreferredTalukaIds = <int>{};
+  final List<_MarriageEditRow> _marriageRows = <_MarriageEditRow>[];
+  final List<_ChildEditRow> _childRows = <_ChildEditRow>[];
   final List<_SiblingEditRow> _siblingRows = <_SiblingEditRow>[];
   final List<_RelativeEditRow> _relativeRows = <_RelativeEditRow>[];
+  final List<_AllianceNetworkEditRow> _allianceNetworkRows =
+      <_AllianceNetworkEditRow>[];
   bool _preferredLocationsTouched = false;
   Map<String, dynamic> _horoscopeRules = <String, dynamic>{};
   Map<String, dynamic> _rashiAshtakoota = <String, dynamic>{};
@@ -420,6 +618,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _locationSearchDebounce?.cancel();
     _birthPlaceSearchDebounce?.cancel();
     _workLocationSearchDebounce?.cancel();
+    _allianceLocationSearchDebounce?.cancel();
     _savedHighlightTimer?.cancel();
     _scrollController.dispose();
     _fullNameController.dispose();
@@ -454,8 +653,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _navrasNameController.dispose();
     _aboutMeController.dispose();
     _expectationsController.dispose();
+    _disposeMarriageRows();
+    _disposeChildRows();
     _disposeSiblingRows();
     _disposeRelativeRows();
+    _disposeAllianceNetworkRows();
     super.dispose();
   }
 
@@ -532,11 +734,71 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _siblingRows.clear();
   }
 
+  void _disposeMarriageRows() {
+    for (final row in _marriageRows) {
+      row.dispose();
+    }
+    _marriageRows.clear();
+  }
+
+  void _disposeChildRows() {
+    for (final row in _childRows) {
+      row.dispose();
+    }
+    _childRows.clear();
+  }
+
   void _disposeRelativeRows() {
     for (final row in _relativeRows) {
       row.dispose();
     }
     _relativeRows.clear();
+  }
+
+  void _disposeAllianceNetworkRows() {
+    for (final row in _allianceNetworkRows) {
+      row.dispose();
+    }
+    _allianceNetworkRows.clear();
+  }
+
+  void _prefillMarriages(dynamic value) {
+    _disposeMarriageRows();
+    for (final row in _readRows(value)) {
+      _marriageRows.add(
+        _MarriageEditRow(
+          id: _readInt(row['id']),
+          marriageYear: _readText(row['marriage_year']),
+          separationYear: _readText(row['separation_year']),
+          divorceYear: _readText(row['divorce_year']),
+          spouseDeathYear: _readText(row['spouse_death_year']),
+          divorceStatus: _readDivorceStatus(row['divorce_status']),
+          remarriageReason: ApiClient.safeDisplayLabel(
+            row['remarriage_reason'],
+          ),
+          notes: ApiClient.safeDisplayLabel(row['notes']),
+        ),
+      );
+    }
+  }
+
+  void _prefillChildren(dynamic value) {
+    _disposeChildRows();
+    for (final row in _readRows(value)) {
+      _childRows.add(
+        _ChildEditRow(
+          id: _readInt(row['id']),
+          childName: ApiClient.safeDisplayLabel(row['child_name']),
+          gender: _readChildGender(row['gender']),
+          age: _readText(row['age']),
+          childLivingWithId: _readInt(row['child_living_with_id']),
+          sortOrder: _readInt(row['sort_order']) ?? _childRows.length,
+        ),
+      );
+    }
+    if (_selectedHasChildren == null && _childRows.isNotEmpty) {
+      _selectedHasChildren = true;
+    }
   }
 
   void _prefillSiblings(dynamic value) {
@@ -586,6 +848,33 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
   }
 
+  String? _allianceNetworkLocationLabel(Map<String, dynamic> row) {
+    return _joinSummaryParts([
+      ApiClient.safeDisplayLabel(row['city_label']),
+      ApiClient.safeDisplayLabel(row['taluka_label']),
+      ApiClient.safeDisplayLabel(row['district_label']),
+      ApiClient.safeDisplayLabel(row['state_label']),
+    ], separator: ', ');
+  }
+
+  void _prefillAllianceNetworks(dynamic value) {
+    _disposeAllianceNetworkRows();
+    for (final row in _readRows(value)) {
+      _allianceNetworkRows.add(
+        _AllianceNetworkEditRow(
+          id: _readInt(row['id']),
+          surname: ApiClient.safeDisplayLabel(row['surname']),
+          locationLabel: _allianceNetworkLocationLabel(row),
+          cityId: _readInt(row['city_id']),
+          stateId: _readInt(row['state_id']),
+          districtId: _readInt(row['district_id']),
+          talukaId: _readInt(row['taluka_id']),
+          notes: ApiClient.safeDisplayLabel(row['notes']),
+        ),
+      );
+    }
+  }
+
   String? _readSiblingRelationType(dynamic value) {
     final text = _readText(value);
     if (text == null) return null;
@@ -613,6 +902,40 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final text = _readText(value);
     if (text == null) return null;
     return const ['unmarried', 'married'].contains(text) ? text : null;
+  }
+
+  String? _readDivorceStatus(dynamic value) {
+    final text = _readText(value);
+    if (text == null) return null;
+    return const ['pending', 'finalized', 'mutual', 'contested'].contains(text)
+        ? text
+        : null;
+  }
+
+  String? _readChildGender(dynamic value) {
+    final text = _readText(value);
+    if (text == null) return null;
+    return const ['male', 'female', 'other', 'prefer_not_say'].contains(text)
+        ? text
+        : null;
+  }
+
+  List<Map<String, dynamic>> _divorceStatusOptions() {
+    return const <Map<String, dynamic>>[
+      {'value': 'pending', 'label': 'Pending'},
+      {'value': 'finalized', 'label': 'Finalized'},
+      {'value': 'mutual', 'label': 'Mutual'},
+      {'value': 'contested', 'label': 'Contested'},
+    ];
+  }
+
+  List<Map<String, dynamic>> _childGenderOptions() {
+    return const <Map<String, dynamic>>[
+      {'value': 'male', 'label': 'Male'},
+      {'value': 'female', 'label': 'Female'},
+      {'value': 'other', 'label': 'Other'},
+      {'value': 'prefer_not_say', 'label': 'Prefer not to say'},
+    ];
   }
 
   List<Map<String, dynamic>> _siblingRelationOptions() {
@@ -921,6 +1244,32 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return null;
   }
 
+  int? _locationDistrictId(Map<String, dynamic> location) {
+    final direct =
+        _readInt(location['district_id']) ?? _readInt(location['districtId']);
+    if (direct != null) return direct;
+
+    final district = location['district'];
+    if (district is Map) {
+      return _readInt(district['id']);
+    }
+
+    return null;
+  }
+
+  int? _locationTalukaId(Map<String, dynamic> location) {
+    final direct =
+        _readInt(location['taluka_id']) ?? _readInt(location['talukaId']);
+    if (direct != null) return direct;
+
+    final taluka = location['taluka'];
+    if (taluka is Map) {
+      return _readInt(taluka['id']);
+    }
+
+    return null;
+  }
+
   int? _profileLocationStateId(Map<String, dynamic> profile) {
     final direct =
         _readInt(profile['state_id']) ??
@@ -1072,7 +1421,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedSpectaclesLens = _readText(profile['spectacles_lens']);
     _selectedPhysicalCondition = _readText(profile['physical_condition']);
     _selectedMaritalStatusId = _readInt(profile['marital_status_id']);
+    _selectedMaritalStatusKey = _readText(profile['marital_status_key']);
     _selectedHasChildren = _readBool(profile['has_children']);
+    _prefillMarriages(profile['marriages']);
+    _prefillChildren(profile['children']);
     _selectedDietId = _readInt(profile['diet_id']);
     _selectedSmokingStatusId = _readInt(profile['smoking_status_id']);
     _selectedDrinkingStatusId = _readInt(profile['drinking_status_id']);
@@ -1173,6 +1525,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedHasSiblings = _readBool(profile['has_siblings']);
     _prefillSiblings(profile['siblings']);
     _prefillRelatives(profile['relatives']);
+    _prefillAllianceNetworks(profile['alliance_networks']);
     _otherRelativesController.text =
         ApiClient.safeDisplayLabel(profile['other_relatives_text']) ?? '';
     _propertyDetailsController.text =
@@ -1475,6 +1828,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       setState(() {
         _maritalStatusOptions =
             results['marital_statuses'] ?? <Map<String, dynamic>>[];
+        _selectedMaritalStatusKey =
+            _maritalStatusKeyForId(_selectedMaritalStatusId) ??
+            _selectedMaritalStatusKey;
+        _childLivingWithOptions =
+            results['child_living_with'] ?? <Map<String, dynamic>>[];
         _dietOptions = results['diets'] ?? <Map<String, dynamic>>[];
         _smokingStatusOptions =
             results['smoking_statuses'] ?? <Map<String, dynamic>>[];
@@ -2712,9 +3070,51 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return rows;
   }
 
+  List<Map<String, dynamic>> _marriagesPayload() {
+    if (_isNeverMarriedStatus(_selectedMaritalStatusId)) {
+      return const <Map<String, dynamic>>[];
+    }
+
+    final rows = <Map<String, dynamic>>[];
+    for (final row in _marriageRows) {
+      if (!row.hasData) continue;
+      rows.add(row.toPayload(_selectedMaritalStatusId));
+    }
+
+    return rows;
+  }
+
+  List<Map<String, dynamic>> _childrenPayload() {
+    if (_selectedHasChildren == false) return const <Map<String, dynamic>>[];
+
+    final rows = <Map<String, dynamic>>[];
+    for (var index = 0; index < _childRows.length; index++) {
+      final row = _childRows[index];
+      if (!row.hasData) continue;
+      rows.add(row.toPayload(index));
+    }
+
+    return rows;
+  }
+
+  String? _maritalStatusKeyForId(int? id) {
+    if (id == null) return null;
+    for (final option in _maritalStatusOptions) {
+      if (_readInt(option['id']) == id) {
+        return _readText(option['key']);
+      }
+    }
+    return id == _selectedMaritalStatusId ? _selectedMaritalStatusKey : null;
+  }
+
+  bool _isNeverMarriedStatus(int? id) {
+    return _maritalStatusKeyForId(id) == 'never_married';
+  }
+
   Map<String, dynamic> _buildProfilePayload({
     bool includeSiblings = false,
     bool includeRelatives = false,
+    bool includeMarriageChildren = false,
   }) {
     final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
         ? _selectedCasteLabel!.trim()
@@ -2869,6 +3269,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       payload['relatives'] = _relativesPayload();
     }
 
+    if (includeMarriageChildren) {
+      payload['marriages'] = _marriagesPayload();
+      payload['children'] = _childrenPayload();
+    }
+
     if (educationDegreeId != null) {
       payload['education_slots'] = jsonEncode([
         {'t': 'd', 'id': educationDegreeId},
@@ -2894,6 +3299,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final payload = _buildProfilePayload(
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
+      includeMarriageChildren: section == _EditProfileSection.maritalLifestyle,
     );
     Map<String, dynamic> response;
     try {
@@ -3217,6 +3623,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _selectedMaritalStatusId,
             'Marital status',
           ),
+          _marriageRows.isEmpty
+              ? null
+              : '${_marriageRows.length} marriage row(s)',
+          _joinSummaryParts([
+            'Children',
+            _boolSummary(_selectedHasChildren),
+            _childRows.isEmpty ? null : '${_childRows.length} row(s)',
+          ], separator: ': '),
           _labelForId(_dietOptions, _selectedDietId, 'Diet'),
           _joinSummaryParts([
             _labelForId(
@@ -3422,6 +3836,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return const [
           'marital_status_id',
           'has_children',
+          'marriages',
+          'children',
           'diet_id',
           'smoking_status_id',
           'drinking_status_id',
@@ -3513,6 +3929,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final payload = _buildProfilePayload(
       includeSiblings: section == _EditProfileSection.siblings,
       includeRelatives: section == _EditProfileSection.relatives,
+      includeMarriageChildren: section == _EditProfileSection.maritalLifestyle,
     );
     return <String, dynamic>{
       for (final key in _sectionPayloadKeys(section))
@@ -4570,9 +4987,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           selectedId: _selectedMaritalStatusId,
           fallbackPrefix: 'Marital status',
           loading: _maritalLifestyleOptionsLoading,
-          onChanged: (value) =>
-              setState(() => _selectedMaritalStatusId = value),
+          onChanged: (value) => setState(() {
+            _selectedMaritalStatusId = value;
+            _selectedMaritalStatusKey = _maritalStatusKeyForId(value);
+          }),
         ),
+        const SizedBox(height: 14),
+        _buildMarriageHistoryEditor(),
         const SizedBox(height: 14),
         _boolDropdown(
           labelText: 'Has children (Optional)',
@@ -4580,6 +5001,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           selectedValue: _selectedHasChildren,
           onChanged: (value) => setState(() => _selectedHasChildren = value),
         ),
+        if (_selectedHasChildren == true) ...[
+          const SizedBox(height: 14),
+          _buildChildrenEditor(),
+        ],
         const SizedBox(height: 14),
         _intDropdown(
           labelText: 'Diet (Optional)',
@@ -4627,6 +5052,277 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ),
       ],
     );
+  }
+
+  Widget _buildMarriageHistoryEditor() {
+    final neverMarried = _isNeverMarriedStatus(_selectedMaritalStatusId);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Marriage history',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: _saving || neverMarried ? null : _addMarriage,
+              icon: const Icon(Icons.add),
+              label: const Text('Add'),
+            ),
+          ],
+        ),
+        if (neverMarried)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'No marriage history rows.',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+          )
+        else if (_marriageRows.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'No marriage history rows added.',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+          )
+        else ...[
+          const SizedBox(height: 10),
+          for (var index = 0; index < _marriageRows.length; index++) ...[
+            _buildMarriageRowEditor(index, _marriageRows[index]),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMarriageRowEditor(int index, _MarriageEditRow row) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Marriage ${index + 1}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Remove',
+                onPressed: _saving ? null : () => _removeMarriage(index),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextField(
+            controller: row.marriageYearController,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Marriage year (Optional)',
+              prefixIcon: Icon(Icons.calendar_month_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.separationYearController,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Separation year (Optional)',
+              prefixIcon: Icon(Icons.event_busy_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.divorceYearController,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Divorce year (Optional)',
+              prefixIcon: Icon(Icons.gavel_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.spouseDeathYearController,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Spouse death year (Optional)',
+              prefixIcon: Icon(Icons.event_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _stringDropdown(
+            labelText: 'Legal status (Optional)',
+            icon: Icons.verified_outlined,
+            options: _divorceStatusOptions(),
+            selectedValue: row.divorceStatus,
+            fallbackPrefix: 'Legal status',
+            loading: false,
+            onChanged: (value) => setState(() => row.divorceStatus = value),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.notesController,
+            maxLines: 2,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Notes (Optional)',
+              prefixIcon: Icon(Icons.notes_outlined),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addMarriage() {
+    setState(() {
+      _marriageRows.add(_MarriageEditRow());
+    });
+  }
+
+  void _removeMarriage(int index) {
+    setState(() {
+      final removed = _marriageRows.removeAt(index);
+      removed.dispose();
+    });
+  }
+
+  Widget _buildChildrenEditor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                'Children',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+            OutlinedButton.icon(
+              onPressed: _saving ? null : _addChild,
+              icon: const Icon(Icons.add),
+              label: const Text('Add'),
+            ),
+          ],
+        ),
+        if (_childRows.isEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'No child rows added.',
+              style: TextStyle(color: Colors.grey.shade700),
+            ),
+          )
+        else ...[
+          const SizedBox(height: 10),
+          for (var index = 0; index < _childRows.length; index++) ...[
+            _buildChildRowEditor(index, _childRows[index]),
+            const SizedBox(height: 12),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildChildRowEditor(int index, _ChildEditRow row) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade300),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Child ${index + 1}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Remove',
+                onPressed: _saving ? null : () => _removeChild(index),
+                icon: const Icon(Icons.delete_outline),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _stringDropdown(
+            labelText: 'Gender',
+            icon: Icons.person_outline,
+            options: _childGenderOptions(),
+            selectedValue: row.gender,
+            fallbackPrefix: 'Gender',
+            loading: false,
+            onChanged: (value) => setState(() => row.gender = value),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: row.ageController,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.next,
+            decoration: const InputDecoration(
+              labelText: 'Age',
+              prefixIcon: Icon(Icons.cake_outlined),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _intDropdown(
+            labelText: 'Living with (Optional)',
+            icon: Icons.home_outlined,
+            options: _childLivingWithOptions,
+            selectedId: row.childLivingWithId,
+            fallbackPrefix: 'Living with',
+            loading: _maritalLifestyleOptionsLoading,
+            onChanged: (value) => setState(() => row.childLivingWithId = value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addChild() {
+    setState(() {
+      _selectedHasChildren = true;
+      _childRows.add(_ChildEditRow(sortOrder: _childRows.length));
+    });
+  }
+
+  void _removeChild(int index) {
+    setState(() {
+      final removed = _childRows.removeAt(index);
+      removed.dispose();
+    });
   }
 
   Widget _buildBasicSection() {
