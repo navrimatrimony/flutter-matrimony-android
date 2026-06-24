@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
-import '../auth/register_screen.dart';
+import '../onboarding/smart_onboarding_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
               duration: Duration(seconds: 2),
             ),
           );
-          Navigator.pushReplacementNamed(context, '/create-profile');
+          Navigator.pushReplacementNamed(context, '/smart-onboarding');
           return;
         }
 
@@ -69,7 +69,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
         setState(() {
           isLoading = false;
-          errorMessage = profileResult['message'] ??
+          errorMessage =
+              profileResult['message'] ??
               'Profile check failed. Please try again.';
         });
       } catch (e) {
@@ -100,9 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -125,16 +124,11 @@ class _LoginScreenState extends State<LoginScreen> {
             TextField(
               controller: passwordController,
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-              ),
+              decoration: const InputDecoration(labelText: 'Password'),
             ),
             const SizedBox(height: 20),
             if (errorMessage.isNotEmpty)
-              Text(
-                errorMessage,
-                style: const TextStyle(color: Colors.red),
-              ),
+              Text(errorMessage, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 10),
             ElevatedButton(
               onPressed: isLoading ? null : handleLogin,
@@ -148,13 +142,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const RegisterScreen(),
+                    builder: (context) => const SmartOnboardingScreen(),
                   ),
                 );
               },
-              child: const Text(
-                'New user? Register here',
-              ),
+              child: const Text('New user? Register here'),
             ),
           ],
         ),

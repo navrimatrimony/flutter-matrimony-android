@@ -6,7 +6,6 @@ import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
-import 'features/matrimony_profile/create_profile_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
 import 'features/onboarding/smart_onboarding_screen.dart';
 
@@ -102,8 +101,9 @@ class MyApp extends StatelessWidget {
         '/language': (context) => const LanguageChoiceScreen(),
         '/landing': (context) => const LandingScreen(),
         '/login': (context) => const LoginScreen(),
+        '/register': (context) => const SmartOnboardingScreen(),
         '/home': (context) => const HomeScreen(),
-        '/create-profile': (context) => const CreateMatrimonyProfileScreen(),
+        '/create-profile': (context) => const SmartOnboardingScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
         '/smart-onboarding': (context) => const SmartOnboardingScreen(),
       },
@@ -140,7 +140,18 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
 
     if (!mounted) return;
 
-    final route = ApiClient.authToken == null ? '/landing' : '/home';
+    var route = ApiClient.authToken == null ? '/landing' : '/home';
+    if (ApiClient.authToken != null) {
+      try {
+        final profileResult = await ApiClient.getMyProfile();
+        if (profileResult['statusCode'] == 404) {
+          route = '/smart-onboarding';
+        }
+      } catch (_) {
+        route = '/home';
+      }
+    }
+    if (!mounted) return;
     Navigator.pushReplacementNamed(context, route);
   }
 

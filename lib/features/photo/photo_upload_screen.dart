@@ -107,7 +107,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         _showErrorMessage(
           '❌ प्रोफाइल सापडली नाही! कृपया आधी प्रोफाइल तयार करा.',
         );
-        Navigator.pushReplacementNamed(context, '/create-profile');
+        Navigator.pushReplacementNamed(context, '/smart-onboarding');
         return; // इथेच थांबा
       }
 

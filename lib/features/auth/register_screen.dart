@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
 
+/// Legacy email/password registration screen.
+/// Production registration routes use SmartOnboardingScreen.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -52,7 +54,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           duration: Duration(seconds: 2),
         ),
       );
-      Navigator.pushReplacementNamed(context, '/create-profile');
+      Navigator.pushReplacementNamed(context, '/smart-onboarding');
       return;
     }
 

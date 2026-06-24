@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_strings.dart';
+import '../onboarding/smart_onboarding_screen.dart';
 import 'login_screen.dart';
-import 'register_screen.dart';
 
 /// ===============================
 /// LANDING / WELCOME SCREEN
@@ -164,7 +164,8 @@ class LandingScreen extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const RegisterScreen(),
+                                builder: (context) =>
+                                    const SmartOnboardingScreen(),
                               ),
                             );
                           },
@@ -248,7 +249,11 @@ class _TrustPoint extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.verified_user_outlined, color: Colors.white, size: 15),
+          const Icon(
+            Icons.verified_user_outlined,
+            color: Colors.white,
+            size: 15,
+          ),
           const SizedBox(width: 5),
           Text(
             label,
