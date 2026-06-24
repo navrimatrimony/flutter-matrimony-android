@@ -1,0 +1,201 @@
+import 'package:flutter/material.dart';
+
+import '../../../core/api_client.dart';
+import '../models/onboarding_option.dart';
+import '../models/paged_lookup_response.dart';
+import '../widgets/onboarding_picker_field.dart';
+import 'onboarding_step_helpers.dart';
+import 'onboarding_step_scaffold.dart';
+
+class FamilyOptionalStep extends StatefulWidget {
+  const FamilyOptionalStep({
+    super.key,
+    required this.data,
+    required this.locale,
+    required this.loading,
+    required this.onSave,
+    required this.onBack,
+  });
+
+  final Map<String, dynamic> data;
+  final String locale;
+  final bool loading;
+  final OnboardingStepSaver onSave;
+  final VoidCallback onBack;
+
+  @override
+  State<FamilyOptionalStep> createState() => _FamilyOptionalStepState();
+}
+
+class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
+  final TextEditingController _fatherNameController = TextEditingController();
+  final TextEditingController _fatherInfoController = TextEditingController();
+  final TextEditingController _motherNameController = TextEditingController();
+  final TextEditingController _motherInfoController = TextEditingController();
+
+  OnboardingOption? _fatherOccupation;
+  OnboardingOption? _motherOccupation;
+  bool get _mr => widget.locale == 'mr';
+
+  @override
+  void initState() {
+    super.initState();
+    _prefill();
+  }
+
+  @override
+  void didUpdateWidget(covariant FamilyOptionalStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.data != widget.data) _prefill();
+  }
+
+  @override
+  void dispose() {
+    _fatherNameController.dispose();
+    _fatherInfoController.dispose();
+    _motherNameController.dispose();
+    _motherInfoController.dispose();
+    super.dispose();
+  }
+
+  void _prefill() {
+    final data = widget.data;
+    _fatherNameController.text = onboardingText(data['father_name']) ?? '';
+    _fatherInfoController.text =
+        onboardingText(data['father_extra_info']) ?? '';
+    _motherNameController.text = onboardingText(data['mother_name']) ?? '';
+    _motherInfoController.text =
+        onboardingText(data['mother_extra_info']) ?? '';
+    _fatherOccupation =
+        optionFromData(data['father_occupation_option']) ??
+        _placeholder(data['father_occupation_master_id'], 'Occupation');
+    _motherOccupation =
+        optionFromData(data['mother_occupation_option']) ??
+        _placeholder(data['mother_occupation_master_id'], 'Occupation');
+  }
+
+  String _t(String en, String mr) => _mr ? mr : en;
+
+  OnboardingOption? _placeholder(dynamic id, String label) {
+    final intId = onboardingInt(id);
+    if (intId == null) return null;
+    return OnboardingOption(id: intId, label: '$label #$intId');
+  }
+
+  Future<PagedLookupResponse> _occupationPage(
+    String query,
+    int page,
+    int limit,
+  ) async {
+    return PagedLookupResponse.fromJson(
+      await ApiClient.searchOccupations(
+        query: query,
+        page: page,
+        limit: limit,
+        locale: widget.locale,
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    await widget.onSave(
+      'family',
+      compactPayload({
+        'father_name': _fatherNameController.text.trim(),
+        'father_occupation_master_id': _fatherOccupation?.intId,
+        'father_extra_info': _fatherInfoController.text.trim(),
+        'mother_name': _motherNameController.text.trim(),
+        'mother_occupation_master_id': _motherOccupation?.intId,
+        'mother_extra_info': _motherInfoController.text.trim(),
+      }),
+      saveProfile: true,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return OnboardingStepScaffold(
+      title: _t('Family Optional', 'कुटुंब माहिती Optional'),
+      subtitle: _t(
+        'This step is optional and does not block onboarding.',
+        'हा step optional आहे आणि onboarding block करत नाही.',
+      ),
+      loading: widget.loading,
+      onBack: widget.onBack,
+      onContinue: _save,
+      continueLabel: _t('Save optional details', 'Optional तपशील save करा'),
+      secondary: TextButton(
+        onPressed: widget.loading
+            ? null
+            : () => widget.onSave('family', const {}, saveProfile: false),
+        child: Text(
+          _t('Skip optional family details', 'Optional family skip करा'),
+        ),
+      ),
+      children: [
+        TextField(
+          controller: _fatherNameController,
+          decoration: InputDecoration(
+            labelText: _t('Father name optional', 'वडिलांचे नाव optional'),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _occupationPicker(
+          label: _t('Father occupation', 'वडिलांचा व्यवसाय'),
+          selected: _fatherOccupation,
+          onChanged: (option) => setState(() => _fatherOccupation = option),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _fatherInfoController,
+          decoration: InputDecoration(
+            labelText: _t('Father notes optional', 'वडिलांची माहिती optional'),
+          ),
+        ),
+        const SizedBox(height: 16),
+        TextField(
+          controller: _motherNameController,
+          decoration: InputDecoration(
+            labelText: _t('Mother name optional', 'आईचे नाव optional'),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _occupationPicker(
+          label: _t('Mother occupation', 'आईचा व्यवसाय'),
+          selected: _motherOccupation,
+          onChanged: (option) => setState(() => _motherOccupation = option),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _motherInfoController,
+          decoration: InputDecoration(
+            labelText: _t('Mother notes optional', 'आईची माहिती optional'),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          _t(
+            'Brothers/sisters count and native location are not accepted by the current onboarding backend contract.',
+            'सध्याच्या onboarding backend contract मध्ये brothers/sisters count आणि native location accepted नाहीत.',
+          ),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
+      ],
+    );
+  }
+
+  Widget _occupationPicker({
+    required String label,
+    required OnboardingOption? selected,
+    required ValueChanged<OnboardingOption?> onChanged,
+  }) {
+    return OnboardingPickerField(
+      label: label,
+      selectedItems: selected == null ? const [] : [selected],
+      placeholder: _t('Search occupation', 'Occupation शोधा'),
+      loadPage: _occupationPage,
+      itemSubtitleBuilder: (option) => option.metaText('category_label'),
+      onChanged: (items) => onChanged(items.isEmpty ? null : items.first),
+    );
+  }
+}

@@ -15,6 +15,7 @@ class OnboardingPickerField extends StatelessWidget {
     this.placeholder,
     this.searchHint,
     this.itemSubtitleBuilder,
+    this.optionEnabled,
     this.allowRequestToAdd = false,
     this.onRequestToAdd,
     this.enabled = true,
@@ -29,6 +30,7 @@ class OnboardingPickerField extends StatelessWidget {
   final String? placeholder;
   final String? searchHint;
   final SmartPickerSubtitleBuilder? itemSubtitleBuilder;
+  final SmartPickerOptionEnabled? optionEnabled;
   final bool allowRequestToAdd;
   final VoidCallback? onRequestToAdd;
   final bool enabled;
@@ -98,6 +100,7 @@ class OnboardingPickerField extends StatelessWidget {
       multiSelect: multiSelect,
       searchHint: searchHint,
       itemSubtitleBuilder: itemSubtitleBuilder,
+      optionEnabled: optionEnabled,
       allowRequestToAdd: allowRequestToAdd,
       onRequestToAdd: onRequestToAdd,
     );

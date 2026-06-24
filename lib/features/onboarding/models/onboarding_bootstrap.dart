@@ -33,17 +33,25 @@ class OnboardingBootstrap {
 
     return OnboardingBootstrap(
       profileForWhom: OnboardingOption.listFrom(source['profile_for_whom']),
-      genders: OnboardingOption.listFrom(source['genders']),
+      genders: OnboardingOption.listFrom(
+        source['gender_options'] ?? source['genders'],
+      ),
       maritalStatuses: OnboardingOption.listFrom(source['marital_statuses']),
       heightOptions: OnboardingOption.listFrom(
         source['height_options'] ?? source['heights'],
       ),
-      diets: OnboardingOption.listFrom(source['diets'] ?? source['diet']),
+      diets: OnboardingOption.listFrom(
+        source['diet_options'] ?? source['diets'] ?? source['diet'],
+      ),
       smokingOptions: OnboardingOption.listFrom(
-        source['smoking'] ?? source['smoking_statuses'],
+        source['smoking_options'] ??
+            source['smoking'] ??
+            source['smoking_statuses'],
       ),
       drinkingOptions: OnboardingOption.listFrom(
-        source['drinking'] ?? source['drinking_statuses'],
+        source['drinking_options'] ??
+            source['drinking'] ??
+            source['drinking_statuses'],
       ),
       childrenRules: _mapValue(source['children_rules']),
       agePolicy: _mapValue(source['age_policy']),

@@ -9,6 +9,7 @@ typedef SmartPickerPageLoader =
     Future<PagedLookupResponse> Function(String query, int page, int limit);
 
 typedef SmartPickerSubtitleBuilder = String? Function(OnboardingOption option);
+typedef SmartPickerOptionEnabled = bool Function(OnboardingOption option);
 
 class SmartPickerPanel extends StatefulWidget {
   const SmartPickerPanel({
@@ -20,6 +21,7 @@ class SmartPickerPanel extends StatefulWidget {
     this.multiSelect = false,
     this.searchHint,
     this.itemSubtitleBuilder,
+    this.optionEnabled,
     this.allowRequestToAdd = false,
     this.onRequestToAdd,
     this.closeOnSingleSelect = true,
@@ -33,6 +35,7 @@ class SmartPickerPanel extends StatefulWidget {
   final bool multiSelect;
   final String? searchHint;
   final SmartPickerSubtitleBuilder? itemSubtitleBuilder;
+  final SmartPickerOptionEnabled? optionEnabled;
   final bool allowRequestToAdd;
   final VoidCallback? onRequestToAdd;
   final bool closeOnSingleSelect;
@@ -47,6 +50,7 @@ class SmartPickerPanel extends StatefulWidget {
     bool multiSelect = false,
     String? searchHint,
     SmartPickerSubtitleBuilder? itemSubtitleBuilder,
+    SmartPickerOptionEnabled? optionEnabled,
     bool allowRequestToAdd = false,
     VoidCallback? onRequestToAdd,
     bool closeOnSingleSelect = true,
@@ -67,6 +71,7 @@ class SmartPickerPanel extends StatefulWidget {
           multiSelect: multiSelect,
           searchHint: searchHint,
           itemSubtitleBuilder: itemSubtitleBuilder,
+          optionEnabled: optionEnabled,
           allowRequestToAdd: allowRequestToAdd,
           onRequestToAdd: onRequestToAdd,
           closeOnSingleSelect: closeOnSingleSelect,
@@ -202,6 +207,8 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
   }
 
   void _select(OnboardingOption option) {
+    if (!(widget.optionEnabled?.call(option) ?? true)) return;
+
     if (widget.multiSelect) {
       setState(() {
         if (_selected.containsKey(option.identity)) {
@@ -351,12 +358,17 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
     final selected = _selected.containsKey(option.identity);
     final subtitle =
         widget.itemSubtitleBuilder?.call(option) ?? option.subtitle;
+    final enabled = widget.optionEnabled?.call(option) ?? true;
 
     return ListTile(
       dense: true,
+      enabled: enabled,
       selected: selected,
       leading: widget.multiSelect
-          ? Checkbox(value: selected, onChanged: (_) => _select(option))
+          ? Checkbox(
+              value: selected,
+              onChanged: enabled ? (_) => _select(option) : null,
+            )
           : selected
           ? const Icon(Icons.check_circle)
           : const Icon(Icons.radio_button_unchecked),
@@ -364,13 +376,18 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
       subtitle: subtitle == null
           ? null
           : Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-      trailing: option.translationMissing
+      trailing: !enabled
+          ? const Tooltip(
+              message: 'Not selectable for this field.',
+              child: Icon(Icons.lock_outline, size: 18),
+            )
+          : option.translationMissing
           ? const Tooltip(
               message: 'Translation missing. Showing fallback label.',
               child: Icon(Icons.translate, size: 18),
             )
           : null,
-      onTap: () => _select(option),
+      onTap: enabled ? () => _select(option) : null,
     );
   }
 

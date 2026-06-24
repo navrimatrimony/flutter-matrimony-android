@@ -5,7 +5,14 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
 
 class PhotoUploadScreen extends StatefulWidget {
-  const PhotoUploadScreen({super.key});
+  const PhotoUploadScreen({
+    super.key,
+    this.returnToPreviousOnSuccess = false,
+    this.onUploaded,
+  });
+
+  final bool returnToPreviousOnSuccess;
+  final VoidCallback? onUploaded;
 
   @override
   State<PhotoUploadScreen> createState() => _PhotoUploadScreenState();
@@ -97,7 +104,9 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
       final profileStatusCode = profileCheck['statusCode'];
 
       if (profileStatusCode == 404 || profileCheck['success'] != true) {
-        _showErrorMessage('❌ प्रोफाइल सापडली नाही! कृपया आधी प्रोफाइल तयार करा.');
+        _showErrorMessage(
+          '❌ प्रोफाइल सापडली नाही! कृपया आधी प्रोफाइल तयार करा.',
+        );
         Navigator.pushReplacementNamed(context, '/create-profile');
         return; // इथेच थांबा
       }
@@ -135,7 +144,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
           _showErrorMessage(
             '❌ Photo upload API ला profile सापडली नाही (404).\n'
             'Backend issue असू शकते. Profile आहे, पण upload endpoint 404 देते.\n'
-            'कृपया backend verify करा.'
+            'कृपया backend verify करा.',
           );
         }
         return;
@@ -156,23 +165,27 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         // Profile refresh करा latest photo साठी
         await ApiClient.getMyProfile();
 
-        _showSuccessMessage('🎉 Photo upload यशस्वी! Profile मध्ये photo update झाला आहे.');
-        
+        _showSuccessMessage(
+          '🎉 Photo upload यशस्वी! Profile मध्ये photo update झाला आहे.',
+        );
+
+        widget.onUploaded?.call();
+
         // 1.5 seconds नंतर home screen वर navigate करा
         Future.delayed(const Duration(milliseconds: 1500), () {
           if (mounted) {
-            Navigator.pushReplacementNamed(context, "/home");
+            if (widget.returnToPreviousOnSuccess) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacementNamed(context, "/home");
+            }
           }
         });
       } else {
-        _showErrorMessage(
-          '❌ Upload fail झाला!\nStatus Code: $statusCode',
-        );
+        _showErrorMessage('❌ Upload fail झाला!\nStatus Code: $statusCode');
       }
     } catch (e) {
-      _showErrorMessage(
-        '❌ Exception आली!\nError: ${e.toString()}',
-      );
+      _showErrorMessage('❌ Exception आली!\nError: ${e.toString()}');
     } finally {
       setState(() {
         _uploading = false;
@@ -201,9 +214,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload Profile Photo'),
-      ),
+      appBar: AppBar(title: const Text('Upload Profile Photo')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

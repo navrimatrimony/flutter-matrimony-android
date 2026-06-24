@@ -25,6 +25,29 @@ class OnboardingOption {
     return 'label:${label.trim().toLowerCase()}';
   }
 
+  int? get intId {
+    if (id is int) return id as int;
+    if (id is num) return (id as num).toInt();
+    return int.tryParse(id?.toString() ?? '');
+  }
+
+  int? metaInt(String key) {
+    final value = meta[key] ?? raw[key];
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
+  }
+
+  String? metaText(String key) {
+    final text = (meta[key] ?? raw[key])?.toString().trim();
+    if (text == null || text.isEmpty) return null;
+    return text;
+  }
+
+  bool? metaBool(String key) {
+    return _boolValue(meta[key] ?? raw[key]);
+  }
+
   String? get subtitle {
     for (final key in const [
       'subtitle',
@@ -68,6 +91,7 @@ class OnboardingOption {
       'status',
       'working_with_id',
       'working_with_label',
+      'cm',
     ]) {
       absorbMeta(key);
     }

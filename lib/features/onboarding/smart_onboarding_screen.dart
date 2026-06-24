@@ -11,6 +11,16 @@ import 'models/onboarding_bootstrap.dart';
 import 'models/onboarding_option.dart';
 import 'models/onboarding_status.dart';
 import 'models/paged_lookup_response.dart';
+import 'steps/activation_checklist_step.dart';
+import 'steps/basic_candidate_info_step.dart';
+import 'steps/career_step.dart';
+import 'steps/education_step.dart';
+import 'steps/family_optional_step.dart';
+import 'steps/lifestyle_step.dart';
+import 'steps/location_step.dart';
+import 'steps/onboarding_step_helpers.dart';
+import 'steps/photo_step.dart';
+import 'steps/religion_caste_step.dart';
 import 'widgets/onboarding_picker_field.dart';
 
 enum _SmartOnboardingStep {
@@ -18,7 +28,15 @@ enum _SmartOnboardingStep {
   mobileOtp,
   accountDetails,
   profileForWhom,
-  status,
+  basicInfo,
+  religionCaste,
+  location,
+  education,
+  career,
+  lifestyle,
+  family,
+  photo,
+  activation,
 }
 
 class SmartOnboardingScreen extends StatefulWidget {
@@ -42,6 +60,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   OnboardingStatus? _status;
   OnboardingOption? _profileForWhom;
   MobileOtpSendResponse? _otpChallenge;
+  Map<String, dynamic> _serverDraftData = <String, dynamic>{};
 
   bool _loading = false;
   bool _termsAccepted = false;
@@ -78,6 +97,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     });
 
     if (ApiClient.authToken != null) {
+      await _loadBootstrap();
       await _loadStatus(goToStatus: false);
       final status = _status;
       if (!mounted || status == null) return;
@@ -85,10 +105,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       setState(() {
         if (status.account['creator_name_present'] == false) {
           _step = _SmartOnboardingStep.accountDetails;
-        } else if (status.hasProfile || status.nextStep != null) {
-          _step = _SmartOnboardingStep.status;
-        } else {
+        } else if (status.draft == null && !status.hasProfile) {
           _step = _SmartOnboardingStep.profileForWhom;
+        } else {
+          _step = _stepFromStatus(status);
         }
       });
     }
@@ -99,6 +119,93 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   String get _localeCode => appLanguageCode(_language);
+
+  bool get _isAuthenticated =>
+      ApiClient.authToken != null && ApiClient.authToken!.isNotEmpty;
+
+  _SmartOnboardingStep _stepFromStatus(OnboardingStatus status) {
+    final next = status.nextStep ?? status.draft?.currentStep;
+    return _stepFromServerName(next);
+  }
+
+  _SmartOnboardingStep _stepFromServerName(String? step) {
+    switch (step) {
+      case 'account':
+        return _SmartOnboardingStep.accountDetails;
+      case 'profile_for_whom':
+        return _SmartOnboardingStep.profileForWhom;
+      case 'basic_info':
+        return _SmartOnboardingStep.basicInfo;
+      case 'religion_caste':
+        return _SmartOnboardingStep.religionCaste;
+      case 'location':
+        return _SmartOnboardingStep.location;
+      case 'education':
+        return _SmartOnboardingStep.education;
+      case 'career':
+        return _SmartOnboardingStep.career;
+      case 'lifestyle':
+        return _SmartOnboardingStep.lifestyle;
+      case 'family':
+        return _SmartOnboardingStep.family;
+      case 'photo':
+        return _SmartOnboardingStep.photo;
+      case 'activation':
+        return _SmartOnboardingStep.activation;
+    }
+
+    return _SmartOnboardingStep.activation;
+  }
+
+  _SmartOnboardingStep _nextProfileStep(_SmartOnboardingStep step) {
+    switch (step) {
+      case _SmartOnboardingStep.profileForWhom:
+        return _SmartOnboardingStep.basicInfo;
+      case _SmartOnboardingStep.basicInfo:
+        return _SmartOnboardingStep.religionCaste;
+      case _SmartOnboardingStep.religionCaste:
+        return _SmartOnboardingStep.location;
+      case _SmartOnboardingStep.location:
+        return _SmartOnboardingStep.education;
+      case _SmartOnboardingStep.education:
+        return _SmartOnboardingStep.career;
+      case _SmartOnboardingStep.career:
+        return _SmartOnboardingStep.lifestyle;
+      case _SmartOnboardingStep.lifestyle:
+        return _SmartOnboardingStep.family;
+      case _SmartOnboardingStep.family:
+        return _SmartOnboardingStep.photo;
+      case _SmartOnboardingStep.photo:
+        return _SmartOnboardingStep.activation;
+      default:
+        return step;
+    }
+  }
+
+  _SmartOnboardingStep _previousProfileStep(_SmartOnboardingStep step) {
+    switch (step) {
+      case _SmartOnboardingStep.basicInfo:
+        return _SmartOnboardingStep.profileForWhom;
+      case _SmartOnboardingStep.religionCaste:
+        return _SmartOnboardingStep.basicInfo;
+      case _SmartOnboardingStep.location:
+        return _SmartOnboardingStep.religionCaste;
+      case _SmartOnboardingStep.education:
+        return _SmartOnboardingStep.location;
+      case _SmartOnboardingStep.career:
+        return _SmartOnboardingStep.education;
+      case _SmartOnboardingStep.lifestyle:
+        return _SmartOnboardingStep.career;
+      case _SmartOnboardingStep.family:
+        return _SmartOnboardingStep.lifestyle;
+      case _SmartOnboardingStep.photo:
+        return _SmartOnboardingStep.family;
+      case _SmartOnboardingStep.activation:
+        return _SmartOnboardingStep.photo;
+      default:
+        return step;
+    }
+  }
 
   String _normalizeMobile(String value) {
     final digits = value.replaceAll(RegExp(r'\D'), '');
@@ -258,8 +365,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
 
     final nextAction = response.accountState?.nextAction;
-    await _loadStatus(goToStatus: false);
     await _loadBootstrap();
+    await _loadStatus(goToStatus: false);
 
     if (!mounted) return;
     setState(() {
@@ -270,7 +377,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _step = _SmartOnboardingStep.accountDetails;
       } else if (nextAction == 'resume_onboarding' ||
           response.accountState?.hasProfile == true) {
-        _step = _SmartOnboardingStep.status;
+        _step = _status == null
+            ? _SmartOnboardingStep.activation
+            : _stepFromStatus(_status!);
       } else {
         _step = _SmartOnboardingStep.profileForWhom;
       }
@@ -390,8 +499,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     setState(() {
       _loading = false;
       _message = _t(
-        'Onboarding started. Follow the activation checklist.',
-        'Onboarding सुरू झाले. Activation checklist पूर्ण करा.',
+        'Onboarding started. Add candidate details.',
+        'Onboarding सुरू झाले. Candidate तपशील भरा.',
       );
     });
     await _saveLocalDraft();
@@ -401,9 +510,12 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     try {
       final data = await ApiClient.getOnboardingStatus(locale: _localeCode);
       if (!mounted) return;
+      final status = OnboardingStatus.fromJson(data);
       setState(() {
-        _status = OnboardingStatus.fromJson(data);
-        if (goToStatus) _step = _SmartOnboardingStep.status;
+        _status = status;
+        _serverDraftData = status.draft?.data ?? <String, dynamic>{};
+        _syncProfileForWhomFromDraft();
+        if (goToStatus) _step = _stepFromStatus(status);
       });
     } catch (error) {
       if (!mounted) return;
@@ -411,6 +523,144 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _error = error.toString();
       });
     }
+  }
+
+  Map<String, dynamic> _draftStepData(String step) {
+    final data = _serverDraftData[step];
+    return data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
+  }
+
+  void _mergeDraftStepData(String step, Map<String, dynamic> data) {
+    _serverDraftData = <String, dynamic>{
+      ..._serverDraftData,
+      step: <String, dynamic>{..._draftStepData(step), ...data},
+    };
+  }
+
+  Future<bool> _saveOnboardingStep(
+    String step,
+    Map<String, dynamic> data, {
+    bool saveProfile = true,
+  }) async {
+    if (!_isAuthenticated) {
+      setState(() {
+        _step = _SmartOnboardingStep.mobileOtp;
+        _error = _t('Please verify mobile first.', 'आधी mobile verify करा.');
+      });
+      return false;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+      _message = null;
+    });
+
+    try {
+      final draftResponse = await ApiClient.saveOnboardingDraftStep(
+        step: step,
+        data: data,
+      );
+      if (!mounted) return false;
+      if (draftResponse['statusCode'] == 401) {
+        setState(() {
+          _loading = false;
+          _step = _SmartOnboardingStep.mobileOtp;
+          _error = _t(
+            'Session expired. Verify mobile again.',
+            'Session expired. Mobile पुन्हा verify करा.',
+          );
+        });
+        return false;
+      }
+      if (draftResponse['success'] != true) {
+        setState(() {
+          _loading = false;
+          _error = readableApiError(
+            draftResponse,
+            _t('Could not save draft.', 'Draft save झाले नाही.'),
+          );
+        });
+        return false;
+      }
+
+      _mergeDraftStepData(step, data);
+      final draft = draftResponse['draft'];
+      if (draft is Map && draft['data'] is Map) {
+        _serverDraftData = Map<String, dynamic>.from(draft['data'] as Map);
+      }
+
+      Map<String, dynamic>? profileResponse;
+      if (saveProfile && step != 'photo') {
+        profileResponse = await ApiClient.saveOnboardingProfileStep(
+          step: step,
+          data: data,
+        );
+        if (!mounted) return false;
+        if (profileResponse['success'] != true) {
+          setState(() {
+            _loading = false;
+            _error = readableApiError(
+              profileResponse!,
+              _t(
+                'Could not save profile step.',
+                'Profile step save झाला नाही.',
+              ),
+            );
+          });
+          return false;
+        }
+        final profileDraft = profileResponse['draft'];
+        if (profileDraft is Map && profileDraft['data'] is Map) {
+          _serverDraftData = Map<String, dynamic>.from(
+            profileDraft['data'] as Map,
+          );
+        }
+      }
+
+      await _loadStatus(goToStatus: false);
+      if (!mounted) return false;
+      setState(() {
+        _loading = false;
+        _message = _t('Saved.', 'Save झाले.');
+        _step = step == 'photo'
+            ? _SmartOnboardingStep.activation
+            : _nextProfileStep(_step);
+      });
+      await _saveLocalDraft();
+      return true;
+    } catch (error) {
+      if (!mounted) return false;
+      setState(() {
+        _loading = false;
+        _error = error.toString();
+      });
+      return false;
+    }
+  }
+
+  void _goBackOneStep() {
+    setState(() {
+      _error = null;
+      _message = null;
+      _step = _previousProfileStep(_step);
+    });
+  }
+
+  void _showStepMessage(String message) {
+    setState(() {
+      _message = null;
+      _error = message;
+    });
+  }
+
+  void _syncProfileForWhomFromDraft() {
+    final data = _draftStepData('profile_for_whom');
+    final value = onboardingText(data['profile_for_whom']);
+    if (value == null) return;
+    _profileForWhom =
+        optionByKey(_bootstrap.profileForWhom, value) ??
+        OnboardingOption(key: value, label: value);
   }
 
   Future<PagedLookupResponse> _profileForWhomPage(
@@ -446,7 +696,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           children: [
             _buildHeader(context),
             const SizedBox(height: 14),
-            _StepIndicator(currentStep: _step.index, totalSteps: 5),
+            _StepIndicator(
+              currentStep: _step.index,
+              totalSteps: _SmartOnboardingStep.values.length,
+            ),
             const SizedBox(height: 14),
             if (_message != null) _InfoBanner(message: _message!),
             if (_error != null) _ErrorBanner(message: _error!),
@@ -503,7 +756,79 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             _SmartOnboardingStep.profileForWhom => _buildProfileForWhomStep(
               context,
             ),
-            _SmartOnboardingStep.status => _buildStatusStep(context),
+            _SmartOnboardingStep.basicInfo => BasicCandidateInfoStep(
+              data: _draftStepData('basic_info'),
+              bootstrap: _bootstrap,
+              account: _status?.account ?? const <String, dynamic>{},
+              profileForWhom: _profileForWhom,
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+              onMessage: _showStepMessage,
+            ),
+            _SmartOnboardingStep.religionCaste => ReligionCasteStep(
+              data: _draftStepData('religion_caste'),
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+              onMessage: _showStepMessage,
+            ),
+            _SmartOnboardingStep.location => LocationStep(
+              data: _draftStepData('location'),
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+              onMessage: _showStepMessage,
+            ),
+            _SmartOnboardingStep.education => EducationStep(
+              data: _draftStepData('education'),
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+              onMessage: _showStepMessage,
+            ),
+            _SmartOnboardingStep.career => CareerStep(
+              data: _draftStepData('career'),
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+              onMessage: _showStepMessage,
+            ),
+            _SmartOnboardingStep.lifestyle => LifestyleStep(
+              data: _draftStepData('lifestyle'),
+              bootstrap: _bootstrap,
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+            ),
+            _SmartOnboardingStep.family => FamilyOptionalStep(
+              data: _draftStepData('family'),
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+            ),
+            _SmartOnboardingStep.photo => PhotoStep(
+              status: _status,
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+              onRefresh: () => _loadStatus(goToStatus: false),
+            ),
+            _SmartOnboardingStep.activation => ActivationChecklistStep(
+              status: _status,
+              locale: _localeCode,
+              loading: _loading,
+              onRefresh: () => _loadStatus(goToStatus: false),
+              onBack: _goBackOneStep,
+            ),
           },
         ),
       ),
@@ -744,60 +1069,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       ],
     );
   }
-
-  Widget _buildStatusStep(BuildContext context) {
-    final status = _status;
-    final checklist = status?.activationChecklist ?? const [];
-
-    return _StepContent(
-      key: const ValueKey('status'),
-      title: _t('Activation checklist', 'Activation checklist'),
-      children: [
-        if (status == null)
-          OutlinedButton.icon(
-            onPressed: _loading ? null : () => _loadStatus(goToStatus: true),
-            icon: const Icon(Icons.refresh),
-            label: Text(_t('Load status', 'Status load करा')),
-          )
-        else ...[
-          _StatusSummary(status: status),
-          const SizedBox(height: 12),
-          if (checklist.isEmpty)
-            Text(
-              _t(
-                'No checklist items returned yet.',
-                'Checklist items अजून आलेले नाहीत.',
-              ),
-            )
-          else
-            ...checklist.map((item) {
-              final color = item.complete
-                  ? Colors.green
-                  : item.blocking
-                  ? Colors.orange
-                  : Colors.grey;
-              return ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: Icon(
-                  item.complete
-                      ? Icons.check_circle
-                      : Icons.radio_button_unchecked,
-                  color: color,
-                ),
-                title: Text(item.label),
-                subtitle: item.message == null ? null : Text(item.message!),
-              );
-            }),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: _loading ? null : () => _loadStatus(goToStatus: true),
-            icon: const Icon(Icons.refresh),
-            label: Text(_t('Refresh', 'Refresh')),
-          ),
-        ],
-      ],
-    );
-  }
 }
 
 class _StepContent extends StatelessWidget {
@@ -909,48 +1180,6 @@ class _Banner extends StatelessWidget {
           Icon(icon, color: color, size: 20),
           const SizedBox(width: 8),
           Expanded(child: Text(message)),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusSummary extends StatelessWidget {
-  const _StatusSummary({required this.status});
-
-  final OnboardingStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = status.isSearchable ? Colors.green : Colors.orange;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                status.isSearchable ? Icons.visibility : Icons.visibility_off,
-                color: color,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  status.isSearchable ? 'Searchable' : 'Not searchable',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text('Profile status: ${status.profileStatus ?? '-'}'),
-          Text('Next step: ${status.nextStep ?? '-'}'),
         ],
       ),
     );
