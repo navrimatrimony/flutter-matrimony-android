@@ -6493,7 +6493,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Keep private'),
+          title: Text('Keep ${title.toLowerCase()} private'),
           value: private,
           onChanged: _saving
               ? null
@@ -6866,7 +6866,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           if (onAdd != null) ...[
             const SizedBox(width: 8),
             IconButton(
-              tooltip: 'Add contact',
+              tooltip: 'Add another contact',
               onPressed: onAdd,
               icon: const Icon(Icons.add_circle_outline),
             ),
@@ -6874,7 +6874,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           if (onRemove != null) ...[
             const SizedBox(width: 8),
             IconButton(
-              tooltip: 'Remove contact',
+              tooltip: 'Remove this contact',
               onPressed: onRemove,
               icon: const Icon(Icons.remove_circle_outline),
             ),
@@ -6942,7 +6942,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _familyOccupationDropdown(
-          labelText: 'Father occupation (Optional)',
+          labelText: 'Father occupation category (Optional)',
           father: true,
         ),
         const SizedBox(height: 14),
@@ -6950,7 +6950,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           controller: _fatherOccupationController,
           textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
-            labelText: 'Father occupation text (Optional)',
+            labelText: 'Father occupation details (Optional)',
             prefixIcon: Icon(Icons.edit),
           ),
         ),
@@ -6985,7 +6985,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _familyOccupationDropdown(
-          labelText: 'Mother occupation (Optional)',
+          labelText: 'Mother occupation category (Optional)',
           father: false,
         ),
         const SizedBox(height: 14),
@@ -6993,7 +6993,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           controller: _motherOccupationController,
           textInputAction: TextInputAction.next,
           decoration: const InputDecoration(
-            labelText: 'Mother occupation text (Optional)',
+            labelText: 'Mother occupation details (Optional)',
             prefixIcon: Icon(Icons.edit),
           ),
         ),
@@ -7738,7 +7738,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           child: ElevatedButton.icon(
             onPressed: _saving ? null : _openPhotoManager,
             icon: const Icon(Icons.photo_camera_outlined),
-            label: const Text('Open photo manager'),
+            label: const Text('Manage profile photo'),
           ),
         ),
       ],

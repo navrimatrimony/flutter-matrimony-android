@@ -580,6 +580,15 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     return 'No approved photo';
   }
 
+  String? _scalarDisplayText(dynamic value) {
+    if (value == null || value is Map || value is List) return null;
+
+    final text = value.toString().trim();
+    if (text.isEmpty || text.toLowerCase() == 'null') return null;
+
+    return text;
+  }
+
   String? _joinDisplayValues(dynamic value) {
     if (value is List) {
       final parts = value
@@ -600,8 +609,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     String prefix = '',
     String suffix = '',
   }) {
-    final minText = ApiClient.safeDisplayLabel(min);
-    final maxText = ApiClient.safeDisplayLabel(max);
+    final minText = _scalarDisplayText(min);
+    final maxText = _scalarDisplayText(max);
     if (minText == null && maxText == null) return null;
     if (minText != null && maxText != null) {
       return '$prefix$minText$suffix - $prefix$maxText$suffix';
@@ -651,8 +660,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final currency =
         ApiClient.safeDisplayLabel(profile['${prefix}_currency_symbol']) ?? '₹';
     if (valueType == 'range') {
-      final min = ApiClient.safeDisplayLabel(profile['${prefix}_min_amount']);
-      final max = ApiClient.safeDisplayLabel(profile['${prefix}_max_amount']);
+      final min = _scalarDisplayText(profile['${prefix}_min_amount']);
+      final max = _scalarDisplayText(profile['${prefix}_max_amount']);
       if (min != null && max != null) return '$currency$min - $currency$max';
       if (min != null) return '$currency$min+';
       if (max != null) return 'Up to $currency$max';
@@ -660,8 +669,8 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     }
 
     final amount =
-        ApiClient.safeDisplayLabel(profile['${prefix}_amount']) ??
-        ApiClient.safeDisplayLabel(profile[legacyKey]);
+        _scalarDisplayText(profile['${prefix}_amount']) ??
+        _scalarDisplayText(profile[legacyKey]);
     return amount == null ? null : '$currency$amount';
   }
 
@@ -713,16 +722,16 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     final parts = <String>[];
     for (final row in rows.take(1)) {
       if (row is! Map) continue;
-      final marriageYear = ApiClient.safeDisplayLabel(row['marriage_year']);
+      final marriageYear = _scalarDisplayText(row['marriage_year']);
       final separationYear = maritalStatusKey == 'separated'
-          ? ApiClient.safeDisplayLabel(row['separation_year'])
+          ? _scalarDisplayText(row['separation_year'])
           : null;
       final divorceYear =
           maritalStatusKey == 'divorced' || maritalStatusKey == 'annulled'
-          ? ApiClient.safeDisplayLabel(row['divorce_year'])
+          ? _scalarDisplayText(row['divorce_year'])
           : null;
       final spouseDeathYear = maritalStatusKey == 'widowed'
-          ? ApiClient.safeDisplayLabel(row['spouse_death_year'])
+          ? _scalarDisplayText(row['spouse_death_year'])
           : null;
       final legalStatus =
           maritalStatusKey == 'divorced' ||
@@ -760,7 +769,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
       index++;
       final name =
           ApiClient.safeDisplayLabel(row['child_name']) ?? 'Child $index';
-      final age = ApiClient.safeDisplayLabel(row['age']);
+      final age = _scalarDisplayText(row['age']);
       final gender =
           ApiClient.safeDisplayLabel(row['gender_label']) ??
           _childGenderLabel(ApiClient.safeDisplayLabel(row['gender']));
@@ -951,12 +960,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   }
 
   String? _phoneDisplayText(dynamic value) {
-    if (value == null || value is Map || value is List) return null;
-
-    final text = value.toString().trim();
-    if (text.isEmpty || text.toLowerCase() == 'null') return null;
-
-    return text;
+    return _scalarDisplayText(value);
   }
 
   void _addPhoneDisplayItem(
