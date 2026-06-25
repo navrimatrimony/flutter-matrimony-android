@@ -11,6 +11,7 @@ import 'models/mobile_otp_models.dart';
 import 'models/onboarding_bootstrap.dart';
 import 'models/onboarding_option.dart';
 import 'models/onboarding_status.dart';
+import 'models/paged_lookup_response.dart';
 import 'steps/activation_checklist_step.dart';
 import 'steps/basic_candidate_info_step.dart';
 import 'steps/career_step.dart';
@@ -21,11 +22,11 @@ import 'steps/location_step.dart';
 import 'steps/onboarding_step_helpers.dart';
 import 'steps/photo_step.dart';
 import 'steps/religion_caste_step.dart';
+import 'widgets/onboarding_picker_field.dart';
 
 enum _SmartOnboardingStep {
   language,
   profileForWhom,
-  genderWarmup,
   mobileOtp,
   accountDetails,
   basicInfo,
@@ -48,6 +49,8 @@ class SmartOnboardingScreen extends StatefulWidget {
 
 class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   static const String _consentVersion = '2026-06-24';
+  static const Color _selectedGreen = Color(0xFF0F8F5F);
+  static const Color _selectedGreenSurface = Color(0xFFE7F6ED);
   static const List<_SmartOnboardingStep> _progressSteps =
       <_SmartOnboardingStep>[
         _SmartOnboardingStep.basicInfo,
@@ -72,8 +75,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   OnboardingStatus? _status;
   OnboardingOption? _profileForWhom;
   OnboardingOption? _warmupGender;
+  OnboardingOption? _motherTongue;
   MobileOtpSendResponse? _otpChallenge;
   Map<String, dynamic> _serverDraftData = <String, dynamic>{};
+  List<OnboardingOption> _motherTongues = const <OnboardingOption>[];
 
   bool _loading = false;
   bool _termsAccepted = false;
@@ -127,6 +132,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return;
     }
 
+    await _loadBootstrap();
     if (!mounted) return;
     setState(() {
       _step = savedLanguage == null
@@ -286,6 +292,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _profileForWhom = _profileOptionFromKey(profileForWhom);
       }
       _warmupGender = optionFromData(draft['warmup_gender']);
+      _motherTongue = optionFromData(draft['mother_tongue_option']);
       final language = appLanguageFromCode(draft['locale']?.toString());
       if (language != null) {
         _language = language;
@@ -305,6 +312,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       'email': _emailController.text.trim(),
       'profile_for_whom': _profileForWhom?.key,
       if (_warmupGender != null) 'warmup_gender': _warmupGender!.toJson(),
+      if (_motherTongue != null)
+        'mother_tongue_option': _motherTongue!.toJson(),
     };
     await AppStorage.instance.saveOnboardingDraftJson(jsonEncode(draft));
   }
@@ -321,10 +330,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     await _saveLocalDraft();
   }
 
-  Future<void> _toggleLanguage() async {
-    final next = _language == AppLanguage.marathi
-        ? AppLanguage.english
-        : AppLanguage.marathi;
+  Future<void> _setLanguage(AppLanguage next) async {
+    if (_language == next) return;
     setState(() {
       _language = next;
       _error = null;
@@ -527,17 +534,41 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     try {
       final data = await ApiClient.getOnboardingBootstrap(locale: _localeCode);
       final parsed = OnboardingBootstrap.fromJson(data);
+      final motherTongues = parsed.motherTongues.isEmpty
+          ? await _loadMotherTongueOptions()
+          : parsed.motherTongues;
       if (!mounted) return;
       setState(() {
         _bootstrap = parsed.profileForWhom.isEmpty
             ? OnboardingBootstrap.fallbackProfileForWhom()
             : parsed;
+        _motherTongues = motherTongues;
+        _motherTongue = _resolveSelectedMotherTongue(
+          _motherTongue,
+          motherTongues,
+        );
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         _bootstrap = OnboardingBootstrap.fallbackProfileForWhom();
+        if (_motherTongues.isEmpty) {
+          _motherTongues = _fallbackMotherTongues();
+        }
       });
+    }
+  }
+
+  Future<List<OnboardingOption>> _loadMotherTongueOptions() async {
+    if (!_isAuthenticated) return _fallbackMotherTongues();
+
+    try {
+      final data = await ApiClient.getProfileBasicPhysicalOptions();
+      final rows = data['mother_tongues'] ?? <Map<String, dynamic>>[];
+      final options = OnboardingOption.listFrom(rows);
+      return options.isEmpty ? _fallbackMotherTongues() : options;
+    } catch (_) {
+      return _fallbackMotherTongues();
     }
   }
 
@@ -590,7 +621,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
     if (nextStep == _SmartOnboardingStep.language ||
         nextStep == _SmartOnboardingStep.profileForWhom ||
-        nextStep == _SmartOnboardingStep.genderWarmup ||
         nextStep == _SmartOnboardingStep.mobileOtp) {
       nextStep = _SmartOnboardingStep.basicInfo;
     }
@@ -647,6 +677,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return false;
     }
 
+    final payloadData = await _dataForOnboardingStep(step, data);
+    if (payloadData == null) return false;
+
     setState(() {
       _loading = true;
       _error = null;
@@ -656,7 +689,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     try {
       final draftResponse = await ApiClient.saveOnboardingDraftStep(
         step: step,
-        data: data,
+        data: payloadData,
       );
       if (!mounted) return false;
       if (draftResponse['statusCode'] == 401) {
@@ -681,7 +714,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return false;
       }
 
-      _mergeDraftStepData(step, data);
+      _mergeDraftStepData(step, payloadData);
       final draft = draftResponse['draft'];
       if (draft is Map && draft['data'] is Map) {
         _serverDraftData = Map<String, dynamic>.from(draft['data'] as Map);
@@ -691,7 +724,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       if (saveProfile && step != 'photo') {
         profileResponse = await ApiClient.saveOnboardingProfileStep(
           step: step,
-          data: data,
+          data: payloadData,
         );
         if (!mounted) return false;
         if (profileResponse['success'] != true) {
@@ -711,7 +744,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           );
         }
       }
-
       await _loadStatus(goToStatus: false);
       if (!mounted) return false;
       setState(() {
@@ -733,6 +765,42 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       });
       return false;
     }
+  }
+
+  Future<Map<String, dynamic>?> _dataForOnboardingStep(
+    String step,
+    Map<String, dynamic> data,
+  ) async {
+    if (step != 'basic_info' || _motherTongue == null) {
+      return data;
+    }
+
+    var motherTongue = _motherTongue;
+    if (motherTongue?.intId == null) {
+      final options = await _loadMotherTongueOptions();
+      motherTongue = _resolveSelectedMotherTongue(motherTongue, options);
+      if (mounted) {
+        setState(() {
+          _motherTongues = options;
+          _motherTongue = motherTongue;
+        });
+      }
+    }
+
+    final motherTongueId = motherTongue?.intId;
+    if (motherTongueId == null) {
+      if (mounted) {
+        setState(() {
+          _error = _t(
+            'Choose mother tongue again from the list.',
+            'मातृभाषा पुन्हा यादीतून निवडा.',
+          );
+        });
+      }
+      return null;
+    }
+
+    return <String, dynamic>{...data, 'mother_tongue_id': motherTongueId};
   }
 
   void _goBackOneStep() {
@@ -768,23 +836,15 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return;
     }
 
-    await _saveLocalDraft();
     if (_needsGenderWarmup && _warmupGender == null) {
       setState(() {
-        _error = null;
-        _message = null;
-        _step = _SmartOnboardingStep.genderWarmup;
+        _error = _t('Choose profile gender.', 'प्रोफाइलचा लिंग प्रकार निवडा.');
       });
       return;
     }
-
-    await _continueAfterWarmup();
-  }
-
-  Future<void> _continueFromGenderWarmup() async {
-    if (_warmupGender == null) {
+    if (_motherTongue == null) {
       setState(() {
-        _error = _t('Choose profile gender.', 'प्रोफाइलचा लिंग प्रकार निवडा.');
+        _error = _t('Choose mother tongue.', 'मातृभाषा निवडा.');
       });
       return;
     }
@@ -821,9 +881,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     setState(() {
       _error = null;
       _message = null;
-      _step = _needsGenderWarmup && _warmupGender != null
-          ? _SmartOnboardingStep.genderWarmup
-          : _SmartOnboardingStep.profileForWhom;
+      _step = _SmartOnboardingStep.profileForWhom;
     });
   }
 
@@ -848,23 +906,23 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case 'self':
         return _t('Myself', 'स्वतःसाठी');
       case 'son':
-        return _t('My Son', 'मुलगा');
+        return _t('Son', 'मुलगा');
       case 'daughter':
-        return _t('My Daughter', 'मुलगी');
+        return _t('Daughter', 'मुलगी');
       case 'brother':
-        return _t('My Brother', 'भाऊ');
+        return _t('Brother', 'भाऊ');
       case 'sister':
-        return _t('My Sister', 'बहीण');
+        return _t('Sister', 'बहीण');
       case 'relative':
-        return _t('My Relative', 'नातेवाईक');
+        return _t('Relative', 'नातेवाईक');
       case 'friend':
-        return _t('My Friend', 'मित्र / मैत्रीण');
+        return _t('Friend', 'मित्र / मैत्रीण');
     }
 
     return key;
   }
 
-  List<OnboardingOption> _genderWarmupOptions() {
+  List<OnboardingOption> _profileGenderOptions() {
     final genders = _bootstrap.genders;
     OnboardingOption? male = optionByKey(genders, 'male');
     OnboardingOption? female = optionByKey(genders, 'female');
@@ -885,6 +943,81 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     ];
   }
 
+  List<OnboardingOption> _motherTongueOptions() {
+    return _motherTongues.isEmpty ? _fallbackMotherTongues() : _motherTongues;
+  }
+
+  List<OnboardingOption> _fallbackMotherTongues() {
+    const labels = <String>[
+      'Marathi',
+      'Hindi',
+      'English',
+      'Gujarati',
+      'Kannada',
+      'Tamil',
+      'Telugu',
+      'Malayalam',
+      'Punjabi',
+      'Bengali',
+    ];
+
+    return labels
+        .map(
+          (label) => OnboardingOption(
+            key: label.toLowerCase().replaceAll(' ', '_'),
+            label: label,
+          ),
+        )
+        .toList();
+  }
+
+  OnboardingOption? _resolveSelectedMotherTongue(
+    OnboardingOption? selected,
+    List<OnboardingOption> options,
+  ) {
+    if (selected == null || options.isEmpty) return selected;
+    if (selected.intId != null) {
+      return optionById(options, selected.intId) ?? selected;
+    }
+
+    final byKey = optionByKey(options, selected.key);
+    if (byKey != null) return byKey;
+
+    final wanted = _normalizeLookupLabel(selected.label);
+    for (final option in options) {
+      if (_normalizeLookupLabel(option.label) == wanted) {
+        return option;
+      }
+    }
+
+    return selected;
+  }
+
+  String _normalizeLookupLabel(String value) {
+    return value.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '');
+  }
+
+  Future<PagedLookupResponse> _staticOptionsPage(
+    List<OnboardingOption> options,
+    String query,
+    int page,
+    int limit,
+  ) async {
+    final q = query.trim().toLowerCase();
+    final rows = options
+        .where(
+          (option) =>
+              q.isEmpty ||
+              option.label.toLowerCase().contains(q) ||
+              (option.key?.toLowerCase().contains(q) ?? false),
+        )
+        .toList();
+    final start = (page - 1) * limit;
+    return PagedLookupResponse.fromOptions(
+      start >= rows.length ? const [] : rows.skip(start).take(limit).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -892,30 +1025,64 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         title: Text(_t('Create Profile', 'प्रोफाइल तयार करा')),
         actions: [
           if (_step != _SmartOnboardingStep.language)
-            IconButton(
-              tooltip: _t('Change language', 'भाषा बदला'),
-              onPressed: _loading ? null : _toggleLanguage,
-              icon: const Icon(Icons.translate),
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: _LanguageToggle(
+                isMarathi: _language == AppLanguage.marathi,
+                onEnglish: _loading
+                    ? null
+                    : () {
+                        _setLanguage(AppLanguage.english);
+                      },
+                onMarathi: _loading
+                    ? null
+                    : () {
+                        _setLanguage(AppLanguage.marathi);
+                      },
+              ),
             ),
         ],
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
+        child: Stack(
           children: [
-            _buildHeader(context),
-            const SizedBox(height: 14),
-            if (_showProgress) ...[
-              _StepIndicator(
-                currentStep: _progressIndex,
-                totalSteps: _progressSteps.length,
+            ListView(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                16,
+                16,
+                _step == _SmartOnboardingStep.profileForWhom ? 72 : 16,
               ),
-              const SizedBox(height: 14),
-            ],
-            if (_message != null) _InfoBanner(message: _message!),
-            if (_error != null) _ErrorBanner(message: _error!),
-            if (_message != null || _error != null) const SizedBox(height: 12),
-            _buildStepCard(context),
+              children: [
+                _buildHeader(context),
+                const SizedBox(height: 14),
+                if (_showProgress) ...[
+                  _StepIndicator(
+                    currentStep: _progressIndex,
+                    totalSteps: _progressSteps.length,
+                  ),
+                  const SizedBox(height: 14),
+                ],
+                if (_message != null) _InfoBanner(message: _message!),
+                if (_error != null) _ErrorBanner(message: _error!),
+                if (_message != null || _error != null)
+                  const SizedBox(height: 12),
+                _buildStepCard(context),
+              ],
+            ),
+            if (_step == _SmartOnboardingStep.profileForWhom)
+              Positioned(
+                left: 16,
+                right: 16,
+                bottom: 10,
+                child: _AlreadyRegisteredLink(
+                  text: _t(
+                    'Already registered? Verify mobile to continue',
+                    'आधीच नोंदणी केली आहे? मोबाइल पडताळून पुढे जा',
+                  ),
+                  onPressed: _loading ? null : _startExistingMobileFlow,
+                ),
+              ),
           ],
         ),
       ),
@@ -960,9 +1127,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           child: switch (_step) {
             _SmartOnboardingStep.language => _buildLanguageStep(context),
             _SmartOnboardingStep.profileForWhom => _buildProfileForWhomStep(
-              context,
-            ),
-            _SmartOnboardingStep.genderWarmup => _buildGenderWarmupStep(
               context,
             ),
             _SmartOnboardingStep.mobileOtp => _buildMobileOtpStep(context),
@@ -1258,16 +1422,34 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final options = _profileForWhomOptions();
     return _StepContent(
       key: const ValueKey('profile_for_whom'),
-      title: _t('Who is this profile for?', 'ही प्रोफाइल कोणासाठी आहे?'),
+      title: _t(
+        'I am creating this profile for',
+        'मी ही प्रोफाइल तयार करत आहे',
+      ),
       children: [
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: 12,
+          runSpacing: 12,
           children: options.map((option) {
             final selected = _profileForWhom?.identity == option.identity;
             return ChoiceChip(
               label: Text(_relationLabel(option)),
               selected: selected,
+              selectedColor: _selectedGreenSurface,
+              checkmarkColor: _selectedGreen,
+              labelStyle: TextStyle(
+                color: selected ? _selectedGreen : Colors.grey.shade900,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+                side: BorderSide(
+                  color: selected ? _selectedGreen : Colors.grey.shade300,
+                  width: selected ? 1.5 : 1,
+                ),
+              ),
+              backgroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               onSelected: _loading
                   ? null
                   : (_) {
@@ -1282,14 +1464,80 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 12),
-        Text(
-          _t(
-            'We will ask only the details needed to create this profile.',
-            'ही प्रोफाइल तयार करण्यासाठी लागणारीच माहिती विचारू.',
+        if (_profileForWhom != null) ...[
+          if (_needsGenderWarmup) ...[
+            const SizedBox(height: 20),
+            Text(
+              _t('Profile gender', 'प्रोफाइलचा लिंग प्रकार'),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: _profileGenderOptions().map((option) {
+                final selected = _warmupGender?.identity == option.identity;
+                final key = option.key?.toLowerCase();
+                final label = key == 'male'
+                    ? _t('Groom', 'वर')
+                    : key == 'female'
+                    ? _t('Bride', 'वधू')
+                    : option.label;
+                return ChoiceChip(
+                  label: Text(label),
+                  selected: selected,
+                  selectedColor: _selectedGreenSurface,
+                  checkmarkColor: _selectedGreen,
+                  labelStyle: TextStyle(
+                    color: selected ? _selectedGreen : Colors.grey.shade900,
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(18),
+                    side: BorderSide(
+                      color: selected ? _selectedGreen : Colors.grey.shade300,
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  backgroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  onSelected: _loading
+                      ? null
+                      : (_) {
+                          setState(() {
+                            _warmupGender = option;
+                            _error = null;
+                            _message = null;
+                          });
+                          _saveLocalDraft();
+                        },
+                );
+              }).toList(),
+            ),
+          ],
+          const SizedBox(height: 20),
+          OnboardingPickerField(
+            label: _t('Mother tongue *', 'मातृभाषा *'),
+            selectedItems: _motherTongue == null ? const [] : [_motherTongue!],
+            placeholder: _t('Select mother tongue', 'मातृभाषा निवडा'),
+            searchHint: _t('Search mother tongue', 'मातृभाषा शोधा'),
+            loadPage: (query, page, limit) =>
+                _staticOptionsPage(_motherTongueOptions(), query, page, limit),
+            onChanged: (items) {
+              setState(() {
+                _motherTongue = items.isEmpty ? null : items.first;
+                _error = null;
+                _message = null;
+              });
+              _saveLocalDraft();
+            },
           ),
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
+        ],
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: _loading ? null : _continueFromProfileForWhom,
@@ -1300,84 +1548,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : Text(_t('Continue', 'पुढे जा')),
-        ),
-        TextButton(
-          onPressed: _loading ? null : _startExistingMobileFlow,
-          child: Text(
-            _t(
-              'Already registered? Verify mobile to continue',
-              'आधीच नोंदणी केली आहे? मोबाइल पडताळून पुढे जा',
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGenderWarmupStep(BuildContext context) {
-    final options = _genderWarmupOptions();
-    return _StepContent(
-      key: const ValueKey('gender_warmup'),
-      title: _t('Bride or groom?', 'वधू की वर?'),
-      children: [
-        Text(
-          _t(
-            'This helps us show the right questions.',
-            'यामुळे पुढची माहिती योग्य प्रकारे विचारता येते.',
-          ),
-        ),
-        const SizedBox(height: 14),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: options.map((option) {
-            final selected = _warmupGender?.identity == option.identity;
-            final key = option.key?.toLowerCase();
-            final label = key == 'male'
-                ? _t('Groom', 'वर')
-                : key == 'female'
-                ? _t('Bride', 'वधू')
-                : option.label;
-            return ChoiceChip(
-              label: Text(label),
-              selected: selected,
-              onSelected: _loading
-                  ? null
-                  : (_) {
-                      setState(() {
-                        _warmupGender = option;
-                        _error = null;
-                      });
-                      _saveLocalDraft();
-                    },
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: 18),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _loading
-                    ? null
-                    : () => setState(() {
-                        _step = _SmartOnboardingStep.profileForWhom;
-                        _error = null;
-                        _message = null;
-                      }),
-                icon: const Icon(Icons.arrow_back),
-                label: Text(_t('Back', 'मागे')),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton(
-                onPressed: _loading ? null : _continueFromGenderWarmup,
-                child: Text(_t('Continue', 'पुढे जा')),
-              ),
-            ),
-          ],
         ),
       ],
     );
@@ -1412,6 +1582,108 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     await _loadStatus(goToStatus: false);
     return null;
+  }
+}
+
+class _LanguageToggle extends StatelessWidget {
+  const _LanguageToggle({
+    required this.isMarathi,
+    required this.onEnglish,
+    required this.onMarathi,
+  });
+
+  final bool isMarathi;
+  final VoidCallback? onEnglish;
+  final VoidCallback? onMarathi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _LanguageToggleItem(
+            label: 'English',
+            active: !isMarathi,
+            onPressed: onEnglish,
+          ),
+          _LanguageToggleItem(
+            label: 'मराठी',
+            active: isMarathi,
+            onPressed: onMarathi,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LanguageToggleItem extends StatelessWidget {
+  const _LanguageToggleItem({
+    required this.label,
+    required this.active,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool active;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: active ? null : onPressed,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 140),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: active ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: active
+              ? const [BoxShadow(color: Colors.black12, blurRadius: 3)]
+              : null,
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: active ? const Color(0xFFB91C1C) : Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AlreadyRegisteredLink extends StatelessWidget {
+  const _AlreadyRegisteredLink({required this.text, required this.onPressed});
+
+  final String text;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: TextButton(
+        onPressed: onPressed,
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.grey.shade600,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+        ),
+        child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1)),
+      ),
+    );
   }
 }
 

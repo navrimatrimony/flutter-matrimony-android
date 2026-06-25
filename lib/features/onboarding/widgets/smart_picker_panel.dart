@@ -94,6 +94,9 @@ class SmartPickerPanel extends StatefulWidget {
 }
 
 class _SmartPickerPanelState extends State<SmartPickerPanel> {
+  static const Color _selectedGreen = Color(0xFF0F8F5F);
+  static const Color _selectedGreenSurface = Color(0xFFE7F6ED);
+
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final Map<String, OnboardingOption> _selected = <String, OnboardingOption>{};
@@ -362,13 +365,16 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
       dense: true,
       enabled: enabled,
       selected: selected,
+      selectedTileColor: _selectedGreenSurface,
+      selectedColor: _selectedGreen,
       leading: widget.multiSelect
           ? Checkbox(
               value: selected,
               onChanged: enabled ? (_) => _select(option) : null,
+              activeColor: _selectedGreen,
             )
           : selected
-          ? const Icon(Icons.check_circle)
+          ? const Icon(Icons.check_circle, color: _selectedGreen)
           : const Icon(Icons.radio_button_unchecked),
       title: Text(option.label, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: subtitle == null

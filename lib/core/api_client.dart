@@ -1408,7 +1408,7 @@ class ApiClient {
   static Future<Map<String, dynamic>> getOnboardingBootstrap({String? locale}) {
     return _getJson(
       ApiRoutes.onboardingLookupsBootstrap,
-      authenticated: true,
+      authenticated: false,
       query: {'locale': locale},
     );
   }

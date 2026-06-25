@@ -4,6 +4,7 @@ class OnboardingBootstrap {
   const OnboardingBootstrap({
     this.profileForWhom = const <OnboardingOption>[],
     this.genders = const <OnboardingOption>[],
+    this.motherTongues = const <OnboardingOption>[],
     this.maritalStatuses = const <OnboardingOption>[],
     this.heightOptions = const <OnboardingOption>[],
     this.diets = const <OnboardingOption>[],
@@ -17,6 +18,7 @@ class OnboardingBootstrap {
 
   final List<OnboardingOption> profileForWhom;
   final List<OnboardingOption> genders;
+  final List<OnboardingOption> motherTongues;
   final List<OnboardingOption> maritalStatuses;
   final List<OnboardingOption> heightOptions;
   final List<OnboardingOption> diets;
@@ -35,6 +37,9 @@ class OnboardingBootstrap {
       profileForWhom: OnboardingOption.listFrom(source['profile_for_whom']),
       genders: OnboardingOption.listFrom(
         source['gender_options'] ?? source['genders'],
+      ),
+      motherTongues: OnboardingOption.listFrom(
+        source['mother_tongues'] ?? source['motherTongues'],
       ),
       maritalStatuses: OnboardingOption.listFrom(source['marital_statuses']),
       heightOptions: OnboardingOption.listFrom(

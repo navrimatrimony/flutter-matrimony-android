@@ -11,6 +11,9 @@
     <!-- Camera permission (optional, for future camera feature) -->
     <uses-permission android:name="android.permission.CAMERA"/>
 
+    <!-- Notification permission for Android 13+ startup prompt -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application
         android:label="नवरी मिळे नवऱ्याला"
         android:name="${applicationName}"

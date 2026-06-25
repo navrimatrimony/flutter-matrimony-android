@@ -34,6 +34,8 @@ class OnboardingPickerField extends StatelessWidget {
   final bool allowRequestToAdd;
   final VoidCallback? onRequestToAdd;
   final bool enabled;
+  static const Color _selectedGreen = Color(0xFF0F8F5F);
+  static const Color _selectedGreenSurface = Color(0xFFE7F6ED);
 
   @override
   Widget build(BuildContext context) {
@@ -67,10 +69,17 @@ class OnboardingPickerField extends StatelessWidget {
                           item.label,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: _selectedGreen,
+                            fontWeight: FontWeight.w700,
+                          ),
                         );
                       }
 
                       return InputChip(
+                        backgroundColor: _selectedGreenSurface,
+                        selectedColor: _selectedGreenSurface,
+                        side: const BorderSide(color: _selectedGreen),
                         label: ConstrainedBox(
                           constraints: BoxConstraints(
                             maxWidth: chipLabelMaxWidth,
@@ -79,6 +88,10 @@ class OnboardingPickerField extends StatelessWidget {
                             item.label,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: _selectedGreen,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                         onDeleted: enabled
