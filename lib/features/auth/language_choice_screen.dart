@@ -4,6 +4,8 @@ import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
 
+const String _languageLogoAsset = 'assets/images/navri_logo.png';
+
 class LanguageChoiceScreen extends StatelessWidget {
   const LanguageChoiceScreen({super.key});
 
@@ -21,8 +23,6 @@ class LanguageChoiceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -30,34 +30,21 @@ class LanguageChoiceScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const Spacer(),
-              Icon(Icons.favorite, size: 54, color: colorScheme.primary),
-              const SizedBox(height: 18),
-              Text(
-                AppStrings.appNameBilingual,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.w800,
-                  height: 1.18,
+              const Spacer(flex: 2),
+              Center(
+                child: Image.asset(
+                  _languageLogoAsset,
+                  width: 190,
+                  fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 34),
               Text(
                 AppStrings.chooseLanguageBilingual,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   height: 1.18,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                AppStrings.chooseLanguageSubtitleBilingual,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade700,
-                  height: 1.35,
                 ),
               ),
               const SizedBox(height: 32),
@@ -70,7 +57,7 @@ class LanguageChoiceScreen extends StatelessWidget {
                 onPressed: () => _selectLanguage(context, AppLanguage.english),
                 child: Text(AppStrings.english),
               ),
-              const Spacer(),
+              const Spacer(flex: 3),
             ],
           ),
         ),

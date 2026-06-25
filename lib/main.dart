@@ -17,6 +17,8 @@ final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 const Color _brandMaroon = Color(0xFFDC2626);
 const Color _brandGold = Color(0xFFC79A3B);
 const Color _screenBackground = Color(0xFFF8F4EF);
+const String _brandLogoAsset = 'assets/images/navri_logo.png';
+const String _startupHeroAsset = 'assets/images/landing_hero.jpg';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -129,11 +131,19 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
   @override
   void initState() {
     super.initState();
-    _restoreAndRoute();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startBootstrap();
+    });
+  }
+
+  Future<void> _startBootstrap() async {
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    await NotificationPermissionService.requestOnStartup();
+    if (!mounted) return;
+    await _restoreAndRoute();
   }
 
   Future<void> _restoreAndRoute() async {
-    await NotificationPermissionService.requestOnStartup();
     final savedLanguage = await AppStorage.instance.readLanguage();
 
     if (!mounted) return;
@@ -185,6 +195,39 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    return Scaffold(
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(_startupHeroAsset, fit: BoxFit.cover),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.22),
+                  Colors.black.withValues(alpha: 0.10),
+                  Colors.black.withValues(alpha: 0.28),
+                ],
+              ),
+            ),
+          ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(28, 76, 28, 0),
+                child: Image.asset(
+                  _brandLogoAsset,
+                  width: 220,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

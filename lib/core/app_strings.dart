@@ -6,21 +6,11 @@ class AppStrings {
   static String get appName =>
       _mr ? 'नवरी मिळे नवऱ्याला' : 'Navri Mile Navryala';
 
-  static String get appNameBilingual =>
-      'नवरी मिळे नवऱ्याला\nNavri Mile Navryala';
-
   static bool get isMarathi => _mr;
 
   static String get chooseLanguage => _mr ? 'भाषा निवडा' : 'Choose Language';
 
   static String get chooseLanguageBilingual => 'भाषा निवडा\nChoose language';
-
-  static String get chooseLanguageSubtitle => _mr
-      ? 'अ‍ॅप कोणत्या भाषेत वापरायचे?'
-      : 'Which language would you like to use?';
-
-  static String get chooseLanguageSubtitleBilingual =>
-      'अ‍ॅप कोणत्या भाषेत वापरायचे?\nWhich language would you like to use?';
 
   static String get marathi => 'मराठी';
 
