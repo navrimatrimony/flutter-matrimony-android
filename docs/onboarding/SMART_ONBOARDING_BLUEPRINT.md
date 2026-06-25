@@ -17,9 +17,20 @@ The production registration route must lead to Smart Onboarding. The old simple 
 - Phase 1 allows one candidate matrimony profile per account.
 - Laravel enum values and API contracts are the source of truth.
 - Missing translations should fall back to English labels.
-- Phase 1 must not add mother tongue, astrology, horoscope, family type, biodata upload, or OCR.
+- Phase 1 may collect one governed mother tongue value as `mother_tongue_id`; it must not add astrology, horoscope, family type, biodata upload, or OCR.
 - Onboarding must not include a long partner preference form. Partner preferences should be generated as an editable draft from onboarding data.
 - Final summary screen must not be shown. Show only the Activation Checklist/status screen after profile creation.
+
+Phase 7A mother tongue addendum:
+
+- Mobile onboarding may collect one `mother_tongue_id` during the early profile-for-whom/basic-info flow.
+- `mother_tongue_id` must reference an active backend master mother tongue.
+- Mother tongue is single-select only in this phase.
+- Do not add mother tongue multi-select.
+- Do not store mother tongue as JSON, custom text, CSV, or any free-form value.
+- Do not add partner preference mother-tongue matching in this phase.
+- This addendum does not allow horoscope, astrology, family type, biodata upload, or OCR in registration onboarding.
+- Persistence must remain backend governed through the MutationService-backed onboarding save-step contract.
 
 ## Account And Profile Policy
 
@@ -355,6 +366,7 @@ Phase 1 includes:
 - account/profile separation
 - one candidate profile per account
 - profile_for_whom gender logic
+- single `mother_tongue_id` from active backend master data
 - basic info
 - religion/caste/sub-caste dependency
 - location hierarchy and add-location request
