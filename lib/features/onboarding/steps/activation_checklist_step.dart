@@ -227,25 +227,10 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
         const SizedBox(height: 14),
         _preferenceCard(context),
         const SizedBox(height: 18),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: widget.loading ? null : widget.onBack,
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              flex: 2,
-              child: ElevatedButton.icon(
-                onPressed: widget.loading ? null : widget.onRefresh,
-                icon: const Icon(Icons.refresh),
-                label: Text(_t('Refresh', 'Refresh करा')),
-              ),
-            ),
-          ],
+        ElevatedButton.icon(
+          onPressed: widget.loading ? null : widget.onRefresh,
+          icon: const Icon(Icons.refresh),
+          label: Text(_t('Refresh', 'Refresh करा')),
         ),
       ],
     );

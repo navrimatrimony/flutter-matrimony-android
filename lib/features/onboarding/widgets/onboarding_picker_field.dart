@@ -19,6 +19,8 @@ class OnboardingPickerField extends StatelessWidget {
     this.allowRequestToAdd = false,
     this.onRequestToAdd,
     this.enabled = true,
+    this.errorText,
+    this.showDividers = false,
   });
 
   final String label;
@@ -34,6 +36,8 @@ class OnboardingPickerField extends StatelessWidget {
   final bool allowRequestToAdd;
   final VoidCallback? onRequestToAdd;
   final bool enabled;
+  final String? errorText;
+  final bool showDividers;
   static const Color _selectedGreen = Color(0xFF0F8F5F);
   static const Color _selectedGreenSurface = Color(0xFFE7F6ED);
 
@@ -48,6 +52,7 @@ class OnboardingPickerField extends StatelessWidget {
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
+          errorText: errorText,
           suffixIcon: Icon(
             Icons.chevron_right,
             color: enabled ? colorScheme.primary : Colors.grey,
@@ -69,8 +74,8 @@ class OnboardingPickerField extends StatelessWidget {
                           item.label,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: _selectedGreen,
+                          style: TextStyle(
+                            color: Colors.grey.shade900,
                             fontWeight: FontWeight.w700,
                           ),
                         );
@@ -132,6 +137,7 @@ class OnboardingPickerField extends StatelessWidget {
       optionEnabled: optionEnabled,
       allowRequestToAdd: allowRequestToAdd,
       onRequestToAdd: onRequestToAdd,
+      showDividers: showDividers,
     );
   }
 }

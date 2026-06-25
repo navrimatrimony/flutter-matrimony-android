@@ -24,13 +24,29 @@ class MobileOtpSendResponse {
   final Map<String, dynamic> raw;
 
   factory MobileOtpSendResponse.fromJson(Map<String, dynamic> json) {
+    final data = json['data'];
+    final nested = data is Map ? Map<String, dynamic>.from(data) : null;
     return MobileOtpSendResponse(
       success: _boolValue(json['success']) ?? false,
-      challengeId: _stringValue(json['challenge_id']),
-      expiresIn: _intValue(json['expires_in']),
-      resendAfter: _intValue(json['resend_after']),
-      deliveryChannel: _stringValue(json['delivery_channel']),
-      debugOtp: _stringValue(json['debug_otp']),
+      challengeId:
+          _stringValue(json['challenge_id']) ??
+          _stringValue(nested?['challenge_id']),
+      expiresIn: _intValue(
+        json['expires_in'] ?? json['expiresIn'] ?? nested?['expires_in'] ??
+            nested?['expiresIn'],
+      ),
+      resendAfter: _intValue(
+        json['resend_after'] ?? json['resendAfter'] ??
+            nested?['resend_after'] ?? nested?['resendAfter'],
+      ),
+      deliveryChannel:
+          _stringValue(json['delivery_channel']) ??
+          _stringValue(nested?['delivery_channel']),
+      debugOtp:
+          _stringValue(json['debug_otp']) ??
+          _stringValue(json['debugOtp']) ??
+          _stringValue(nested?['debug_otp']) ??
+          _stringValue(nested?['debugOtp']),
       message: _stringValue(json['message']),
       statusCode: _intValue(json['statusCode']),
       raw: Map<String, dynamic>.from(json),

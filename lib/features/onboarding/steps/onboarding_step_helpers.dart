@@ -87,16 +87,27 @@ Map<String, dynamic> compactPayload(Map<String, dynamic> data) {
 }
 
 String readableApiError(Map<String, dynamic> response, String fallback) {
+  String friendly(String? text) {
+    if (text == null) return fallback;
+    final lower = text.toLowerCase();
+    if (lower.contains('not accepted in onboarding phase 2') ||
+        lower.contains('not supported for this onboarding step') ||
+        lower.contains('direct custom education or occupation text')) {
+      return fallback;
+    }
+    return text;
+  }
+
   final message = onboardingText(response['message']);
   final errors = response['errors'];
   if (errors is Map && errors.isNotEmpty) {
     final first = errors.values.first;
     if (first is List && first.isNotEmpty) {
       final text = onboardingText(first.first);
-      if (text != null) return text;
+      if (text != null) return friendly(text);
     }
     final text = onboardingText(first);
-    if (text != null) return text;
+    if (text != null) return friendly(text);
   }
-  return message ?? fallback;
+  return friendly(message);
 }

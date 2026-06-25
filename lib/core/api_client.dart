@@ -1356,9 +1356,13 @@ class ApiClient {
 
   static Future<Map<String, dynamic>> startOnboarding({
     required String profileForWhom,
+    int? genderId,
+    int? motherTongueId,
   }) {
     return _postJson(ApiRoutes.onboardingStart, {
       'profile_for_whom': profileForWhom,
+      'gender_id': genderId,
+      'mother_tongue_id': motherTongueId,
     }, authenticated: true);
   }
 

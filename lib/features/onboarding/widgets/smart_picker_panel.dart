@@ -26,6 +26,7 @@ class SmartPickerPanel extends StatefulWidget {
     this.onRequestToAdd,
     this.closeOnSingleSelect = true,
     this.pageSize = 20,
+    this.showDividers = false,
   });
 
   final String title;
@@ -40,6 +41,7 @@ class SmartPickerPanel extends StatefulWidget {
   final VoidCallback? onRequestToAdd;
   final bool closeOnSingleSelect;
   final int pageSize;
+  final bool showDividers;
 
   static Future<List<OnboardingOption>?> show(
     BuildContext context, {
@@ -55,6 +57,7 @@ class SmartPickerPanel extends StatefulWidget {
     VoidCallback? onRequestToAdd,
     bool closeOnSingleSelect = true,
     int pageSize = 20,
+    bool showDividers = false,
   }) {
     return showGeneralDialog<List<OnboardingOption>>(
       context: context,
@@ -76,6 +79,7 @@ class SmartPickerPanel extends StatefulWidget {
           onRequestToAdd: onRequestToAdd,
           closeOnSingleSelect: closeOnSingleSelect,
           pageSize: pageSize,
+          showDividers: showDividers,
         );
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -341,11 +345,11 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
       children: [
         if (showPopular) ...[
           const _SectionLabel(label: 'Popular'),
-          ..._popular.map(_buildOptionTile),
+          ..._buildOptionTiles(_popular),
           const SizedBox(height: 10),
           const _SectionLabel(label: 'All'),
         ],
-        ..._results.map(_buildOptionTile),
+        ..._buildOptionTiles(_results),
         if (_loadingMore)
           const Padding(
             padding: EdgeInsets.all(16),
@@ -353,6 +357,23 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
           ),
       ],
     );
+  }
+
+  List<Widget> _buildOptionTiles(List<OnboardingOption> options) {
+    if (!widget.showDividers) {
+      return options.map(_buildOptionTile).toList();
+    }
+
+    final tiles = <Widget>[];
+    for (var index = 0; index < options.length; index += 1) {
+      tiles.add(_buildOptionTile(options[index]));
+      if (index < options.length - 1) {
+        tiles.add(
+          Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
+        );
+      }
+    }
+    return tiles;
   }
 
   Widget _buildOptionTile(OnboardingOption option) {

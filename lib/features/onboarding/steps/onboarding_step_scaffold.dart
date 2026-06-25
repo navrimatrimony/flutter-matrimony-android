@@ -8,6 +8,7 @@ class OnboardingStepScaffold extends StatelessWidget {
     required this.onContinue,
     this.onBack,
     this.loading = false,
+    this.continueEnabled = true,
     this.subtitle,
     this.continueLabel,
     this.secondary,
@@ -19,6 +20,7 @@ class OnboardingStepScaffold extends StatelessWidget {
   final Future<void> Function() onContinue;
   final VoidCallback? onBack;
   final bool loading;
+  final bool continueEnabled;
   final String? continueLabel;
   final Widget? secondary;
 
@@ -46,33 +48,16 @@ class OnboardingStepScaffold extends StatelessWidget {
         const SizedBox(height: 14),
         ...children,
         const SizedBox(height: 18),
-        Row(
-          children: [
-            if (onBack != null) ...[
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: loading ? null : onBack,
-                  icon: const Icon(Icons.arrow_back),
-                  label: const Text('Back'),
-                ),
-              ),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              flex: 2,
-              child: ElevatedButton.icon(
-                onPressed: loading ? null : onContinue,
-                icon: loading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.arrow_forward),
-                label: Text(continueLabel ?? 'Continue'),
-              ),
-            ),
-          ],
+        ElevatedButton.icon(
+          onPressed: loading || !continueEnabled ? null : onContinue,
+          icon: loading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.arrow_forward),
+          label: Text(continueLabel ?? 'Continue'),
         ),
         if (secondary != null) ...[const SizedBox(height: 10), secondary!],
       ],

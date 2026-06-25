@@ -26,16 +26,14 @@ class OnboardingOption {
   }
 
   int? get intId {
-    if (id is int) return id as int;
-    if (id is num) return (id as num).toInt();
-    return int.tryParse(id?.toString() ?? '');
+    final direct = _intValue(id);
+    if (direct != null) return direct;
+    return metaInt('mother_tongue_id') ?? metaInt('id');
   }
 
   int? metaInt(String key) {
     final value = meta[key] ?? raw[key];
-    if (value is int) return value;
-    if (value is num) return value.toInt();
-    return int.tryParse(value?.toString() ?? '');
+    return _intValue(value);
   }
 
   String? metaText(String key) {
@@ -91,13 +89,18 @@ class OnboardingOption {
       'status',
       'working_with_id',
       'working_with_label',
+      'mother_tongue_id',
       'cm',
     ]) {
       absorbMeta(key);
     }
 
     return OnboardingOption(
-      id: json['id'] ?? json['location_id'] ?? json['value'],
+      id:
+          json['id'] ??
+          json['mother_tongue_id'] ??
+          json['location_id'] ??
+          json['value'],
       key: _stringValue(json['key'] ?? json['slug'] ?? json['code']),
       label: _labelFromJson(json),
       translationMissing: _boolValue(json['translation_missing']) ?? false,
@@ -148,6 +151,14 @@ class OnboardingOption {
     final text = value?.toString().trim();
     if (text == null || text.isEmpty) return null;
     return text;
+  }
+
+  static int? _intValue(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty) return null;
+    return int.tryParse(text);
   }
 
   static bool? _boolValue(dynamic value) {

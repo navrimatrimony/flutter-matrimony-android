@@ -1,14 +1,117 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_strings.dart';
+import '../../core/email_hint_service.dart';
+import '../../core/phone_number_hint_service.dart';
 import '../onboarding/smart_onboarding_screen.dart';
-import 'login_screen.dart';
 
-/// ===============================
-/// LANDING / WELCOME SCREEN
-/// ===============================
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
+
+  static const Color _brandRed = Color(0xFFE01F26);
+  static const Color _textColor = Color(0xFF4A3A3A);
+
+  String _copy(String english, String marathi) {
+    return AppStrings.isMarathi ? marathi : english;
+  }
+
+  Future<void> _captureEmailAndStartMobile(BuildContext context) async {
+    var email = await EmailHintService.requestEmailHint();
+    if (!context.mounted) return;
+    email ??= await _showEmailCaptureSheet(context);
+    if (email == null || !context.mounted) return;
+
+    await _startMobileSignup(context, pendingEmail: email);
+  }
+
+  Future<void> _startMobileSignup(
+    BuildContext context, {
+    String? pendingEmail,
+  }) async {
+    final mobile = await PhoneNumberHintService.requestPhoneNumberHint();
+    if (!context.mounted) return;
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SmartOnboardingScreen(
+          initialMode: SmartOnboardingInitialMode.mobileOtp,
+          pendingEmail: pendingEmail?.trim().isEmpty == true
+              ? null
+              : pendingEmail?.trim(),
+          initialMobile: mobile,
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _showEmailCaptureSheet(BuildContext context) {
+    final controller = TextEditingController();
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            22,
+            24,
+            MediaQuery.of(sheetContext).viewInsets.bottom + 24,
+          ),
+          child: AutofillGroup(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  _copy('Choose email', 'Email निवडा'),
+                  style: Theme.of(sheetContext)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _copy(
+                    'This email will be used for your account. Mobile verification is required to continue.',
+                    'हा email account साठी वापरला जाईल. पुढे जाण्यासाठी मोबाइल verification आवश्यक आहे.',
+                  ),
+                  style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey.shade700,
+                    height: 1.3,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                TextField(
+                  controller: controller,
+                  keyboardType: TextInputType.emailAddress,
+                  autofillHints: const [AutofillHints.email],
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    labelText: _copy('Email', 'Email'),
+                    prefixIcon: const Icon(Icons.email_outlined),
+                  ),
+                  onSubmitted: (_) {
+                    Navigator.pop(sheetContext, controller.text.trim());
+                  },
+                ),
+                const SizedBox(height: 18),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(sheetContext, controller.text.trim());
+                  },
+                  child: Text(_copy('Continue', 'पुढे जा')),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ).whenComplete(controller.dispose);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,214 +119,152 @@ class LandingScreen extends StatelessWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // Full-screen hero background image
           Image.asset(
             'assets/images/landing_hero.jpg',
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
-              // Fallback if image not found
-              return Container(
-                color: Colors.grey.shade300,
-                child: const Center(
-                  child: Icon(
-                    Icons.image_not_supported,
-                    size: 80,
-                    color: Colors.grey,
-                  ),
-                ),
-              );
+              return Container(color: _brandRed);
             },
           ),
-          // Dark semi-transparent overlay for text readability
-          Container(
+          const DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.black.withValues(alpha: 0.3),
-                  Colors.black.withValues(alpha: 0.7),
+                  Color(0x66A40E15),
+                  Color(0x33A40E15),
+                  Color(0xEEA40E15),
                 ],
               ),
             ),
           ),
-          // Content overlay
           SafeArea(
-            child: Column(
-              children: [
-                // Brand Logo and Name at top
-                Padding(
-                  padding: const EdgeInsets.only(top: 40.0),
-                  child: Column(
-                    children: [
-                      // Brand Logo Image
-                      Image.asset(
-                        'assets/images/brand_logo.png',
-                        height: 120,
-                        fit: BoxFit.contain,
-                        errorBuilder: (context, error, stackTrace) {
-                          // Fallback: Show brand name as text if logo not found
-                          return Column(
-                            children: [
-                              const Icon(
-                                Icons.favorite,
-                                size: 60,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                AppStrings.appName,
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  shadows: [
-                                    Shadow(
-                                      offset: const Offset(2, 2),
-                                      blurRadius: 4,
-                                      color: Colors.black.withValues(
-                                        alpha: 0.8,
-                                      ),
-                                    ),
-                                  ],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 34, 28, 28),
+              child: Column(
+                children: [
+                  Image.asset(
+                    'assets/images/brand_logo.png',
+                    height: 112,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Text(
+                        AppStrings.appName,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      );
+                    },
+                  ),
+                  const Spacer(),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _copy('New here?', 'नवीन आहात?'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        _AuthChoiceButton(
+                          icon: const _GoogleMark(),
+                          label: _copy(
+                            'Sign Up with Google',
+                            'Google ने सुरू करा',
+                          ),
+                          onPressed: () => _captureEmailAndStartMobile(
+                            context,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        _AuthChoiceButton(
+                          icon: const Icon(
+                            Icons.phone_android_rounded,
+                            color: Color(0xFF8A8A8A),
+                          ),
+                          label: _copy(
+                            'Sign Up with Mobile',
+                            'मोबाइल नंबरने सुरू करा',
+                          ),
+                          onPressed: () => _startMobileSignup(context),
+                        ),
+                        const SizedBox(height: 12),
+                        _AuthChoiceButton(
+                          icon: const Icon(
+                            Icons.email_outlined,
+                            color: Color(0xFF8A8A8A),
+                          ),
+                          label: _copy(
+                            'Sign Up with Email',
+                            'Email ने सुरू करा',
+                          ),
+                          onPressed: () => _captureEmailAndStartMobile(
+                            context,
+                          ),
+                        ),
+                        const SizedBox(height: 26),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                _copy(
+                                  'Already have an account?',
+                                  'आधीपासून account आहे?',
                                 ),
-                                textAlign: TextAlign.center,
+                                textAlign: TextAlign.right,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0,
+                                ),
                               ),
-                            ],
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                // Spacer to push content down
-                const Spacer(),
-                // Trust-oriented messaging text
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    children: [
-                      Text(
-                        AppStrings.landingHeadline,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                              offset: const Offset(2, 2),
-                              blurRadius: 4,
-                              color: Colors.black.withValues(alpha: 0.8),
+                            ),
+                            const SizedBox(width: 10),
+                            OutlinedButton(
+                              onPressed: () {
+                                Navigator.pushNamed(context, '/login');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                side: const BorderSide(
+                                  color: Colors.white,
+                                  width: 1.5,
+                                ),
+                                minimumSize: const Size(84, 42),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                shape: const StadiumBorder(),
+                              ),
+                              child: Text(
+                                _copy('Login', 'Login'),
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0,
+                                ),
+                              ),
                             ),
                           ],
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        AppStrings.landingSubline,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                          shadows: [
-                            Shadow(
-                              offset: const Offset(1, 1),
-                              blurRadius: 3,
-                              color: Colors.black.withValues(alpha: 0.8),
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 18),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _TrustPoint(label: AppStrings.safeProfiles),
-                          _TrustPoint(label: AppStrings.familyFriendly),
-                          _TrustPoint(label: AppStrings.simpleProcess),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 48),
-                // Action buttons
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    children: [
-                      // Register Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const SmartOnboardingScreen(),
-                              ),
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: Colors.white,
-                            foregroundColor: Theme.of(context).primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            AppStrings.register,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Login Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
-                              ),
-                            );
-                          },
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: const BorderSide(
-                              color: Colors.white,
-                              width: 2,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          child: Text(
-                            AppStrings.login,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -232,38 +273,72 @@ class LandingScreen extends StatelessWidget {
   }
 }
 
-class _TrustPoint extends StatelessWidget {
-  final String label;
+class _AuthChoiceButton extends StatelessWidget {
+  const _AuthChoiceButton({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
 
-  const _TrustPoint({required this.label});
+  final Widget icon;
+  final String label;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.verified_user_outlined,
-            color: Colors.white,
-            size: 15,
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          foregroundColor: LandingScreen._textColor,
+          elevation: 8,
+          shadowColor: Colors.black.withValues(alpha: 0.20),
+          padding: const EdgeInsets.symmetric(horizontal: 22),
+          shape: const StadiumBorder(),
+          textStyle: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0,
           ),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(width: 28, height: 28, child: Center(child: icon)),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 42),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GoogleMark extends StatelessWidget {
+  const _GoogleMark();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Text(
+      'G',
+      style: TextStyle(
+        color: Color(0xFF4285F4),
+        fontSize: 22,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0,
       ),
     );
   }
