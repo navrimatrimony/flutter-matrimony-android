@@ -253,10 +253,8 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
         child: LayoutBuilder(
           builder: (context, constraints) {
             final maxWidth = constraints.maxWidth;
-            final minWidth = maxWidth < 300 ? maxWidth : 300.0;
-            final preferredWidth = maxWidth < 520
-                ? maxWidth * 0.94
-                : maxWidth * 0.7;
+            final minWidth = maxWidth < 360 ? maxWidth : 300.0;
+            final preferredWidth = maxWidth * 0.7;
             final width = preferredWidth.clamp(minWidth, maxWidth).toDouble();
 
             return AnimatedPadding(

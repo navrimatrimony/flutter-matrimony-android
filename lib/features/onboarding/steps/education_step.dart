@@ -220,8 +220,8 @@ class _EducationStepState extends State<EducationStep> {
     return OnboardingStepScaffold(
       title: _t('Education', 'शिक्षण'),
       subtitle: _t(
-        'Select approved backend education options only.',
-        'फक्त backend approved education options निवडा.',
+        'Choose the highest or relevant education.',
+        'सर्वात उच्च किंवा योग्य शिक्षण निवडा.',
       ),
       loading: widget.loading,
       onBack: widget.onBack,

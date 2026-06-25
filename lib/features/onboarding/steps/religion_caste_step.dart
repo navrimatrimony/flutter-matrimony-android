@@ -190,8 +190,8 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     return OnboardingStepScaffold(
       title: _t('Religion / Caste', 'धर्म / जात'),
       subtitle: _t(
-        'Choose dependency in order. Changing parent clears child selections.',
-        'क्रमाने निवडा. Parent बदलल्यास child निवडी clear होतील.',
+        'Choose religion first, then caste and sub-caste.',
+        'आधी धर्म, नंतर जात आणि पोटजात निवडा.',
       ),
       loading: widget.loading,
       onBack: widget.onBack,

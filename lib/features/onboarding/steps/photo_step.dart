@@ -68,8 +68,8 @@ class PhotoStep extends StatelessWidget {
     return OnboardingStepScaffold(
       title: _t('Profile Photo', 'Profile Photo'),
       subtitle: _t(
-        'You can skip, but profile will not be searchable until photo is uploaded and approved.',
-        'Skip करू शकता, पण photo upload आणि approve होईपर्यंत profile searchable होणार नाही.',
+        'You can skip now, but the profile will be visible after photo upload and approval.',
+        'सध्या skip करू शकता, पण photo upload आणि approval नंतरच profile दिसेल.',
       ),
       loading: loading,
       onBack: onBack,

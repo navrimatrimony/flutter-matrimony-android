@@ -7,6 +7,7 @@ import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
+import 'features/onboarding/models/onboarding_status.dart';
 import 'features/onboarding/smart_onboarding_screen.dart';
 
 // RouteObserver for RouteAware lifecycle management
@@ -142,17 +143,37 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
 
     var route = ApiClient.authToken == null ? '/landing' : '/home';
     if (ApiClient.authToken != null) {
-      try {
-        final profileResult = await ApiClient.getMyProfile();
-        if (profileResult['statusCode'] == 404) {
-          route = '/smart-onboarding';
-        }
-      } catch (_) {
-        route = '/home';
-      }
+      route = await _routeForAuthenticatedUser();
     }
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, route);
+  }
+
+  Future<String> _routeForAuthenticatedUser() async {
+    try {
+      final data = await ApiClient.getOnboardingStatus(
+        locale: appLanguageCode(currentAppLanguage),
+      );
+      final status = OnboardingStatus.fromJson(data);
+      if (status.success) {
+        return status.hasProfile && status.isSearchable
+            ? '/home'
+            : '/smart-onboarding';
+      }
+    } catch (_) {
+      // Fall back to the older profile check below.
+    }
+
+    try {
+      final profileResult = await ApiClient.getMyProfile();
+      if (profileResult['statusCode'] == 404) {
+        return '/smart-onboarding';
+      }
+    } catch (_) {
+      return '/home';
+    }
+
+    return '/home';
   }
 
   @override

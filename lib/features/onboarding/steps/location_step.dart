@@ -189,8 +189,8 @@ class _LocationStepState extends State<LocationStep> {
                       const SizedBox(height: 8),
                       Text(
                         _t(
-                          'This request stays pending until backend approval.',
-                          'Backend approval होईपर्यंत request pending राहील.',
+                          'This request stays pending until approval.',
+                          'Approval होईपर्यंत request pending राहील.',
                         ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
@@ -302,8 +302,8 @@ class _LocationStepState extends State<LocationStep> {
     return OnboardingStepScaffold(
       title: _t('Location', 'ठिकाण'),
       subtitle: _t(
-        'Only approved final locations can make a profile searchable.',
-        'फक्त approved final location profile searchable करू शकते.',
+        'Choose where the profile lives.',
+        'प्रोफाइलचे सध्याचे ठिकाण निवडा.',
       ),
       loading: widget.loading,
       onBack: widget.onBack,
@@ -336,7 +336,7 @@ class _LocationStepState extends State<LocationStep> {
             final finalNode = option.metaBool('is_final_node') == true;
             return [
               if (type != null) type,
-              if (!finalNode) _t('Not final node', 'Final node नाही'),
+              if (!finalNode) _t('Not selectable', 'निवडता येणार नाही'),
               if (status != null) status,
             ].join(' • ');
           },
@@ -387,8 +387,8 @@ class _LocationStepState extends State<LocationStep> {
                     if (type != null) type,
                     if (requestId != null) '#$requestId',
                     _t(
-                      'Approval pending; profile will not be searchable until approved.',
-                      'Approval pending आहे; approved होईपर्यंत profile searchable होणार नाही.',
+                      'Approval pending; profile will be visible after approval.',
+                      'Approval pending आहे; approved झाल्यावर profile दिसेल.',
                     ),
                   ].join(' • '),
                 ),

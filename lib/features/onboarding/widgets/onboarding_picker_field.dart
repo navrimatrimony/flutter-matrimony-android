@@ -53,34 +53,50 @@ class OnboardingPickerField extends StatelessWidget {
           enabled: enabled,
         ),
         child: hasSelection
-            ? Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: selectedItems.map((item) {
-                  if (!multiSelect) {
-                    return Text(
-                      item.label,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    );
-                  }
+            ? LayoutBuilder(
+                builder: (context, constraints) {
+                  final chipLabelMaxWidth = (constraints.maxWidth - 54)
+                      .clamp(120.0, constraints.maxWidth)
+                      .toDouble();
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: selectedItems.map((item) {
+                      if (!multiSelect) {
+                        return Text(
+                          item.label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        );
+                      }
 
-                  return InputChip(
-                    label: Text(item.label),
-                    onDeleted: enabled
-                        ? () {
-                            onChanged(
-                              selectedItems
-                                  .where(
-                                    (selected) =>
-                                        selected.identity != item.identity,
-                                  )
-                                  .toList(),
-                            );
-                          }
-                        : null,
+                      return InputChip(
+                        label: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxWidth: chipLabelMaxWidth,
+                          ),
+                          child: Text(
+                            item.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        onDeleted: enabled
+                            ? () {
+                                onChanged(
+                                  selectedItems
+                                      .where(
+                                        (selected) =>
+                                            selected.identity != item.identity,
+                                      )
+                                      .toList(),
+                                );
+                              }
+                            : null,
+                      );
+                    }).toList(),
                   );
-                }).toList(),
+                },
               )
             : Text(
                 placeholder ?? 'Select',

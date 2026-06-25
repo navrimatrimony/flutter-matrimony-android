@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
@@ -10,7 +11,6 @@ import 'models/mobile_otp_models.dart';
 import 'models/onboarding_bootstrap.dart';
 import 'models/onboarding_option.dart';
 import 'models/onboarding_status.dart';
-import 'models/paged_lookup_response.dart';
 import 'steps/activation_checklist_step.dart';
 import 'steps/basic_candidate_info_step.dart';
 import 'steps/career_step.dart';
@@ -21,13 +21,13 @@ import 'steps/location_step.dart';
 import 'steps/onboarding_step_helpers.dart';
 import 'steps/photo_step.dart';
 import 'steps/religion_caste_step.dart';
-import 'widgets/onboarding_picker_field.dart';
 
 enum _SmartOnboardingStep {
   language,
+  profileForWhom,
+  genderWarmup,
   mobileOtp,
   accountDetails,
-  profileForWhom,
   basicInfo,
   religionCaste,
   location,
@@ -48,6 +48,18 @@ class SmartOnboardingScreen extends StatefulWidget {
 
 class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   static const String _consentVersion = '2026-06-24';
+  static const List<_SmartOnboardingStep> _progressSteps =
+      <_SmartOnboardingStep>[
+        _SmartOnboardingStep.basicInfo,
+        _SmartOnboardingStep.religionCaste,
+        _SmartOnboardingStep.location,
+        _SmartOnboardingStep.education,
+        _SmartOnboardingStep.career,
+        _SmartOnboardingStep.lifestyle,
+        _SmartOnboardingStep.family,
+        _SmartOnboardingStep.photo,
+        _SmartOnboardingStep.activation,
+      ];
 
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
@@ -59,6 +71,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   OnboardingBootstrap _bootstrap = OnboardingBootstrap.fallbackProfileForWhom();
   OnboardingStatus? _status;
   OnboardingOption? _profileForWhom;
+  OnboardingOption? _warmupGender;
   MobileOtpSendResponse? _otpChallenge;
   Map<String, dynamic> _serverDraftData = <String, dynamic>{};
 
@@ -90,7 +103,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     await _restoreLocalDraft();
 
     if (!mounted) return;
-    final language = savedLanguage ?? currentAppLanguage;
+    final language = savedLanguage ?? _language;
     setState(() {
       _language = language;
       setAppLanguage(language);
@@ -111,7 +124,15 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           _step = _stepFromStatus(status);
         }
       });
+      return;
     }
+
+    if (!mounted) return;
+    setState(() {
+      _step = savedLanguage == null
+          ? _SmartOnboardingStep.language
+          : _SmartOnboardingStep.profileForWhom;
+    });
   }
 
   String _t(String english, String marathi) {
@@ -122,6 +143,35 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
   bool get _isAuthenticated =>
       ApiClient.authToken != null && ApiClient.authToken!.isNotEmpty;
+
+  int get _progressIndex => _progressSteps.indexOf(_step);
+
+  bool get _showProgress => _progressIndex >= 0;
+
+  String? get _profileForWhomKey => _profileForWhom?.key?.trim();
+
+  String get _genderMode {
+    final explicit =
+        _profileForWhom?.metaText('gender_mode') ??
+        _profileForWhom?.raw['gender_mode']?.toString().trim();
+    if (explicit != null && explicit.isNotEmpty) {
+      return explicit.toLowerCase();
+    }
+
+    switch (_profileForWhomKey) {
+      case 'son':
+      case 'brother':
+        return 'male';
+      case 'daughter':
+      case 'sister':
+        return 'female';
+      default:
+        return 'ask';
+    }
+  }
+
+  bool get _needsGenderWarmup =>
+      _genderMode != 'male' && _genderMode != 'female';
 
   _SmartOnboardingStep _stepFromStatus(OnboardingStatus status) {
     final next = status.nextStep ?? status.draft?.currentStep;
@@ -231,6 +281,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       final draft = Map<String, dynamic>.from(decoded);
       _creatorNameController.text = draft['creator_name']?.toString() ?? '';
       _emailController.text = draft['email']?.toString() ?? '';
+      final profileForWhom = onboardingText(draft['profile_for_whom']);
+      if (profileForWhom != null) {
+        _profileForWhom = _profileOptionFromKey(profileForWhom);
+      }
+      _warmupGender = optionFromData(draft['warmup_gender']);
       final language = appLanguageFromCode(draft['locale']?.toString());
       if (language != null) {
         _language = language;
@@ -249,6 +304,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       'creator_name': _creatorNameController.text.trim(),
       'email': _emailController.text.trim(),
       'profile_for_whom': _profileForWhom?.key,
+      if (_warmupGender != null) 'warmup_gender': _warmupGender!.toJson(),
     };
     await AppStorage.instance.saveOnboardingDraftJson(jsonEncode(draft));
   }
@@ -258,10 +314,24 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _language = language;
       _error = null;
       _message = null;
-      _step = _SmartOnboardingStep.mobileOtp;
+      _step = _SmartOnboardingStep.profileForWhom;
     });
     setAppLanguage(language);
     await AppStorage.instance.saveLanguage(language);
+    await _saveLocalDraft();
+  }
+
+  Future<void> _toggleLanguage() async {
+    final next = _language == AppLanguage.marathi
+        ? AppLanguage.english
+        : AppLanguage.marathi;
+    setState(() {
+      _language = next;
+      _error = null;
+      _message = null;
+    });
+    setAppLanguage(next);
+    await AppStorage.instance.saveLanguage(next);
     await _saveLocalDraft();
   }
 
@@ -373,29 +443,49 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _loading = false;
       _otpController.clear();
       _message = _t('Mobile verified.', 'मोबाइल पडताळणी पूर्ण झाली.');
-      if (nextAction == 'account_details') {
-        _step = _SmartOnboardingStep.accountDetails;
-      } else if (nextAction == 'resume_onboarding' ||
-          response.accountState?.hasProfile == true) {
+    });
+
+    if (!mounted) return;
+    if (nextAction == 'account_details') {
+      setState(() => _step = _SmartOnboardingStep.accountDetails);
+    } else if (nextAction == 'resume_onboarding' ||
+        response.accountState?.hasProfile == true) {
+      setState(() {
         _step = _status == null
             ? _SmartOnboardingStep.activation
             : _stepFromStatus(_status!);
-      } else {
-        _step = _SmartOnboardingStep.profileForWhom;
-      }
+      });
+    } else if (_profileForWhom != null) {
+      await _startOnboardingAfterAuth();
+      return;
+    } else {
+      setState(() => _step = _SmartOnboardingStep.profileForWhom);
+    }
+    await _saveLocalDraft();
+  }
+
+  Future<void> _routeAfterAccountDetailsSaved() async {
+    await _loadBootstrap();
+    if (!mounted) return;
+    if (_profileForWhom != null) {
+      setState(() => _loading = false);
+      await _startOnboardingAfterAuth();
+      return;
+    }
+
+    setState(() {
+      _loading = false;
+      _step = _SmartOnboardingStep.profileForWhom;
+      _message = _t('Details saved.', 'माहिती save झाली.');
     });
     await _saveLocalDraft();
   }
 
   Future<void> _saveAccountDetails() async {
     final creatorName = _creatorNameController.text.trim();
-    final email = _emailController.text.trim();
     if (creatorName.isEmpty) {
       setState(() {
-        _error = _t(
-          'Enter account creator name.',
-          'Account creator चे नाव भरा.',
-        );
+        _error = _t('Enter your name.', 'तुमचे नाव भरा.');
       });
       return;
     }
@@ -408,7 +498,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     final data = await ApiClient.updateAccountDetails(
       creatorName: creatorName,
-      email: email.isEmpty ? null : email,
+      email: null,
       locale: _localeCode,
       whatsappAlertsOptIn: _whatsappAlertsOptIn,
     );
@@ -425,22 +515,12 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                 'हा email दुसऱ्या account ला जोडलेला आहे.',
               )
             : data['message']?.toString() ??
-                  _t(
-                    'Could not save account details.',
-                    'Account तपशील save झाले नाहीत.',
-                  );
+                  _t('Could not save details.', 'माहिती save झाली नाही.');
       });
       return;
     }
 
-    await _loadBootstrap();
-    if (!mounted) return;
-    setState(() {
-      _loading = false;
-      _step = _SmartOnboardingStep.profileForWhom;
-      _message = _t('Account details saved.', 'Account तपशील save झाले.');
-    });
-    await _saveLocalDraft();
+    await _routeAfterAccountDetailsSaved();
   }
 
   Future<void> _loadBootstrap() async {
@@ -461,7 +541,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
   }
 
-  Future<void> _startOnboarding() async {
+  Future<void> _startOnboardingAfterAuth({
+    bool keepLoadingState = false,
+  }) async {
     final option = _profileForWhom;
     final profileForWhom = option?.key;
     if (profileForWhom == null || profileForWhom.isEmpty) {
@@ -474,11 +556,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return;
     }
 
-    setState(() {
-      _loading = true;
-      _error = null;
-      _message = null;
-    });
+    if (!keepLoadingState) {
+      setState(() {
+        _loading = true;
+        _error = null;
+        _message = null;
+      });
+    }
 
     final data = await ApiClient.startOnboarding(
       profileForWhom: profileForWhom,
@@ -489,19 +573,31 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _loading = false;
         _error =
             data['message']?.toString() ??
-            _t('Could not start onboarding.', 'Onboarding सुरू झाले नाही.');
+            _t('Could not continue.', 'पुढे जाता आले नाही.');
       });
       return;
     }
 
-    await _loadStatus(goToStatus: true);
+    await _loadStatus(goToStatus: false);
     if (!mounted) return;
+    var nextStep = _SmartOnboardingStep.basicInfo;
+    final status = _status;
+    if (status != null &&
+        (status.hasProfile ||
+            status.nextStep != null ||
+            status.draft?.currentStep != null)) {
+      nextStep = _stepFromStatus(status);
+    }
+    if (nextStep == _SmartOnboardingStep.language ||
+        nextStep == _SmartOnboardingStep.profileForWhom ||
+        nextStep == _SmartOnboardingStep.genderWarmup ||
+        nextStep == _SmartOnboardingStep.mobileOtp) {
+      nextStep = _SmartOnboardingStep.basicInfo;
+    }
     setState(() {
       _loading = false;
-      _message = _t(
-        'Onboarding started. Add candidate details.',
-        'Onboarding सुरू झाले. Candidate तपशील भरा.',
-      );
+      _step = nextStep;
+      _message = _t('Saved. Add basic details.', 'Save झाले. थोडी माहिती भरा.');
     });
     await _saveLocalDraft();
   }
@@ -579,7 +675,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           _loading = false;
           _error = readableApiError(
             draftResponse,
-            _t('Could not save draft.', 'Draft save झाले नाही.'),
+            _t('Could not save details.', 'माहिती save झाली नाही.'),
           );
         });
         return false;
@@ -603,10 +699,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             _loading = false;
             _error = readableApiError(
               profileResponse!,
-              _t(
-                'Could not save profile step.',
-                'Profile step save झाला नाही.',
-              ),
+              _t('Could not save details.', 'माहिती save झाली नाही.'),
             );
           });
           return false;
@@ -661,49 +754,164 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final data = _draftStepData('profile_for_whom');
     final value = onboardingText(data['profile_for_whom']);
     if (value == null) return;
-    _profileForWhom =
-        optionByKey(_bootstrap.profileForWhom, value) ??
-        OnboardingOption(key: value, label: value);
+    _profileForWhom = _profileOptionFromKey(value);
   }
 
-  Future<PagedLookupResponse> _profileForWhomPage(
-    String query,
-    int page,
-    int limit,
-  ) async {
-    final normalized = query.trim().toLowerCase();
-    final rows = _bootstrap.profileForWhom
-        .where(
-          (option) =>
-              normalized.isEmpty ||
-              option.label.toLowerCase().contains(normalized) ||
-              (option.key?.toLowerCase().contains(normalized) ?? false),
-        )
-        .toList();
+  Future<void> _continueFromProfileForWhom() async {
+    if (_profileForWhom == null) {
+      setState(() {
+        _error = _t(
+          'Choose who this profile is for.',
+          'ही प्रोफाइल कोणासाठी आहे ते निवडा.',
+        );
+      });
+      return;
+    }
 
-    final start = (page - 1) * limit;
-    final pageRows = start >= rows.length
-        ? <OnboardingOption>[]
-        : rows.skip(start).take(limit).toList();
+    await _saveLocalDraft();
+    if (_needsGenderWarmup && _warmupGender == null) {
+      setState(() {
+        _error = null;
+        _message = null;
+        _step = _SmartOnboardingStep.genderWarmup;
+      });
+      return;
+    }
 
-    return PagedLookupResponse.fromOptions(pageRows);
+    await _continueAfterWarmup();
+  }
+
+  Future<void> _continueFromGenderWarmup() async {
+    if (_warmupGender == null) {
+      setState(() {
+        _error = _t('Choose profile gender.', 'प्रोफाइलचा लिंग प्रकार निवडा.');
+      });
+      return;
+    }
+
+    await _saveLocalDraft();
+    await _continueAfterWarmup();
+  }
+
+  Future<void> _continueAfterWarmup() async {
+    if (_isAuthenticated) {
+      await _startOnboardingAfterAuth();
+      return;
+    }
+
+    setState(() {
+      _error = null;
+      _message = null;
+      _step = _SmartOnboardingStep.mobileOtp;
+    });
+  }
+
+  void _startExistingMobileFlow() {
+    setState(() {
+      _error = null;
+      _message = _t(
+        'Verify mobile to continue.',
+        'पुढे जाण्यासाठी मोबाइल पडताळा.',
+      );
+      _step = _SmartOnboardingStep.mobileOtp;
+    });
+  }
+
+  void _goBackFromMobile() {
+    setState(() {
+      _error = null;
+      _message = null;
+      _step = _needsGenderWarmup && _warmupGender != null
+          ? _SmartOnboardingStep.genderWarmup
+          : _SmartOnboardingStep.profileForWhom;
+    });
+  }
+
+  List<OnboardingOption> _profileForWhomOptions() {
+    final options = _bootstrap.profileForWhom;
+    return options.isEmpty
+        ? OnboardingBootstrap.fallbackProfileForWhom().profileForWhom
+        : options;
+  }
+
+  OnboardingOption _profileOptionFromKey(String key) {
+    return optionByKey(_profileForWhomOptions(), key) ??
+        OnboardingOption(key: key, label: _relationLabelForKey(key));
+  }
+
+  String _relationLabel(OnboardingOption option) {
+    return _relationLabelForKey(option.key ?? option.label);
+  }
+
+  String _relationLabelForKey(String key) {
+    switch (key.toLowerCase()) {
+      case 'self':
+        return _t('Myself', 'स्वतःसाठी');
+      case 'son':
+        return _t('My Son', 'मुलगा');
+      case 'daughter':
+        return _t('My Daughter', 'मुलगी');
+      case 'brother':
+        return _t('My Brother', 'भाऊ');
+      case 'sister':
+        return _t('My Sister', 'बहीण');
+      case 'relative':
+        return _t('My Relative', 'नातेवाईक');
+      case 'friend':
+        return _t('My Friend', 'मित्र / मैत्रीण');
+    }
+
+    return key;
+  }
+
+  List<OnboardingOption> _genderWarmupOptions() {
+    final genders = _bootstrap.genders;
+    OnboardingOption? male = optionByKey(genders, 'male');
+    OnboardingOption? female = optionByKey(genders, 'female');
+
+    for (final option in genders) {
+      final label = option.label.toLowerCase();
+      if (male == null && (label == 'male' || label.contains('male'))) {
+        male = option;
+      }
+      if (female == null && (label == 'female' || label.contains('female'))) {
+        female = option;
+      }
+    }
+
+    return <OnboardingOption>[
+      male ?? OnboardingOption(key: 'male', label: _t('Male', 'पुरुष')),
+      female ?? OnboardingOption(key: 'female', label: _t('Female', 'स्त्री')),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Smart Onboarding')),
+      appBar: AppBar(
+        title: Text(_t('Create Profile', 'प्रोफाइल तयार करा')),
+        actions: [
+          if (_step != _SmartOnboardingStep.language)
+            IconButton(
+              tooltip: _t('Change language', 'भाषा बदला'),
+              onPressed: _loading ? null : _toggleLanguage,
+              icon: const Icon(Icons.translate),
+            ),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             _buildHeader(context),
             const SizedBox(height: 14),
-            _StepIndicator(
-              currentStep: _step.index,
-              totalSteps: _SmartOnboardingStep.values.length,
-            ),
-            const SizedBox(height: 14),
+            if (_showProgress) ...[
+              _StepIndicator(
+                currentStep: _progressIndex,
+                totalSteps: _progressSteps.length,
+              ),
+              const SizedBox(height: 14),
+            ],
             if (_message != null) _InfoBanner(message: _message!),
             if (_error != null) _ErrorBanner(message: _error!),
             if (_message != null || _error != null) const SizedBox(height: 12),
@@ -727,10 +935,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          _t(
-            'OTP-first matrimony onboarding',
-            'OTP-first matrimony onboarding',
-          ),
+          _showProgress
+              ? _t('Almost done', 'थोडी माहिती पूर्ण करा')
+              : _t('Let’s create a profile', 'चला, प्रोफाइल तयार करूया'),
           style: Theme.of(
             context,
           ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
@@ -752,11 +959,14 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           duration: const Duration(milliseconds: 180),
           child: switch (_step) {
             _SmartOnboardingStep.language => _buildLanguageStep(context),
-            _SmartOnboardingStep.mobileOtp => _buildMobileOtpStep(context),
-            _SmartOnboardingStep.accountDetails => _buildAccountDetailsStep(
+            _SmartOnboardingStep.profileForWhom => _buildProfileForWhomStep(
               context,
             ),
-            _SmartOnboardingStep.profileForWhom => _buildProfileForWhomStep(
+            _SmartOnboardingStep.genderWarmup => _buildGenderWarmupStep(
+              context,
+            ),
+            _SmartOnboardingStep.mobileOtp => _buildMobileOtpStep(context),
+            _SmartOnboardingStep.accountDetails => _buildAccountDetailsStep(
               context,
             ),
             _SmartOnboardingStep.basicInfo => BasicCandidateInfoStep(
@@ -764,6 +974,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
               bootstrap: _bootstrap,
               account: _status?.account ?? const <String, dynamic>{},
               profileForWhom: _profileForWhom,
+              warmupGender: _warmupGender,
               locale: _localeCode,
               loading: _loading,
               onSave: _saveOnboardingStep,
@@ -827,8 +1038,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             ),
             _SmartOnboardingStep.activation => ActivationChecklistStep(
               status: _status,
+              account: _status?.account ?? const <String, dynamic>{},
               locale: _localeCode,
               loading: _loading,
+              onSaveEmail: _saveOptionalEmail,
               onRefresh: () => _loadStatus(goToStatus: false),
               onBack: _goBackOneStep,
             ),
@@ -870,143 +1083,159 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   Widget _buildMobileOtpStep(BuildContext context) {
     final otpSent = _otpChallenge?.challengeId != null;
 
-    return _StepContent(
+    return AutofillGroup(
       key: const ValueKey('mobile'),
-      title: _t('Verify mobile number', 'मोबाइल नंबर पडताळा'),
-      children: [
-        TextField(
-          controller: _mobileController,
-          enabled: !_loading && !otpSent,
-          keyboardType: TextInputType.phone,
-          decoration: InputDecoration(
-            labelText: _t('Mobile number *', 'मोबाइल नंबर *'),
-            prefixText: '+91 ',
-          ),
-        ),
-        const SizedBox(height: 12),
-        CheckboxListTile(
-          value: _termsAccepted,
-          onChanged: _loading
-              ? null
-              : (value) => setState(() => _termsAccepted = value ?? false),
-          title: Text(_t('I accept Terms.', 'मी Terms स्वीकारतो.')),
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
-        ),
-        CheckboxListTile(
-          value: _privacyAccepted,
-          onChanged: _loading
-              ? null
-              : (value) => setState(() => _privacyAccepted = value ?? false),
-          title: Text(
-            _t('I accept Privacy Policy.', 'मी Privacy Policy स्वीकारतो.'),
-          ),
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
-        ),
-        CheckboxListTile(
-          value: _whatsappAlertsOptIn,
-          onChanged: _loading
-              ? null
-              : (value) =>
-                    setState(() => _whatsappAlertsOptIn = value ?? false),
-          title: Text(
+      child: _StepContent(
+        title: _t('Verify mobile number', 'मोबाइल नंबर पडताळा'),
+        children: [
+          Text(
             _t(
-              'Send profile alerts on WhatsApp',
-              'Profile alerts WhatsApp वर पाठवा',
+              'We will send a 6 digit code to continue.',
+              'पुढे जाण्यासाठी 6 अंकी code पाठवू.',
             ),
           ),
-          subtitle: Text(
-            _t(
-              'This does not verify WhatsApp.',
-              'यामुळे WhatsApp verify होत नाही.',
-            ),
-          ),
-          controlAffinity: ListTileControlAffinity.leading,
-          contentPadding: EdgeInsets.zero,
-        ),
-        const SizedBox(height: 10),
-        ElevatedButton(
-          onPressed: _loading || otpSent ? null : _sendOtp,
-          child: _loading && !otpSent
-              ? const SizedBox(
-                  height: 18,
-                  width: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(_t('Send OTP', 'OTP पाठवा')),
-        ),
-        if (otpSent) ...[
-          const SizedBox(height: 18),
+          const SizedBox(height: 12),
           TextField(
-            controller: _otpController,
-            keyboardType: TextInputType.number,
+            controller: _mobileController,
+            enabled: !_loading && !otpSent,
+            keyboardType: TextInputType.phone,
+            autofillHints: const [AutofillHints.telephoneNumber],
             decoration: InputDecoration(
-              labelText: _t('OTP', 'OTP'),
-              helperText: _otpChallenge?.resendAfter == null
-                  ? null
-                  : _t(
-                      'You can resend after ${_otpChallenge!.resendAfter}s.',
-                      '${_otpChallenge!.resendAfter}s नंतर OTP पुन्हा पाठवू शकता.',
-                    ),
+              labelText: _t('Mobile number *', 'मोबाइल नंबर *'),
+              prefixText: '+91 ',
             ),
           ),
-          if (_otpChallenge?.debugOtp != null) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Debug OTP: ${_otpChallenge!.debugOtp}',
-              style: Theme.of(context).textTheme.bodySmall,
+          const SizedBox(height: 12),
+          CheckboxListTile(
+            value: _termsAccepted,
+            onChanged: _loading
+                ? null
+                : (value) => setState(() => _termsAccepted = value ?? false),
+            title: Text(_t('I accept Terms.', 'मी Terms स्वीकारतो.')),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+          ),
+          CheckboxListTile(
+            value: _privacyAccepted,
+            onChanged: _loading
+                ? null
+                : (value) => setState(() => _privacyAccepted = value ?? false),
+            title: Text(
+              _t('I accept Privacy Policy.', 'मी Privacy Policy स्वीकारतो.'),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+          ),
+          CheckboxListTile(
+            value: _whatsappAlertsOptIn,
+            onChanged: _loading
+                ? null
+                : (value) =>
+                      setState(() => _whatsappAlertsOptIn = value ?? false),
+            title: Text(
+              _t(
+                'Send profile alerts on WhatsApp',
+                'Profile alerts WhatsApp वर पाठवा',
+              ),
+            ),
+            subtitle: Text(
+              _t(
+                'This does not verify WhatsApp.',
+                'यामुळे WhatsApp verify होत नाही.',
+              ),
+            ),
+            controlAffinity: ListTileControlAffinity.leading,
+            contentPadding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              if (!otpSent && !_isAuthenticated) ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _loading ? null : _goBackFromMobile,
+                    icon: const Icon(Icons.arrow_back),
+                    label: Text(_t('Back', 'मागे')),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+              Expanded(
+                flex: 2,
+                child: ElevatedButton(
+                  onPressed: _loading || otpSent ? null : _sendOtp,
+                  child: _loading && !otpSent
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(_t('Send code', 'Code पाठवा')),
+                ),
+              ),
+            ],
+          ),
+          if (otpSent) ...[
+            const SizedBox(height: 18),
+            TextField(
+              controller: _otpController,
+              keyboardType: TextInputType.number,
+              autofillHints: const [AutofillHints.oneTimeCode],
+              decoration: InputDecoration(
+                labelText: _t('Verification code', 'पडताळणी code'),
+                helperText: _otpChallenge?.resendAfter == null
+                    ? null
+                    : _t(
+                        'You can resend after ${_otpChallenge!.resendAfter}s.',
+                        '${_otpChallenge!.resendAfter}s नंतर code पुन्हा पाठवू शकता.',
+                      ),
+              ),
+            ),
+            if (!kReleaseMode && _otpChallenge?.debugOtp != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Debug code: ${_otpChallenge!.debugOtp}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: 12),
+            ElevatedButton(
+              onPressed: _loading ? null : _verifyOtp,
+              child: _loading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(_t('Verify and continue', 'पडताळून पुढे जा')),
+            ),
+            TextButton(
+              onPressed: _loading
+                  ? null
+                  : () => setState(() {
+                      _otpChallenge = null;
+                      _otpController.clear();
+                    }),
+              child: Text(_t('Change mobile number', 'मोबाइल नंबर बदला')),
             ),
           ],
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: _loading ? null : _verifyOtp,
-            child: _loading
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(_t('Verify OTP', 'OTP पडताळा')),
-          ),
-          TextButton(
-            onPressed: _loading
-                ? null
-                : () => setState(() {
-                    _otpChallenge = null;
-                    _otpController.clear();
-                  }),
-            child: Text(_t('Change mobile number', 'मोबाइल नंबर बदला')),
-          ),
         ],
-      ],
+      ),
     );
   }
 
   Widget _buildAccountDetailsStep(BuildContext context) {
     return _StepContent(
       key: const ValueKey('account'),
-      title: _t('Account details', 'Account तपशील'),
+      title: _t('Your name', 'तुमचे नाव'),
       children: [
         TextField(
           controller: _creatorNameController,
           decoration: InputDecoration(
-            labelText: _t('Creator name *', 'Creator नाव *'),
+            labelText: _t('Your name *', 'तुमचे नाव *'),
             helperText: _t(
-              'This is account holder name, not candidate name.',
-              'हे account holder चे नाव आहे, candidate चे नाही.',
-            ),
-          ),
-        ),
-        const SizedBox(height: 14),
-        TextField(
-          controller: _emailController,
-          keyboardType: TextInputType.emailAddress,
-          decoration: InputDecoration(
-            labelText: _t('Email (optional)', 'Email (optional)'),
-            helperText: _t(
-              'You can skip email. No fake email will be created.',
-              'Email skip करू शकता. Fake email तयार होणार नाही.',
+              'This helps us manage your account.',
+              'यामुळे तुमचे account व्यवस्थित ठेवता येते.',
             ),
           ),
         ),
@@ -1026,51 +1255,163 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   Widget _buildProfileForWhomStep(BuildContext context) {
+    final options = _profileForWhomOptions();
     return _StepContent(
       key: const ValueKey('profile_for_whom'),
-      title: _t('Profile for whom?', 'Profile कोणासाठी?'),
+      title: _t('Who is this profile for?', 'ही प्रोफाइल कोणासाठी आहे?'),
       children: [
-        OnboardingPickerField(
-          label: _t('Profile for whom', 'Profile कोणासाठी'),
-          selectedItems: _profileForWhom == null
-              ? const <OnboardingOption>[]
-              : [_profileForWhom!],
-          placeholder: _t('Select', 'निवडा'),
-          searchHint: _t('Search relation', 'Relation शोधा'),
-          loadPage: _profileForWhomPage,
-          itemSubtitleBuilder: (option) {
-            final mode = option.meta['gender_mode']?.toString();
-            if (mode == null || mode.isEmpty) return null;
-            return _t('Gender mode: $mode', 'Gender mode: $mode');
-          },
-          onChanged: (items) {
-            setState(() {
-              _profileForWhom = items.isEmpty ? null : items.first;
-            });
-            _saveLocalDraft();
-          },
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: options.map((option) {
+            final selected = _profileForWhom?.identity == option.identity;
+            return ChoiceChip(
+              label: Text(_relationLabel(option)),
+              selected: selected,
+              onSelected: _loading
+                  ? null
+                  : (_) {
+                      setState(() {
+                        _profileForWhom = option;
+                        _warmupGender = null;
+                        _error = null;
+                        _message = null;
+                      });
+                      _saveLocalDraft();
+                    },
+            );
+          }).toList(),
         ),
         const SizedBox(height: 12),
         Text(
           _t(
-            'Candidate name is not collected in this foundation step.',
-            'या foundation step मध्ये candidate चे नाव घेतले जात नाही.',
+            'We will ask only the details needed to create this profile.',
+            'ही प्रोफाइल तयार करण्यासाठी लागणारीच माहिती विचारू.',
           ),
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 16),
         ElevatedButton(
-          onPressed: _loading ? null : _startOnboarding,
+          onPressed: _loading ? null : _continueFromProfileForWhom,
           child: _loading
               ? const SizedBox(
                   height: 18,
                   width: 18,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(_t('Start onboarding', 'Onboarding सुरू करा')),
+              : Text(_t('Continue', 'पुढे जा')),
+        ),
+        TextButton(
+          onPressed: _loading ? null : _startExistingMobileFlow,
+          child: Text(
+            _t(
+              'Already registered? Verify mobile to continue',
+              'आधीच नोंदणी केली आहे? मोबाइल पडताळून पुढे जा',
+            ),
+          ),
         ),
       ],
     );
+  }
+
+  Widget _buildGenderWarmupStep(BuildContext context) {
+    final options = _genderWarmupOptions();
+    return _StepContent(
+      key: const ValueKey('gender_warmup'),
+      title: _t('Bride or groom?', 'वधू की वर?'),
+      children: [
+        Text(
+          _t(
+            'This helps us show the right questions.',
+            'यामुळे पुढची माहिती योग्य प्रकारे विचारता येते.',
+          ),
+        ),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: options.map((option) {
+            final selected = _warmupGender?.identity == option.identity;
+            final key = option.key?.toLowerCase();
+            final label = key == 'male'
+                ? _t('Groom', 'वर')
+                : key == 'female'
+                ? _t('Bride', 'वधू')
+                : option.label;
+            return ChoiceChip(
+              label: Text(label),
+              selected: selected,
+              onSelected: _loading
+                  ? null
+                  : (_) {
+                      setState(() {
+                        _warmupGender = option;
+                        _error = null;
+                      });
+                      _saveLocalDraft();
+                    },
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 18),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _loading
+                    ? null
+                    : () => setState(() {
+                        _step = _SmartOnboardingStep.profileForWhom;
+                        _error = null;
+                        _message = null;
+                      }),
+                icon: const Icon(Icons.arrow_back),
+                label: Text(_t('Back', 'मागे')),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: _loading ? null : _continueFromGenderWarmup,
+                child: Text(_t('Continue', 'पुढे जा')),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Future<String?> _saveOptionalEmail(String email) async {
+    final trimmed = email.trim();
+    if (trimmed.isEmpty) return null;
+    final creatorName =
+        onboardingText(_status?.account['creator_name']) ??
+        onboardingText(_status?.account['name']) ??
+        onboardingText(_creatorNameController.text);
+    if (creatorName == null) {
+      return _t(
+        'Add your name before saving email.',
+        'Email save करण्याआधी नाव भरा.',
+      );
+    }
+
+    final response = await ApiClient.updateAccountDetails(
+      creatorName: creatorName,
+      email: trimmed,
+      locale: _localeCode,
+      whatsappAlertsOptIn: _whatsappAlertsOptIn,
+    );
+    if (response['success'] != true) {
+      return readableApiError(
+        response,
+        _t('Could not save email.', 'Email save झाला नाही.'),
+      );
+    }
+
+    await _loadStatus(goToStatus: false);
+    return null;
   }
 }
 

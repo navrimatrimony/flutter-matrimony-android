@@ -9,15 +9,19 @@ class ActivationChecklistStep extends StatefulWidget {
   const ActivationChecklistStep({
     super.key,
     required this.status,
+    required this.account,
     required this.locale,
     required this.loading,
+    required this.onSaveEmail,
     required this.onRefresh,
     required this.onBack,
   });
 
   final OnboardingStatus? status;
+  final Map<String, dynamic> account;
   final String locale;
   final bool loading;
+  final Future<String?> Function(String email) onSaveEmail;
   final Future<void> Function() onRefresh;
   final VoidCallback onBack;
 
@@ -27,18 +31,44 @@ class ActivationChecklistStep extends StatefulWidget {
 }
 
 class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
+  final TextEditingController _emailController = TextEditingController();
+
   bool _preferenceLoading = false;
   String? _preferenceMessage;
+  bool _emailSaving = false;
+  String? _emailMessage;
 
   bool get _mr => widget.locale == 'mr';
 
   @override
   void initState() {
     super.initState();
+    _prefillEmail();
     WidgetsBinding.instance.addPostFrameCallback((_) => _syncPreferences());
   }
 
+  @override
+  void didUpdateWidget(covariant ActivationChecklistStep oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.account != widget.account && _emailController.text.isEmpty) {
+      _prefillEmail();
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
+  }
+
   String _t(String en, String mr) => _mr ? mr : en;
+
+  void _prefillEmail() {
+    final email = widget.account['email']?.toString().trim();
+    if (email != null && email.isNotEmpty) {
+      _emailController.text = email;
+    }
+  }
 
   Future<void> _syncPreferences() async {
     if (_preferenceLoading || widget.status?.hasProfile != true) return;
@@ -61,8 +91,8 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
         setState(() {
           _preferenceLoading = false;
           _preferenceMessage = _t(
-            'Partner preferences have been auto-created from your profile.',
-            'Partner preferences profile वरून auto-create झाल्या आहेत.',
+            'Match preferences are ready.',
+            'जोडीदार पसंती तयार आहे.',
           );
         });
         return;
@@ -78,15 +108,12 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
         setState(() {
           _preferenceLoading = false;
           _preferenceMessage = generated['success'] == true
-              ? _t(
-                  'Partner preferences have been auto-created from your profile.',
-                  'Partner preferences profile वरून auto-create झाल्या आहेत.',
-                )
+              ? _t('Match preferences are ready.', 'जोडीदार पसंती तयार आहे.')
               : readableApiError(
                   generated,
                   _t(
-                    'Partner preferences will be auto-created later.',
-                    'Partner preferences नंतर auto-create होतील.',
+                    'Match preferences will be prepared later.',
+                    'जोडीदार पसंती नंतर तयार होईल.',
                   ),
                 );
         });
@@ -96,8 +123,8 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
           _preferenceMessage = readableApiError(
             preview,
             _t(
-              'Partner preferences will be auto-created after required profile data is complete.',
-              'Required profile data पूर्ण झाल्यावर partner preferences auto-create होतील.',
+              'Match preferences will be prepared after required details are complete.',
+              'गरजेची माहिती पूर्ण झाल्यावर जोडीदार पसंती तयार होईल.',
             ),
           );
         });
@@ -107,11 +134,33 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
       setState(() {
         _preferenceLoading = false;
         _preferenceMessage = _t(
-          'Partner preferences will be auto-created automatically.',
-          'Partner preferences automatically auto-create होतील.',
+          'Match preferences will be prepared automatically.',
+          'जोडीदार पसंती आपोआप तयार होईल.',
         );
       });
     }
+  }
+
+  Future<void> _saveEmail() async {
+    if (_emailSaving) return;
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() {
+        _emailMessage = _t('Email skipped for now.', 'Email सध्या skip केला.');
+      });
+      return;
+    }
+
+    setState(() {
+      _emailSaving = true;
+      _emailMessage = null;
+    });
+    final error = await widget.onSaveEmail(email);
+    if (!mounted) return;
+    setState(() {
+      _emailSaving = false;
+      _emailMessage = error ?? _t('Email saved.', 'Email save झाला.');
+    });
   }
 
   @override
@@ -125,7 +174,10 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          _t('Activation Checklist', 'Activation Checklist'),
+          _t(
+            'To make the profile visible',
+            'प्रोफाइल दिसण्यासाठी अजून हे बाकी आहे',
+          ),
           style: Theme.of(
             context,
           ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -149,10 +201,10 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
               Expanded(
                 child: Text(
                   status?.isSearchable == true
-                      ? _t('Profile searchable', 'Profile searchable आहे')
+                      ? _t('Profile is visible', 'प्रोफाइल दिसत आहे')
                       : _t(
-                          'Profile not searchable yet',
-                          'Profile अजून searchable नाही',
+                          'Profile is not visible yet',
+                          'प्रोफाइल अजून दिसत नाही',
                         ),
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
@@ -164,12 +216,14 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
         if (items.isEmpty)
           Text(
             _t(
-              'Checklist is not available yet. Refresh status.',
-              'Checklist अजून उपलब्ध नाही. Status refresh करा.',
+              'Details are not available yet. Refresh once.',
+              'माहिती अजून उपलब्ध नाही. एकदा refresh करा.',
             ),
           )
         else
           ...items.map(_itemTile),
+        const SizedBox(height: 14),
+        _emailCard(context),
         const SizedBox(height: 14),
         _preferenceCard(context),
         const SizedBox(height: 18),
@@ -188,7 +242,7 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
               child: ElevatedButton.icon(
                 onPressed: widget.loading ? null : widget.onRefresh,
                 icon: const Icon(Icons.refresh),
-                label: Text(_t('Refresh checklist', 'Checklist refresh करा')),
+                label: Text(_t('Refresh', 'Refresh करा')),
               ),
             ),
           ],
@@ -239,12 +293,89 @@ class _ActivationChecklistStepState extends State<ActivationChecklistStep> {
             child: Text(
               _preferenceMessage ??
                   _t(
-                    'Partner preferences will be auto-created from onboarding data.',
-                    'Onboarding data वरून partner preferences auto-create होतील.',
+                    'Match preferences will be prepared from this profile.',
+                    'या प्रोफाइलवरून जोडीदार पसंती तयार होईल.',
                   ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _emailCard(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: AutofillGroup(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              _t('Email optional', 'Email optional'),
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _t(
+                'Add it for account updates, or skip for now.',
+                'Account updates साठी email भरा किंवा सध्या skip करा.',
+              ),
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              autofillHints: const [AutofillHints.email],
+              decoration: InputDecoration(labelText: _t('Email', 'Email')),
+            ),
+            if (_emailMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _emailMessage!,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: _emailSaving
+                        ? null
+                        : () {
+                            _emailController.clear();
+                            setState(() {
+                              _emailMessage = _t(
+                                'Email skipped for now.',
+                                'Email सध्या skip केला.',
+                              );
+                            });
+                          },
+                    child: Text(_t('Skip for now', 'सध्या skip करा')),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _emailSaving ? null : _saveEmail,
+                    child: _emailSaving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(_t('Save email', 'Email save करा')),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

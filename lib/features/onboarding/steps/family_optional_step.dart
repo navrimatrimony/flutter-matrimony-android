@@ -126,10 +126,10 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: _t('Family Optional', 'कुटुंब माहिती Optional'),
+      title: _t('Family details', 'कुटुंब माहिती'),
       subtitle: _t(
-        'This step is optional and does not block onboarding.',
-        'हा step optional आहे आणि onboarding block करत नाही.',
+        'This is optional. You can skip it now.',
+        'ही माहिती optional आहे. सध्या skip करू शकता.',
       ),
       loading: widget.loading,
       onBack: widget.onBack,
@@ -210,8 +210,8 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
         const SizedBox(height: 8),
         Text(
           _t(
-            'Sibling counts are saved to onboarding draft only. Detailed siblings remain in Edit Profile.',
-            'Sibling count onboarding draft मध्येच save होतो. Detailed siblings Edit Profile मध्ये आहेत.',
+            'Detailed sibling information can be added later from Edit Profile.',
+            'भावंडांची सविस्तर माहिती नंतर Edit Profile मधून भरू शकता.',
           ),
           style: Theme.of(context).textTheme.bodySmall,
         ),

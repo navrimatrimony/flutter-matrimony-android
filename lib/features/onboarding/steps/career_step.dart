@@ -45,6 +45,7 @@ class _CareerStepState extends State<CareerStep> {
   int? _currencyId;
   String _currencySymbol = '₹';
   bool _incomePrivate = true;
+  int _page = 0;
 
   bool get _mr => widget.locale == 'mr';
 
@@ -220,6 +221,67 @@ class _CareerStepState extends State<CareerStep> {
     await widget.onSave('career', payload, saveProfile: true);
   }
 
+  Future<void> _continue() async {
+    if (_page == 0 && _workingWith == null) {
+      widget.onMessage(_t('Choose work details.', 'कामाची माहिती निवडा.'));
+      return;
+    }
+
+    if (_notWorking) {
+      await _save();
+      return;
+    }
+
+    if (_page == 1 && _occupation == null) {
+      widget.onMessage(_t('Choose occupation.', 'व्यवसाय निवडा.'));
+      return;
+    }
+
+    if (_page < 2) {
+      setState(() => _page += 1);
+      return;
+    }
+
+    await _save();
+  }
+
+  void _back() {
+    if (_page > 0) {
+      setState(() => _page -= 1);
+      return;
+    }
+
+    widget.onBack();
+  }
+
+  String get _pageTitle {
+    switch (_page) {
+      case 0:
+        return _t('Work details', 'कामाची माहिती');
+      case 1:
+        return _t('Occupation', 'व्यवसाय');
+      default:
+        return _t('Annual income', 'वार्षिक उत्पन्न');
+    }
+  }
+
+  String? get _pageSubtitle {
+    switch (_page) {
+      case 0:
+        return _t(
+          'Select the current work type.',
+          'सध्याचा कामाचा प्रकार निवडा.',
+        );
+      case 1:
+        return _t(
+          'Add occupation and optional work info.',
+          'व्यवसाय आणि कामाची optional माहिती भरा.',
+        );
+      default:
+        return _t('Income can be kept private.', 'उत्पन्न private ठेवू शकता.');
+    }
+  }
+
   Future<void> _showSuggestionDialog() async {
     final label = TextEditingController();
     final categoryId = TextEditingController();
@@ -314,49 +376,61 @@ class _CareerStepState extends State<CareerStep> {
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: _t('Career', 'करिअर'),
-      subtitle: _t(
-        'Occupation categories and income options come from backend.',
-        'Occupation categories आणि income options backend मधून येतात.',
-      ),
+      title: _pageTitle,
+      subtitle: _pageSubtitle,
       loading: widget.loading,
-      onBack: widget.onBack,
-      onContinue: _save,
-      secondary: OutlinedButton.icon(
-        onPressed: widget.loading || _workingWith == null
-            ? null
-            : _showSuggestionDialog,
-        icon: const Icon(Icons.add),
-        label: Text(
-          _t('Not found? Request occupation', 'Occupation request करा'),
-        ),
-      ),
-      children: [
-        OnboardingPickerField(
-          label: _t('Working with', 'Working with'),
-          selectedItems: _workingWith == null ? const [] : [_workingWith!],
-          placeholder: _t('Select working with', 'Working with निवडा'),
-          searchHint: _t('Search working with', 'Working with शोधा'),
-          loadPage: _workingWithPage,
-          onChanged: (items) => setState(() {
-            final next = items.isEmpty ? null : items.first;
-            if (_workingWith?.identity != next?.identity) {
-              _occupation = null;
-              _amountController.clear();
-              _minAmountController.clear();
-              _maxAmountController.clear();
-            }
-            _workingWith = next;
-          }),
-        ),
-        if (!_notWorking) ...[
-          const SizedBox(height: 12),
+      onBack: _back,
+      onContinue: _continue,
+      continueLabel: _page < 2 && !_notWorking
+          ? _t('Continue', 'पुढे जा')
+          : _t('Save and continue', 'Save करून पुढे जा'),
+      secondary: _page == 1
+          ? OutlinedButton.icon(
+              onPressed: widget.loading || _workingWith == null
+                  ? null
+                  : _showSuggestionDialog,
+              icon: const Icon(Icons.add),
+              label: Text(
+                _t('Not found? Request occupation', 'Occupation request करा'),
+              ),
+            )
+          : null,
+      children: switch (_page) {
+        0 => [
           OnboardingPickerField(
-            label: _t('Working as', 'Working as'),
+            label: _t('Working with', 'कामाचा प्रकार'),
+            selectedItems: _workingWith == null ? const [] : [_workingWith!],
+            placeholder: _t('Select work type', 'कामाचा प्रकार निवडा'),
+            searchHint: _t('Search work type', 'कामाचा प्रकार शोधा'),
+            loadPage: _workingWithPage,
+            onChanged: (items) => setState(() {
+              final next = items.isEmpty ? null : items.first;
+              if (_workingWith?.identity != next?.identity) {
+                _occupation = null;
+                _amountController.clear();
+                _minAmountController.clear();
+                _maxAmountController.clear();
+              }
+              _workingWith = next;
+            }),
+          ),
+          if (_notWorking) ...[
+            const SizedBox(height: 12),
+            Text(
+              _t(
+                'Occupation and income are optional when not working.',
+                'काम करत नसल्यास व्यवसाय आणि उत्पन्न optional आहे.',
+              ),
+            ),
+          ],
+        ],
+        1 => [
+          OnboardingPickerField(
+            label: _t('Working as', 'व्यवसाय'),
             selectedItems: _occupation == null ? const [] : [_occupation!],
             enabled: _workingWith != null,
-            placeholder: _t('Select occupation', 'Occupation निवडा'),
-            searchHint: _t('Search occupation', 'Occupation शोधा'),
+            placeholder: _t('Select occupation', 'व्यवसाय निवडा'),
+            searchHint: _t('Search occupation', 'व्यवसाय शोधा'),
             loadPage: _occupationPage,
             itemSubtitleBuilder: (option) => option.metaText('category_label'),
             allowRequestToAdd: true,
@@ -379,7 +453,8 @@ class _CareerStepState extends State<CareerStep> {
               labelText: _t('Work location optional', 'Work location optional'),
             ),
           ),
-          const SizedBox(height: 12),
+        ],
+        _ => [
           Row(
             children: [
               Expanded(
@@ -452,16 +527,8 @@ class _CareerStepState extends State<CareerStep> {
             value: _incomePrivate,
             onChanged: (value) => setState(() => _incomePrivate = value),
           ),
-        ] else ...[
-          const SizedBox(height: 12),
-          Text(
-            _t(
-              'Occupation and income are optional when not working.',
-              'Not working असल्यास occupation आणि income optional आहेत.',
-            ),
-          ),
         ],
-      ],
+      },
     );
   }
 }
