@@ -69,7 +69,9 @@ class OnboardingFieldErrorMap {
   ) {
     return Map<String, String>.fromEntries(
       fieldErrors.entries.where(
-        (entry) => targetFor(entry.key)?.ownerStep == ownerStep,
+        (entry) =>
+            targetFor(entry.key)?.ownerStep == ownerStep &&
+            entry.value.trim().isNotEmpty,
       ),
     );
   }
@@ -90,7 +92,8 @@ class OnboardingFieldErrorMap {
     Iterable<String> priority = ownershipPriority,
   }) {
     for (final field in priority) {
-      if (!fieldErrors.containsKey(field)) continue;
+      final message = fieldErrors[field];
+      if (message == null || message.trim().isEmpty) continue;
       final ownerStep = targetFor(field)?.ownerStep;
       if (ownerStep != null) return ownerStep;
     }

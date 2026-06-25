@@ -588,6 +588,19 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
 
   @override
   Widget build(BuildContext context) {
+    final fullNameError = onboardingFieldErrorText(
+      widget.fieldErrors,
+      'full_name',
+    );
+    final dobFieldError = onboardingFieldErrorText(
+      widget.fieldErrors,
+      'date_of_birth',
+    );
+    final heightFieldError = onboardingFieldErrorText(
+      widget.fieldErrors,
+      'height_cm',
+    );
+
     return OnboardingStepScaffold(
       title: _detailsTitle,
       loading: widget.loading,
@@ -609,7 +622,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
               labelText: _nameFieldLabel,
               errorText: _nameError
                   ? _t('Enter full name.', 'पूर्ण नाव भरा.')
-                  : widget.fieldErrors['full_name'],
+                  : fullNameError,
             ),
             onChanged: (_) {
               setState(() {
@@ -635,7 +648,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
                 labelText: _dobLabel,
                 errorText: _dobError
                     ? _t('Select DOB.', 'जन्मतारीख निवडा.')
-                    : widget.fieldErrors['date_of_birth'],
+                    : dobFieldError,
                 suffixIcon: const Icon(Icons.calendar_today),
               ),
             ),
@@ -654,7 +667,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
               placeholder: _t('Select height', 'उंची निवडा'),
               errorText: _heightError
                   ? _t('Select height.', 'उंची निवडा.')
-                  : widget.fieldErrors['height_cm'],
+                  : heightFieldError,
               showDividers: true,
               loadPage: (query, page, limit) =>
                   _staticPage(_heightOptions, query, page, limit),

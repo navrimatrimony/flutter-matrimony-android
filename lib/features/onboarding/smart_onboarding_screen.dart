@@ -367,7 +367,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _fieldErrorPulseToken++;
       _motherTongueError =
           ownerStep == OnboardingFieldErrorMap.profileForWhomStep
-          ? fieldErrors['mother_tongue_id'] ?? fieldErrors['mother_tongue']
+          ? onboardingFirstFieldError(fieldErrors, const <String>[
+              'mother_tongue_id',
+              'mother_tongue',
+            ])
           : null;
       _error = message;
       _message = null;
@@ -467,6 +470,17 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   bool get _needsGenderWarmup =>
       _genderMode != 'male' && _genderMode != 'female';
 
+  bool get _canStepBackWithinOnboarding {
+    if (_loading) return false;
+    if (_step == _SmartOnboardingStep.profileForWhom) return false;
+    if (_step == _SmartOnboardingStep.mobileOtp) {
+      return _otpChallenge?.challengeId != null ||
+          widget.initialMode != SmartOnboardingInitialMode.mobileOtp ||
+          _profileForWhom != null;
+    }
+    return true;
+  }
+
   _SmartOnboardingStep _stepFromStatus(OnboardingStatus status) {
     final next = status.nextStep ?? status.draft?.currentStep;
     return _stepFromServerName(next);
@@ -528,6 +542,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
   _SmartOnboardingStep _previousProfileStep(_SmartOnboardingStep step) {
     switch (step) {
+      case _SmartOnboardingStep.mobileOtp:
+        return _SmartOnboardingStep.profileForWhom;
       case _SmartOnboardingStep.basicInfo:
         return _SmartOnboardingStep.profileForWhom;
       case _SmartOnboardingStep.religionCaste:
@@ -1284,6 +1300,12 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   void _goBackOneStep() {
+    if (_step == _SmartOnboardingStep.mobileOtp &&
+        _otpChallenge?.challengeId != null) {
+      _editMobileNumber();
+      return;
+    }
+
     setState(() {
       _error = null;
       _message = null;
@@ -1291,6 +1313,26 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _fieldErrors = const <String, String>{};
       _step = _previousProfileStep(_step);
     });
+  }
+
+  Future<bool> _handleRouteBack() async {
+    if (_loading) return false;
+
+    if (_canStepBackWithinOnboarding) {
+      _goBackOneStep();
+      return false;
+    }
+
+    return true;
+  }
+
+  void _handleAppBarBack() {
+    if (_canStepBackWithinOnboarding) {
+      _goBackOneStep();
+      return;
+    }
+
+    Navigator.of(context).maybePop();
   }
 
   void _showStepMessage(String message) {
@@ -1656,74 +1698,87 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: false,
-        title: Text(_t('Create Profile', 'प्रोफाइल तयार करा')),
-        actions: [
-          if (_step != _SmartOnboardingStep.profileForWhom)
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: _LanguageToggle(
-                isMarathi: _language == AppLanguage.marathi,
-                onEnglish: _loading
-                    ? null
-                    : () {
-                        _setLanguage(AppLanguage.english);
-                      },
-                onMarathi: _loading
-                    ? null
-                    : () {
-                        _setLanguage(AppLanguage.marathi);
-                      },
-              ),
-            ),
-        ],
-      ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            ListView(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                _step == _SmartOnboardingStep.profileForWhom ? 72 : 16,
-              ),
-              children: [
-                _buildHeader(context),
-                const SizedBox(height: 14),
-                if (_showProgress) ...[
-                  _StepIndicator(
-                    currentStep: _progressIndex,
-                    totalSteps: _progressSteps.length,
-                  ),
-                  const SizedBox(height: 14),
-                ],
-                _buildStepCard(context),
-                if (_step == _SmartOnboardingStep.mobileOtp &&
-                    _otpChallenge?.challengeId == null) ...[
-                  const SizedBox(height: 28),
-                  _TermsPrivacyFooter(
-                    isMarathi: _language == AppLanguage.marathi,
-                  ),
-                ],
-              ],
-            ),
-            if (_step == _SmartOnboardingStep.profileForWhom)
-              Positioned(
-                left: 16,
-                right: 16,
-                bottom: 10,
-                child: _AlreadyRegisteredLink(
-                  text: _t(
-                    'Already registered? Verify mobile to continue',
-                    'आधीच नोंदणी केली आहे? मोबाइल पडताळून पुढे जा',
-                  ),
-                  onPressed: _loading ? null : _startExistingMobileFlow,
+    final showBack = _canStepBackWithinOnboarding || Navigator.canPop(context);
+
+    return WillPopScope(
+      onWillPop: _handleRouteBack,
+      child: Scaffold(
+        appBar: AppBar(
+          centerTitle: false,
+          leading: showBack
+              ? IconButton(
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: _loading ? null : _handleAppBarBack,
+                )
+              : null,
+          title: Text(_t('Create Profile', 'प्रोफाइल तयार करा')),
+          actions: [
+            if (_step != _SmartOnboardingStep.profileForWhom)
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: _LanguageToggle(
+                  isMarathi: _language == AppLanguage.marathi,
+                  onEnglish: _loading
+                      ? null
+                      : () {
+                          _setLanguage(AppLanguage.english);
+                        },
+                  onMarathi: _loading
+                      ? null
+                      : () {
+                          _setLanguage(AppLanguage.marathi);
+                        },
                 ),
               ),
           ],
+        ),
+        body: SafeArea(
+          child: Stack(
+            children: [
+              ListView(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  _step == _SmartOnboardingStep.profileForWhom ? 72 : 16,
+                ),
+                children: [
+                  _buildHeader(context),
+                  const SizedBox(height: 14),
+                  if (_showProgress &&
+                      _step != _SmartOnboardingStep.religionCaste) ...[
+                    _StepIndicator(
+                      currentStep: _progressIndex,
+                      totalSteps: _progressSteps.length,
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  _buildStepCard(context),
+                  if (_step == _SmartOnboardingStep.mobileOtp &&
+                      _otpChallenge?.challengeId == null) ...[
+                    const SizedBox(height: 28),
+                    _TermsPrivacyFooter(
+                      isMarathi: _language == AppLanguage.marathi,
+                    ),
+                  ],
+                ],
+              ),
+              if (_step == _SmartOnboardingStep.profileForWhom)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 10,
+                  child: _AlreadyRegisteredLink(
+                    text: _t(
+                      'Already registered? Verify mobile to continue',
+                      'आधीच नोंदणी केली आहे? मोबाइल पडताळून पुढे जा',
+                    ),
+                    onPressed: _loading ? null : _startExistingMobileFlow,
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1756,10 +1811,17 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return _MessageBanner(message: message, type: _messageType);
     }
 
+    String fallback;
+    if (_step == _SmartOnboardingStep.religionCaste) {
+      fallback = _t('Choose community details', 'समुदायाची माहिती निवडा');
+    } else if (_showProgress) {
+      fallback = _t('Almost done', 'थोडी माहिती पूर्ण करा');
+    } else {
+      fallback = _t('Let’s create a profile', 'चला, प्रोफाइल तयार करूया');
+    }
+
     return Text(
-      _showProgress
-          ? _t('Almost done', 'थोडी माहिती पूर्ण करा')
-          : _t('Let’s create a profile', 'चला, प्रोफाइल तयार करूया'),
+      fallback,
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       style: Theme.of(

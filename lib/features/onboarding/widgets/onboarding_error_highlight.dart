@@ -20,10 +20,11 @@ class OnboardingErrorHighlight extends StatefulWidget {
     Object? pulseToken,
     BorderRadius borderRadius = const BorderRadius.all(Radius.circular(8)),
   }) {
+    final errorText = onboardingFieldErrorText(fieldErrors, field);
     return OnboardingErrorHighlight(
       key: key,
-      hasError: localError || fieldErrors.containsKey(field),
-      pulseKey: '$field:$pulseToken:${fieldErrors[field]}',
+      hasError: localError || errorText != null,
+      pulseKey: '$field:$pulseToken:$errorText',
       borderRadius: borderRadius,
       child: child,
     );
@@ -129,8 +130,17 @@ String? onboardingFirstFieldError(
   Iterable<String> priority,
 ) {
   for (final field in priority) {
-    final message = fieldErrors[field];
-    if (message != null && message.trim().isNotEmpty) return message;
+    final message = onboardingFieldErrorText(fieldErrors, field);
+    if (message != null) return message;
   }
   return null;
+}
+
+String? onboardingFieldErrorText(
+  Map<String, String> fieldErrors,
+  String field,
+) {
+  final message = fieldErrors[field]?.trim();
+  if (message == null || message.isEmpty) return null;
+  return message;
 }
