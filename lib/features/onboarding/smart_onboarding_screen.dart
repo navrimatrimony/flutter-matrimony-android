@@ -1094,21 +1094,26 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppStrings.appName,
+          _step == _SmartOnboardingStep.language
+              ? AppStrings.appNameBilingual
+              : AppStrings.appName,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
             color: Theme.of(context).colorScheme.primary,
             fontWeight: FontWeight.w800,
+            height: 1.18,
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          _showProgress
-              ? _t('Almost done', 'थोडी माहिती पूर्ण करा')
-              : _t('Let’s create a profile', 'चला, प्रोफाइल तयार करूया'),
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-        ),
+        if (_step != _SmartOnboardingStep.language) ...[
+          const SizedBox(height: 4),
+          Text(
+            _showProgress
+                ? _t('Almost done', 'थोडी माहिती पूर्ण करा')
+                : _t('Let’s create a profile', 'चला, प्रोफाइल तयार करूया'),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ],
       ],
     );
   }
@@ -1218,13 +1223,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   Widget _buildLanguageStep(BuildContext context) {
     return _StepContent(
       key: const ValueKey('language'),
-      title: _t('Choose language', 'भाषा निवडा'),
+      title: AppStrings.chooseLanguageBilingual,
       children: [
         Text(
-          _t(
-            'You can change language before sending OTP.',
-            'OTP पाठवण्यापूर्वी भाषा बदलू शकता.',
-          ),
+          AppStrings.chooseLanguageSubtitleBilingual,
+          style: const TextStyle(height: 1.35),
         ),
         const SizedBox(height: 16),
         ElevatedButton(

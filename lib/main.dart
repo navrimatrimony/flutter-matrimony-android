@@ -32,14 +32,6 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      NotificationPermissionService.requestOnStartup();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -141,6 +133,7 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
   }
 
   Future<void> _restoreAndRoute() async {
+    await NotificationPermissionService.requestOnStartup();
     final savedLanguage = await AppStorage.instance.readLanguage();
 
     if (!mounted) return;

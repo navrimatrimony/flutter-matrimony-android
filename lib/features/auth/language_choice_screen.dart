@@ -31,61 +31,46 @@ class LanguageChoiceScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Spacer(),
-              Icon(
-                Icons.favorite,
-                size: 54,
-                color: colorScheme.primary,
-              ),
+              Icon(Icons.favorite, size: 54, color: colorScheme.primary),
               const SizedBox(height: 18),
               Text(
-                AppStrings.appName,
+                AppStrings.appNameBilingual,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                  height: 1.18,
+                ),
               ),
               const SizedBox(height: 28),
               Text(
-                AppStrings.chooseLanguage,
+                AppStrings.chooseLanguageBilingual,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  height: 1.18,
+                ),
               ),
               const SizedBox(height: 8),
               Text(
-                AppStrings.chooseLanguageSubtitle,
+                AppStrings.chooseLanguageSubtitleBilingual,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey.shade700,
-                    ),
+                  color: Colors.grey.shade700,
+                  height: 1.35,
+                ),
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () => _selectLanguage(
-                  context,
-                  AppLanguage.marathi,
-                ),
+                onPressed: () => _selectLanguage(context, AppLanguage.marathi),
                 child: Text(AppStrings.marathi),
               ),
               const SizedBox(height: 14),
               OutlinedButton(
-                onPressed: () => _selectLanguage(
-                  context,
-                  AppLanguage.english,
-                ),
+                onPressed: () => _selectLanguage(context, AppLanguage.english),
                 child: Text(AppStrings.english),
               ),
               const Spacer(),
-              Text(
-                'Navri Mile Navryala',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ],
           ),
         ),

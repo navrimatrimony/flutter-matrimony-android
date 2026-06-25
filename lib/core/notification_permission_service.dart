@@ -2,6 +2,8 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/services.dart';
 
+import 'app_storage.dart';
+
 class NotificationPermissionService {
   NotificationPermissionService._();
 
@@ -15,8 +17,15 @@ class NotificationPermissionService {
     if (_requestedThisLaunch || !Platform.isAndroid) return;
     _requestedThisLaunch = true;
 
+    if (await AppStorage.instance.hasPromptedNotificationPermission()) {
+      return;
+    }
+
     try {
-      await _channel.invokeMethod<String>('request');
+      final result = await _channel.invokeMethod<String>('request');
+      if (result == 'granted' || result == 'denied') {
+        await AppStorage.instance.markNotificationPermissionPrompted();
+      }
     } on PlatformException {
       return;
     } on MissingPluginException {

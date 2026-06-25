@@ -6,14 +6,21 @@ class AppStrings {
   static String get appName =>
       _mr ? 'नवरी मिळे नवऱ्याला' : 'Navri Mile Navryala';
 
+  static String get appNameBilingual =>
+      'नवरी मिळे नवऱ्याला\nNavri Mile Navryala';
+
   static bool get isMarathi => _mr;
 
-  static String get chooseLanguage =>
-      _mr ? 'भाषा निवडा' : 'Choose Language';
+  static String get chooseLanguage => _mr ? 'भाषा निवडा' : 'Choose Language';
+
+  static String get chooseLanguageBilingual => 'भाषा निवडा\nChoose language';
 
   static String get chooseLanguageSubtitle => _mr
       ? 'अ‍ॅप कोणत्या भाषेत वापरायचे?'
       : 'Which language would you like to use?';
+
+  static String get chooseLanguageSubtitleBilingual =>
+      'अ‍ॅप कोणत्या भाषेत वापरायचे?\nWhich language would you like to use?';
 
   static String get marathi => 'मराठी';
 
@@ -27,8 +34,7 @@ class AppStrings {
       ? 'सुरक्षित, सोपे आणि कुटुंबासाठी योग्य विवाह-जुळवणी व्यासपीठ'
       : 'Safe, simple and family-friendly matrimony platform';
 
-  static String get safeProfiles =>
-      _mr ? 'सुरक्षित प्रोफाइल' : 'Safe profiles';
+  static String get safeProfiles => _mr ? 'सुरक्षित प्रोफाइल' : 'Safe profiles';
 
   static String get familyFriendly =>
       _mr ? 'कुटुंबांसाठी योग्य' : 'Family-friendly';
@@ -50,8 +56,7 @@ class AppStrings {
       ? 'प्रोफाइल, फोटो आणि इंटरेस्ट एका ठिकाणी व्यवस्थापित करा.'
       : 'Manage your profile, photo and interests in one place.';
 
-  static String get browseProfiles =>
-      _mr ? 'स्थळे' : 'Matches';
+  static String get browseProfiles => _mr ? 'स्थळे' : 'Matches';
 
   static String get browseProfilesSubtitle => _mr
       ? 'तुमच्यासाठी योग्य स्थळे शोधा'
@@ -64,11 +69,9 @@ class AppStrings {
   static String get matchesTabMyMatches =>
       _mr ? 'माझी जुळणारी स्थळे' : 'My Matches';
 
-  static String get matchesTabNearMe =>
-      _mr ? 'जवळची स्थळे' : 'Near Me';
+  static String get matchesTabNearMe => _mr ? 'जवळची स्थळे' : 'Near Me';
 
-  static String get matchesTabMore =>
-      _mr ? 'अधिक स्थळे' : 'More Matches';
+  static String get matchesTabMore => _mr ? 'अधिक स्थळे' : 'More Matches';
 
   static String get matchesFilter => _mr ? 'फिल्टर' : 'Filters';
 
@@ -191,9 +194,8 @@ class AppStrings {
     return '';
   }
 
-  static String get upgradeToSeeVisitors => _mr
-      ? 'भेट देणारे पाहण्यासाठी अपग्रेड करा'
-      : 'Upgrade to see visitors';
+  static String get upgradeToSeeVisitors =>
+      _mr ? 'भेट देणारे पाहण्यासाठी अपग्रेड करा' : 'Upgrade to see visitors';
 
   static String get recentVisitorsEmpty => _mr
       ? 'दाखवण्यासाठी योग्य अलीकडील भेटी अजून नाहीत.'
@@ -239,26 +241,22 @@ class AppStrings {
 
   static String get myProfile => _mr ? 'माझे प्रोफाइल' : 'My Profile';
 
-  static String get myProfileSubtitle => _mr
-      ? 'तुमची प्रोफाइल माहिती पहा'
-      : 'View your matrimony profile';
+  static String get myProfileSubtitle =>
+      _mr ? 'तुमची प्रोफाइल माहिती पहा' : 'View your matrimony profile';
 
   static String get editProfile =>
       _mr ? 'प्रोफाइल अपडेट करा' : 'Update Profile';
 
-  static String get uploadPhoto =>
-      _mr ? 'फोटो अपलोड करा' : 'Upload Photo';
+  static String get uploadPhoto => _mr ? 'फोटो अपलोड करा' : 'Upload Photo';
 
-  static String get uploadPhotoSubtitle => _mr
-      ? 'प्रोफाइलसाठी फोटो अपडेट करा'
-      : 'Update your profile photo';
+  static String get uploadPhotoSubtitle =>
+      _mr ? 'प्रोफाइलसाठी फोटो अपडेट करा' : 'Update your profile photo';
 
   static String get sentInterests =>
       _mr ? 'पाठवलेले इंटरेस्ट' : 'Sent Interests';
 
-  static String get sentInterestsSubtitle => _mr
-      ? 'तुम्ही पाठवलेले इंटरेस्ट पहा'
-      : 'View interests you have sent';
+  static String get sentInterestsSubtitle =>
+      _mr ? 'तुम्ही पाठवलेले इंटरेस्ट पहा' : 'View interests you have sent';
 
   static String get receivedInterests =>
       _mr ? 'आलेले इंटरेस्ट' : 'Received Interests';
@@ -284,11 +282,9 @@ class AppStrings {
 
   static String get profile => _mr ? 'प्रोफाइल' : 'Profile';
 
-  static String get profileType =>
-      _mr ? 'प्रोफाइल प्रकार' : 'Profile type';
+  static String get profileType => _mr ? 'प्रोफाइल प्रकार' : 'Profile type';
 
-  static String get brideGroom =>
-      _mr ? 'वधू / वर' : 'Bride / Groom';
+  static String get brideGroom => _mr ? 'वधू / वर' : 'Bride / Groom';
 
   static String get selectProfileType =>
       _mr ? 'कृपया वधू / वर निवडा.' : 'Please select profile type.';
@@ -316,9 +312,7 @@ class AppStrings {
   static String get noProfileData =>
       _mr ? 'प्रोफाइल डेटा उपलब्ध नाही.' : 'Profile data is not available.';
 
-  static String get sendInterest =>
-      _mr ? 'इंटरेस्ट पाठवा' : 'Send Interest';
+  static String get sendInterest => _mr ? 'इंटरेस्ट पाठवा' : 'Send Interest';
 
-  static String get interestSent =>
-      _mr ? 'इंटरेस्ट पाठवला' : 'Interest Sent';
+  static String get interestSent => _mr ? 'इंटरेस्ट पाठवला' : 'Interest Sent';
 }

@@ -14,6 +14,8 @@ class AppStorage {
   static const String _authTokenKey = 'auth_token';
   static const String _languageKey = 'app_language';
   static const String _onboardingDraftKey = 'smart_onboarding_draft';
+  static const String _notificationPermissionPromptedKey =
+      'notification_permission_prompted';
 
   final FlutterSecureStorage? _secureStorage;
   final Map<String, String>? _memory;
@@ -80,6 +82,14 @@ class AppStorage {
 
   Future<void> clearOnboardingDraftJson() {
     return _delete(_onboardingDraftKey);
+  }
+
+  Future<bool> hasPromptedNotificationPermission() async {
+    return await _read(_notificationPermissionPromptedKey) == 'true';
+  }
+
+  Future<void> markNotificationPermissionPrompted() {
+    return _write(_notificationPermissionPromptedKey, 'true');
   }
 
   Future<void> clearSessionButKeepLanguage() {
