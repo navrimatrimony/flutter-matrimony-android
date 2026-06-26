@@ -596,6 +596,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
       widget.fieldErrors,
       'date_of_birth',
     );
+    final dobHasError = _dobError || dobFieldError != null;
     final heightFieldError = onboardingFieldErrorText(
       widget.fieldErrors,
       'height_cm',
@@ -644,13 +645,22 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
               controller: _dobController,
               readOnly: true,
               onTap: _pickDob,
-              decoration: onboardingErrorInputDecoration(
-                labelText: _dobLabel,
-                errorText: _dobError
-                    ? _t('Select DOB.', 'जन्मतारीख निवडा.')
-                    : dobFieldError,
-                suffixIcon: const Icon(Icons.calendar_today),
-              ),
+              decoration:
+                  onboardingErrorInputDecoration(
+                    labelText: _dobLabel,
+                    errorText: _dobError
+                        ? _t('Select DOB.', 'जन्मतारीख निवडा.')
+                        : dobFieldError,
+                    suffixIcon: const Icon(Icons.calendar_today),
+                  ).copyWith(
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    floatingLabelStyle: dobHasError
+                        ? null
+                        : TextStyle(color: Colors.grey.shade700),
+                  ),
             ),
           ),
         ],

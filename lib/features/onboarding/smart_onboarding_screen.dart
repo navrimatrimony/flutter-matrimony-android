@@ -578,14 +578,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     return digits;
   }
 
-  void _setMobileDisplay(String value) {
-    final digits = _displayMobileDigits(value);
-    if (_mobileController.text == digits) return;
-    _mobileController.value = TextEditingValue(
-      text: digits,
-      selection: TextSelection.collapsed(offset: digits.length),
-    );
-  }
 
   String _maskedMobile() {
     final mobile = _normalizeMobile(_mobileController.text);
@@ -2141,7 +2133,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   enabled: !_loading,
                   keyboardType: TextInputType.phone,
                   autofillHints: const [AutofillHints.telephoneNumber],
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  inputFormatters: const [_OnboardingMobileInputFormatter()],
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -2149,7 +2141,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                     hintText: _t('Mobile number', 'मोबाइल नंबर'),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14),
                   ),
-                  onChanged: _setMobileDisplay,
                 ),
               ),
             ],
@@ -2707,6 +2698,40 @@ class _StepIndicator extends StatelessWidget {
   }
 }
 
+class _OnboardingMobileInputFormatter extends TextInputFormatter {
+  const _OnboardingMobileInputFormatter();
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    var digits = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final selectionEnd = newValue.selection.end
+        .clamp(0, newValue.text.length)
+        .toInt();
+    var selectionDigits = newValue.text
+        .substring(0, selectionEnd)
+        .replaceAll(RegExp(r'\D'), '')
+        .length;
+
+    if (digits.length == 12 && digits.startsWith('91')) {
+      digits = digits.substring(2);
+      selectionDigits = (selectionDigits - 2).clamp(0, digits.length).toInt();
+    }
+
+    if (digits.length > 10) {
+      return oldValue;
+    }
+
+    return TextEditingValue(
+      text: digits,
+      selection: TextSelection.collapsed(
+        offset: selectionDigits.clamp(0, digits.length).toInt(),
+      ),
+    );
+  }
+}
 class _MessageBanner extends StatelessWidget {
   const _MessageBanner({required this.message, required this.type});
 
