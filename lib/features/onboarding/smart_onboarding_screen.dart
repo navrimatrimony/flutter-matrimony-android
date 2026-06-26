@@ -16,8 +16,7 @@ import 'models/onboarding_status.dart';
 import 'models/paged_lookup_response.dart';
 import 'steps/activation_checklist_step.dart';
 import 'steps/basic_candidate_info_step.dart';
-import 'steps/career_step.dart';
-import 'steps/education_step.dart';
+import 'steps/education_career_step.dart';
 import 'steps/family_optional_step.dart';
 import 'steps/lifestyle_step.dart';
 import 'steps/location_step.dart';
@@ -36,7 +35,6 @@ enum _SmartOnboardingStep {
   religionCaste,
   location,
   education,
-  career,
   lifestyle,
   family,
   photo,
@@ -70,7 +68,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _SmartOnboardingStep.religionCaste,
         _SmartOnboardingStep.location,
         _SmartOnboardingStep.education,
-        _SmartOnboardingStep.career,
         _SmartOnboardingStep.lifestyle,
         _SmartOnboardingStep.family,
         _SmartOnboardingStep.photo,
@@ -280,7 +277,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _SmartOnboardingStep.religionCaste => 'religion_caste',
       _SmartOnboardingStep.location => 'location',
       _SmartOnboardingStep.education => 'education',
-      _SmartOnboardingStep.career => 'career',
       _SmartOnboardingStep.lifestyle => 'lifestyle',
       _SmartOnboardingStep.family => 'family',
       _SmartOnboardingStep.photo => 'photo',
@@ -297,7 +293,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       'religion_caste' => _SmartOnboardingStep.religionCaste,
       'location' => _SmartOnboardingStep.location,
       'education' => _SmartOnboardingStep.education,
-      'career' => _SmartOnboardingStep.career,
+      'career' => _SmartOnboardingStep.education,
       'lifestyle' => _SmartOnboardingStep.lifestyle,
       'family' => _SmartOnboardingStep.family,
       'photo' => _SmartOnboardingStep.photo,
@@ -496,7 +492,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case 'education':
         return _SmartOnboardingStep.education;
       case 'career':
-        return _SmartOnboardingStep.career;
+        return _SmartOnboardingStep.education;
       case 'lifestyle':
         return _SmartOnboardingStep.lifestyle;
       case 'family':
@@ -521,8 +517,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.location:
         return _SmartOnboardingStep.education;
       case _SmartOnboardingStep.education:
-        return _SmartOnboardingStep.career;
-      case _SmartOnboardingStep.career:
         return _SmartOnboardingStep.lifestyle;
       case _SmartOnboardingStep.lifestyle:
         return _SmartOnboardingStep.family;
@@ -547,10 +541,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _SmartOnboardingStep.religionCaste;
       case _SmartOnboardingStep.education:
         return _SmartOnboardingStep.location;
-      case _SmartOnboardingStep.career:
-        return _SmartOnboardingStep.education;
       case _SmartOnboardingStep.lifestyle:
-        return _SmartOnboardingStep.career;
+        return _SmartOnboardingStep.education;
       case _SmartOnboardingStep.family:
         return _SmartOnboardingStep.lifestyle;
       case _SmartOnboardingStep.photo:
@@ -577,7 +569,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
     return digits;
   }
-
 
   String _maskedMobile() {
     final mobile = _normalizeMobile(_mobileController.text);
@@ -1910,6 +1901,35 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return _MessageBanner(message: message, type: _messageType);
     }
 
+    if (_step == _SmartOnboardingStep.education) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            _t('Education & Career', 'शिक्षण आणि करिअर'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            _t(
+              'Helps us suggest better matches.',
+              'योग्य matches सुचवण्यासाठी ही माहिती उपयोगी आहे.',
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
+          ),
+        ],
+      );
+    }
+
     String fallback;
     if (_step == _SmartOnboardingStep.religionCaste) {
       fallback = _t('Choose community details', 'समुदायाची माहिती निवडा');
@@ -1977,16 +1997,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
               onBack: _goBackOneStep,
               onMessage: _showStepMessage,
             ),
-            _SmartOnboardingStep.education => EducationStep(
-              data: _draftStepData('education'),
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveOnboardingStep,
-              onBack: _goBackOneStep,
-              onMessage: _showStepMessage,
-            ),
-            _SmartOnboardingStep.career => CareerStep(
-              data: _draftStepData('career'),
+            _SmartOnboardingStep.education => EducationCareerStep(
+              educationData: _draftStepData('education'),
+              careerData: _draftStepData('career'),
               locale: _localeCode,
               loading: _loading,
               onSave: _saveOnboardingStep,
@@ -2732,6 +2745,7 @@ class _OnboardingMobileInputFormatter extends TextInputFormatter {
     );
   }
 }
+
 class _MessageBanner extends StatelessWidget {
   const _MessageBanner({required this.message, required this.type});
 

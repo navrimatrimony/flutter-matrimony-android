@@ -26,26 +26,34 @@ class OnboardingStepScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final titleText = title.trim();
+    final subtitleText = subtitle?.trim();
+    final hasHeader =
+        titleText.isNotEmpty || (subtitleText?.isNotEmpty ?? false);
+
     return Column(
       key: key,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        if (subtitle != null) ...[
-          const SizedBox(height: 6),
-          Text(
-            subtitle!,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
-          ),
+        if (hasHeader) ...[
+          if (titleText.isNotEmpty)
+            Text(
+              titleText,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          if (subtitleText != null && subtitleText.isNotEmpty) ...[
+            if (titleText.isNotEmpty) const SizedBox(height: 6),
+            Text(
+              subtitleText,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade700),
+            ),
+          ],
+          const SizedBox(height: 14),
         ],
-        const SizedBox(height: 14),
         ...children,
         const SizedBox(height: 18),
         ElevatedButton.icon(
