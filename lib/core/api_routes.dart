@@ -7,6 +7,12 @@ class ApiRoutes {
   static const String mobileOtpVerify = '/auth/mobile-otp/verify';
   static const String accountDetails = '/account/details';
   static const String locationSearch = '/location/search';
+  static const String internalLocationStates = '/internal/location/states';
+  static const String internalLocationDistricts =
+      '/internal/location/districts';
+  static const String internalLocationTalukas = '/internal/location/talukas';
+  static const String internalLocationCities = '/internal/location/cities';
+  static const String internalLocationChildren = '/internal/location/children';
   static const String educationDegreeSearch = '/education-degrees/search';
 
   // Smart Onboarding

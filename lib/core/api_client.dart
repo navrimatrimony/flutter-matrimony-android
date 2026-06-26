@@ -92,6 +92,14 @@ class ApiClient {
     return base.replace(queryParameters: queryParameters);
   }
 
+  static Uri _rootApiUri(String route, {Map<String, dynamic>? query}) {
+    final base = Uri.parse(ApiRoutes.rootApiBaseUrl + route);
+    final queryParameters = _queryParameters(query);
+    if (queryParameters.isEmpty) return base;
+
+    return base.replace(queryParameters: queryParameters);
+  }
+
   static Map<String, dynamic> _compactBody(Map<String, dynamic> source) {
     final body = <String, dynamic>{};
 
@@ -112,6 +120,18 @@ class ApiClient {
     final response = await http.get(
       _apiUri(route, query: query),
       headers: _acceptHeaders(authenticated: authenticated),
+    );
+
+    return _decodeResponse(response);
+  }
+
+  static Future<Map<String, dynamic>> _getRootJson(
+    String route, {
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await http.get(
+      _rootApiUri(route, query: query),
+      headers: _acceptHeaders(),
     );
 
     return _decodeResponse(response);
@@ -1364,6 +1384,64 @@ class ApiClient {
       'gender_id': genderId,
       'mother_tongue_id': motherTongueId,
     }, authenticated: true);
+  }
+
+  static Future<List<Map<String, dynamic>>> getInternalLocationStates() async {
+    return _safeMapList(await _getRootJson(ApiRoutes.internalLocationStates));
+  }
+
+  static Future<List<Map<String, dynamic>>> getInternalLocationDistricts({
+    required int stateId,
+  }) async {
+    return _safeMapList(
+      await _getRootJson(
+        ApiRoutes.internalLocationDistricts,
+        query: {'parent_id': stateId},
+      ),
+    );
+  }
+
+  static Future<List<Map<String, dynamic>>> getInternalLocationTalukas({
+    required int districtId,
+  }) async {
+    return _safeMapList(
+      await _getRootJson(
+        ApiRoutes.internalLocationTalukas,
+        query: {'parent_id': districtId},
+      ),
+    );
+  }
+
+  static Future<List<Map<String, dynamic>>> getInternalLocationCities({
+    required int talukaId,
+  }) async {
+    return _safeMapList(
+      await _getRootJson(
+        ApiRoutes.internalLocationCities,
+        query: {'parent_id': talukaId},
+      ),
+    );
+  }
+
+  static Future<Map<String, dynamic>> getInternalLocationChildren({
+    required int parentId,
+    String? query,
+    int page = 1,
+    int limit = 20,
+    String? locale,
+    String? filter,
+  }) {
+    return _getRootJson(
+      ApiRoutes.internalLocationChildren,
+      query: {
+        'parent_id': parentId,
+        'q': query,
+        'page': page,
+        'limit': limit,
+        'locale': locale,
+        'filter': filter,
+      },
+    );
   }
 
   static Future<Map<String, dynamic>> getOnboardingStatus({String? locale}) {

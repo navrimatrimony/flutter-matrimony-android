@@ -7,9 +7,24 @@ import '../models/paged_lookup_response.dart';
 
 typedef SmartPickerPageLoader =
     Future<PagedLookupResponse> Function(String query, int page, int limit);
+typedef SmartPickerFilteredPageLoader =
+    Future<PagedLookupResponse> Function(
+      String query,
+      int page,
+      int limit,
+      String? filterKey,
+    );
 
 typedef SmartPickerSubtitleBuilder = String? Function(OnboardingOption option);
 typedef SmartPickerOptionEnabled = bool Function(OnboardingOption option);
+typedef SmartPickerEmptyTextBuilder = String Function(String query);
+
+class SmartPickerFilterOption {
+  const SmartPickerFilterOption({required this.key, required this.label});
+
+  final String key;
+  final String label;
+}
 
 class SmartPickerPanel extends StatefulWidget {
   const SmartPickerPanel({
@@ -17,20 +32,32 @@ class SmartPickerPanel extends StatefulWidget {
     required this.title,
     required this.loadPage,
     required this.onChanged,
+    this.filteredLoadPage,
     this.selectedItems = const <OnboardingOption>[],
     this.multiSelect = false,
     this.searchHint,
     this.itemSubtitleBuilder,
     this.optionEnabled,
     this.allowRequestToAdd = false,
+    this.requestToAddOnlyAfterQuery = false,
     this.onRequestToAdd,
     this.closeOnSingleSelect = true,
     this.pageSize = 20,
     this.showDividers = false,
+    this.showOptionSubtitles = true,
+    this.groupOptions = false,
+    this.filterOptions = const <SmartPickerFilterOption>[],
+    this.emptyTitle,
+    this.emptyMessage,
+    this.emptyTitleBuilder,
+    this.emptyMessageBuilder,
+    this.requestToAddLabel,
+    this.requestToAddLabelBuilder,
   });
 
   final String title;
   final SmartPickerPageLoader loadPage;
+  final SmartPickerFilteredPageLoader? filteredLoadPage;
   final ValueChanged<List<OnboardingOption>> onChanged;
   final List<OnboardingOption> selectedItems;
   final bool multiSelect;
@@ -38,26 +65,48 @@ class SmartPickerPanel extends StatefulWidget {
   final SmartPickerSubtitleBuilder? itemSubtitleBuilder;
   final SmartPickerOptionEnabled? optionEnabled;
   final bool allowRequestToAdd;
+  final bool requestToAddOnlyAfterQuery;
   final VoidCallback? onRequestToAdd;
   final bool closeOnSingleSelect;
   final int pageSize;
   final bool showDividers;
+  final bool showOptionSubtitles;
+  final bool groupOptions;
+  final List<SmartPickerFilterOption> filterOptions;
+  final String? emptyTitle;
+  final String? emptyMessage;
+  final SmartPickerEmptyTextBuilder? emptyTitleBuilder;
+  final SmartPickerEmptyTextBuilder? emptyMessageBuilder;
+  final String? requestToAddLabel;
+  final SmartPickerEmptyTextBuilder? requestToAddLabelBuilder;
 
   static Future<List<OnboardingOption>?> show(
     BuildContext context, {
     required String title,
     required SmartPickerPageLoader loadPage,
     required ValueChanged<List<OnboardingOption>> onChanged,
+    SmartPickerFilteredPageLoader? filteredLoadPage,
     List<OnboardingOption> selectedItems = const <OnboardingOption>[],
     bool multiSelect = false,
     String? searchHint,
     SmartPickerSubtitleBuilder? itemSubtitleBuilder,
     SmartPickerOptionEnabled? optionEnabled,
     bool allowRequestToAdd = false,
+    bool requestToAddOnlyAfterQuery = false,
     VoidCallback? onRequestToAdd,
     bool closeOnSingleSelect = true,
     int pageSize = 20,
     bool showDividers = false,
+    bool showOptionSubtitles = true,
+    bool groupOptions = false,
+    List<SmartPickerFilterOption> filterOptions =
+        const <SmartPickerFilterOption>[],
+    String? emptyTitle,
+    String? emptyMessage,
+    SmartPickerEmptyTextBuilder? emptyTitleBuilder,
+    SmartPickerEmptyTextBuilder? emptyMessageBuilder,
+    String? requestToAddLabel,
+    SmartPickerEmptyTextBuilder? requestToAddLabelBuilder,
   }) {
     return showGeneralDialog<List<OnboardingOption>>(
       context: context,
@@ -69,6 +118,7 @@ class SmartPickerPanel extends StatefulWidget {
         return SmartPickerPanel(
           title: title,
           loadPage: loadPage,
+          filteredLoadPage: filteredLoadPage,
           onChanged: onChanged,
           selectedItems: selectedItems,
           multiSelect: multiSelect,
@@ -76,10 +126,20 @@ class SmartPickerPanel extends StatefulWidget {
           itemSubtitleBuilder: itemSubtitleBuilder,
           optionEnabled: optionEnabled,
           allowRequestToAdd: allowRequestToAdd,
+          requestToAddOnlyAfterQuery: requestToAddOnlyAfterQuery,
           onRequestToAdd: onRequestToAdd,
           closeOnSingleSelect: closeOnSingleSelect,
           pageSize: pageSize,
           showDividers: showDividers,
+          showOptionSubtitles: showOptionSubtitles,
+          groupOptions: groupOptions,
+          filterOptions: filterOptions,
+          emptyTitle: emptyTitle,
+          emptyMessage: emptyMessage,
+          emptyTitleBuilder: emptyTitleBuilder,
+          emptyMessageBuilder: emptyMessageBuilder,
+          requestToAddLabel: requestToAddLabel,
+          requestToAddLabelBuilder: requestToAddLabelBuilder,
         );
       },
       transitionBuilder: (context, animation, secondaryAnimation, child) {
@@ -113,10 +173,14 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
   bool _hasMore = false;
   int _page = 1;
   String? _error;
+  String? _selectedFilterKey;
 
   @override
   void initState() {
     super.initState();
+    _selectedFilterKey = widget.filterOptions.isEmpty
+        ? null
+        : widget.filterOptions.first.key;
     for (final item in widget.selectedItems) {
       _selected[item.identity] = item;
     }
@@ -168,11 +232,15 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
 
     try {
       final nextPage = reset ? 1 : _page + 1;
-      final response = await widget.loadPage(
-        _searchController.text.trim(),
-        nextPage,
-        widget.pageSize,
-      );
+      final query = _searchController.text.trim();
+      final response = widget.filteredLoadPage == null
+          ? await widget.loadPage(query, nextPage, widget.pageSize)
+          : await widget.filteredLoadPage!(
+              query,
+              nextPage,
+              widget.pageSize,
+              _selectedFilterKey,
+            );
 
       if (!mounted) return;
       if (!response.success) {
@@ -248,6 +316,18 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
     Navigator.of(context).pop(selected);
   }
 
+  void _setFilter(String key) {
+    if (_selectedFilterKey == key) return;
+    setState(() {
+      _selectedFilterKey = key;
+      _results = const <OnboardingOption>[];
+      _popular = const <OnboardingOption>[];
+      _hasMore = false;
+      _page = 1;
+    });
+    _load(reset: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -296,6 +376,13 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
                             ),
                           ),
                         ),
+                        if (widget.filterOptions.length > 1)
+                          _FilterChips(
+                            options: widget.filterOptions,
+                            selectedKey: _selectedFilterKey,
+                            enabled: !_loading && !_loadingMore,
+                            onSelected: _setFilter,
+                          ),
                         Expanded(child: _buildBody(context)),
                         _buildFooter(context),
                       ],
@@ -330,12 +417,26 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
     final hasResults = _results.isNotEmpty || showPopular;
 
     if (!hasResults) {
+      final query = _searchController.text.trim();
+      final canRequestToAdd =
+          widget.allowRequestToAdd &&
+          (!widget.requestToAddOnlyAfterQuery || query.isNotEmpty);
       return _PanelMessage(
         icon: Icons.search_off,
-        title: 'No options found',
-        message: 'Try another search term.',
-        actionLabel: widget.allowRequestToAdd ? 'Request to add' : null,
-        onAction: widget.allowRequestToAdd ? widget.onRequestToAdd : null,
+        title:
+            widget.emptyTitleBuilder?.call(query) ??
+            widget.emptyTitle ??
+            'No options found',
+        message:
+            widget.emptyMessageBuilder?.call(query) ??
+            widget.emptyMessage ??
+            'Try another search term.',
+        actionLabel: canRequestToAdd
+            ? widget.requestToAddLabelBuilder?.call(query) ??
+                  widget.requestToAddLabel ??
+                  'Request to add'
+            : null,
+        onAction: canRequestToAdd ? widget.onRequestToAdd : null,
       );
     }
 
@@ -360,26 +461,38 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
   }
 
   List<Widget> _buildOptionTiles(List<OnboardingOption> options) {
-    if (!widget.showDividers) {
+    if (!widget.showDividers && !widget.groupOptions) {
       return options.map(_buildOptionTile).toList();
     }
 
     final tiles = <Widget>[];
-    for (var index = 0; index < options.length; index += 1) {
-      tiles.add(_buildOptionTile(options[index]));
-      if (index < options.length - 1) {
+    String? previousGroup;
+    var hasAddedOption = false;
+    for (final option in options) {
+      final groupLabel = widget.groupOptions ? _optionGroupLabel(option) : null;
+      if (widget.showDividers && hasAddedOption) {
         tiles.add(
           Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
         );
       }
+      if (groupLabel != null && groupLabel != previousGroup) {
+        if (hasAddedOption) {
+          tiles.add(const SizedBox(height: 8));
+        }
+        tiles.add(_SectionLabel(label: groupLabel));
+        previousGroup = groupLabel;
+      }
+      tiles.add(_buildOptionTile(option));
+      hasAddedOption = true;
     }
     return tiles;
   }
 
   Widget _buildOptionTile(OnboardingOption option) {
     final selected = _selected.containsKey(option.identity);
-    final subtitle =
-        widget.itemSubtitleBuilder?.call(option) ?? option.subtitle;
+    final subtitle = widget.showOptionSubtitles
+        ? (widget.itemSubtitleBuilder?.call(option) ?? option.subtitle)
+        : null;
     final enabled = widget.optionEnabled?.call(option) ?? true;
 
     return ListTile(
@@ -416,9 +529,15 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
     );
   }
 
+  String? _optionGroupLabel(OnboardingOption option) {
+    return option.metaText('group_label');
+  }
+
   Widget _buildFooter(BuildContext context) {
     if (!widget.multiSelect) {
-      if (!widget.allowRequestToAdd) return const SizedBox.shrink();
+      if (!widget.allowRequestToAdd || widget.requestToAddOnlyAfterQuery) {
+        return const SizedBox.shrink();
+      }
       return SafeArea(
         top: false,
         child: Padding(
@@ -426,7 +545,7 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
           child: OutlinedButton.icon(
             onPressed: widget.onRequestToAdd,
             icon: const Icon(Icons.add),
-            label: const Text('Request to add'),
+            label: Text(widget.requestToAddLabel ?? 'Request to add'),
           ),
         ),
       );
@@ -458,6 +577,41 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _FilterChips extends StatelessWidget {
+  const _FilterChips({
+    required this.options,
+    required this.selectedKey,
+    required this.enabled,
+    required this.onSelected,
+  });
+
+  final List<SmartPickerFilterOption> options;
+  final String? selectedKey;
+  final bool enabled;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (context, index) {
+          final option = options[index];
+          return ChoiceChip(
+            label: Text(option.label),
+            selected: option.key == selectedKey,
+            onSelected: enabled ? (_) => onSelected(option.key) : null,
+          );
+        },
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemCount: options.length,
       ),
     );
   }
@@ -547,12 +701,14 @@ class _PanelMessage extends StatelessWidget {
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
-            const SizedBox(height: 6),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            if (message.trim().isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+            ],
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 16),
               OutlinedButton(onPressed: onAction, child: Text(actionLabel!)),

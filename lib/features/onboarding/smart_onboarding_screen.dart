@@ -90,6 +90,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   OnboardingOption? _motherTongue;
   MobileOtpSendResponse? _otpChallenge;
   Map<String, dynamic> _serverDraftData = <String, dynamic>{};
+  Map<String, dynamic> _clientDraftData = <String, dynamic>{};
   List<OnboardingOption> _motherTongues = const <OnboardingOption>[];
   DateTime? _resendAvailableAt;
   Timer? _resendTimer;
@@ -224,10 +225,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case 'full_name':
         return _t('Please enter full name.', 'कृपया पूर्ण नाव भरा.');
       case 'date_of_birth':
-        return _t(
-          'Please check Date of birth.',
-          'कृपया जन्मतारीख तपासा.',
-        );
+        return _t('Please check Date of birth.', 'कृपया जन्मतारीख तपासा.');
       case 'height_cm':
         return _t('Please check Height.', 'कृपया उंची तपासा.');
       case 'mother_tongue_id':
@@ -238,10 +236,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         );
     }
     if (_isTechnicalOnboardingError(raw)) {
-      return _t(
-        'Please check this field.',
-        'कृपया ही निवड तपासा.',
-      );
+      return _t('Please check this field.', 'कृपया ही निवड तपासा.');
     }
 
     return raw;
@@ -613,6 +608,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       }
       _warmupGender = optionFromData(draft['warmup_gender']);
       _motherTongue = optionFromData(draft['mother_tongue_option']);
+      final clientDraft = draft['client_draft_data'];
+      if (clientDraft is Map) {
+        _clientDraftData = Map<String, dynamic>.from(clientDraft);
+      }
       final language = appLanguageFromCode(draft['locale']?.toString());
       if (language != null) {
         _language = language;
@@ -634,6 +633,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       if (_warmupGender != null) 'warmup_gender': _warmupGender!.toJson(),
       if (motherTongue?.intId != null)
         'mother_tongue_option': motherTongue!.toJson(),
+      if (_clientDraftData.isNotEmpty) 'client_draft_data': _clientDraftData,
     };
     await AppStorage.instance.saveOnboardingDraftJson(jsonEncode(draft));
   }
@@ -982,10 +982,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       if (!mounted) return;
       if (data['success'] != true) {
         _debugLogBackendError('start onboarding', data);
-        _applySaveFailure(
-          attemptedStep: 'profile_for_whom',
-          response: data,
-        );
+        _applySaveFailure(attemptedStep: 'profile_for_whom', response: data);
         return;
       }
 
@@ -1046,8 +1043,87 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   Map<String, dynamic> _draftStepData(String step) {
+    final server = _serverStepData(step);
+    final client = _clientDisplayStepData(step, server);
+    return <String, dynamic>{...server, ...client};
+  }
+
+  Map<String, dynamic> _serverStepData(String step) {
     final data = _serverDraftData[step];
     return data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
+  }
+
+  Map<String, dynamic> _clientStepData(String step) {
+    final data = _clientDraftData[step];
+    return data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
+  }
+
+  Map<String, dynamic> _clientDisplayStepData(
+    String step,
+    Map<String, dynamic> server,
+  ) {
+    final client = _clientStepData(step);
+    if (client.isEmpty || server.isEmpty) return const <String, dynamic>{};
+
+    if (step == 'religion_caste') {
+      return <String, dynamic>{
+        if (_clientOptionMatchesServer(
+          client,
+          server,
+          optionKey: 'religion_option',
+          idKey: 'religion_id',
+        ))
+          'religion_option': client['religion_option'],
+        if (_clientOptionMatchesServer(
+          client,
+          server,
+          optionKey: 'caste_option',
+          idKey: 'caste_id',
+        ))
+          'caste_option': client['caste_option'],
+        if (_clientOptionMatchesServer(
+          client,
+          server,
+          optionKey: 'sub_caste_option',
+          idKey: 'sub_caste_id',
+        ))
+          'sub_caste_option': client['sub_caste_option'],
+      };
+    }
+
+    if (step == 'location') {
+      final locationMatches = _clientOptionMatchesServer(
+        client,
+        server,
+        optionKey: 'location_option',
+        idKey: 'location_id',
+      );
+      if (!locationMatches) return const <String, dynamic>{};
+      return <String, dynamic>{
+        'location_option': client['location_option'],
+        for (final key in const [
+          'country_option',
+          'state_option',
+          'district_option',
+          'local_area_option',
+          'village_option',
+        ])
+          if (client.containsKey(key)) key: client[key],
+      };
+    }
+
+    return client;
+  }
+
+  bool _clientOptionMatchesServer(
+    Map<String, dynamic> client,
+    Map<String, dynamic> server, {
+    required String optionKey,
+    required String idKey,
+  }) {
+    final id = onboardingInt(server[idKey]);
+    if (id == null) return false;
+    return optionFromData(client[optionKey])?.intId == id;
   }
 
   Map<String, dynamic> _accountWithPendingEmail() {
@@ -1065,9 +1141,32 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   void _mergeDraftStepData(String step, Map<String, dynamic> data) {
     _serverDraftData = <String, dynamic>{
       ..._serverDraftData,
-      step: <String, dynamic>{..._draftStepData(step), ...data},
+      step: <String, dynamic>{..._serverStepData(step), ...data},
     };
   }
+
+  void _mergeClientDraftStepData(String step, Map<String, dynamic> data) {
+    final clientOnly = _clientOnlyStepData(data);
+    if (clientOnly.isEmpty) return;
+    _clientDraftData = <String, dynamic>{
+      ..._clientDraftData,
+      step: <String, dynamic>{..._clientStepData(step), ...clientOnly},
+    };
+  }
+
+  Map<String, dynamic> _stripClientOnlyStepData(Map<String, dynamic> data) {
+    final payload = Map<String, dynamic>.from(data);
+    payload.removeWhere((key, _) => _isClientOnlyStepKey(key));
+    return payload;
+  }
+
+  Map<String, dynamic> _clientOnlyStepData(Map<String, dynamic> data) {
+    return Map<String, dynamic>.fromEntries(
+      data.entries.where((entry) => _isClientOnlyStepKey(entry.key)),
+    );
+  }
+
+  bool _isClientOnlyStepKey(String key) => key.endsWith('_option');
 
   Future<bool> _saveOnboardingStep(
     String step,
@@ -1085,7 +1184,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return false;
     }
 
-    final payloadData = await _dataForOnboardingStep(step, data);
+    final payloadData = await _dataForOnboardingStep(
+      step,
+      _stripClientOnlyStepData(data),
+    );
     if (payloadData == null) return false;
     _debugLogSaveAttempt(step, payloadData);
 
@@ -1116,10 +1218,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       }
       if (draftResponse['success'] != true) {
         _debugLogBackendError('draft save', draftResponse);
-        _applySaveFailure(
-          attemptedStep: step,
-          response: draftResponse,
-        );
+        _applySaveFailure(attemptedStep: step, response: draftResponse);
         return false;
       }
 
@@ -1138,10 +1237,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         if (!mounted) return false;
         if (profileResponse['success'] != true) {
           _debugLogBackendError('profile save', profileResponse);
-          _applySaveFailure(
-            attemptedStep: step,
-            response: profileResponse,
-          );
+          _applySaveFailure(attemptedStep: step, response: profileResponse);
           return false;
         }
         final profileDraft = profileResponse['draft'];
@@ -1153,6 +1249,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       }
       await _loadStatus(goToStatus: false);
       if (!mounted) return false;
+      _mergeClientDraftStepData(step, data);
       setState(() {
         _loading = false;
         if (advance) {
@@ -1281,7 +1378,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     _motherTongue = OnboardingOption(
       id: draftId,
       key: current?.key,
-      label: current?.label ?? draftId.toString(),
+      label:
+          current?.label ??
+          (_motherTongueOptions().isEmpty
+              ? onboardingSelectedLoadingLabel(_localeCode)
+              : onboardingSelectedFailureLabel(_localeCode)),
       translationMissing: current?.translationMissing ?? false,
       popular: current?.popular ?? false,
       meta: current?.meta ?? const <String, dynamic>{},
@@ -1378,10 +1479,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
     if (resolvedGender == null) {
       setState(() {
-        _error = _t(
-          'Select gender again.',
-          'लिंग पुन्हा निवडा.',
-        );
+        _error = _t('Select gender again.', 'लिंग पुन्हा निवडा.');
         _motherTongueError = null;
         _fieldErrors = const <String, String>{};
       });
@@ -1602,7 +1700,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     final direct = onboardingText(option.raw['label_mr']);
     final mapped =
-        direct ?? _motherTongueMarathiLabel(option.key) ??
+        direct ??
+        _motherTongueMarathiLabel(option.key) ??
         _motherTongueMarathiLabel(option.label);
     if (mapped == null || mapped == option.label) return option;
 
@@ -1700,8 +1799,15 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   Widget build(BuildContext context) {
     final showBack = _canStepBackWithinOnboarding || Navigator.canPop(context);
 
-    return WillPopScope(
-      onWillPop: _handleRouteBack,
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _handleRouteBack();
+        if (shouldPop && context.mounted) {
+          Navigator.of(context).maybePop();
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           centerTitle: false,
@@ -1747,7 +1853,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   _buildHeader(context),
                   const SizedBox(height: 14),
                   if (_showProgress &&
-                      _step != _SmartOnboardingStep.religionCaste) ...[
+                      _step != _SmartOnboardingStep.religionCaste &&
+                      _step != _SmartOnboardingStep.location) ...[
                     _StepIndicator(
                       currentStep: _progressIndex,
                       totalSteps: _progressSteps.length,
@@ -1967,9 +2074,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                 'Send profile alerts on WhatsApp',
                 'WhatsApp वर profile alerts पाठवा',
               ),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             controlAffinity: ListTileControlAffinity.leading,
             contentPadding: EdgeInsets.zero,
@@ -2074,10 +2181,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             children: [
               Text(
                 '+91 $mobile',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w800),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               TextButton(
                 onPressed: _loading ? null : _editMobileNumber,
@@ -2104,10 +2210,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           if (debugOtpAvailable) ...[
             const SizedBox(height: 8),
             Text(
-              _t(
-                'Test OTP filled automatically.',
-                'Test OTP आपोआप भरला आहे.',
-              ),
+              _t('Test OTP filled automatically.', 'Test OTP आपोआप भरला आहे.'),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Colors.green.shade700,
                 fontWeight: FontWeight.w700,
@@ -2281,7 +2384,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           const SizedBox(height: 20),
           OnboardingErrorHighlight(
             hasError: _motherTongueError != null,
-            pulseKey: 'mother_tongue:$_fieldErrorPulseToken:$_motherTongueError',
+            pulseKey:
+                'mother_tongue:$_fieldErrorPulseToken:$_motherTongueError',
             child: OnboardingPickerField(
               label: '${_motherTongueLabel()} *',
               selectedItems: _motherTongue?.intId == null
@@ -2405,18 +2509,12 @@ class _TermsPrivacyFooter extends StatelessWidget {
                 label: 'T & C',
                 onTap: () => _showUnavailable(context, 'T & C'),
               ),
-              Text(
-                _t(' and ', ' आणि '),
-                style: textStyle,
-              ),
+              Text(_t(' and ', ' आणि '), style: textStyle),
               _FooterLink(
                 label: 'Privacy Policy',
                 onTap: () => _showUnavailable(context, 'Privacy Policy'),
               ),
-              Text(
-                _t('.', ' मान्य करतो/करते.'),
-                style: textStyle,
-              ),
+              Text(_t('.', ' मान्य करतो/करते.'), style: textStyle),
             ],
           ),
         ),
@@ -2628,11 +2726,7 @@ class _MessageBanner extends StatelessWidget {
       _OnboardingMessageType.info => Icons.info_outline,
     };
 
-    return _Banner(
-      message: message,
-      icon: icon,
-      color: color,
-    );
+    return _Banner(message: message, icon: icon, color: color);
   }
 }
 
@@ -2677,11 +2771,7 @@ class _Banner extends StatelessWidget {
           Icon(icon, color: color, size: 20),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              message,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
+            child: Text(message, maxLines: 2, overflow: TextOverflow.ellipsis),
           ),
         ],
       ),
