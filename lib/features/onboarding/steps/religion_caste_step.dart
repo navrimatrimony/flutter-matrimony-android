@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../../core/api_client.dart';
 import '../models/onboarding_option.dart';
 import '../models/paged_lookup_response.dart';
+import '../widgets/onboarding_error_highlight.dart';
 import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
@@ -16,17 +17,27 @@ class ReligionCasteStep extends StatefulWidget {
   const ReligionCasteStep({
     super.key,
     required this.data,
+    required this.motherTongues,
+    required this.selectedMotherTongue,
+    required this.motherTongueError,
     required this.locale,
     required this.loading,
     required this.onSave,
+    required this.onSaveMotherTongue,
+    required this.onMotherTongueChanged,
     required this.onBack,
     required this.onMessage,
   });
 
   final Map<String, dynamic> data;
+  final List<OnboardingOption> motherTongues;
+  final OnboardingOption? selectedMotherTongue;
+  final String? motherTongueError;
   final String locale;
   final bool loading;
   final OnboardingStepSaver onSave;
+  final Future<bool> Function(OnboardingOption? option) onSaveMotherTongue;
+  final ValueChanged<OnboardingOption?> onMotherTongueChanged;
   final VoidCallback onBack;
   final ValueChanged<String> onMessage;
 
@@ -38,6 +49,7 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
   static final Map<String, OnboardingOption> _resolvedOptionCache =
       <String, OnboardingOption>{};
 
+  OnboardingOption? _motherTongue;
   OnboardingOption? _religion;
   OnboardingOption? _caste;
   OnboardingOption? _subCaste;
@@ -57,6 +69,10 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     super.didUpdateWidget(oldWidget);
     if (!mapEquals(oldWidget.data, widget.data)) {
       _prefill();
+    } else if (oldWidget.selectedMotherTongue?.identity !=
+            widget.selectedMotherTongue?.identity ||
+        oldWidget.motherTongues != widget.motherTongues) {
+      _syncMotherTongueFromWidget();
     } else if (oldWidget.locale != widget.locale) {
       unawaited(_hydrateSelectedOptions());
     }
@@ -64,6 +80,7 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
 
   void _prefill() {
     final data = widget.data;
+    _syncMotherTongueFromWidget();
     _religion =
         optionFromData(data['religion_option']) ??
         _placeholderOption(data['religion_id']);
@@ -92,6 +109,15 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
   }
 
   String _t(String en, String mr) => _mr ? mr : en;
+
+  void _syncMotherTongueFromWidget() {
+    _motherTongue = _resolveMotherTongue(widget.selectedMotherTongue);
+  }
+
+  OnboardingOption? _resolveMotherTongue(OnboardingOption? option) {
+    if (option?.intId == null) return null;
+    return optionById(widget.motherTongues, option!.intId) ?? option;
+  }
 
   OnboardingOption? _placeholderOption(dynamic id, {bool failed = false}) {
     return selectedValuePlaceholderOption(id, widget.locale, failed: failed);
@@ -248,6 +274,14 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     }
   }
 
+  Future<PagedLookupResponse> _motherTonguePage(
+    String query,
+    int page,
+    int limit,
+  ) async {
+    return _staticOptionsPage(widget.motherTongues, query, page, limit);
+  }
+
   Future<PagedLookupResponse> _religionPage(
     String query,
     int page,
@@ -299,7 +333,31 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     );
   }
 
+  Future<PagedLookupResponse> _staticOptionsPage(
+    List<OnboardingOption> options,
+    String query,
+    int page,
+    int limit,
+  ) async {
+    final q = query.trim().toLowerCase();
+    final rows = options
+        .where(
+          (option) =>
+              q.isEmpty ||
+              option.label.toLowerCase().contains(q) ||
+              (option.key?.toLowerCase().contains(q) ?? false),
+        )
+        .toList();
+    final start = (page - 1) * limit;
+    return PagedLookupResponse.fromOptions(
+      start >= rows.length ? const [] : rows.skip(start).take(limit).toList(),
+    );
+  }
+
   Future<void> _save() async {
+    final motherTongueSaved = await widget.onSaveMotherTongue(_motherTongue);
+    if (!motherTongueSaved) return;
+
     final casteStrictness = _intercasteAccepted
         ? CommunityStrictness.open
         : CommunityStrictness.preferred;
@@ -323,20 +381,42 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
 
   @override
   Widget build(BuildContext context) {
+    final hasMotherTongueError =
+        widget.motherTongueError?.trim().isNotEmpty ?? false;
+    final motherTongueSelected = _motherTongue?.intId != null;
     return OnboardingStepScaffold(
-      title: _t('Religion / Caste', 'धर्म / जात'),
+      title: _t('Community details', 'समुदायाची माहिती'),
       subtitle: _t(
-        'Choose religion first, then caste and sub-caste.',
-        'आधी धर्म, नंतर जात आणि पोटजात निवडा.',
+        'Select mother tongue first, then religion and caste.',
+        'आधी मातृभाषा, नंतर धर्म आणि जात निवडा.',
       ),
       loading: widget.loading,
+      continueEnabled: motherTongueSelected && _religion?.intId != null,
       onBack: widget.onBack,
       onContinue: _save,
       children: [
+        OnboardingErrorHighlight(
+          hasError: hasMotherTongueError,
+          pulseKey:
+              'mother_tongue:${widget.motherTongueError}:${_motherTongue?.intId}',
+          child: _picker(
+            label: _t('Mother tongue', 'मातृभाषा'),
+            selected: _motherTongue,
+            loadPage: _motherTonguePage,
+            errorText: widget.motherTongueError,
+            onChanged: (option) {
+              final selected = _resolveMotherTongue(option);
+              setState(() => _motherTongue = selected);
+              widget.onMotherTongueChanged(selected);
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
         _picker(
           label: _t('Religion', 'धर्म'),
           selected: _religion,
           loadPage: _religionPage,
+          enabled: motherTongueSelected,
           onChanged: (option) => setState(() {
             if (_religion?.identity == option?.identity) return;
             _religion = option;
@@ -390,12 +470,16 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     required OnboardingOption? selected,
     required Future<PagedLookupResponse> Function(String, int, int) loadPage,
     required ValueChanged<OnboardingOption?> onChanged,
+    bool enabled = true,
+    String? errorText,
   }) {
     return OnboardingPickerField(
       label: label,
       selectedItems: selected == null ? const [] : [selected],
       placeholder: _t('Select', 'निवडा'),
       searchHint: _t('Search', 'शोधा'),
+      enabled: enabled,
+      errorText: errorText,
       loadPage: loadPage,
       onChanged: (items) => onChanged(items.isEmpty ? null : items.first),
     );

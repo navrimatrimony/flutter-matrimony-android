@@ -14,6 +14,7 @@ import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Build
 import android.os.Bundle
+import android.os.CancellationSignal
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -37,11 +38,16 @@ class MainActivity : FlutterActivity() {
     private val locationPermissionRequestCode = 2404
     private val locationTimeoutMillis = 20000L
     private val lastKnownLocationMaxAgeMillis = 30 * 60 * 1000L
+    private val relaxedLastKnownLocationMaxAgeMillis = 2 * 60 * 60 * 1000L
+    private val relaxedLastKnownMaxAccuracyMeters = 20_000f
+    private val relaxedFallbackDelayMillis = 4500L
     private var pendingNotificationResult: MethodChannel.Result? = null
     private var pendingPhoneNumberHintResult: MethodChannel.Result? = null
     private var pendingEmailHintResult: MethodChannel.Result? = null
     private var pendingLocationResult: MethodChannel.Result? = null
+    private var pendingLocationLocale: String? = null
     private var pendingLocationListener: LocationListener? = null
+    private var requestedFineLocationUpgrade = false
     private var locationTimeoutRunnable: Runnable? = null
     private val locationTimeoutHandler = Handler(Looper.getMainLooper())
 
@@ -79,7 +85,10 @@ class MainActivity : FlutterActivity() {
             nativeLocationChannel
         ).setMethodCallHandler { call, result ->
             when (call.method) {
-                "getApproximateLocation" -> requestApproximateLocation(result)
+                "getApproximateLocation" -> requestApproximateLocation(
+                    result,
+                    call.argument<String>("locale")
+                )
                 "openLocationSettings" -> openLocationSettings(result)
                 else -> result.notImplemented()
             }
@@ -166,17 +175,19 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun requestApproximateLocation(result: MethodChannel.Result) {
+    private fun requestApproximateLocation(result: MethodChannel.Result, requestedLocale: String?) {
         if (pendingLocationResult != null) {
             result.error("LOCATION_PENDING", "A location request is already running.", null)
             return
         }
 
-        if (!hasLocationPermission()) {
+        pendingLocationLocale = requestedLocale
+        if (shouldRequestLocationPermission()) {
             pendingLocationResult = result
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestedFineLocationUpgrade = true
                 requestPermissions(
-                    arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+                    locationPermissionsToRequest(),
                     locationPermissionRequestCode
                 )
             } else {
@@ -200,20 +211,30 @@ class MainActivity : FlutterActivity() {
     private fun beginLocationRequest(result: MethodChannel.Result) {
         pendingLocationResult = result
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val lastKnown = bestLastKnownLocation(locationManager)
+        val lastKnown = bestLastKnownLocation(
+            locationManager,
+            maxAgeMillis = lastKnownLocationMaxAgeMillis,
+            maxAccuracyMeters = null
+        )
         if (lastKnown != null) {
             finishLocationSuccess(lastKnown)
             return
         }
 
-        val provider = freshLocationProvider(locationManager)
-        if (provider == null) {
+        val providers = freshLocationProviders(locationManager)
+        if (providers.isEmpty()) {
             finishLocationError(
                 "LOCATION_DISABLED",
                 "Device location is disabled or unavailable."
             )
             return
         }
+
+        val relaxedFallback = bestLastKnownLocation(
+            locationManager,
+            maxAgeMillis = relaxedLastKnownLocationMaxAgeMillis,
+            maxAccuracyMeters = relaxedLastKnownMaxAccuracyMeters
+        )
 
         val listener = object : LocationListener {
             override fun onLocationChanged(location: Location) {
@@ -230,16 +251,41 @@ class MainActivity : FlutterActivity() {
 
         pendingLocationListener = listener
         val timeout = Runnable {
-            finishLocationError("LOCATION_TIMEOUT", "Could not get device location in time.")
+            val fallback = relaxedFallback ?: bestLastKnownLocation(
+                    locationManager,
+                    maxAgeMillis = relaxedLastKnownLocationMaxAgeMillis,
+                    maxAccuracyMeters = relaxedLastKnownMaxAccuracyMeters
+                )
+            if (fallback != null) {
+                finishLocationSuccess(fallback)
+            } else {
+                finishLocationError("LOCATION_TIMEOUT", "Could not get device location in time.")
+            }
         }
         locationTimeoutRunnable = timeout
-        locationTimeoutHandler.postDelayed(timeout, locationTimeoutMillis)
+        locationTimeoutHandler.postDelayed(
+            timeout,
+            if (relaxedFallback != null) relaxedFallbackDelayMillis else locationTimeoutMillis
+        )
 
+        var requested = false
         try {
-            locationManager.requestSingleUpdate(provider, listener, Looper.getMainLooper())
+            for (provider in providers) {
+                try {
+                    if (requestCurrentLocation(locationManager, provider)) {
+                        requested = true
+                    }
+                    locationManager.requestSingleUpdate(provider, listener, Looper.getMainLooper())
+                    requested = true
+                } catch (_: IllegalArgumentException) {
+                    // Try the next enabled provider.
+                }
+            }
         } catch (_: SecurityException) {
             finishLocationError("PERMISSION_DENIED", "Location permission was denied.")
-        } catch (_: IllegalArgumentException) {
+        }
+
+        if (!requested && pendingLocationResult != null) {
             finishLocationError("LOCATION_DISABLED", "Device location provider is unavailable.")
         }
     }
@@ -252,13 +298,30 @@ class MainActivity : FlutterActivity() {
             PackageManager.PERMISSION_GRANTED
     }
 
+    private fun shouldRequestLocationPermission(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return false
+        if (!hasLocationPermission()) return true
+        return !hasFineLocationPermission() && !requestedFineLocationUpgrade
+    }
+
+    private fun locationPermissionsToRequest(): Array<String> {
+        return arrayOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
+
     private fun hasFineLocationPermission(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
         return checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
     }
 
-    private fun bestLastKnownLocation(locationManager: LocationManager): Location? {
+    private fun bestLastKnownLocation(
+        locationManager: LocationManager,
+        maxAgeMillis: Long,
+        maxAccuracyMeters: Float?
+    ): Location? {
         val providers = mutableListOf(LocationManager.NETWORK_PROVIDER, LocationManager.PASSIVE_PROVIDER)
         if (hasFineLocationPermission()) providers.add(LocationManager.GPS_PROVIDER)
         val now = System.currentTimeMillis()
@@ -273,18 +336,23 @@ class MainActivity : FlutterActivity() {
                     null
                 }
             }
+            .filter { it.time > 0L && now - it.time <= maxAgeMillis }
+            .filter { maxAccuracyMeters == null || !it.hasAccuracy() || it.accuracy <= maxAccuracyMeters }
             .maxByOrNull { it.time }
-            ?.takeIf { it.time > 0L && now - it.time <= lastKnownLocationMaxAgeMillis }
     }
 
-    private fun freshLocationProvider(locationManager: LocationManager): String? {
+    private fun freshLocationProviders(locationManager: LocationManager): List<String> {
+        val providers = mutableListOf<String>()
         if (isProviderEnabled(locationManager, LocationManager.NETWORK_PROVIDER)) {
-            return LocationManager.NETWORK_PROVIDER
+            providers.add(LocationManager.NETWORK_PROVIDER)
+        }
+        if (isProviderEnabled(locationManager, LocationManager.PASSIVE_PROVIDER)) {
+            providers.add(LocationManager.PASSIVE_PROVIDER)
         }
         if (hasFineLocationPermission() && isProviderEnabled(locationManager, LocationManager.GPS_PROVIDER)) {
-            return LocationManager.GPS_PROVIDER
+            providers.add(LocationManager.GPS_PROVIDER)
         }
-        return null
+        return providers
     }
 
     private fun isProviderEnabled(locationManager: LocationManager, provider: String): Boolean {
@@ -295,12 +363,37 @@ class MainActivity : FlutterActivity() {
         }
     }
 
+    private fun requestCurrentLocation(
+        locationManager: LocationManager,
+        provider: String
+    ): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false
+        return try {
+            locationManager.getCurrentLocation(
+                provider,
+                CancellationSignal(),
+                mainExecutor
+            ) { location ->
+                if (location != null) {
+                    finishLocationSuccess(location)
+                }
+            }
+            true
+        } catch (error: SecurityException) {
+            throw error
+        } catch (_: Exception) {
+            false
+        }
+    }
+
     private fun finishLocationSuccess(location: Location) {
         val result = pendingLocationResult ?: return
+        val requestedLocale = pendingLocationLocale
         clearLocationCallbacks()
         pendingLocationResult = null
+        pendingLocationLocale = null
         Thread {
-            val payload = approximateLocationPayload(location)
+            val payload = approximateLocationPayload(location, requestedLocale)
             runOnUiThread {
                 result.success(payload)
             }
@@ -311,6 +404,7 @@ class MainActivity : FlutterActivity() {
         val result = pendingLocationResult ?: return
         clearLocationCallbacks()
         pendingLocationResult = null
+        pendingLocationLocale = null
         result.error(code, message, null)
     }
 
@@ -328,33 +422,59 @@ class MainActivity : FlutterActivity() {
         pendingLocationListener = null
     }
 
-    private fun approximateLocationPayload(location: Location): Map<String, Any?> {
-        val address = reverseGeocode(location)
-        val addressLine = if (address != null && address.maxAddressLineIndex >= 0) {
-            address.getAddressLine(0)
+    private fun approximateLocationPayload(location: Location, requestedLocale: String?): Map<String, Any?> {
+        val displayLocale = locationDisplayLocale(requestedLocale)
+        val displayAddress = reverseGeocode(location, displayLocale)
+        val englishAddress = if (displayLocale.language == Locale.ENGLISH.language) {
+            displayAddress
         } else {
-            null
+            reverseGeocode(location, Locale.ENGLISH)
         }
+        val address = displayAddress ?: englishAddress
+        val addressLine = addressLine(displayAddress) ?: addressLine(englishAddress)
 
         return mapOf(
             "success" to true,
             "accuracy_meters" to if (location.hasAccuracy()) location.accuracy.toDouble() else null,
             "provider" to location.provider,
             "address_line" to addressLine,
+            "address_line_en" to addressLine(englishAddress),
             "country" to address?.countryName,
+            "country_en" to englishAddress?.countryName,
             "state" to address?.adminArea,
+            "state_en" to englishAddress?.adminArea,
             "district" to address?.subAdminArea,
+            "district_en" to englishAddress?.subAdminArea,
             "locality" to address?.locality,
+            "locality_en" to englishAddress?.locality,
             "sub_locality" to address?.subLocality,
-            "feature_name" to address?.featureName
+            "sub_locality_en" to englishAddress?.subLocality,
+            "feature_name" to address?.featureName,
+            "feature_name_en" to englishAddress?.featureName
         )
     }
 
-    private fun reverseGeocode(location: Location): Address? {
+    private fun addressLine(address: Address?): String? {
+        return if (address != null && address.maxAddressLineIndex >= 0) {
+            address.getAddressLine(0)
+        } else {
+            null
+        }
+    }
+
+    private fun locationDisplayLocale(requestedLocale: String?): Locale {
+        return when (requestedLocale?.trim()?.lowercase(Locale.US)) {
+            "mr", "marathi" -> Locale("mr", "IN")
+            "en", "english" -> Locale.ENGLISH
+            else -> Locale.getDefault()
+        }
+    }
+
+    private fun reverseGeocode(location: Location, locale: Locale): Address? {
         if (!Geocoder.isPresent()) return null
         return try {
             @Suppress("DEPRECATION")
-            Geocoder(this, Locale.getDefault())
+            Geocoder(this, locale)
                 .getFromLocation(location.latitude, location.longitude, 1)
                 ?.firstOrNull()
         } catch (_: IOException) {
@@ -417,13 +537,17 @@ class MainActivity : FlutterActivity() {
             locationPermissionRequestCode -> {
                 val granted = permissions.indices.any { index ->
                     grantResults.getOrNull(index) == PackageManager.PERMISSION_GRANTED &&
-                        permissions[index] == Manifest.permission.ACCESS_COARSE_LOCATION
+                        (
+                            permissions[index] == Manifest.permission.ACCESS_COARSE_LOCATION ||
+                                permissions[index] == Manifest.permission.ACCESS_FINE_LOCATION
+                        )
                 }
                 val result = pendingLocationResult ?: return
                 if (granted) {
                     beginLocationRequest(result)
                 } else {
                     pendingLocationResult = null
+                    pendingLocationLocale = null
                     result.error("PERMISSION_DENIED", "Location permission was denied.", null)
                 }
             }

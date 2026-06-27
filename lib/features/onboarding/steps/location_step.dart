@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import '../../../core/api_client.dart';
 import '../models/onboarding_option.dart';
 import '../models/paged_lookup_response.dart';
+import '../widgets/onboarding_error_highlight.dart';
 import '../widgets/onboarding_picker_field.dart';
 import '../widgets/smart_picker_panel.dart';
 import 'onboarding_step_helpers.dart';
@@ -56,8 +57,11 @@ class _LocationStepState extends State<LocationStep>
   String? _pendingLocationLabel;
   String? _pendingLocationStatus;
   String? _pendingLocationType;
+  String? _locationErrorField;
+  String? _locationFieldError;
   bool _usingMobileLocation = false;
   bool _retryMobileLocationOnResume = false;
+  int _locationErrorPulseToken = 0;
 
   bool get _mr => widget.locale == 'mr';
   bool get _hasPendingLocation =>
@@ -629,26 +633,73 @@ class _LocationStepState extends State<LocationStep>
     return out;
   }
 
+  String? _locationErrorFor(String field) {
+    return _locationErrorField == field ? _locationFieldError : null;
+  }
+
+  void _showLocationFieldError(String field, String message) {
+    setState(() {
+      _locationErrorField = field;
+      _locationFieldError = message;
+      _locationErrorPulseToken++;
+    });
+    widget.onMessage(message);
+  }
+
+  void _clearLocationFieldError() {
+    if (_locationErrorField == null && _locationFieldError == null) return;
+    setState(() {
+      _locationErrorField = null;
+      _locationFieldError = null;
+    });
+  }
+
+  Widget _highlightLocationField(String field, Widget child) {
+    final errorText = _locationErrorFor(field);
+    return OnboardingErrorHighlight(
+      hasError: errorText != null,
+      pulseKey: '$field:$_locationErrorPulseToken:$errorText',
+      child: child,
+    );
+  }
+
+  String _missingLocationMessage() {
+    return _t(
+      'Select a city, suburb, village, or add your location.',
+      'शहर, उपनगर, गाव निवडा किंवा तुमचे location add करा.',
+    );
+  }
+
   Future<void> _save() async {
     final localArea = _localArea;
     final selectedLocation =
         _village ??
         (localArea != null && _locationEnabled(localArea) ? localArea : null);
     if (selectedLocation == null || !_locationEnabled(selectedLocation)) {
-      if (_localArea != null || _district != null) {
-        widget.onMessage(
-          _t(
-            'Select a city, suburb, village, or add your location.',
-            'शहर, उपनगर, गाव निवडा किंवा तुमचे location add करा.',
-          ),
+      if (_country == null) {
+        _showLocationFieldError('country', _t('Select country.', 'देश निवडा.'));
+        return;
+      }
+      if (_state == null) {
+        _showLocationFieldError('state', _t('Select state.', 'राज्य निवडा.'));
+        return;
+      }
+      if (_district == null) {
+        _showLocationFieldError(
+          'district',
+          _t('Select district and location.', 'जिल्हा आणि ठिकाण निवडा.'),
         );
         return;
       }
-      widget.onMessage(
-        _t('Select district and location.', 'जिल्हा आणि ठिकाण निवडा.'),
-      );
+      if (_showVillagePicker) {
+        _showLocationFieldError('village', _missingLocationMessage());
+        return;
+      }
+      _showLocationFieldError('local_area', _missingLocationMessage());
       return;
     }
+
+    _clearLocationFieldError();
 
     final isPendingLocation = _isPendingLocationOption(selectedLocation);
     final pendingDisplayLabel = _pendingLocationDisplayLabel(selectedLocation);
@@ -736,11 +787,17 @@ class _LocationStepState extends State<LocationStep>
 
   Future<void> _useMobileLocation({bool openSettingsOnDisabled = true}) async {
     if (_usingMobileLocation || widget.loading) return;
-    setState(() => _usingMobileLocation = true);
+    setState(() {
+      _usingMobileLocation = true;
+      _locationErrorField = null;
+      _locationFieldError = null;
+    });
 
     try {
       final data = await _nativeLocationChannel
-          .invokeMapMethod<String, dynamic>('getApproximateLocation');
+          .invokeMapMethod<String, dynamic>('getApproximateLocation', {
+            'locale': widget.locale,
+          });
       if (!mounted) return;
       if (data == null) {
         widget.onMessage(
@@ -789,6 +846,7 @@ class _LocationStepState extends State<LocationStep>
       }
 
       await _applyLocationOption(match, mobileData: data);
+      _fillMobileAddressLine(data);
       if (!mounted) return;
       widget.onMessage(
         _t(
@@ -880,19 +938,25 @@ class _LocationStepState extends State<LocationStep>
     OnboardingOption option,
     Map<String, dynamic> data,
   ) {
-    final stateText = _mobileLocationText(data['state']);
-    if (stateText != null) {
+    final stateTexts = _mobileLocationTexts(data, const ['state_en', 'state']);
+    if (stateTexts.isNotEmpty) {
       final stateLabel = _parentLabel(option, 'state');
-      if (stateLabel == null || !_locationTextMatches(stateLabel, stateText)) {
+      if (stateLabel == null ||
+          !stateTexts.any((text) => _locationTextMatches(stateLabel, text))) {
         return false;
       }
     }
 
-    final districtText = _mobileLocationText(data['district']);
-    if (districtText != null) {
+    final districtTexts = _mobileLocationTexts(data, const [
+      'district_en',
+      'district',
+    ]);
+    if (districtTexts.isNotEmpty) {
       final districtLabel = _parentLabel(option, 'district');
       if (districtLabel == null ||
-          !_locationTextMatches(districtLabel, districtText)) {
+          !districtTexts.any(
+            (text) => _locationTextMatches(districtLabel, text),
+          )) {
         return false;
       }
     }
@@ -923,10 +987,15 @@ class _LocationStepState extends State<LocationStep>
       score += 6;
     }
     for (final entry in const [
+      MapEntry('locality_en', 5),
       MapEntry('locality', 5),
+      MapEntry('sub_locality_en', 5),
       MapEntry('sub_locality', 5),
+      MapEntry('feature_name_en', 4),
       MapEntry('feature_name', 4),
+      MapEntry('district_en', 3),
       MapEntry('district', 3),
+      MapEntry('state_en', 2),
       MapEntry('state', 2),
     ]) {
       final text = _mobileLocationText(data[entry.key])?.toLowerCase();
@@ -938,23 +1007,42 @@ class _LocationStepState extends State<LocationStep>
   List<String> _mobileLocationSearchTerms(Map<String, dynamic> data) {
     final seen = <String>{};
     final terms = <String>[];
-    for (final value in [
-      data['sub_locality'],
-      data['locality'],
-      data['feature_name'],
-      data['district'],
-    ]) {
+    void addTerm(dynamic value) {
       final text = _mobileLocationText(value);
-      if (text == null || text.length < 2) continue;
+      if (text == null || text.length < 2) return;
       if (seen.add(text.toLowerCase())) terms.add(text);
     }
+
+    for (final value in [
+      data['sub_locality_en'],
+      data['sub_locality'],
+      data['locality_en'],
+      data['locality'],
+      data['feature_name_en'],
+      data['feature_name'],
+      data['district_en'],
+      data['district'],
+    ]) {
+      addTerm(value);
+    }
+
+    for (final key in const ['address_line_en', 'address_line']) {
+      final addressLine = _mobileLocationText(data[key]);
+      if (addressLine == null) continue;
+      for (final part in addressLine.split(',')) {
+        addTerm(part);
+      }
+    }
+
     return terms;
   }
 
   Future<OnboardingOption?> _mobileStateOption(
     Map<String, dynamic> data,
   ) async {
-    final stateText = _mobileLocationText(data['state']);
+    final stateText =
+        _mobileLocationText(data['state_en']) ??
+        _mobileLocationText(data['state']);
     if (stateText == null) return _state;
     final states = await _ensureStates();
     final countryId = _country?.intId;
@@ -1013,9 +1101,15 @@ class _LocationStepState extends State<LocationStep>
   }
 
   Future<bool> _fillMobileKnownHierarchy(Map<String, dynamic> data) async {
-    final countryText = _mobileLocationText(data['country']);
-    final stateText = _mobileLocationText(data['state']);
-    final districtText = _mobileLocationText(data['district']);
+    final countryText =
+        _mobileLocationText(data['country_en']) ??
+        _mobileLocationText(data['country']);
+    final stateText =
+        _mobileLocationText(data['state_en']) ??
+        _mobileLocationText(data['state']);
+    final districtText =
+        _mobileLocationText(data['district_en']) ??
+        _mobileLocationText(data['district']);
 
     final country = countryText == null
         ? _country
@@ -1061,6 +1155,10 @@ class _LocationStepState extends State<LocationStep>
         _village = null;
         changed = true;
       }
+      if (changed) {
+        _locationErrorField = null;
+        _locationFieldError = null;
+      }
     });
     if (district != null) {
       await _ensureTalukasForDistrict(district);
@@ -1076,7 +1174,10 @@ class _LocationStepState extends State<LocationStep>
     OnboardingOption option, {
     Map<String, dynamic>? mobileData,
   }) async {
-    final countryText = _mobileLocationText(mobileData?['country']) ?? 'India';
+    final countryText =
+        _mobileLocationText(mobileData?['country_en']) ??
+        _mobileLocationText(mobileData?['country']) ??
+        'India';
     final country =
         await _findLocationByType(countryText, 'country') ?? _country;
     final state = _parentOption(option, 'state');
@@ -1089,6 +1190,8 @@ class _LocationStepState extends State<LocationStep>
       if (country != null) _country = country;
       if (state != null) _state = state;
       if (district != null) _district = district;
+      _locationErrorField = null;
+      _locationFieldError = null;
       if (type == 'village') {
         _localArea = taluka;
         _village = option;
@@ -1180,6 +1283,20 @@ class _LocationStepState extends State<LocationStep>
     return text;
   }
 
+  List<String> _mobileLocationTexts(
+    Map<String, dynamic> data,
+    List<String> keys,
+  ) {
+    final seen = <String>{};
+    final values = <String>[];
+    for (final key in keys) {
+      final text = _mobileLocationText(data[key]);
+      if (text == null) continue;
+      if (seen.add(text.toLowerCase())) values.add(text);
+    }
+    return values;
+  }
+
   bool _fillMobileAddressLine(Map<String, dynamic> data) {
     if (_addressLineController.text.trim().isNotEmpty) return false;
     final addressLine = _mobileReadableAddressLine(data);
@@ -1189,17 +1306,25 @@ class _LocationStepState extends State<LocationStep>
   }
 
   String? _mobileReadableAddressLine(Map<String, dynamic> data) {
-    final direct = _mobileLocationText(data['address_line']);
+    final direct =
+        _mobileLocationText(data['address_line']) ??
+        _mobileLocationText(data['address_line_en']);
     if (direct != null) return direct;
 
     final seen = <String>{};
     final parts = <String>[];
     for (final value in [
+      data['sub_locality_en'],
       data['sub_locality'],
+      data['locality_en'],
       data['locality'],
+      data['feature_name_en'],
       data['feature_name'],
+      data['district_en'],
       data['district'],
+      data['state_en'],
       data['state'],
+      data['country_en'],
       data['country'],
     ]) {
       final text = _mobileLocationText(value);
@@ -1787,6 +1912,8 @@ class _LocationStepState extends State<LocationStep>
           option.metaText('pending_location_type') ??
           _locationType(option) ??
           'village';
+      _locationErrorField = null;
+      _locationFieldError = null;
     });
   }
 
@@ -1834,6 +1961,8 @@ class _LocationStepState extends State<LocationStep>
       _district = null;
       _localArea = null;
       _village = null;
+      _locationErrorField = null;
+      _locationFieldError = null;
       _districts = const <OnboardingOption>[];
       _talukas = const <OnboardingOption>[];
       _districtsForStateId = null;
@@ -1848,6 +1977,8 @@ class _LocationStepState extends State<LocationStep>
       _district = null;
       _localArea = null;
       _village = null;
+      _locationErrorField = null;
+      _locationFieldError = null;
       _districts = const <OnboardingOption>[];
       _talukas = const <OnboardingOption>[];
       _districtsForStateId = null;
@@ -1866,6 +1997,8 @@ class _LocationStepState extends State<LocationStep>
       _district = next;
       _localArea = null;
       _village = null;
+      _locationErrorField = null;
+      _locationFieldError = null;
       _talukas = const <OnboardingOption>[];
       _talukasForDistrictId = null;
     });
@@ -1881,6 +2014,8 @@ class _LocationStepState extends State<LocationStep>
     setState(() {
       _localArea = next;
       _village = null;
+      _locationErrorField = null;
+      _locationFieldError = null;
     });
   }
 
@@ -1919,89 +2054,111 @@ class _LocationStepState extends State<LocationStep>
           ),
         ),
         const SizedBox(height: 12),
-        OnboardingPickerField(
-          label: _t('Country', 'देश'),
-          selectedItems: _country == null ? const [] : [_country!],
-          placeholder: _t('Select country', 'देश निवडा'),
-          searchHint: _t('Search country', 'देश शोधा'),
-          loadPage: _countryPage,
-          showOptionSubtitles: false,
-          onChanged: _selectCountry,
+        _highlightLocationField(
+          'country',
+          OnboardingPickerField(
+            label: _t('Country', 'देश'),
+            selectedItems: _country == null ? const [] : [_country!],
+            placeholder: _t('Select country', 'देश निवडा'),
+            searchHint: _t('Search country', 'देश शोधा'),
+            loadPage: _countryPage,
+            errorText: _locationErrorFor('country'),
+            showOptionSubtitles: false,
+            onChanged: _selectCountry,
+          ),
         ),
         const SizedBox(height: 12),
-        OnboardingPickerField(
-          label: _t('State', 'राज्य'),
-          selectedItems: _state == null ? const [] : [_state!],
-          placeholder: _t('Select state', 'राज्य निवडा'),
-          searchHint: _t('Search state', 'राज्य शोधा'),
-          loadPage: _statePage,
-          enabled: _country != null,
-          showOptionSubtitles: false,
-          onChanged: _selectState,
+        _highlightLocationField(
+          'state',
+          OnboardingPickerField(
+            label: _t('State', 'राज्य'),
+            selectedItems: _state == null ? const [] : [_state!],
+            placeholder: _t('Select state', 'राज्य निवडा'),
+            searchHint: _t('Search state', 'राज्य शोधा'),
+            loadPage: _statePage,
+            enabled: _country != null,
+            errorText: _locationErrorFor('state'),
+            showOptionSubtitles: false,
+            onChanged: _selectState,
+          ),
         ),
         if (_state != null) ...[
           const SizedBox(height: 12),
-          OnboardingPickerField(
-            label: _t('District', 'जिल्हा'),
-            selectedItems: _district == null ? const [] : [_district!],
-            placeholder: _t('Select district', 'जिल्हा निवडा'),
-            searchHint: _t('Search district', 'जिल्हा शोधा'),
-            loadPage: _districtPage,
-            showOptionSubtitles: false,
-            onChanged: _selectDistrict,
+          _highlightLocationField(
+            'district',
+            OnboardingPickerField(
+              label: _t('District', 'जिल्हा'),
+              selectedItems: _district == null ? const [] : [_district!],
+              placeholder: _t('Select district', 'जिल्हा निवडा'),
+              searchHint: _t('Search district', 'जिल्हा शोधा'),
+              loadPage: _districtPage,
+              errorText: _locationErrorFor('district'),
+              showOptionSubtitles: false,
+              onChanged: _selectDistrict,
+            ),
           ),
         ],
         if (_district != null) ...[
           const SizedBox(height: 12),
-          OnboardingPickerField(
-            label: _t('Taluka / City / Suburban', 'तालुका / शहर / उपनगर'),
-            selectedItems: _localArea == null ? const [] : [_localArea!],
-            placeholder: _t(
-              'Select taluka, city or suburb',
-              'तालुका, शहर किंवा उपनगर निवडा',
+          _highlightLocationField(
+            'local_area',
+            OnboardingPickerField(
+              label: _t('Taluka / City / Suburban', 'तालुका / शहर / उपनगर'),
+              selectedItems: _localArea == null ? const [] : [_localArea!],
+              placeholder: _t(
+                'Select taluka, city or suburb',
+                'तालुका, शहर किंवा उपनगर निवडा',
+              ),
+              searchHint: _t(
+                'Search taluka, city or suburb',
+                'तालुका, शहर किंवा उपनगर शोधा',
+              ),
+              loadPage: _localAreaPage,
+              filteredLoadPage: _localAreaFilteredPage,
+              errorText: _locationErrorFor('local_area'),
+              showDividers: true,
+              showOptionSubtitles: false,
+              groupOptions: true,
+              filterOptions: _districtLevelFilters,
+              emptyTitleBuilder: _locationNotFoundTitle,
+              emptyMessageBuilder: _emptyLocationMessage,
+              allowRequestToAdd: true,
+              requestToAddOnlyAfterQuery: true,
+              onRequestToAdd: _showSuggestionDialog,
+              requestToAddLabel: _addLocationLabel,
+              onChanged: _selectLocalArea,
             ),
-            searchHint: _t(
-              'Search taluka, city or suburb',
-              'तालुका, शहर किंवा उपनगर शोधा',
-            ),
-            loadPage: _localAreaPage,
-            filteredLoadPage: _localAreaFilteredPage,
-            showDividers: true,
-            showOptionSubtitles: false,
-            groupOptions: true,
-            filterOptions: _districtLevelFilters,
-            emptyTitleBuilder: _locationNotFoundTitle,
-            emptyMessageBuilder: _emptyLocationMessage,
-            allowRequestToAdd: true,
-            requestToAddOnlyAfterQuery: true,
-            onRequestToAdd: _showSuggestionDialog,
-            requestToAddLabel: _addLocationLabel,
-            onChanged: _selectLocalArea,
           ),
         ],
         if (_showVillagePicker) ...[
           const SizedBox(height: 12),
-          OnboardingPickerField(
-            label: _t('Location', 'ठिकाण'),
-            selectedItems: _village == null ? const [] : [_village!],
-            placeholder: _t('Select location', 'ठिकाण निवडा'),
-            searchHint: _t('Search location', 'ठिकाण शोधा'),
-            loadPage: _villagePage,
-            filteredLoadPage: _villageFilteredPage,
-            optionEnabled: _locationEnabled,
-            showDividers: true,
-            showOptionSubtitles: false,
-            groupOptions: true,
-            filterOptions: _talukaLevelFilters,
-            emptyTitleBuilder: _locationNotFoundTitle,
-            emptyMessageBuilder: _emptyLocationMessage,
-            allowRequestToAdd: true,
-            requestToAddOnlyAfterQuery: true,
-            onRequestToAdd: _showSuggestionDialog,
-            requestToAddLabel: _addLocationLabel,
-            onChanged: (items) => setState(() {
-              _village = items.isEmpty ? null : items.first;
-            }),
+          _highlightLocationField(
+            'village',
+            OnboardingPickerField(
+              label: _t('Location', 'ठिकाण'),
+              selectedItems: _village == null ? const [] : [_village!],
+              placeholder: _t('Select location', 'ठिकाण निवडा'),
+              searchHint: _t('Search location', 'ठिकाण शोधा'),
+              loadPage: _villagePage,
+              filteredLoadPage: _villageFilteredPage,
+              optionEnabled: _locationEnabled,
+              errorText: _locationErrorFor('village'),
+              showDividers: true,
+              showOptionSubtitles: false,
+              groupOptions: true,
+              filterOptions: _talukaLevelFilters,
+              emptyTitleBuilder: _locationNotFoundTitle,
+              emptyMessageBuilder: _emptyLocationMessage,
+              allowRequestToAdd: true,
+              requestToAddOnlyAfterQuery: true,
+              onRequestToAdd: _showSuggestionDialog,
+              requestToAddLabel: _addLocationLabel,
+              onChanged: (items) => setState(() {
+                _village = items.isEmpty ? null : items.first;
+                _locationErrorField = null;
+                _locationFieldError = null;
+              }),
+            ),
           ),
         ],
         const SizedBox(height: 12),

@@ -125,47 +125,97 @@ class _LifestyleStepState extends State<LifestyleStep> {
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: _t('Lifestyle', 'जीवनशैली'),
+      title: _t('Lifestyle details', 'जीवनशैली माहिती'),
       subtitle: _t(
-        'Diet is useful for matching. Smoking and drinking are optional.',
-        'Diet matching साठी उपयोगी आहे. Smoking/drinking optional आहेत.',
+        'Choose what you want to share now. You can change it later.',
+        'आता जी माहिती द्यायची आहे ती निवडा. नंतर बदलता येईल.',
       ),
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
       children: [
-        _picker(
+        _optionGroup(
           label: _t('Diet', 'आहार'),
+          helper: _t(
+            'Useful for day-to-day compatibility.',
+            'दैनंदिन जुळवणीसाठी उपयोगी.',
+          ),
+          options: widget.bootstrap.diets,
+          lookupType: 'diet',
           selected: _diet,
-          loadPage: (query, page, limit) =>
-              _page('diet', widget.bootstrap.diets, query, page, limit),
           onChanged: (option) => setState(() => _diet = option),
         ),
-        const SizedBox(height: 12),
-        _picker(
-          label: _t('Smoking optional', 'Smoking optional'),
+        const SizedBox(height: 16),
+        _optionGroup(
+          label: _t('Smoking', 'Smoking'),
+          helper: _t('Optional', 'Optional'),
+          options: widget.bootstrap.smokingOptions,
+          lookupType: 'smoking',
           selected: _smoking,
-          loadPage: (query, page, limit) => _page(
-            'smoking',
-            widget.bootstrap.smokingOptions,
-            query,
-            page,
-            limit,
-          ),
           onChanged: (option) => setState(() => _smoking = option),
         ),
-        const SizedBox(height: 12),
-        _picker(
-          label: _t('Drinking optional', 'Drinking optional'),
+        const SizedBox(height: 16),
+        _optionGroup(
+          label: _t('Drinking', 'Drinking'),
+          helper: _t('Optional', 'Optional'),
+          options: widget.bootstrap.drinkingOptions,
+          lookupType: 'drinking',
           selected: _drinking,
-          loadPage: (query, page, limit) => _page(
-            'drinking',
-            widget.bootstrap.drinkingOptions,
-            query,
-            page,
-            limit,
-          ),
           onChanged: (option) => setState(() => _drinking = option),
+        ),
+      ],
+    );
+  }
+
+  Widget _optionGroup({
+    required String label,
+    required String helper,
+    required List<OnboardingOption> options,
+    required String lookupType,
+    required OnboardingOption? selected,
+    required ValueChanged<OnboardingOption?> onChanged,
+  }) {
+    if (options.isEmpty) {
+      return _picker(
+        label: label,
+        selected: selected,
+        loadPage: (query, page, limit) =>
+            _page(lookupType, options, query, page, limit),
+        onChanged: onChanged,
+      );
+    }
+
+    return _OptionGroupShell(
+      title: label,
+      helper: helper,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final available = constraints.maxWidth;
+            final twoColumn = available >= 300;
+            final itemWidth = twoColumn ? (available - 10) / 2 : available;
+
+            return Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                for (final option in options)
+                  SizedBox(
+                    width: itemWidth,
+                    child: OnboardingSelectablePill(
+                      label: option.label,
+                      selected: selected?.identity == option.identity,
+                      onTap: () => onChanged(option),
+                      minHeight: 48,
+                      fontSize: 14,
+                      maxLines: 2,
+                      horizontalPadding: 12,
+                      verticalPadding: 10,
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -183,6 +233,59 @@ class _LifestyleStepState extends State<LifestyleStep> {
       placeholder: _t('Select', 'निवडा'),
       loadPage: loadPage,
       onChanged: (items) => onChanged(items.isEmpty ? null : items.first),
+    );
+  }
+}
+
+class _OptionGroupShell extends StatelessWidget {
+  const _OptionGroupShell({
+    required this.title,
+    required this.helper,
+    required this.children,
+  });
+
+  final String title;
+  final String helper;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: Colors.grey.shade900,
+                    ),
+                  ),
+                ),
+                Text(
+                  helper,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            ...children,
+          ],
+        ),
+      ),
     );
   }
 }

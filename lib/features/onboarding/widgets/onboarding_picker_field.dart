@@ -29,6 +29,7 @@ class OnboardingPickerField extends StatelessWidget {
     this.showDividers = false,
     this.showOptionSubtitles = true,
     this.groupOptions = false,
+    this.initialScrollIndex,
     this.filterOptions = const <SmartPickerFilterOption>[],
     this.emptyTitle,
     this.emptyMessage,
@@ -58,6 +59,7 @@ class OnboardingPickerField extends StatelessWidget {
   final bool showDividers;
   final bool showOptionSubtitles;
   final bool groupOptions;
+  final int? initialScrollIndex;
   final List<SmartPickerFilterOption> filterOptions;
   final String? emptyTitle;
   final String? emptyMessage;
@@ -171,6 +173,7 @@ class OnboardingPickerField extends StatelessWidget {
       showDividers: showDividers,
       showOptionSubtitles: showOptionSubtitles,
       groupOptions: groupOptions,
+      initialScrollIndex: initialScrollIndex,
       filterOptions: filterOptions,
       emptyTitle: emptyTitle,
       emptyMessage: emptyMessage,

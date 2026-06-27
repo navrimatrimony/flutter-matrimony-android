@@ -316,7 +316,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _SmartOnboardingStep.location => 'location',
       _SmartOnboardingStep.education => 'education',
       _SmartOnboardingStep.motherTongue =>
-        OnboardingFieldErrorMap.profileForWhomStep,
+        OnboardingFieldErrorMap.communityStep,
       _SmartOnboardingStep.lifestyle => 'lifestyle',
       _SmartOnboardingStep.family => 'family',
       _SmartOnboardingStep.photo => 'photo',
@@ -353,7 +353,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _SmartOnboardingStep.maritalStatus;
       }
       if (uiField == 'mother_tongue') {
-        return _SmartOnboardingStep.motherTongue;
+        return _SmartOnboardingStep.religionCaste;
       }
     }
 
@@ -362,6 +362,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
   Map<String, String> _fieldErrorsForStep(String step) {
     return OnboardingFieldErrorMap.forStep(_fieldErrors, step);
+  }
+
+  String? _motherTongueFieldError(Map<String, String> fieldErrors) {
+    return onboardingFirstFieldError(fieldErrors, const <String>[
+      'mother_tongue_id',
+      'mother_tongue',
+    ]);
   }
 
   String? _firstFieldErrorForStep(
@@ -385,10 +392,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _step = nextStep;
       _fieldErrors = fieldErrors;
       _fieldErrorPulseToken++;
-      _motherTongueError =
-          ownerStep == OnboardingFieldErrorMap.profileForWhomStep
-          ? message
-          : null;
+      _motherTongueError = _motherTongueFieldError(fieldErrors);
       _error = message;
       _message = null;
     });
@@ -415,13 +419,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _step = nextStep;
       _fieldErrors = fieldErrors;
       _fieldErrorPulseToken++;
-      _motherTongueError =
-          ownerStep == OnboardingFieldErrorMap.profileForWhomStep
-          ? onboardingFirstFieldError(fieldErrors, const <String>[
-              'mother_tongue_id',
-              'mother_tongue',
-            ])
-          : null;
+      _motherTongueError = _motherTongueFieldError(fieldErrors);
       _error = message;
       _message = null;
     });
@@ -551,7 +549,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final next = status.nextStep ?? status.draft?.currentStep;
     if (_statusHasCompletedEducation(status)) {
       if (!_hasMotherTongueSelection) {
-        return _SmartOnboardingStep.motherTongue;
+        return _SmartOnboardingStep.religionCaste;
       }
       if (_isServerStepBeforeLifestyle(next)) {
         return _SmartOnboardingStep.lifestyle;
@@ -595,7 +593,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case 'lifestyle':
         return _hasMotherTongueSelection
             ? _SmartOnboardingStep.lifestyle
-            : _SmartOnboardingStep.motherTongue;
+            : _SmartOnboardingStep.religionCaste;
       case 'family':
         return _SmartOnboardingStep.family;
       case 'photo':
@@ -620,7 +618,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.location:
         return _SmartOnboardingStep.education;
       case _SmartOnboardingStep.education:
-        return _SmartOnboardingStep.motherTongue;
+        return _SmartOnboardingStep.lifestyle;
       case _SmartOnboardingStep.motherTongue:
         return _SmartOnboardingStep.lifestyle;
       case _SmartOnboardingStep.lifestyle:
@@ -649,9 +647,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.education:
         return _SmartOnboardingStep.location;
       case _SmartOnboardingStep.lifestyle:
-        return _SmartOnboardingStep.motherTongue;
-      case _SmartOnboardingStep.motherTongue:
         return _SmartOnboardingStep.education;
+      case _SmartOnboardingStep.motherTongue:
+        return _SmartOnboardingStep.religionCaste;
       case _SmartOnboardingStep.family:
         return _SmartOnboardingStep.lifestyle;
       case _SmartOnboardingStep.photo:
@@ -1466,6 +1464,51 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     });
     await _saveLocalDraft();
     return true;
+  }
+
+  void _selectMotherTongue(OnboardingOption? option) {
+    final selected = option?.intId == null
+        ? null
+        : _resolveSelectedMotherTongue(option, _motherTongueOptions());
+    setState(() {
+      _motherTongue = selected?.intId == null ? null : selected;
+      _error = null;
+      _message = null;
+      _motherTongueError = null;
+      _fieldErrors = const <String, String>{};
+    });
+    unawaited(_saveLocalDraft());
+  }
+
+  Future<bool> _saveCommunityMotherTongue(OnboardingOption? option) async {
+    final selected = option?.intId == null
+        ? null
+        : _resolveSelectedMotherTongue(option, _motherTongueOptions());
+    if (selected == null) {
+      _showMappedFieldError('mother_tongue_id');
+      return false;
+    }
+
+    if (_motherTongue?.identity != selected.identity) {
+      setState(() {
+        _motherTongue = selected;
+        _error = null;
+        _message = null;
+        _motherTongueError = null;
+        _fieldErrors = const <String, String>{};
+      });
+      await _saveLocalDraft();
+    }
+
+    final motherTongueId = await _requireMotherTongueId();
+    if (!mounted || motherTongueId == null) return false;
+
+    return _saveOnboardingStep(
+      'basic_info',
+      <String, dynamic>{'mother_tongue_id': motherTongueId},
+      saveProfile: true,
+      advance: false,
+    );
   }
 
   Future<void> _continueFromMotherTongue() async {
@@ -2418,9 +2461,18 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             ),
             _SmartOnboardingStep.religionCaste => ReligionCasteStep(
               data: _draftStepData('religion_caste'),
+              motherTongues: _motherTongueOptions(),
+              selectedMotherTongue: _motherTongue,
+              motherTongueError:
+                  _motherTongueError ??
+                  _motherTongueFieldError(
+                    _fieldErrorsForStep(OnboardingFieldErrorMap.communityStep),
+                  ),
               locale: _localeCode,
               loading: _loading,
               onSave: _saveOnboardingStep,
+              onSaveMotherTongue: _saveCommunityMotherTongue,
+              onMotherTongueChanged: _selectMotherTongue,
               onBack: _goBackOneStep,
               onMessage: _showStepMessage,
             ),

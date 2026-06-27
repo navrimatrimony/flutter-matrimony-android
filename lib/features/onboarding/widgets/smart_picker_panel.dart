@@ -46,6 +46,7 @@ class SmartPickerPanel extends StatefulWidget {
     this.showDividers = false,
     this.showOptionSubtitles = true,
     this.groupOptions = false,
+    this.initialScrollIndex,
     this.filterOptions = const <SmartPickerFilterOption>[],
     this.emptyTitle,
     this.emptyMessage,
@@ -72,6 +73,7 @@ class SmartPickerPanel extends StatefulWidget {
   final bool showDividers;
   final bool showOptionSubtitles;
   final bool groupOptions;
+  final int? initialScrollIndex;
   final List<SmartPickerFilterOption> filterOptions;
   final String? emptyTitle;
   final String? emptyMessage;
@@ -99,6 +101,7 @@ class SmartPickerPanel extends StatefulWidget {
     bool showDividers = false,
     bool showOptionSubtitles = true,
     bool groupOptions = false,
+    int? initialScrollIndex,
     List<SmartPickerFilterOption> filterOptions =
         const <SmartPickerFilterOption>[],
     String? emptyTitle,
@@ -133,6 +136,7 @@ class SmartPickerPanel extends StatefulWidget {
           showDividers: showDividers,
           showOptionSubtitles: showOptionSubtitles,
           groupOptions: groupOptions,
+          initialScrollIndex: initialScrollIndex,
           filterOptions: filterOptions,
           emptyTitle: emptyTitle,
           emptyMessage: emptyMessage,
@@ -171,6 +175,7 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
   bool _loading = false;
   bool _loadingMore = false;
   bool _hasMore = false;
+  bool _initialScrollApplied = false;
   int _page = 1;
   String? _error;
   String? _selectedFilterKey;
@@ -271,6 +276,7 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
         _loading = false;
         _loadingMore = false;
       });
+      _scheduleInitialScrollIfNeeded(reset: reset);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -279,6 +285,24 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
         _loadingMore = false;
       });
     }
+  }
+
+  void _scheduleInitialScrollIfNeeded({required bool reset}) {
+    if (!reset || _initialScrollApplied) return;
+    if (_searchController.text.trim().isNotEmpty) return;
+    final index = widget.initialScrollIndex;
+    if (index == null || index <= 0 || index >= _results.length) return;
+
+    _initialScrollApplied = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      const estimatedTileExtent = 49.0;
+      final target = (index * estimatedTileExtent).clamp(
+        0.0,
+        _scrollController.position.maxScrollExtent,
+      );
+      _scrollController.jumpTo(target);
+    });
   }
 
   void _select(OnboardingOption option) {

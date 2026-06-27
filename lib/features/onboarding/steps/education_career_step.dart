@@ -579,6 +579,16 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     return value.toStringAsFixed(1);
   }
 
+  String _incomeRangeSummary(RangeValues values) {
+    return '${_formatIncomeAmount(values.start)} - ${_formatIncomeAmount(values.end)}';
+  }
+
+  String _incomePeriodSuffix() {
+    return _incomeIsMonthly
+        ? _t('per month', 'दर महिना')
+        : _t('per year', 'दर वर्ष');
+  }
+
   Map<String, dynamic> _educationPayload() {
     final degreeIds = _selectedEducation
         .map((option) => option.intId)
@@ -704,6 +714,13 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   String? _incomeFieldError(String field) {
     return _incomeErrorField == field ? _incomeError : null;
+  }
+
+  String? _rangeIncomeError() {
+    return switch (_incomeErrorField) {
+      'min' || 'max' || 'range' => _incomeError,
+      _ => null,
+    };
   }
 
   Future<void> _continue() async {
@@ -1114,66 +1131,37 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
   Widget _rangeIncomeSection(BuildContext context) {
     final band = _currentIncomeBand;
     final values = _rangeValuesForBand(band);
+    final selectedRange = _incomeRangeSummary(values);
+    final rangeError = _rangeIncomeError();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(
-          height: 34,
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                for (var i = 0; i < _incomeBands.length; i++) ...[
-                  if (i > 0) const SizedBox(width: 6),
-                  Builder(
-                    builder: (context) {
-                      final item = _incomeBands[i];
-                      final selected = item.key == band.key;
-                      return ChoiceChip(
-                        label: Text(item.label),
-                        selected: selected,
-                        visualDensity: const VisualDensity(
-                          horizontal: -4,
-                          vertical: -4,
-                        ),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: EdgeInsets.zero,
-                        labelStyle: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                        onSelected: (_) => setState(() {
-                          _clearIncomeErrorState();
-                          _applyIncomeBand(item);
-                        }),
-                      );
-                    },
-                  ),
-                ],
-              ],
-            ),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 160),
+          child: Column(
+            key: ValueKey<String>(selectedRange),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                selectedRange,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: const Color(0xFF111827),
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                _incomePeriodSuffix(),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.grey.shade700,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Text(
-              _formatIncomeAmount(values.start),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const Spacer(),
-            Text(
-              _formatIncomeAmount(values.end),
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
         RangeSlider(
           values: values,
           min: band.min.toDouble(),
@@ -1196,6 +1184,80 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
             ).toString();
           }),
         ),
+        Row(
+          children: [
+            Text(
+              _formatIncomeAmount(band.min),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              _formatIncomeAmount(band.max),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade700,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (var i = 0; i < _incomeBands.length; i++) ...[
+                if (i > 0) const SizedBox(width: 6),
+                Builder(
+                  builder: (context) {
+                    final item = _incomeBands[i];
+                    final selected = item.key == band.key;
+                    return ChoiceChip(
+                      label: Text(item.label),
+                      selected: selected,
+                      visualDensity: const VisualDensity(
+                        horizontal: -4,
+                        vertical: -4,
+                      ),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: EdgeInsets.zero,
+                      labelStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: selected ? Colors.white : Colors.grey.shade900,
+                      ),
+                      selectedColor: const Color(0xFF0F8F5F),
+                      backgroundColor: Colors.white,
+                      side: BorderSide(
+                        color: selected
+                            ? const Color(0xFF0F8F5F)
+                            : Colors.grey.shade300,
+                      ),
+                      onSelected: (_) => setState(() {
+                        _clearIncomeErrorState();
+                        _applyIncomeBand(item);
+                      }),
+                    );
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (rangeError != null) ...[
+          const SizedBox(height: 6),
+          Text(
+            rangeError,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ],
     );
   }

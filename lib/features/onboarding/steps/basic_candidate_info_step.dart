@@ -67,7 +67,16 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
     final options = backendOptions.isNotEmpty
         ? _collapseHeightOptionsByInch(backendOptions)
         : _laravelHeightOptions;
-    return _prioritizeCommonHeights(options);
+    return options;
+  }
+
+  int? get _heightInitialScrollIndex {
+    final options = _heightOptions;
+    final index = options.indexWhere((option) {
+      final cm = option.metaInt('cm') ?? option.intId;
+      return cm != null && cm >= 150;
+    });
+    return index < 0 ? null : index;
   }
 
   static final List<OnboardingOption> _laravelHeightOptions =
@@ -252,27 +261,6 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
         return aCm.compareTo(bCm);
       });
     return sorted;
-  }
-
-  static List<OnboardingOption> _prioritizeCommonHeights(
-    List<OnboardingOption> options,
-  ) {
-    final common = <OnboardingOption>[];
-    final lower = <OnboardingOption>[];
-    final higher = <OnboardingOption>[];
-
-    for (final option in options) {
-      final cm = option.metaInt('cm') ?? option.intId ?? 0;
-      if (cm >= 150 && cm <= 168) {
-        common.add(option);
-      } else if (cm < 150) {
-        lower.add(option);
-      } else {
-        higher.add(option);
-      }
-    }
-
-    return <OnboardingOption>[...common, ...lower, ...higher];
   }
 
   static OnboardingOption _heightOptionFromCm(int cm) {
@@ -683,6 +671,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
                   ? _t('Select height.', 'उंची निवडा.')
                   : heightFieldError,
               showDividers: true,
+              initialScrollIndex: _heightInitialScrollIndex,
               loadPage: (query, page, limit) =>
                   _staticPage(_heightOptions, query, page, limit),
               onChanged: (items) {

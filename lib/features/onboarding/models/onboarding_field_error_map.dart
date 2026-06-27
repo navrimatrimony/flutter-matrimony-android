@@ -13,6 +13,7 @@ class OnboardingFieldErrorTarget {
 class OnboardingFieldErrorMap {
   static const String profileForWhomStep = 'profile_for_whom';
   static const String basicInfoStep = 'basic_info';
+  static const String communityStep = 'religion_caste';
 
   static const List<String> knownBackendFields = <String>[
     'mother_tongue_id',
@@ -40,12 +41,12 @@ class OnboardingFieldErrorMap {
       <String, OnboardingFieldErrorTarget>{
         'mother_tongue_id': OnboardingFieldErrorTarget(
           backendField: 'mother_tongue_id',
-          ownerStep: profileForWhomStep,
+          ownerStep: communityStep,
           uiField: 'mother_tongue',
         ),
         'mother_tongue': OnboardingFieldErrorTarget(
           backendField: 'mother_tongue',
-          ownerStep: profileForWhomStep,
+          ownerStep: communityStep,
           uiField: 'mother_tongue',
         ),
         'full_name': OnboardingFieldErrorTarget(

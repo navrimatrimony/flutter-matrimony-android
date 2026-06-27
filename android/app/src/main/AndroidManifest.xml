@@ -14,8 +14,9 @@
     <!-- Notification permission for Android 13+ startup prompt -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <!-- Approximate location permission for onboarding location assist -->
+    <!-- Location permissions for onboarding location assist -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
     <application
         android:label="@string/app_name"
