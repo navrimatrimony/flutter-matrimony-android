@@ -674,6 +674,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _preferredReligionOptions =
       <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _preferredCasteOptions = <Map<String, dynamic>>[];
+  List<Map<String, dynamic>> _preferredMotherTongueOptions =
+      <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _preferredEducationDegreeOptions =
       <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _preferredOccupationOptions =
@@ -686,12 +688,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final Set<int> _selectedPreferredDietIds = <int>{};
   final Set<int> _selectedPreferredReligionIds = <int>{};
   final Set<int> _selectedPreferredCasteIds = <int>{};
+  final Set<int> _selectedPreferredMotherTongueIds = <int>{};
   final Set<int> _selectedPreferredEducationDegreeIds = <int>{};
   final Set<int> _selectedPreferredOccupationMasterIds = <int>{};
   final Set<int> _selectedPreferredCountryIds = <int>{};
   final Set<int> _selectedPreferredStateIds = <int>{};
   final Set<int> _selectedPreferredDistrictIds = <int>{};
   final Set<int> _selectedPreferredTalukaIds = <int>{};
+  bool _hasSavedPreferredEducationDegreeIds = false;
+  bool _hasSavedPreferredOccupationMasterIds = false;
+  bool _hasSavedPreferredIncomeMin = false;
+  bool _hasSavedPreferredIncomeMax = false;
+  bool _preferredEducationTouched = false;
+  bool _preferredOccupationTouched = false;
+  bool _preferredIncomeTouched = false;
   final List<_MarriageEditRow> _marriageRows = <_MarriageEditRow>[];
   final List<_ChildEditRow> _childRows = <_ChildEditRow>[];
   final List<_AddressEditRow> _selfAddressRows = <_AddressEditRow>[];
@@ -1573,6 +1583,228 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         .toList();
   }
 
+  Map<String, dynamic>? _optionById(
+    List<Map<String, dynamic>> options,
+    int? id,
+  ) {
+    if (id == null) return null;
+    for (final option in options) {
+      if (_readInt(option['id']) == id) return option;
+    }
+    return null;
+  }
+
+  String _normalizedOptionText(Map<String, dynamic> row) {
+    final parts = <String?>[
+      _readText(row['code']),
+      _readText(row['label']),
+      _readText(row['label_en']),
+      _readText(row['full_form']),
+      _readText(row['category_label']),
+    ];
+    return parts
+        .whereType<String>()
+        .join(' ')
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), ' ')
+        .trim();
+  }
+
+  int? _educationLevelRank(Map<String, dynamic> row) {
+    final text = ' ${_normalizedOptionText(row)} ';
+    if (text.trim().isEmpty) return null;
+    if (RegExp(r'\b(phd|ph d|doctorate|doctoral)\b').hasMatch(text)) {
+      return 5;
+    }
+    if (RegExp(
+      r'\b(post graduate|postgraduation|post graduation|master|masters|pg|ma|mcom|msc|mba|mca|me|mtech)\b',
+    ).hasMatch(text)) {
+      return 4;
+    }
+    if (RegExp(
+      r'\b(graduation|graduate|under graduate|undergraduate|bachelor|ba|bcom|bsc|bca|be|btech|ug)\b',
+    ).hasMatch(text)) {
+      return 3;
+    }
+    if (RegExp(r'\b(diploma|iti|polytechnic)\b').hasMatch(text)) {
+      return 2;
+    }
+    if (RegExp(r'\b(ssc|hsc|school|10th|12th)\b').hasMatch(text)) {
+      return 1;
+    }
+    return null;
+  }
+
+  List<int> _categoryOrderAtOrAbove(
+    List<Map<String, dynamic>> options,
+    int selectedCategoryId,
+  ) {
+    final categoryOrder = <int>[];
+    for (final option in options) {
+      final categoryId = _readInt(option['category_id']);
+      if (categoryId == null || categoryOrder.contains(categoryId)) continue;
+      categoryOrder.add(categoryId);
+    }
+    final selectedIndex = categoryOrder.indexOf(selectedCategoryId);
+    if (selectedIndex < 0) return const <int>[];
+    final allowedCategoryIds = categoryOrder.skip(selectedIndex).toSet();
+    return options
+        .where((option) {
+          final categoryId = _readInt(option['category_id']);
+          return categoryId != null && allowedCategoryIds.contains(categoryId);
+        })
+        .map((option) => _readInt(option['id']))
+        .whereType<int>()
+        .toSet()
+        .toList(growable: false);
+  }
+
+  List<int> _smartPreferredEducationDegreeIds() {
+    final selectedId =
+        _selectedEducationDegreeId ??
+        _findEducationDegreeIdByText(_educationController.text);
+    if (selectedId == null) return const <int>[];
+
+    final options = _preferredEducationDegreeOptions.isNotEmpty
+        ? _preferredEducationDegreeOptions
+        : _educationDegreeOptions;
+    if (options.isEmpty) return <int>[selectedId];
+
+    final selectedRow =
+        _optionById(options, selectedId) ??
+        _optionById(_educationDegreeOptions, selectedId);
+    if (selectedRow == null) return <int>[selectedId];
+
+    final selectedRank = _educationLevelRank(selectedRow);
+    if (selectedRank != null) {
+      final rankedIds = options
+          .where((option) {
+            final rank = _educationLevelRank(option);
+            return rank != null && rank >= selectedRank;
+          })
+          .map((option) => _readInt(option['id']))
+          .whereType<int>()
+          .toSet()
+          .toList(growable: false);
+      if (rankedIds.isNotEmpty) return rankedIds;
+    }
+
+    final selectedCategoryId = _readInt(selectedRow['category_id']);
+    if (selectedCategoryId != null) {
+      final categoryIds = _categoryOrderAtOrAbove(options, selectedCategoryId);
+      if (categoryIds.isNotEmpty) return categoryIds;
+    }
+
+    return <int>[selectedId];
+  }
+
+  List<int> _smartPreferredOccupationMasterIds() {
+    final selectedId = _selectedOccupationMasterId;
+    if (selectedId == null) return const <int>[];
+
+    final options = _preferredOccupationOptions.isNotEmpty
+        ? _preferredOccupationOptions
+        : _occupationOptions;
+    if (options.isEmpty) return <int>[selectedId];
+
+    final selectedRow =
+        _optionById(options, selectedId) ??
+        _optionById(_occupationOptions, selectedId);
+    final categoryId = _readInt(selectedRow?['category_id']);
+    if (categoryId == null) return <int>[selectedId];
+
+    final ids = options
+        .where((option) => _readInt(option['category_id']) == categoryId)
+        .map((option) => _readInt(option['id']))
+        .whereType<int>()
+        .toSet()
+        .toList(growable: false);
+    return ids.isNotEmpty ? ids : <int>[selectedId];
+  }
+
+  int? _annualizedIncomeFromCurrentInputs() {
+    final valueType = _selectedIncomeValueType;
+    num? amount;
+    if (valueType == 'range') {
+      amount = _nullableNumber(_incomeMinAmountController);
+    } else {
+      amount = _nullableNumber(_incomeAmountController);
+    }
+    amount ??= _nullableNumber(_incomeMinAmountController);
+    if (amount == null || amount <= 0) return null;
+
+    final period = _selectedIncomePeriod ?? 'annual';
+    final multiplier = switch (period) {
+      'monthly' => 12,
+      'weekly' => 52,
+      'daily' => 365,
+      _ => 1,
+    };
+    return (amount * multiplier).round();
+  }
+
+  int? _annualizedIncomeFromLoadedProfile() {
+    final profile = _lastLoadedProfile;
+    if (profile == null) return null;
+    final direct =
+        _readDouble(profile['income_normalized_annual_amount']) ??
+        _readDouble(profile['annual_income']);
+    if (direct != null && direct > 0) return direct.round();
+
+    final amount =
+        _readDouble(profile['income_amount']) ??
+        _readDouble(profile['income_min_amount']);
+    if (amount == null || amount <= 0) return null;
+
+    final period = _readText(profile['income_period']) ?? 'annual';
+    final multiplier = switch (period) {
+      'monthly' => 12,
+      'weekly' => 52,
+      'daily' => 365,
+      _ => 1,
+    };
+    return (amount * multiplier).round();
+  }
+
+  int? _smartPreferredIncomeMin() {
+    final annualIncome =
+        _annualizedIncomeFromCurrentInputs() ??
+        _annualizedIncomeFromLoadedProfile();
+    if (annualIncome == null || annualIncome <= 0) return null;
+    return (annualIncome * 0.7).round();
+  }
+
+  void _applySmartPartnerPreferenceDefaults() {
+    if (!_hasSavedPreferredEducationDegreeIds && !_preferredEducationTouched) {
+      final ids = _smartPreferredEducationDegreeIds();
+      if (ids.isNotEmpty) {
+        _selectedPreferredEducationDegreeIds
+          ..clear()
+          ..addAll(ids);
+      }
+    }
+
+    if (!_hasSavedPreferredOccupationMasterIds &&
+        !_preferredOccupationTouched) {
+      final ids = _smartPreferredOccupationMasterIds();
+      if (ids.isNotEmpty) {
+        _selectedPreferredOccupationMasterIds
+          ..clear()
+          ..addAll(ids);
+      }
+    }
+
+    if (!_preferredIncomeTouched) {
+      if (!_hasSavedPreferredIncomeMin) {
+        final min = _smartPreferredIncomeMin();
+        if (min != null) _selectedPreferredIncomeMin = min;
+      }
+      if (!_hasSavedPreferredIncomeMax) {
+        _selectedPreferredIncomeMax = null;
+      }
+    }
+  }
+
   String _educationDegreeLabel(Map<String, dynamic> degree) {
     return _readText(degree['code']) ?? _optionLabel(degree, 'Education');
   }
@@ -1852,6 +2084,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final partnerPreferenceSuggestions = _readMap(
       profile['partner_preference_suggestions'],
     );
+    _preferredEducationTouched = false;
+    _preferredOccupationTouched = false;
+    _preferredIncomeTouched = false;
     _selectedPreferredAgeMin =
         _readInt(profile['preferred_age_min']) ??
         _readInt(partnerPreferenceSuggestions['preferred_age_min']);
@@ -1864,11 +2099,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedPreferredHeightMaxCm =
         _readInt(profile['preferred_height_max_cm']) ??
         _readInt(partnerPreferenceSuggestions['preferred_height_max_cm']);
+    final savedPreferredIncomeMin = _readInt(profile['preferred_income_min']);
+    final savedPreferredIncomeMax = _readInt(profile['preferred_income_max']);
+    _hasSavedPreferredIncomeMin = savedPreferredIncomeMin != null;
+    _hasSavedPreferredIncomeMax = savedPreferredIncomeMax != null;
     _selectedPreferredIncomeMin =
-        _readInt(profile['preferred_income_min']) ??
+        savedPreferredIncomeMin ??
         _readInt(partnerPreferenceSuggestions['preferred_income_min']);
     _selectedPreferredIncomeMax =
-        _readInt(profile['preferred_income_max']) ??
+        savedPreferredIncomeMax ??
         _readInt(partnerPreferenceSuggestions['preferred_income_max']);
     _selectedMarriageTypePreferenceId = _readInt(
       profile['marriage_type_preference_id'],
@@ -1896,6 +2135,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final savedPreferredCasteIds = _readIntList(
       profile['preferred_caste_ids'] ?? profile['preferred_castes'],
     );
+    final savedPreferredMotherTongueIds = _readIntList(
+      profile['preferred_mother_tongue_ids'] ??
+          profile['preferred_mother_tongues'],
+    );
     final savedPreferredEducationDegreeIds = _readIntList(
       profile['preferred_education_degree_ids'] ??
           profile['preferred_education_degrees'],
@@ -1904,6 +2147,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       profile['preferred_occupation_master_ids'] ??
           profile['preferred_occupations'],
     );
+    _hasSavedPreferredEducationDegreeIds =
+        savedPreferredEducationDegreeIds.isNotEmpty;
+    _hasSavedPreferredOccupationMasterIds =
+        savedPreferredOccupationMasterIds.isNotEmpty;
     _selectedPreferredMaritalStatusIds
       ..clear()
       ..addAll(
@@ -1936,6 +2183,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             ? savedPreferredCasteIds
             : _readIntList(partnerPreferenceSuggestions['preferred_caste_ids']),
       );
+    _selectedPreferredMotherTongueIds
+      ..clear()
+      ..addAll(
+        savedPreferredMotherTongueIds.isNotEmpty
+            ? savedPreferredMotherTongueIds
+            : _readIntList(
+                partnerPreferenceSuggestions['preferred_mother_tongue_ids'],
+              ),
+      );
     _selectedPreferredEducationDegreeIds
       ..clear()
       ..addAll(
@@ -1958,6 +2214,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _expectationsController.text =
         ApiClient.safeDisplayLabel(profile['narrative_expectations']) ?? '';
     _lastLoadedProfile = Map<String, dynamic>.from(profile);
+    _applySmartPartnerPreferenceDefaults();
   }
 
   Future<void> _loadScreenData() async {
@@ -2103,6 +2360,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             results['currencies'] ?? <Map<String, dynamic>>[];
         _ensureDefaultCurrencySelections();
         _syncSelectedEducationFromText();
+        _applySmartPartnerPreferenceDefaults();
       });
     } catch (_) {
       if (!mounted) return;
@@ -2234,11 +2492,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _preferredReligionOptions =
             results['religions'] ?? <Map<String, dynamic>>[];
         _preferredCasteOptions = results['castes'] ?? <Map<String, dynamic>>[];
+        _preferredMotherTongueOptions =
+            results['mother_tongues'] ?? <Map<String, dynamic>>[];
         _preferredEducationDegreeOptions =
             results['education_degrees'] ?? <Map<String, dynamic>>[];
         _preferredOccupationOptions =
             results['occupations'] ?? <Map<String, dynamic>>[];
         _removeInvalidPreferredCastes();
+        _applySmartPartnerPreferenceDefaults();
       });
     } catch (_) {
       if (!mounted) return;
@@ -3802,6 +4063,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _preferredCasteOptionsForSelectedReligions(),
         _selectedPreferredCasteIds,
       ),
+      'preferred_mother_tongue_ids': _orderedSelectedIds(
+        _preferredMotherTongueOptions,
+        _selectedPreferredMotherTongueIds,
+      ),
       'preferred_education_degree_ids': _orderedSelectedIds(
         _preferredEducationDegreeOptions,
         _selectedPreferredEducationDegreeIds,
@@ -4379,6 +4644,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             'Religion',
           ),
           _labelsForIds(
+            _preferredMotherTongueOptions,
+            _selectedPreferredMotherTongueIds,
+            'Mother tongue',
+          ),
+          _labelsForIds(
             _preferredEducationDegreeOptions,
             _selectedPreferredEducationDegreeIds,
             'Education',
@@ -4586,6 +4856,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'preferred_diet_ids',
           'preferred_religion_ids',
           'preferred_caste_ids',
+          'preferred_mother_tongue_ids',
           'preferred_education_degree_ids',
           'preferred_occupation_master_ids',
           'preferred_country_ids',
@@ -5464,16 +5735,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         : RangeValues(upper, lower);
     final start = (values.start / step).round() * step;
     final end = (values.end / step).round() * step;
+    final valueText =
+        _selectedPreferredIncomeMin != null &&
+            _selectedPreferredIncomeMax == null
+        ? '${_incomeLabel(_selectedPreferredIncomeMin!)}+'
+        : hasValue
+        ? '${_incomeLabel(start)} - ${_incomeLabel(end)}'
+        : 'Not selected';
 
     return _preferenceRangeField(
       labelText: 'Preferred Income',
       icon: Icons.currency_rupee,
-      valueText: hasValue
-          ? '${_incomeLabel(start)} - ${_incomeLabel(end)}'
-          : 'Not selected',
+      valueText: valueText,
       onClear: hasValue
           ? () {
               setState(() {
+                _preferredIncomeTouched = true;
                 _selectedPreferredIncomeMin = null;
                 _selectedPreferredIncomeMax = null;
               });
@@ -5489,6 +5766,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             ? null
             : (next) {
                 setState(() {
+                  _preferredIncomeTouched = true;
                   _selectedPreferredIncomeMin =
                       (next.start / step).round() * step;
                   _selectedPreferredIncomeMax =
@@ -8211,6 +8489,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _multiSelectPickerField(
+          labelText: 'Preferred mother tongues (Optional)',
+          icon: Icons.translate_outlined,
+          options: _preferredMotherTongueOptions,
+          selectedIds: _selectedPreferredMotherTongueIds,
+          fallbackPrefix: 'Mother tongue',
+          loading: _partnerPreferenceOptionsLoading,
+          onChanged: (value) {
+            setState(() {
+              _selectedPreferredMotherTongueIds
+                ..clear()
+                ..addAll(value);
+            });
+          },
+        ),
+        const SizedBox(height: 14),
+        _multiSelectPickerField(
           labelText: 'Preferred education (Optional)',
           icon: Icons.school_outlined,
           options: _preferredEducationDegreeOptions,
@@ -8219,6 +8513,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) {
             setState(() {
+              _preferredEducationTouched = true;
               _selectedPreferredEducationDegreeIds
                 ..clear()
                 ..addAll(value);
@@ -8235,6 +8530,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) {
             setState(() {
+              _preferredOccupationTouched = true;
               _selectedPreferredOccupationMasterIds
                 ..clear()
                 ..addAll(value);
