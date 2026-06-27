@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../models/onboarding_bootstrap.dart';
@@ -19,6 +20,7 @@ class BasicCandidateInfoStep extends StatefulWidget {
     required this.fieldErrors,
     required this.locale,
     required this.loading,
+    this.showHeader = true,
     required this.onSave,
     required this.onBack,
     required this.onMessage,
@@ -33,6 +35,7 @@ class BasicCandidateInfoStep extends StatefulWidget {
   final Map<String, String> fieldErrors;
   final String locale;
   final bool loading;
+  final bool showHeader;
   final OnboardingStepSaver onSave;
   final VoidCallback onBack;
   final ValueChanged<String> onMessage;
@@ -68,32 +71,30 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
   }
 
   static final List<OnboardingOption> _laravelHeightOptions =
-      List<OnboardingOption>.unmodifiable(
-        <OnboardingOption>[
-          const OnboardingOption(
-            id: 136,
-            key: '136',
-            label: 'Below 4ft 6in (136 cm)',
-            meta: <String, dynamic>{'cm': 136},
-          ),
-          ...List<OnboardingOption>.generate(31, (index) {
-            final totalInches = 54 + index;
-            final cm = (totalInches * 2.54).round();
-            return OnboardingOption(
-              id: cm,
-              key: cm.toString(),
-              label: _heightLabelFromInches(totalInches, cm),
-              meta: <String, dynamic>{'cm': cm, 'total_inches': totalInches},
-            );
-          }),
-          const OnboardingOption(
-            id: 214,
-            key: '214',
-            label: 'Above 7ft (214 cm)',
-            meta: <String, dynamic>{'cm': 214},
-          ),
-        ],
-      );
+      List<OnboardingOption>.unmodifiable(<OnboardingOption>[
+        const OnboardingOption(
+          id: 136,
+          key: '136',
+          label: 'Below 4ft 6in (136 cm)',
+          meta: <String, dynamic>{'cm': 136},
+        ),
+        ...List<OnboardingOption>.generate(31, (index) {
+          final totalInches = 54 + index;
+          final cm = (totalInches * 2.54).round();
+          return OnboardingOption(
+            id: cm,
+            key: cm.toString(),
+            label: _heightLabelFromInches(totalInches, cm),
+            meta: <String, dynamic>{'cm': cm, 'total_inches': totalInches},
+          );
+        }),
+        const OnboardingOption(
+          id: 214,
+          key: '214',
+          label: 'Above 7ft (214 cm)',
+          meta: <String, dynamic>{'cm': 214},
+        ),
+      ]);
 
   @override
   void initState() {
@@ -104,7 +105,13 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
   @override
   void didUpdateWidget(covariant BasicCandidateInfoStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _prefill(initial: false);
+    if (!mapEquals(oldWidget.data, widget.data) ||
+        oldWidget.bootstrap != widget.bootstrap ||
+        !mapEquals(oldWidget.account, widget.account) ||
+        oldWidget.profileForWhom?.identity != widget.profileForWhom?.identity ||
+        oldWidget.warmupGender?.identity != widget.warmupGender?.identity) {
+      _prefill(initial: false);
+    }
   }
 
   @override
@@ -119,7 +126,9 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
     final data = widget.data;
     final incomingName = onboardingText(data['full_name']) ?? '';
     final incomingDob =
-        _formatDobForDisplay(_parseDob(onboardingText(data['date_of_birth']))) ??
+        _formatDobForDisplay(
+          _parseDob(onboardingText(data['date_of_birth'])),
+        ) ??
         '';
     final incomingHeight = _resolveHeightOption(
       optionFromData(data['height_option']),
@@ -184,7 +193,8 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
   }
 
   static OnboardingOption _heightDisplayOption(OnboardingOption option) {
-    final cm = option.metaInt('cm') ?? option.intId ?? onboardingInt(option.key);
+    final cm =
+        option.metaInt('cm') ?? option.intId ?? onboardingInt(option.key);
     if (cm == null) return option;
     if (cm <= 136) {
       return const OnboardingOption(
@@ -229,10 +239,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
       if (cm != null) byCm[cm] = display;
     }
 
-    final merged = <OnboardingOption>[
-      ..._laravelHeightOptions,
-      ...byCm.values,
-    ];
+    final merged = <OnboardingOption>[..._laravelHeightOptions, ...byCm.values];
     final unique = <int, OnboardingOption>{};
     for (final option in merged) {
       final cm = option.metaInt('cm') ?? option.intId;
@@ -566,15 +573,12 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
     }
     if (_gender == null) {
       widget.onMessage(
-        _t(
-          'Choose gender before continuing.',
-          'पुढे जाण्यापूर्वी लिंग निवडा.',
-        ),
+        _t('Choose gender before continuing.', 'पुढे जाण्यापूर्वी लिंग निवडा.'),
       );
       return;
     }
 
-    final payloadDob = _formatDobForPayload(date!);
+    final payloadDob = _formatDobForPayload(date);
     final heightCm = _height?.metaInt('cm') ?? _height?.intId;
     final payload = compactPayload({
       'full_name': _nameController.text.trim(),
@@ -603,7 +607,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
     );
 
     return OnboardingStepScaffold(
-      title: _detailsTitle,
+      title: widget.showHeader ? _detailsTitle : '',
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,

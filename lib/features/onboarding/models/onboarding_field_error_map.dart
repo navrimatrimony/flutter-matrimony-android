@@ -20,6 +20,8 @@ class OnboardingFieldErrorMap {
     'full_name',
     'date_of_birth',
     'height_cm',
+    'marital_status_id',
+    'has_children',
   ];
 
   static const List<String> ownershipPriority = <String>[
@@ -28,6 +30,8 @@ class OnboardingFieldErrorMap {
     'full_name',
     'date_of_birth',
     'height_cm',
+    'marital_status_id',
+    'has_children',
   ];
 
   static const Map<String, OnboardingFieldErrorTarget> _targets =
@@ -56,6 +60,16 @@ class OnboardingFieldErrorMap {
           backendField: 'height_cm',
           ownerStep: basicInfoStep,
           uiField: 'height',
+        ),
+        'marital_status_id': OnboardingFieldErrorTarget(
+          backendField: 'marital_status_id',
+          ownerStep: basicInfoStep,
+          uiField: 'marital_status',
+        ),
+        'has_children': OnboardingFieldErrorTarget(
+          backendField: 'has_children',
+          ownerStep: basicInfoStep,
+          uiField: 'has_children',
         ),
       };
 

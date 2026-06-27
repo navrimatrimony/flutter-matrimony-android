@@ -20,6 +20,7 @@ import 'steps/education_career_step.dart';
 import 'steps/family_optional_step.dart';
 import 'steps/lifestyle_step.dart';
 import 'steps/location_step.dart';
+import 'steps/marital_status_step.dart';
 import 'steps/onboarding_step_helpers.dart';
 import 'steps/photo_step.dart';
 import 'steps/religion_caste_step.dart';
@@ -31,6 +32,7 @@ enum SmartOnboardingInitialMode { normal, mobileOtp }
 enum _SmartOnboardingStep {
   profileForWhom,
   mobileOtp,
+  maritalStatus,
   basicInfo,
   religionCaste,
   location,
@@ -273,6 +275,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     return switch (step) {
       _SmartOnboardingStep.profileForWhom =>
         OnboardingFieldErrorMap.profileForWhomStep,
+      _SmartOnboardingStep.maritalStatus =>
+        OnboardingFieldErrorMap.basicInfoStep,
       _SmartOnboardingStep.basicInfo => OnboardingFieldErrorMap.basicInfoStep,
       _SmartOnboardingStep.religionCaste => 'religion_caste',
       _SmartOnboardingStep.location => 'location',
@@ -438,6 +442,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
   String? get _profileForWhomKey => _profileForWhom?.key?.trim();
 
+  bool get _basicInfoHasMaritalStatus =>
+      onboardingInt(_draftStepData('basic_info')['marital_status_id']) != null;
+
   String get _genderMode {
     final explicit =
         _profileForWhom?.metaText('gender_mode') ??
@@ -484,7 +491,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case 'profile_for_whom':
         return _SmartOnboardingStep.profileForWhom;
       case 'basic_info':
-        return _SmartOnboardingStep.basicInfo;
+        return _basicInfoHasMaritalStatus
+            ? _SmartOnboardingStep.basicInfo
+            : _SmartOnboardingStep.maritalStatus;
       case 'religion_caste':
         return _SmartOnboardingStep.religionCaste;
       case 'location':
@@ -509,6 +518,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   _SmartOnboardingStep _nextProfileStep(_SmartOnboardingStep step) {
     switch (step) {
       case _SmartOnboardingStep.profileForWhom:
+        return _SmartOnboardingStep.maritalStatus;
+      case _SmartOnboardingStep.maritalStatus:
         return _SmartOnboardingStep.basicInfo;
       case _SmartOnboardingStep.basicInfo:
         return _SmartOnboardingStep.religionCaste;
@@ -533,8 +544,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     switch (step) {
       case _SmartOnboardingStep.mobileOtp:
         return _SmartOnboardingStep.profileForWhom;
-      case _SmartOnboardingStep.basicInfo:
+      case _SmartOnboardingStep.maritalStatus:
         return _SmartOnboardingStep.profileForWhom;
+      case _SmartOnboardingStep.basicInfo:
+        return _SmartOnboardingStep.maritalStatus;
       case _SmartOnboardingStep.religionCaste:
         return _SmartOnboardingStep.basicInfo;
       case _SmartOnboardingStep.location:
@@ -862,6 +875,19 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
   }
 
+  Future<void> _retryBootstrapLookups() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+      _message = null;
+    });
+    await _loadBootstrap();
+    if (!mounted) return;
+    setState(() {
+      _loading = false;
+    });
+  }
+
   OnboardingBootstrap _bootstrapWithGenders(
     OnboardingBootstrap source,
     List<OnboardingOption> genders,
@@ -988,7 +1014,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _step = nextStep;
       });
       _showOnboardingMessage(
-        _t('Saved. Add basic details.', 'Save झाले. थोडी माहिती भरा.'),
+        _t('Saved. Choose marital status.', 'Save झाले. वैवाहिक स्थिती निवडा.'),
         type: _OnboardingMessageType.success,
       );
       await _saveLocalDraft();
@@ -1261,6 +1287,21 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
   }
 
+  Future<bool> _saveMaritalStatusStep(Map<String, dynamic> payload) async {
+    final saved = await _saveOnboardingStep(
+      'basic_info',
+      payload,
+      saveProfile: true,
+      advance: false,
+    );
+    if (!mounted || !saved) return false;
+    setState(() {
+      _step = _SmartOnboardingStep.basicInfo;
+    });
+    await _saveLocalDraft();
+    return true;
+  }
+
   Future<Map<String, dynamic>?> _dataForOnboardingStep(
     String step,
     Map<String, dynamic> data,
@@ -1436,6 +1477,48 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
 
     _syncMotherTongueFromDraft();
+  }
+
+  String _profileDetailsTitle() {
+    switch (_profileForWhomKey?.toLowerCase()) {
+      case 'self':
+        return _t('Your details', 'तुमची माहिती');
+      case 'son':
+        return _t('Son’s details', 'मुलाची माहिती');
+      case 'daughter':
+        return _t('Daughter’s details', 'मुलीची माहिती');
+      case 'brother':
+        return _t('Brother’s details', 'भावाची माहिती');
+      case 'sister':
+        return _t('Sister’s details', 'बहिणीची माहिती');
+      case 'relative':
+        return _t('Relative’s details', 'नातेवाईकाची माहिती');
+      case 'friend':
+        return _t('Friend’s details', 'मित्र/मैत्रिणीची माहिती');
+    }
+
+    return _t('Basic details', 'मूलभूत माहिती');
+  }
+
+  String _maritalStatusTitle() {
+    switch (_profileForWhomKey?.toLowerCase()) {
+      case 'self':
+        return _t('Your marital status', 'तुमची वैवाहिक स्थिती');
+      case 'son':
+        return _t('Son’s marital status', 'मुलाची वैवाहिक स्थिती');
+      case 'daughter':
+        return _t('Daughter’s marital status', 'मुलीची वैवाहिक स्थिती');
+      case 'brother':
+        return _t('Brother’s marital status', 'भावाची वैवाहिक स्थिती');
+      case 'sister':
+        return _t('Sister’s marital status', 'बहिणीची वैवाहिक स्थिती');
+      case 'relative':
+        return _t('Relative’s marital status', 'नातेवाईकाची वैवाहिक स्थिती');
+      case 'friend':
+        return _t('Friend’s marital status', 'मित्र/मैत्रिणीची वैवाहिक स्थिती');
+    }
+
+    return _t('Marital status', 'वैवाहिक स्थिती');
   }
 
   Future<void> _continueFromProfileForWhom() async {
@@ -1930,6 +2013,28 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       );
     }
 
+    if (_step == _SmartOnboardingStep.maritalStatus) {
+      return Text(
+        _maritalStatusTitle(),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(
+          context,
+        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+      );
+    }
+
+    if (_step == _SmartOnboardingStep.basicInfo) {
+      return Text(
+        _profileDetailsTitle(),
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(
+          context,
+        ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+      );
+    }
+
     String fallback;
     if (_step == _SmartOnboardingStep.religionCaste) {
       fallback = _t('Choose community details', 'समुदायाची माहिती निवडा');
@@ -1965,6 +2070,24 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
               context,
             ),
             _SmartOnboardingStep.mobileOtp => _buildMobileOtpStep(context),
+            _SmartOnboardingStep.maritalStatus => MaritalStatusStep(
+              title: '',
+              data: _draftStepData('basic_info'),
+              maritalStatuses: _bootstrap.maritalStatuses,
+              childrenRules: _bootstrap.childrenRules,
+              profileForWhom: _profileForWhom,
+              gender: _resolvedProfileGenderOption(),
+              fieldErrors: _fieldErrorsForStep(
+                OnboardingFieldErrorMap.basicInfoStep,
+              ),
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveMaritalStatusStep,
+              onBack: _goBackOneStep,
+              onMessage: _showStepMessage,
+              onRetryLookups: _retryBootstrapLookups,
+              onFieldEdited: _clearCurrentFeedback,
+            ),
             _SmartOnboardingStep.basicInfo => BasicCandidateInfoStep(
               data: _draftStepData('basic_info'),
               bootstrap: _bootstrap,
@@ -1976,6 +2099,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
               ),
               locale: _localeCode,
               loading: _loading,
+              showHeader: false,
               onSave: _saveOnboardingStep,
               onBack: _goBackOneStep,
               onMessage: _showStepMessage,
