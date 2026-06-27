@@ -32,7 +32,8 @@ class LocationStep extends StatefulWidget {
   State<LocationStep> createState() => _LocationStepState();
 }
 
-class _LocationStepState extends State<LocationStep> {
+class _LocationStepState extends State<LocationStep>
+    with WidgetsBindingObserver {
   static const MethodChannel _nativeLocationChannel = MethodChannel(
     'navri_matrimony/native_location',
   );
@@ -56,6 +57,7 @@ class _LocationStepState extends State<LocationStep> {
   String? _pendingLocationStatus;
   String? _pendingLocationType;
   bool _usingMobileLocation = false;
+  bool _retryMobileLocationOnResume = false;
 
   bool get _mr => widget.locale == 'mr';
   bool get _hasPendingLocation =>
@@ -65,6 +67,7 @@ class _LocationStepState extends State<LocationStep> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _prefill();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadDefaultCountryState();
@@ -84,8 +87,23 @@ class _LocationStepState extends State<LocationStep> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _addressLineController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    if (!_retryMobileLocationOnResume) return;
+    _retryMobileLocationAfterSettings();
+  }
+
+  Future<void> _retryMobileLocationAfterSettings() async {
+    _retryMobileLocationOnResume = false;
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (!mounted || widget.loading || _usingMobileLocation) return;
+    await _useMobileLocation(openSettingsOnDisabled: false);
   }
 
   void _prefill() {
@@ -381,16 +399,47 @@ class _LocationStepState extends State<LocationStep> {
       if (option.label.trim().toLowerCase() == wanted) return option;
     }
     for (final option in options) {
+      if (_locationTextMatches(option.label, name)) return option;
+    }
+    for (final option in options) {
       if (option.label.trim().toLowerCase().contains(wanted)) return option;
     }
     return null;
   }
 
+  bool _locationTextMatches(String? left, String? right) {
+    final a = _normalizeLocationCompareText(left);
+    final b = _normalizeLocationCompareText(right);
+    if (a == null || b == null) return false;
+    if (a == b) return true;
+    if (a.length >= 4 && b.length >= 4) {
+      return a.contains(b) || b.contains(a);
+    }
+    return false;
+  }
+
+  String? _normalizeLocationCompareText(String? value) {
+    final text = value?.trim().toLowerCase();
+    if (text == null || text.isEmpty) return null;
+    final normalized = text
+        .replaceAll(RegExp(r'[^a-z0-9\s]'), ' ')
+        .replaceAll(
+          RegExp(
+            r'\b(district|dist|division|state|taluka|tehsil|city|village)\b',
+          ),
+          ' ',
+        )
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    return normalized.isEmpty ? null : normalized;
+  }
+
   Future<PagedLookupResponse> _locationPage(
     String query,
     int page,
-    int limit,
-  ) async {
+    int limit, {
+    int? preferredStateId,
+  }) async {
     if (query.trim().length < 2) {
       return PagedLookupResponse.fromOptions(const []);
     }
@@ -400,6 +449,7 @@ class _LocationStepState extends State<LocationStep> {
         page: page,
         limit: limit,
         locale: widget.locale,
+        preferredStateId: preferredStateId,
       ),
     );
   }
@@ -684,7 +734,7 @@ class _LocationStepState extends State<LocationStep> {
     return clean.join(', ');
   }
 
-  Future<void> _useMobileLocation() async {
+  Future<void> _useMobileLocation({bool openSettingsOnDisabled = true}) async {
     if (_usingMobileLocation || widget.loading) return;
     setState(() => _usingMobileLocation = true);
 
@@ -716,11 +766,19 @@ class _LocationStepState extends State<LocationStep> {
         if (!mounted) return;
         final addressFilled = _fillMobileAddressLine(data);
         if (hierarchyFilled || addressFilled) {
+          final hasFilledLocation =
+              _village != null ||
+              (_localArea != null && _locationEnabled(_localArea!));
           widget.onMessage(
-            _t(
-              'We found your mobile location. Please select the nearest location from the list.',
-              'मोबाईल location मिळाले. कृपया यादीतून जवळचे ठिकाण निवडा.',
-            ),
+            hasFilledLocation
+                ? _t(
+                    'Mobile location filled. Please review it before continuing.',
+                    'मोबाईल location भरले. Continue करण्यापूर्वी तपासा.',
+                  )
+                : _t(
+                    'We found your mobile location. Please select the nearest location from the list.',
+                    'मोबाईल location मिळाले. कृपया यादीतून जवळचे ठिकाण निवडा.',
+                  ),
           );
           return;
         }
@@ -741,7 +799,10 @@ class _LocationStepState extends State<LocationStep> {
     } on PlatformException catch (error) {
       if (!mounted) return;
       if (error.code == 'LOCATION_DISABLED') {
-        await _openLocationSettings();
+        if (openSettingsOnDisabled) {
+          _retryMobileLocationOnResume = true;
+          await _openLocationSettings();
+        }
       }
       if (!mounted) return;
       widget.onMessage(_nativeLocationErrorMessage(error));
@@ -769,9 +830,21 @@ class _LocationStepState extends State<LocationStep> {
   Future<OnboardingOption?> _findMobileLocationMatch(
     Map<String, dynamic> data,
   ) async {
+    final preferredState = await _mobileStateOption(data);
     for (final term in _mobileLocationSearchTerms(data)) {
-      final page = await _locationPage(term, 1, 12);
-      final match = _bestMobileLocationMatch(page.results, data, term);
+      final page = await _locationPage(
+        term,
+        1,
+        20,
+        preferredStateId: preferredState?.intId,
+      );
+      final match = _bestMobileLocationMatch(
+        page.results,
+        data,
+        term,
+        requireHierarchyMatch: true,
+        minScore: 10,
+      );
       if (match != null) return match;
     }
     return null;
@@ -780,9 +853,15 @@ class _LocationStepState extends State<LocationStep> {
   OnboardingOption? _bestMobileLocationMatch(
     List<OnboardingOption> options,
     Map<String, dynamic> data,
-    String searchTerm,
-  ) {
-    final approved = options.where(_locationEnabled).toList();
+    String searchTerm, {
+    bool requireHierarchyMatch = true,
+    int minScore = 1,
+  }) {
+    final approved = options.where((option) {
+      if (!_locationEnabled(option)) return false;
+      if (!requireHierarchyMatch) return true;
+      return _mobileLocationHierarchyMatches(option, data);
+    }).toList();
     if (approved.isEmpty) return null;
     approved.sort(
       (a, b) => _mobileLocationScore(
@@ -792,7 +871,33 @@ class _LocationStepState extends State<LocationStep> {
       ).compareTo(_mobileLocationScore(a, data, searchTerm)),
     );
     final best = approved.first;
-    return _mobileLocationScore(best, data, searchTerm) > 0 ? best : null;
+    return _mobileLocationScore(best, data, searchTerm) >= minScore
+        ? best
+        : null;
+  }
+
+  bool _mobileLocationHierarchyMatches(
+    OnboardingOption option,
+    Map<String, dynamic> data,
+  ) {
+    final stateText = _mobileLocationText(data['state']);
+    if (stateText != null) {
+      final stateLabel = _parentLabel(option, 'state');
+      if (stateLabel == null || !_locationTextMatches(stateLabel, stateText)) {
+        return false;
+      }
+    }
+
+    final districtText = _mobileLocationText(data['district']);
+    if (districtText != null) {
+      final districtLabel = _parentLabel(option, 'district');
+      if (districtLabel == null ||
+          !_locationTextMatches(districtLabel, districtText)) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   int _mobileLocationScore(
@@ -846,6 +951,67 @@ class _LocationStepState extends State<LocationStep> {
     return terms;
   }
 
+  Future<OnboardingOption?> _mobileStateOption(
+    Map<String, dynamic> data,
+  ) async {
+    final stateText = _mobileLocationText(data['state']);
+    if (stateText == null) return _state;
+    final states = await _ensureStates();
+    final countryId = _country?.intId;
+    return _findNamedOption(
+      states.where((option) {
+        if (countryId == null) return true;
+        return _parentId(option) == countryId;
+      }).toList(),
+      stateText,
+    );
+  }
+
+  Future<OnboardingOption?> _findMobileFinalLocationUnderDistrict(
+    OnboardingOption district,
+    Map<String, dynamic> data,
+  ) async {
+    final terms = _mobileLocationSearchTerms(data);
+    if (terms.isEmpty) return null;
+
+    for (final term in terms) {
+      final direct = await _childrenPage(
+        parent: district,
+        query: term,
+        page: 1,
+        limit: 25,
+      );
+      final directMatch = _bestMobileLocationMatch(
+        direct.results,
+        data,
+        term,
+        requireHierarchyMatch: false,
+        minScore: 5,
+      );
+      if (directMatch != null) return directMatch;
+
+      for (final area in direct.results) {
+        if (_locationType(area) != 'taluka') continue;
+        final nested = await _childrenPage(
+          parent: area,
+          query: term,
+          page: 1,
+          limit: 25,
+        );
+        final nestedMatch = _bestMobileLocationMatch(
+          nested.results,
+          data,
+          term,
+          requireHierarchyMatch: false,
+          minScore: 5,
+        );
+        if (nestedMatch != null) return nestedMatch;
+      }
+    }
+
+    return null;
+  }
+
   Future<bool> _fillMobileKnownHierarchy(Map<String, dynamic> data) async {
     final countryText = _mobileLocationText(data['country']);
     final stateText = _mobileLocationText(data['state']);
@@ -871,6 +1037,9 @@ class _LocationStepState extends State<LocationStep> {
     final district = districtText == null
         ? null
         : _findNamedOption(districts, districtText);
+    final finalLocation = district == null
+        ? null
+        : await _findMobileFinalLocationUnderDistrict(district, data);
 
     if (!mounted) return false;
     var changed = false;
@@ -895,6 +1064,10 @@ class _LocationStepState extends State<LocationStep> {
     });
     if (district != null) {
       await _ensureTalukasForDistrict(district);
+    }
+    if (finalLocation != null) {
+      await _applyLocationOption(finalLocation, mobileData: data);
+      changed = true;
     }
     return changed;
   }

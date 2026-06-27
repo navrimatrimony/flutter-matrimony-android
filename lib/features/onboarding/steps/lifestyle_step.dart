@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
@@ -46,7 +47,7 @@ class _LifestyleStepState extends State<LifestyleStep> {
   @override
   void didUpdateWidget(covariant LifestyleStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.data != widget.data ||
+    if (!mapEquals(oldWidget.data, widget.data) ||
         oldWidget.bootstrap != widget.bootstrap) {
       _prefill();
     }
@@ -111,8 +112,11 @@ class _LifestyleStepState extends State<LifestyleStep> {
       'lifestyle',
       compactPayload({
         'diet_id': _diet?.intId,
+        if (_diet?.intId != null) 'diet_option': _diet!.toJson(),
         'smoking_status_id': _smoking?.intId,
+        if (_smoking?.intId != null) 'smoking_option': _smoking!.toJson(),
         'drinking_status_id': _drinking?.intId,
+        if (_drinking?.intId != null) 'drinking_option': _drinking!.toJson(),
       }),
       saveProfile: true,
     );

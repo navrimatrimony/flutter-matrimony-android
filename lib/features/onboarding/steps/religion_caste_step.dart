@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
@@ -32,10 +35,14 @@ class ReligionCasteStep extends StatefulWidget {
 }
 
 class _ReligionCasteStepState extends State<ReligionCasteStep> {
+  static final Map<String, OnboardingOption> _resolvedOptionCache =
+      <String, OnboardingOption>{};
+
   OnboardingOption? _religion;
   OnboardingOption? _caste;
   OnboardingOption? _subCaste;
   bool _intercasteAccepted = false;
+  int _hydrationToken = 0;
 
   bool get _mr => widget.locale == 'mr';
 
@@ -48,20 +55,24 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
   @override
   void didUpdateWidget(covariant ReligionCasteStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.data != widget.data) _prefill();
+    if (!mapEquals(oldWidget.data, widget.data)) {
+      _prefill();
+    } else if (oldWidget.locale != widget.locale) {
+      unawaited(_hydrateSelectedOptions());
+    }
   }
 
   void _prefill() {
     final data = widget.data;
     _religion =
         optionFromData(data['religion_option']) ??
-        _placeholderOption(data['religion_id'], 'Religion');
+        _placeholderOption(data['religion_id']);
     _caste =
         optionFromData(data['caste_option']) ??
-        _placeholderOption(data['caste_id'], 'Caste');
+        _placeholderOption(data['caste_id']);
     _subCaste =
         optionFromData(data['sub_caste_option']) ??
-        _placeholderOption(data['sub_caste_id'], 'Sub-caste');
+        _placeholderOption(data['sub_caste_id']);
     final explicitIntercaste = onboardingBool(data['intercaste_accepted']);
     final casteStrictness = _strictnessFromValue(
       data['caste_strictness'] ??
@@ -77,14 +88,133 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
         explicitIntercaste ??
         (casteStrictness == CommunityStrictness.open &&
             subCasteStrictness == CommunityStrictness.open);
+    unawaited(_hydrateSelectedOptions());
   }
 
   String _t(String en, String mr) => _mr ? mr : en;
 
-  OnboardingOption? _placeholderOption(dynamic id, String label) {
-    final intId = onboardingInt(id);
-    if (intId == null) return null;
-    return OnboardingOption(id: intId, label: '$label #$intId');
+  OnboardingOption? _placeholderOption(dynamic id, {bool failed = false}) {
+    return selectedValuePlaceholderOption(id, widget.locale, failed: failed);
+  }
+
+  Future<void> _hydrateSelectedOptions() async {
+    final token = ++_hydrationToken;
+    final locale = widget.locale;
+    final religionId = _religion?.intId;
+    final casteId = _caste?.intId;
+    final subCasteId = _subCaste?.intId;
+
+    if (religionId != null) {
+      final option = await _resolveReligion(religionId, locale);
+      if (!_canApplyHydratedOption(token, religionId, _religion)) return;
+      setState(() {
+        _religion = option ?? _placeholderOption(religionId, failed: true);
+      });
+    }
+
+    if (casteId != null && religionId != null) {
+      final option = await _resolveCaste(casteId, religionId, locale);
+      if (!_canApplyHydratedOption(token, casteId, _caste)) return;
+      setState(() {
+        _caste = option ?? _placeholderOption(casteId, failed: true);
+      });
+    }
+
+    if (subCasteId != null && casteId != null) {
+      final option = await _resolveSubCaste(subCasteId, casteId, locale);
+      if (!_canApplyHydratedOption(token, subCasteId, _subCaste)) return;
+      setState(() {
+        _subCaste = option ?? _placeholderOption(subCasteId, failed: true);
+      });
+    }
+  }
+
+  bool _canApplyHydratedOption(int token, int id, OnboardingOption? current) {
+    return mounted && token == _hydrationToken && current?.intId == id;
+  }
+
+  Future<OnboardingOption?> _resolveReligion(int id, String locale) {
+    return _resolveSelectedOption(
+      cacheKey: 'religion:$locale:$id',
+      id: id,
+      loadPage: (page, limit) async => PagedLookupResponse.fromJson(
+        await ApiClient.searchReligions(
+          query: '',
+          page: page,
+          limit: limit,
+          locale: locale,
+        ),
+      ),
+    );
+  }
+
+  Future<OnboardingOption?> _resolveCaste(
+    int id,
+    int religionId,
+    String locale,
+  ) {
+    return _resolveSelectedOption(
+      cacheKey: 'caste:$locale:$religionId:$id',
+      id: id,
+      loadPage: (page, limit) async => PagedLookupResponse.fromJson(
+        await ApiClient.searchCastes(
+          religionId: religionId,
+          query: '',
+          page: page,
+          limit: limit,
+          locale: locale,
+        ),
+      ),
+    );
+  }
+
+  Future<OnboardingOption?> _resolveSubCaste(
+    int id,
+    int casteId,
+    String locale,
+  ) {
+    return _resolveSelectedOption(
+      cacheKey: 'sub_caste:$locale:$casteId:$id',
+      id: id,
+      loadPage: (page, limit) async => PagedLookupResponse.fromJson(
+        await ApiClient.searchSubCastesForOnboarding(
+          casteId: casteId,
+          query: '',
+          page: page,
+          limit: limit,
+          locale: locale,
+        ),
+      ),
+    );
+  }
+
+  Future<OnboardingOption?> _resolveSelectedOption({
+    required String cacheKey,
+    required int id,
+    required Future<PagedLookupResponse> Function(int page, int limit) loadPage,
+  }) async {
+    final cached = _resolvedOptionCache[cacheKey];
+    if (cached != null) return cached;
+
+    const limit = 50;
+    try {
+      for (var page = 1; page <= 10; page++) {
+        final response = await loadPage(page, limit);
+        final option = optionById(<OnboardingOption>[
+          ...response.popular,
+          ...response.results,
+        ], id);
+        if (option != null) {
+          _resolvedOptionCache[cacheKey] = option;
+          return option;
+        }
+        if (!response.hasMore) break;
+      }
+    } catch (_) {
+      return null;
+    }
+
+    return null;
   }
 
   CommunityStrictness _strictnessFromValue(
@@ -178,6 +308,9 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
       'religion_id': _religion?.intId,
       'caste_id': _caste?.intId,
       'sub_caste_id': _subCaste?.intId,
+      if (_religion?.intId != null) 'religion_option': _religion!.toJson(),
+      if (_caste?.intId != null) 'caste_option': _caste!.toJson(),
+      if (_subCaste?.intId != null) 'sub_caste_option': _subCaste!.toJson(),
       'religion_strictness': _strictnessToBackend(
         CommunityStrictness.preferred,
       ),
@@ -238,9 +371,7 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
           value: _intercasteAccepted,
           onChanged: widget.loading
               ? null
-              : (value) => setState(
-                  () => _intercasteAccepted = value ?? false,
-                ),
+              : (value) => setState(() => _intercasteAccepted = value ?? false),
           title: Text(
             _t('Intercaste accepted.', 'जातिबंधन नाही'),
             style: const TextStyle(fontWeight: FontWeight.w700),

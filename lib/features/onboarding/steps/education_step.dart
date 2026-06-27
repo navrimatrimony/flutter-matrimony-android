@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
@@ -42,7 +43,7 @@ class _EducationStepState extends State<EducationStep> {
   @override
   void didUpdateWidget(covariant EducationStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.data != widget.data) _prefill();
+    if (!mapEquals(oldWidget.data, widget.data)) _prefill();
   }
 
   void _prefill() {
@@ -55,7 +56,9 @@ class _EducationStepState extends State<EducationStep> {
               return OnboardingOption(
                 id: row['id'],
                 key: row['key']?.toString(),
-                label: row['label']?.toString() ?? 'Education #${row['id']}',
+                label:
+                    onboardingText(row['label']) ??
+                    onboardingSelectedFailureLabel(widget.locale),
                 meta: row['meta'] is Map
                     ? Map<String, dynamic>.from(row['meta'])
                     : <String, dynamic>{},
@@ -74,7 +77,13 @@ class _EducationStepState extends State<EducationStep> {
       _selected = ids
           .map(onboardingInt)
           .whereType<int>()
-          .map((id) => OnboardingOption(id: id, label: 'Education #$id'))
+          .map(
+            (id) => selectedValuePlaceholderOption(
+              id,
+              widget.locale,
+              failed: true,
+            )!,
+          )
           .toList();
     }
   }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
@@ -49,7 +50,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   @override
   void didUpdateWidget(covariant FamilyOptionalStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.data != widget.data) _prefill();
+    if (!mapEquals(oldWidget.data, widget.data)) _prefill();
   }
 
   @override
@@ -77,18 +78,16 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
         onboardingInt(data['sisters_count'])?.toString() ?? '';
     _fatherOccupation =
         optionFromData(data['father_occupation_option']) ??
-        _placeholder(data['father_occupation_master_id'], 'Occupation');
+        _placeholder(data['father_occupation_master_id']);
     _motherOccupation =
         optionFromData(data['mother_occupation_option']) ??
-        _placeholder(data['mother_occupation_master_id'], 'Occupation');
+        _placeholder(data['mother_occupation_master_id']);
   }
 
   String _t(String en, String mr) => _mr ? mr : en;
 
-  OnboardingOption? _placeholder(dynamic id, String label) {
-    final intId = onboardingInt(id);
-    if (intId == null) return null;
-    return OnboardingOption(id: intId, label: '$label #$intId');
+  OnboardingOption? _placeholder(dynamic id) {
+    return selectedValuePlaceholderOption(id, widget.locale, failed: true);
   }
 
   Future<PagedLookupResponse> _occupationPage(
@@ -112,9 +111,13 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
       compactPayload({
         'father_name': _fatherNameController.text.trim(),
         'father_occupation_master_id': _fatherOccupation?.intId,
+        if (_fatherOccupation?.intId != null)
+          'father_occupation_option': _fatherOccupation!.toJson(),
         'father_extra_info': _fatherInfoController.text.trim(),
         'mother_name': _motherNameController.text.trim(),
         'mother_occupation_master_id': _motherOccupation?.intId,
+        if (_motherOccupation?.intId != null)
+          'mother_occupation_option': _motherOccupation!.toJson(),
         'mother_extra_info': _motherInfoController.text.trim(),
         'brothers_count': onboardingInt(_brothersCountController.text),
         'sisters_count': onboardingInt(_sistersCountController.text),

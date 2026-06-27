@@ -22,6 +22,7 @@ class OnboardingFieldErrorMap {
     'height_cm',
     'marital_status_id',
     'has_children',
+    'children',
   ];
 
   static const List<String> ownershipPriority = <String>[
@@ -32,6 +33,7 @@ class OnboardingFieldErrorMap {
     'height_cm',
     'marital_status_id',
     'has_children',
+    'children',
   ];
 
   static const Map<String, OnboardingFieldErrorTarget> _targets =
@@ -74,6 +76,14 @@ class OnboardingFieldErrorMap {
       };
 
   static OnboardingFieldErrorTarget? targetFor(String backendField) {
+    if (backendField == 'children' || backendField.startsWith('children.')) {
+      return OnboardingFieldErrorTarget(
+        backendField: backendField,
+        ownerStep: basicInfoStep,
+        uiField: 'children',
+      );
+    }
+
     return _targets[backendField];
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'onboarding_step_helpers.dart';
+
 class OnboardingStepScaffold extends StatelessWidget {
   const OnboardingStepScaffold({
     super.key,
@@ -56,16 +58,11 @@ class OnboardingStepScaffold extends StatelessWidget {
         ],
         ...children,
         const SizedBox(height: 18),
-        ElevatedButton.icon(
-          onPressed: loading || !continueEnabled ? null : onContinue,
-          icon: loading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.arrow_forward),
-          label: Text(continueLabel ?? 'Continue'),
+        OnboardingContinueButton(
+          label: continueLabel ?? 'Continue',
+          loading: loading,
+          enabled: continueEnabled,
+          onPressed: onContinue,
         ),
         if (secondary != null) ...[const SizedBox(height: 10), secondary!],
       ],

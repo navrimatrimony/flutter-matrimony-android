@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
@@ -59,7 +60,7 @@ class _CareerStepState extends State<CareerStep> {
   @override
   void didUpdateWidget(covariant CareerStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.data != widget.data) _prefill();
+    if (!mapEquals(oldWidget.data, widget.data)) _prefill();
   }
 
   @override
@@ -79,7 +80,7 @@ class _CareerStepState extends State<CareerStep> {
         _workingWithPlaceholder(data['working_with']);
     _occupation =
         optionFromData(data['occupation_option']) ??
-        _placeholder(data['occupation_master_id'], 'Occupation');
+        _placeholder(data['occupation_master_id']);
     _companyController.text = onboardingText(data['company_name']) ?? '';
     _workLocationController.text =
         onboardingText(data['work_location_text']) ?? '';
@@ -92,10 +93,8 @@ class _CareerStepState extends State<CareerStep> {
 
   String _t(String en, String mr) => _mr ? mr : en;
 
-  OnboardingOption? _placeholder(dynamic id, String label) {
-    final intId = onboardingInt(id);
-    if (intId == null) return null;
-    return OnboardingOption(id: intId, label: '$label #$intId');
+  OnboardingOption? _placeholder(dynamic id) {
+    return selectedValuePlaceholderOption(id, widget.locale, failed: true);
   }
 
   OnboardingOption? _workingWithPlaceholder(dynamic key) {
@@ -199,7 +198,10 @@ class _CareerStepState extends State<CareerStep> {
 
     final payload = compactPayload({
       'working_with': _workingWith?.key ?? _workingWith?.id?.toString(),
+      if (_workingWith != null) 'working_with_option': _workingWith!.toJson(),
       'occupation_master_id': _notWorking ? null : _occupation?.intId,
+      if (!_notWorking && _occupation?.intId != null)
+        'occupation_option': _occupation!.toJson(),
       'company_name': _notWorking ? null : _companyController.text.trim(),
       'work_location_text': _notWorking
           ? null
