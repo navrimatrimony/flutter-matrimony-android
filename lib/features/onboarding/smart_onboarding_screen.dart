@@ -15,6 +15,7 @@ import 'models/onboarding_option.dart';
 import 'models/onboarding_status.dart';
 import 'models/paged_lookup_response.dart';
 import 'steps/activation_checklist_step.dart';
+import 'steps/astro_step.dart';
 import 'steps/basic_candidate_info_step.dart';
 import 'steps/education_career_step.dart';
 import 'steps/family_optional_step.dart';
@@ -40,6 +41,7 @@ enum _SmartOnboardingStep {
   motherTongue,
   lifestyle,
   family,
+  astro,
   photo,
   activation,
 }
@@ -319,6 +321,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         OnboardingFieldErrorMap.communityStep,
       _SmartOnboardingStep.lifestyle => 'lifestyle',
       _SmartOnboardingStep.family => 'family',
+      _SmartOnboardingStep.astro => OnboardingFieldErrorMap.astroStep,
       _SmartOnboardingStep.photo => 'photo',
       _SmartOnboardingStep.mobileOtp => 'mobile_otp',
       _SmartOnboardingStep.activation => 'activation',
@@ -336,6 +339,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       'career' => _SmartOnboardingStep.education,
       'lifestyle' => _SmartOnboardingStep.lifestyle,
       'family' => _SmartOnboardingStep.family,
+      OnboardingFieldErrorMap.astroStep => _SmartOnboardingStep.astro,
       'photo' => _SmartOnboardingStep.photo,
       _ => null,
     };
@@ -572,6 +576,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         normalized == 'career';
   }
 
+  bool get _supportsAstroStep {
+    return _bootstrap.steps.contains('astro') ||
+        _bootstrap.mangalDoshTypes.isNotEmpty ||
+        _bootstrap.nakshatras.isNotEmpty ||
+        _bootstrap.rashis.isNotEmpty;
+  }
+
   _SmartOnboardingStep _stepFromServerName(String? step) {
     switch (step) {
       case 'account':
@@ -596,6 +607,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             : _SmartOnboardingStep.religionCaste;
       case 'family':
         return _SmartOnboardingStep.family;
+      case 'astro':
+        return _SmartOnboardingStep.astro;
       case 'photo':
         return _SmartOnboardingStep.photo;
       case 'activation':
@@ -624,6 +637,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.lifestyle:
         return _SmartOnboardingStep.family;
       case _SmartOnboardingStep.family:
+        return _supportsAstroStep
+            ? _SmartOnboardingStep.astro
+            : _SmartOnboardingStep.photo;
+      case _SmartOnboardingStep.astro:
         return _SmartOnboardingStep.photo;
       case _SmartOnboardingStep.photo:
         return _SmartOnboardingStep.activation;
@@ -652,8 +669,12 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _SmartOnboardingStep.religionCaste;
       case _SmartOnboardingStep.family:
         return _SmartOnboardingStep.lifestyle;
-      case _SmartOnboardingStep.photo:
+      case _SmartOnboardingStep.astro:
         return _SmartOnboardingStep.family;
+      case _SmartOnboardingStep.photo:
+        return _supportsAstroStep
+            ? _SmartOnboardingStep.astro
+            : _SmartOnboardingStep.family;
       case _SmartOnboardingStep.activation:
         return _SmartOnboardingStep.photo;
       default:
@@ -1034,6 +1055,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       diets: source.diets,
       smokingOptions: source.smokingOptions,
       drinkingOptions: source.drinkingOptions,
+      mangalDoshTypes: source.mangalDoshTypes,
+      nakshatras: source.nakshatras,
+      rashis: source.rashis,
+      charanOptions: source.charanOptions,
       childrenRules: source.childrenRules,
       agePolicy: source.agePolicy,
       steps: source.steps,
@@ -2266,6 +2291,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _t('Lifestyle details', 'Lifestyle माहिती');
       case _SmartOnboardingStep.family:
         return _t('Family details', 'कुटुंबाची माहिती');
+      case _SmartOnboardingStep.astro:
+        return _t('Astro details', 'ज्योतिष माहिती');
       case _SmartOnboardingStep.photo:
         return _t('Profile photo', 'Profile photo');
       case _SmartOnboardingStep.activation:
@@ -2327,6 +2354,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _t(
           'Family context builds trust before conversations begin.',
           '$subjectMr कुटुंबाची माहिती विश्वास वाढवते.',
+        );
+      case _SmartOnboardingStep.astro:
+        return _t(
+          'Astro details can help families who prefer horoscope matching.',
+          '$subjectMr ज्योतिष माहिती horoscope matching साठी उपयोगी ठरते.',
         );
       case _SmartOnboardingStep.photo:
         return _t(
@@ -2506,6 +2538,14 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             ),
             _SmartOnboardingStep.family => FamilyOptionalStep(
               data: _draftStepData('family'),
+              locale: _localeCode,
+              loading: _loading,
+              onSave: _saveOnboardingStep,
+              onBack: _goBackOneStep,
+            ),
+            _SmartOnboardingStep.astro => AstroStep(
+              data: _draftStepData('astro'),
+              bootstrap: _bootstrap,
               locale: _localeCode,
               loading: _loading,
               onSave: _saveOnboardingStep,

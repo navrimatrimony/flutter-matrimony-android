@@ -14,6 +14,7 @@ class OnboardingFieldErrorMap {
   static const String profileForWhomStep = 'profile_for_whom';
   static const String basicInfoStep = 'basic_info';
   static const String communityStep = 'religion_caste';
+  static const String astroStep = 'astro';
 
   static const List<String> knownBackendFields = <String>[
     'mother_tongue_id',
@@ -24,6 +25,10 @@ class OnboardingFieldErrorMap {
     'marital_status_id',
     'has_children',
     'children',
+    'mangal_dosh_type_id',
+    'nakshatra_id',
+    'rashi_id',
+    'charan',
   ];
 
   static const List<String> ownershipPriority = <String>[
@@ -35,6 +40,10 @@ class OnboardingFieldErrorMap {
     'marital_status_id',
     'has_children',
     'children',
+    'mangal_dosh_type_id',
+    'nakshatra_id',
+    'rashi_id',
+    'charan',
   ];
 
   static const Map<String, OnboardingFieldErrorTarget> _targets =
@@ -73,6 +82,26 @@ class OnboardingFieldErrorMap {
           backendField: 'has_children',
           ownerStep: basicInfoStep,
           uiField: 'has_children',
+        ),
+        'mangal_dosh_type_id': OnboardingFieldErrorTarget(
+          backendField: 'mangal_dosh_type_id',
+          ownerStep: astroStep,
+          uiField: 'mangal_dosh_type',
+        ),
+        'nakshatra_id': OnboardingFieldErrorTarget(
+          backendField: 'nakshatra_id',
+          ownerStep: astroStep,
+          uiField: 'nakshatra',
+        ),
+        'rashi_id': OnboardingFieldErrorTarget(
+          backendField: 'rashi_id',
+          ownerStep: astroStep,
+          uiField: 'rashi',
+        ),
+        'charan': OnboardingFieldErrorTarget(
+          backendField: 'charan',
+          ownerStep: astroStep,
+          uiField: 'charan',
         ),
       };
 

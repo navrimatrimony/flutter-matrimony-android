@@ -10,6 +10,10 @@ class OnboardingBootstrap {
     this.diets = const <OnboardingOption>[],
     this.smokingOptions = const <OnboardingOption>[],
     this.drinkingOptions = const <OnboardingOption>[],
+    this.mangalDoshTypes = const <OnboardingOption>[],
+    this.nakshatras = const <OnboardingOption>[],
+    this.rashis = const <OnboardingOption>[],
+    this.charanOptions = const <OnboardingOption>[],
     this.childrenRules = const <String, dynamic>{},
     this.agePolicy = const <String, dynamic>{},
     this.steps = const <String>[],
@@ -24,6 +28,10 @@ class OnboardingBootstrap {
   final List<OnboardingOption> diets;
   final List<OnboardingOption> smokingOptions;
   final List<OnboardingOption> drinkingOptions;
+  final List<OnboardingOption> mangalDoshTypes;
+  final List<OnboardingOption> nakshatras;
+  final List<OnboardingOption> rashis;
+  final List<OnboardingOption> charanOptions;
   final Map<String, dynamic> childrenRules;
   final Map<String, dynamic> agePolicy;
   final List<String> steps;
@@ -57,6 +65,18 @@ class OnboardingBootstrap {
         source['drinking_options'] ??
             source['drinking'] ??
             source['drinking_statuses'],
+      ),
+      mangalDoshTypes: OnboardingOption.listFrom(
+        source['mangal_dosh_types'] ??
+            source['mangalDoshTypes'] ??
+            source['mangal_dosh'],
+      ),
+      nakshatras: OnboardingOption.listFrom(
+        source['nakshatras'] ?? source['nakshatra'],
+      ),
+      rashis: OnboardingOption.listFrom(source['rashis'] ?? source['rashi']),
+      charanOptions: OnboardingOption.listFrom(
+        source['charan_options'] ?? source['charans'] ?? source['charan'],
       ),
       childrenRules: _mapValue(source['children_rules']),
       agePolicy: _mapValue(source['age_policy']),
