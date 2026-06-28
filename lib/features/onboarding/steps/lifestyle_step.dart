@@ -35,6 +35,8 @@ class _LifestyleStepState extends State<LifestyleStep> {
   OnboardingOption? _diet;
   OnboardingOption? _smoking;
   OnboardingOption? _drinking;
+  OnboardingOption? _physicalBuild;
+  OnboardingOption? _spectaclesLens;
 
   bool get _mr => widget.locale == 'mr';
 
@@ -68,6 +70,18 @@ class _LifestyleStepState extends State<LifestyleStep> {
         optionById(
           widget.bootstrap.drinkingOptions,
           widget.data['drinking_status_id'],
+        );
+    _physicalBuild =
+        optionFromData(widget.data['physical_build_option']) ??
+        optionById(
+          widget.bootstrap.physicalBuilds,
+          widget.data['physical_build_id'],
+        );
+    _spectaclesLens =
+        optionFromData(widget.data['spectacles_lens_option']) ??
+        optionByKey(
+          widget.bootstrap.spectaclesLensOptions,
+          widget.data['spectacles_lens'],
         );
   }
 
@@ -117,6 +131,12 @@ class _LifestyleStepState extends State<LifestyleStep> {
         if (_smoking?.intId != null) 'smoking_option': _smoking!.toJson(),
         'drinking_status_id': _drinking?.intId,
         if (_drinking?.intId != null) 'drinking_option': _drinking!.toJson(),
+        'physical_build_id': _physicalBuild?.intId,
+        if (_physicalBuild?.intId != null)
+          'physical_build_option': _physicalBuild!.toJson(),
+        'spectacles_lens': _spectaclesLens?.key,
+        if (_spectaclesLens?.key != null)
+          'spectacles_lens_option': _spectaclesLens!.toJson(),
       }),
       saveProfile: true,
     );
@@ -125,11 +145,7 @@ class _LifestyleStepState extends State<LifestyleStep> {
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: _t('Lifestyle details', 'जीवनशैली माहिती'),
-      subtitle: _t(
-        'Choose what you want to share now. You can change it later.',
-        'आता जी माहिती द्यायची आहे ती निवडा. नंतर बदलता येईल.',
-      ),
+      title: '',
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
@@ -143,6 +159,7 @@ class _LifestyleStepState extends State<LifestyleStep> {
           options: widget.bootstrap.diets,
           lookupType: 'diet',
           selected: _diet,
+          compactTwoColumn: true,
           onChanged: (option) => setState(() => _diet = option),
         ),
         const SizedBox(height: 16),
@@ -152,6 +169,7 @@ class _LifestyleStepState extends State<LifestyleStep> {
           options: widget.bootstrap.smokingOptions,
           lookupType: 'smoking',
           selected: _smoking,
+          useSelectField: true,
           onChanged: (option) => setState(() => _smoking = option),
         ),
         const SizedBox(height: 16),
@@ -161,7 +179,26 @@ class _LifestyleStepState extends State<LifestyleStep> {
           options: widget.bootstrap.drinkingOptions,
           lookupType: 'drinking',
           selected: _drinking,
+          useSelectField: true,
           onChanged: (option) => setState(() => _drinking = option),
+        ),
+        const SizedBox(height: 16),
+        _optionGroup(
+          label: _t('Physical Build', 'शरीरयष्टी'),
+          helper: _t('Optional', 'Optional'),
+          options: widget.bootstrap.physicalBuilds,
+          lookupType: 'physical-builds',
+          selected: _physicalBuild,
+          onChanged: (option) => setState(() => _physicalBuild = option),
+        ),
+        const SizedBox(height: 16),
+        _optionGroup(
+          label: _t('Spectacles / Lens', 'चष्मा / लेन्स'),
+          helper: _t('Optional', 'Optional'),
+          options: widget.bootstrap.spectaclesLensOptions,
+          lookupType: 'spectacles-lens',
+          selected: _spectaclesLens,
+          onChanged: (option) => setState(() => _spectaclesLens = option),
         ),
       ],
     );
@@ -174,8 +211,10 @@ class _LifestyleStepState extends State<LifestyleStep> {
     required String lookupType,
     required OnboardingOption? selected,
     required ValueChanged<OnboardingOption?> onChanged,
+    bool compactTwoColumn = false,
+    bool useSelectField = false,
   }) {
-    if (options.isEmpty) {
+    if (useSelectField || options.isEmpty) {
       return _picker(
         label: label,
         selected: selected,
@@ -192,12 +231,13 @@ class _LifestyleStepState extends State<LifestyleStep> {
         LayoutBuilder(
           builder: (context, constraints) {
             final available = constraints.maxWidth;
-            final twoColumn = available >= 300;
-            final itemWidth = twoColumn ? (available - 10) / 2 : available;
+            final spacing = compactTwoColumn ? 8.0 : 10.0;
+            final twoColumn = available >= (compactTwoColumn ? 260 : 300);
+            final itemWidth = twoColumn ? (available - spacing) / 2 : available;
 
             return Wrap(
-              spacing: 10,
-              runSpacing: 10,
+              spacing: spacing,
+              runSpacing: compactTwoColumn ? 8 : 10,
               children: [
                 for (final option in options)
                   SizedBox(
@@ -206,11 +246,11 @@ class _LifestyleStepState extends State<LifestyleStep> {
                       label: option.label,
                       selected: selected?.identity == option.identity,
                       onTap: () => onChanged(option),
-                      minHeight: 48,
-                      fontSize: 14,
+                      minHeight: compactTwoColumn ? 44 : 48,
+                      fontSize: compactTwoColumn ? 13 : 14,
                       maxLines: 2,
-                      horizontalPadding: 12,
-                      verticalPadding: 10,
+                      horizontalPadding: compactTwoColumn ? 10 : 12,
+                      verticalPadding: compactTwoColumn ? 8 : 10,
                     ),
                   ),
               ],

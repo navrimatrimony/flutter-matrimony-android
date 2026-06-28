@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../core/api_client.dart';
 import '../models/onboarding_option.dart';
 import '../models/paged_lookup_response.dart';
+import '../widgets/onboarding_error_highlight.dart';
 import '../widgets/onboarding_picker_field.dart';
 import '../widgets/smart_picker_panel.dart';
 import 'onboarding_step_helpers.dart';
@@ -127,6 +128,8 @@ class EducationCareerStep extends StatefulWidget {
     required this.onSave,
     required this.onBack,
     required this.onMessage,
+    this.educationError,
+    this.educationErrorToken = 0,
   });
 
   final Map<String, dynamic> educationData;
@@ -136,6 +139,8 @@ class EducationCareerStep extends StatefulWidget {
   final OnboardingStepSaver onSave;
   final VoidCallback onBack;
   final ValueChanged<String> onMessage;
+  final String? educationError;
+  final int educationErrorToken;
 
   @override
   State<EducationCareerStep> createState() => _EducationCareerStepState();
@@ -160,6 +165,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
   bool _incomePrivate = true;
   String? _incomeError;
   String? _incomeErrorField;
+  String? _educationError;
   String? _incomeBandKey;
   bool _workExtrasExpanded = false;
 
@@ -192,6 +198,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     super.initState();
     _prefillEducation();
     _prefillCareer();
+    _educationError = widget.educationError;
     _loadIncomeOptions();
   }
 
@@ -203,6 +210,10 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     }
     if (!mapEquals(oldWidget.careerData, widget.careerData)) {
       _prefillCareer();
+    }
+    if (oldWidget.educationErrorToken != widget.educationErrorToken ||
+        oldWidget.educationError != widget.educationError) {
+      _educationError = widget.educationError;
     }
   }
 
@@ -724,6 +735,13 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
   }
 
   Future<void> _continue() async {
+    if (_selectedEducation.isEmpty) {
+      final message = _t('Select education.', 'शिक्षण निवडा.');
+      setState(() => _educationError = message);
+      widget.onMessage(message);
+      return;
+    }
+
     if (_workingWith == null) {
       widget.onMessage(_t('Choose work details.', 'कामाची माहिती निवडा.'));
       return;
@@ -941,84 +959,96 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     final colorScheme = Theme.of(context).colorScheme;
     final hasSelection = _selectedEducation.isNotEmpty;
 
-    return InkWell(
+    return OnboardingErrorHighlight(
+      hasError: _educationError != null,
+      pulseKey: 'education:${widget.educationErrorToken}:$_educationError',
       borderRadius: BorderRadius.circular(10),
-      onTap: () => SmartPickerPanel.show(
-        context,
-        title: _t('Education', 'शिक्षण'),
-        selectedItems: _selectedEducation,
-        multiSelect: true,
-        searchHint: _t('Search education', 'Education शोधा'),
-        loadPage: _educationPage,
-        itemSubtitleBuilder: (option) => option.metaText('category_label'),
-        allowRequestToAdd: true,
-        onRequestToAdd: _showEducationSuggestionDialog,
-        onChanged: (items) => setState(() => _selectedEducation = items),
-      ),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          labelText: _t('Education', 'शिक्षण'),
-          isDense: true,
-          contentPadding: const EdgeInsets.fromLTRB(12, 10, 6, 8),
-          suffixIconConstraints: const BoxConstraints(
-            minWidth: 34,
-            minHeight: 32,
-          ),
-          suffixIcon: Icon(Icons.chevron_right, color: colorScheme.primary),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => SmartPickerPanel.show(
+          context,
+          title: _t('Education', 'शिक्षण'),
+          selectedItems: _selectedEducation,
+          multiSelect: true,
+          searchHint: _t('Search education', 'Education शोधा'),
+          loadPage: _educationPage,
+          itemSubtitleBuilder: (option) => option.metaText('category_label'),
+          allowRequestToAdd: true,
+          onRequestToAdd: _showEducationSuggestionDialog,
+          onChanged: (items) => setState(() {
+            _selectedEducation = items;
+            _educationError = null;
+          }),
         ),
-        child: hasSelection
-            ? SizedBox(
-                height: 32,
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      for (var i = 0; i < _selectedEducation.length; i++) ...[
-                        if (i > 0) const SizedBox(width: 6),
-                        InputChip(
-                          label: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 150),
-                            child: Text(
-                              _selectedEducation[i].label,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+        child: InputDecorator(
+          decoration: InputDecoration(
+            labelText: _t('Education *', 'शिक्षण *'),
+            errorText: _educationError,
+            isDense: true,
+            contentPadding: const EdgeInsets.fromLTRB(12, 10, 6, 8),
+            suffixIconConstraints: const BoxConstraints(
+              minWidth: 34,
+              minHeight: 32,
+            ),
+            suffixIcon: Icon(Icons.chevron_right, color: colorScheme.primary),
+          ),
+          child: hasSelection
+              ? SizedBox(
+                  height: 32,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < _selectedEducation.length; i++) ...[
+                          if (i > 0) const SizedBox(width: 6),
+                          InputChip(
+                            label: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 150),
+                              child: Text(
+                                _selectedEducation[i].label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
+                            labelStyle: const TextStyle(
+                              color: _educationChipColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            labelPadding: const EdgeInsets.only(left: 6),
+                            visualDensity: VisualDensity.compact,
+                            materialTapTargetSize:
+                                MaterialTapTargetSize.shrinkWrap,
+                            backgroundColor: _educationChipSurface,
+                            selectedColor: _educationChipSurface,
+                            side: const BorderSide(color: _educationChipColor),
+                            deleteIcon: const Icon(Icons.close, size: 14),
+                            deleteIconColor: _educationChipColor,
+                            onDeleted: () => setState(() {
+                              final item = _selectedEducation[i];
+                              _selectedEducation = _selectedEducation
+                                  .where(
+                                    (selected) =>
+                                        selected.identity != item.identity,
+                                  )
+                                  .toList();
+                              if (_selectedEducation.isNotEmpty) {
+                                _educationError = null;
+                              }
+                            }),
                           ),
-                          labelStyle: const TextStyle(
-                            color: _educationChipColor,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          labelPadding: const EdgeInsets.only(left: 6),
-                          visualDensity: VisualDensity.compact,
-                          materialTapTargetSize:
-                              MaterialTapTargetSize.shrinkWrap,
-                          backgroundColor: _educationChipSurface,
-                          selectedColor: _educationChipSurface,
-                          side: const BorderSide(color: _educationChipColor),
-                          deleteIcon: const Icon(Icons.close, size: 14),
-                          deleteIconColor: _educationChipColor,
-                          onDeleted: () => setState(() {
-                            final item = _selectedEducation[i];
-                            _selectedEducation = _selectedEducation
-                                .where(
-                                  (selected) =>
-                                      selected.identity != item.identity,
-                                )
-                                .toList();
-                          }),
-                        ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
+                )
+              : Text(
+                  _t('Search and select education', 'Education शोधून निवडा'),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: Colors.grey.shade700),
                 ),
-              )
-            : Text(
-                _t('Search and select education', 'Education शोधून निवडा'),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
+        ),
       ),
     );
   }

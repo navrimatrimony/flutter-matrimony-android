@@ -54,9 +54,20 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
   OnboardingOption? _caste;
   OnboardingOption? _subCaste;
   bool _intercasteAccepted = false;
+  bool _religionError = false;
+  bool _casteError = false;
   int _hydrationToken = 0;
 
   bool get _mr => widget.locale == 'mr';
+
+  bool get _motherTongueSelected => _motherTongue?.intId != null;
+
+  bool get _religionSelected => _religion?.intId != null;
+
+  bool get _casteSelected => _caste?.intId != null;
+
+  bool get _canContinue =>
+      _motherTongueSelected && _religionSelected && _casteSelected;
 
   @override
   void initState() {
@@ -355,6 +366,22 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
   }
 
   Future<void> _save() async {
+    final missingReligion = !_religionSelected;
+    final missingCaste = !_casteSelected;
+
+    if (missingReligion || missingCaste) {
+      setState(() {
+        _religionError = missingReligion;
+        _casteError = missingCaste;
+      });
+      widget.onMessage(
+        missingReligion
+            ? _t('Select religion.', 'धर्म निवडा.')
+            : _t('Select caste.', 'जात निवडा.'),
+      );
+      return;
+    }
+
     final motherTongueSaved = await widget.onSaveMotherTongue(_motherTongue);
     if (!motherTongueSaved) return;
 
@@ -383,15 +410,14 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
   Widget build(BuildContext context) {
     final hasMotherTongueError =
         widget.motherTongueError?.trim().isNotEmpty ?? false;
-    final motherTongueSelected = _motherTongue?.intId != null;
     return OnboardingStepScaffold(
       title: _t('Community details', 'समुदायाची माहिती'),
       subtitle: _t(
-        'Select mother tongue first, then religion and caste.',
-        'आधी मातृभाषा, नंतर धर्म आणि जात निवडा.',
+        'Select mother tongue, religion and caste to continue.',
+        'पुढे जाण्यासाठी मातृभाषा, धर्म आणि जात निवडा.',
       ),
       loading: widget.loading,
-      continueEnabled: motherTongueSelected && _religion?.intId != null,
+      continueEnabled: _canContinue,
       onBack: widget.onBack,
       onContinue: _save,
       children: [
@@ -400,7 +426,7 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
           pulseKey:
               'mother_tongue:${widget.motherTongueError}:${_motherTongue?.intId}',
           child: _picker(
-            label: _t('Mother tongue', 'मातृभाषा'),
+            label: _t('Mother tongue *', 'मातृभाषा *'),
             selected: _motherTongue,
             loadPage: _motherTonguePage,
             errorText: widget.motherTongueError,
@@ -413,27 +439,34 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
         ),
         const SizedBox(height: 16),
         _picker(
-          label: _t('Religion', 'धर्म'),
+          label: _t('Religion *', 'धर्म *'),
           selected: _religion,
           loadPage: _religionPage,
-          enabled: motherTongueSelected,
+          enabled: _motherTongueSelected,
+          errorText: _religionError
+              ? _t('Select religion.', 'धर्म निवडा.')
+              : null,
           onChanged: (option) => setState(() {
             if (_religion?.identity == option?.identity) return;
             _religion = option;
             _caste = null;
             _subCaste = null;
+            _religionError = false;
+            _casteError = false;
           }),
         ),
         if (_religion != null) ...[
           const SizedBox(height: 16),
           _picker(
-            label: _t('Caste', 'जात'),
+            label: _t('Caste *', 'जात *'),
             selected: _caste,
             loadPage: _castePage,
+            errorText: _casteError ? _t('Select caste.', 'जात निवडा.') : null,
             onChanged: (option) => setState(() {
               if (_caste?.identity == option?.identity) return;
               _caste = option;
               _subCaste = null;
+              _casteError = false;
             }),
           ),
         ],

@@ -446,6 +446,9 @@ class ApiClient {
   static String? resolveProfilePhotoUrl(Map<String, dynamic>? profile) {
     if (profile == null) return null;
 
+    final approvedPhotoHint = _resolveApprovedPhotoHint(profile);
+    if (approvedPhotoHint != null) return approvedPhotoHint;
+
     final directPhotoUrl = _resolvePhotoValueFromMap(profile, const [
       'profile_photo_url',
       'photo_url',
@@ -463,6 +466,37 @@ class ApiClient {
     if (profilePhotoUrl != null) return profilePhotoUrl;
 
     return _resolvePhotoValueFromMap(profile, const ['url', 'path']);
+  }
+
+  static String? _resolveApprovedPhotoHint(Map<String, dynamic> profile) {
+    final directApproved = _resolvePhotoValueFromMap(profile, const [
+      'approved_photo_url',
+      'approved_profile_photo_url',
+      'primary_photo_url',
+    ], respectApproval: false);
+    if (directApproved != null) return directApproved;
+
+    final display = profile['display'];
+    if (display is! Map) return null;
+
+    final displayMap = Map<String, dynamic>.from(display);
+    for (final key in const ['hero', 'card']) {
+      final section = displayMap[key];
+      if (section is! Map) continue;
+
+      final sectionUrl = _resolvePhotoValueFromMap(
+        Map<String, dynamic>.from(section),
+        const ['primary_photo_url', 'photo_url', 'profile_photo_url'],
+        respectApproval: false,
+      );
+      if (sectionUrl != null) return sectionUrl;
+    }
+
+    return _resolvePhotoValueFromMap(displayMap, const [
+      'primary_photo_url',
+      'photo_url',
+      'profile_photo_url',
+    ], respectApproval: false);
   }
 
   static String? normalizeProfilePhotoUrl(dynamic rawValue) {
@@ -1197,6 +1231,11 @@ class ApiClient {
       'profile_managed_by',
     ]);
     addOptions('diets', const ['diets', 'diet']);
+    addOptions('mother_tongues', const [
+      'mother_tongues',
+      'motherTongues',
+      'mother_tongue',
+    ]);
     addOptions('religions', const ['religions', 'religion']);
     addOptions('castes', const ['castes', 'caste']);
     addOptions('education_degrees', const [
@@ -1374,6 +1413,34 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  static Future<Map<String, dynamic>> verifyGoogleEmail({
+    required String email,
+    required String idToken,
+  }) {
+    return _postJson(ApiRoutes.accountEmailGoogle, {
+      'email': email,
+      'id_token': idToken,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> sendEmailOtp({required String email}) {
+    return _postJson(ApiRoutes.accountEmailOtpSend, {
+      'email': email,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> verifyEmailOtp({
+    required String challengeId,
+    required String email,
+    required String otp,
+  }) {
+    return _postJson(ApiRoutes.accountEmailOtpVerify, {
+      'challenge_id': challengeId,
+      'email': email,
+      'otp': otp,
+    }, authenticated: true);
+  }
+
   static Future<Map<String, dynamic>> startOnboarding({
     required String profileForWhom,
     int? genderId,
@@ -1528,6 +1595,14 @@ class ApiClient {
         return ApiRoutes.onboardingLookupsSmoking;
       case 'drinking':
         return ApiRoutes.onboardingLookupsDrinking;
+      case 'physical-builds':
+      case 'physical_builds':
+      case 'physical-build':
+      case 'physical_build':
+        return ApiRoutes.onboardingLookupsPhysicalBuilds;
+      case 'spectacles-lens':
+      case 'spectacles_lens':
+        return ApiRoutes.onboardingLookupsSpectaclesLens;
     }
 
     return lookup.startsWith('/') ? lookup : '/onboarding/lookups/$lookup';
@@ -1771,7 +1846,19 @@ class ApiClient {
     final data = _decodeResponse(response);
 
     if (response.statusCode == 200 && data['success'] == true) {
-      currentUserProfile = data['profile'] as Map<String, dynamic>?;
+      final profile = data['profile'];
+      if (profile is Map) {
+        final normalizedProfile = Map<String, dynamic>.from(profile);
+        final display = data['display'];
+        if (display is Map) {
+          normalizedProfile['display'] = Map<String, dynamic>.from(display);
+          final displayPhotoUrl = _resolveApprovedPhotoHint(normalizedProfile);
+          if (displayPhotoUrl != null) {
+            normalizedProfile['profile_photo_url'] = displayPhotoUrl;
+          }
+        }
+        currentUserProfile = normalizedProfile;
+      }
     }
 
     return data;

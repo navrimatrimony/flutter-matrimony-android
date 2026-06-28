@@ -10,6 +10,8 @@ class OnboardingBootstrap {
     this.diets = const <OnboardingOption>[],
     this.smokingOptions = const <OnboardingOption>[],
     this.drinkingOptions = const <OnboardingOption>[],
+    this.physicalBuilds = const <OnboardingOption>[],
+    this.spectaclesLensOptions = const <OnboardingOption>[],
     this.mangalDoshTypes = const <OnboardingOption>[],
     this.nakshatras = const <OnboardingOption>[],
     this.rashis = const <OnboardingOption>[],
@@ -28,6 +30,8 @@ class OnboardingBootstrap {
   final List<OnboardingOption> diets;
   final List<OnboardingOption> smokingOptions;
   final List<OnboardingOption> drinkingOptions;
+  final List<OnboardingOption> physicalBuilds;
+  final List<OnboardingOption> spectaclesLensOptions;
   final List<OnboardingOption> mangalDoshTypes;
   final List<OnboardingOption> nakshatras;
   final List<OnboardingOption> rashis;
@@ -65,6 +69,17 @@ class OnboardingBootstrap {
         source['drinking_options'] ??
             source['drinking'] ??
             source['drinking_statuses'],
+      ),
+      physicalBuilds: OnboardingOption.listFrom(
+        source['physical_build_options'] ??
+            source['physical_builds'] ??
+            source['physicalBuilds'] ??
+            source['physical_build'],
+      ),
+      spectaclesLensOptions: OnboardingOption.listFrom(
+        source['spectacles_lens_options'] ??
+            source['spectacles_lens'] ??
+            source['spectaclesLens'],
       ),
       mangalDoshTypes: OnboardingOption.listFrom(
         source['mangal_dosh_types'] ??

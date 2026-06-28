@@ -1,5 +1,4 @@
 import 'account_state.dart';
-import 'activation_checklist.dart';
 import 'onboarding_draft.dart';
 import 'profile_summary.dart';
 
@@ -14,7 +13,6 @@ class OnboardingStatus {
     this.isSearchable = false,
     this.nextStep,
     this.accountState,
-    this.activationChecklist = const <ActivationChecklistItem>[],
     this.preferences,
     this.message,
     this.raw = const <String, dynamic>{},
@@ -29,7 +27,6 @@ class OnboardingStatus {
   final bool isSearchable;
   final String? nextStep;
   final AccountState? accountState;
-  final List<ActivationChecklistItem> activationChecklist;
   final Map<String, dynamic>? preferences;
   final String? message;
   final Map<String, dynamic> raw;
@@ -52,9 +49,6 @@ class OnboardingStatus {
       isSearchable: _boolValue(json['is_searchable']) ?? false,
       nextStep: _stringValue(json['next_step']),
       accountState: AccountState.maybeFrom(json['account_state']),
-      activationChecklist: ActivationChecklistItem.listFrom(
-        json['activation_checklist'] ?? json['items'],
-      ),
       preferences: preferences is Map
           ? Map<String, dynamic>.from(preferences)
           : null,

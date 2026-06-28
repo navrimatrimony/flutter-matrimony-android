@@ -6,6 +6,9 @@ class ApiRoutes {
   static const String mobileOtpSend = '/auth/mobile-otp/send';
   static const String mobileOtpVerify = '/auth/mobile-otp/verify';
   static const String accountDetails = '/account/details';
+  static const String accountEmailGoogle = '/account/email/google';
+  static const String accountEmailOtpSend = '/account/email-otp/send';
+  static const String accountEmailOtpVerify = '/account/email-otp/verify';
   static const String locationSearch = '/location/search';
   static const String internalLocationStates = '/internal/location/states';
   static const String internalLocationDistricts =
@@ -50,6 +53,10 @@ class ApiRoutes {
   static const String onboardingLookupsSmoking = '/onboarding/lookups/smoking';
   static const String onboardingLookupsDrinking =
       '/onboarding/lookups/drinking';
+  static const String onboardingLookupsPhysicalBuilds =
+      '/onboarding/lookups/physical-builds';
+  static const String onboardingLookupsSpectaclesLens =
+      '/onboarding/lookups/spectacles-lens';
   static const String onboardingPreferenceAutoDraftPreview =
       '/onboarding/preferences/auto-draft/preview';
   static const String onboardingPreferenceAutoDraft =

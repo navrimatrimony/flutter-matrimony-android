@@ -8,13 +8,13 @@ import 'package:flutter/services.dart';
 import '../../core/api_client.dart';
 import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
+import '../../core/email_hint_service.dart';
 import 'models/mobile_otp_models.dart';
 import 'models/onboarding_field_error_map.dart';
 import 'models/onboarding_bootstrap.dart';
 import 'models/onboarding_option.dart';
 import 'models/onboarding_status.dart';
 import 'models/paged_lookup_response.dart';
-import 'steps/activation_checklist_step.dart';
 import 'steps/astro_step.dart';
 import 'steps/basic_candidate_info_step.dart';
 import 'steps/education_career_step.dart';
@@ -23,8 +23,10 @@ import 'steps/lifestyle_step.dart';
 import 'steps/location_step.dart';
 import 'steps/marital_status_step.dart';
 import 'steps/onboarding_step_helpers.dart';
+import 'steps/partner_preference_review_step.dart';
 import 'steps/photo_step.dart';
 import 'steps/religion_caste_step.dart';
+import 'steps/registration_success_step.dart';
 import 'widgets/onboarding_error_highlight.dart';
 import 'widgets/onboarding_picker_field.dart';
 
@@ -40,10 +42,11 @@ enum _SmartOnboardingStep {
   education,
   motherTongue,
   lifestyle,
-  family,
   astro,
+  family,
+  registrationComplete,
   photo,
-  activation,
+  partnerPreference,
 }
 
 enum _OnboardingMessageType { success, info, warning }
@@ -322,9 +325,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _SmartOnboardingStep.lifestyle => 'lifestyle',
       _SmartOnboardingStep.family => 'family',
       _SmartOnboardingStep.astro => OnboardingFieldErrorMap.astroStep,
+      _SmartOnboardingStep.registrationComplete => 'registration_complete',
+      _SmartOnboardingStep.partnerPreference => 'partner_preferences',
       _SmartOnboardingStep.photo => 'photo',
       _SmartOnboardingStep.mobileOtp => 'mobile_otp',
-      _SmartOnboardingStep.activation => 'activation',
     };
   }
 
@@ -340,7 +344,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       'lifestyle' => _SmartOnboardingStep.lifestyle,
       'family' => _SmartOnboardingStep.family,
       OnboardingFieldErrorMap.astroStep => _SmartOnboardingStep.astro,
+      'registration_complete' => _SmartOnboardingStep.registrationComplete,
+      'partner_preferences' => _SmartOnboardingStep.partnerPreference,
       'photo' => _SmartOnboardingStep.photo,
+      'activation' => _SmartOnboardingStep.partnerPreference,
       _ => null,
     };
   }
@@ -536,7 +543,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   bool get _canShowOnboardingBack =>
       _step != _SmartOnboardingStep.profileForWhom;
 
-  bool get _showCreateProfileChrome => _step != _SmartOnboardingStep.mobileOtp;
+  bool get _isPostRegistrationStep =>
+      _step == _SmartOnboardingStep.registrationComplete ||
+      _step == _SmartOnboardingStep.photo ||
+      _step == _SmartOnboardingStep.partnerPreference;
+
+  bool get _showCreateProfileChrome =>
+      _step != _SmartOnboardingStep.mobileOtp && !_isPostRegistrationStep;
 
   bool get _canStepBackWithinOnboarding {
     if (_loading) return false;
@@ -565,6 +578,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   bool _statusHasCompletedEducation(OnboardingStatus status) {
     final steps = status.draft?.completedSteps ?? const <String>[];
     return steps.contains('education') || steps.contains('career');
+  }
+
+  bool _hasCompletedServerStep(String step) {
+    return _status?.draft?.completedSteps.contains(step) == true;
   }
 
   bool _isServerStepBeforeLifestyle(String? step) {
@@ -606,16 +623,35 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             ? _SmartOnboardingStep.lifestyle
             : _SmartOnboardingStep.religionCaste;
       case 'family':
+        if (_supportsAstroStep && !_hasCompletedServerStep('astro')) {
+          return _SmartOnboardingStep.astro;
+        }
         return _SmartOnboardingStep.family;
       case 'astro':
+        if (!_supportsAstroStep) {
+          return _hasCompletedServerStep('family')
+              ? _SmartOnboardingStep.registrationComplete
+              : _SmartOnboardingStep.family;
+        }
+        if (_hasCompletedServerStep('astro') &&
+            _hasCompletedServerStep('family')) {
+          return _SmartOnboardingStep.registrationComplete;
+        }
         return _SmartOnboardingStep.astro;
       case 'photo':
-        return _SmartOnboardingStep.photo;
+        if (!_hasCompletedServerStep('family')) {
+          return _SmartOnboardingStep.family;
+        }
+        return _SmartOnboardingStep.registrationComplete;
       case 'activation':
-        return _SmartOnboardingStep.activation;
+        if (_hasCompletedServerStep('photo') &&
+            !_hasReviewedPartnerPreference()) {
+          return _SmartOnboardingStep.partnerPreference;
+        }
+        return _SmartOnboardingStep.partnerPreference;
     }
 
-    return _SmartOnboardingStep.activation;
+    return _SmartOnboardingStep.partnerPreference;
   }
 
   _SmartOnboardingStep _nextProfileStep(_SmartOnboardingStep step) {
@@ -635,15 +671,19 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.motherTongue:
         return _SmartOnboardingStep.lifestyle;
       case _SmartOnboardingStep.lifestyle:
-        return _SmartOnboardingStep.family;
-      case _SmartOnboardingStep.family:
         return _supportsAstroStep
             ? _SmartOnboardingStep.astro
-            : _SmartOnboardingStep.photo;
+            : _SmartOnboardingStep.family;
       case _SmartOnboardingStep.astro:
+        return _SmartOnboardingStep.family;
+      case _SmartOnboardingStep.family:
+        return _SmartOnboardingStep.registrationComplete;
+      case _SmartOnboardingStep.registrationComplete:
         return _SmartOnboardingStep.photo;
       case _SmartOnboardingStep.photo:
-        return _SmartOnboardingStep.activation;
+        return _SmartOnboardingStep.partnerPreference;
+      case _SmartOnboardingStep.partnerPreference:
+        return _SmartOnboardingStep.partnerPreference;
       default:
         return step;
     }
@@ -667,15 +707,17 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _SmartOnboardingStep.education;
       case _SmartOnboardingStep.motherTongue:
         return _SmartOnboardingStep.religionCaste;
-      case _SmartOnboardingStep.family:
-        return _SmartOnboardingStep.lifestyle;
       case _SmartOnboardingStep.astro:
-        return _SmartOnboardingStep.family;
-      case _SmartOnboardingStep.photo:
+        return _SmartOnboardingStep.lifestyle;
+      case _SmartOnboardingStep.family:
         return _supportsAstroStep
             ? _SmartOnboardingStep.astro
-            : _SmartOnboardingStep.family;
-      case _SmartOnboardingStep.activation:
+            : _SmartOnboardingStep.lifestyle;
+      case _SmartOnboardingStep.registrationComplete:
+        return _SmartOnboardingStep.family;
+      case _SmartOnboardingStep.photo:
+        return _SmartOnboardingStep.registrationComplete;
+      case _SmartOnboardingStep.partnerPreference:
         return _SmartOnboardingStep.photo;
       default:
         return step;
@@ -927,7 +969,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           response.accountState?.hasProfile == true) {
         setState(() {
           _step = _status == null
-              ? _SmartOnboardingStep.activation
+              ? _SmartOnboardingStep.partnerPreference
               : _stepFromStatus(_status!);
         });
       } else if (_profileForWhom != null) {
@@ -1055,6 +1097,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       diets: source.diets,
       smokingOptions: source.smokingOptions,
       drinkingOptions: source.drinkingOptions,
+      physicalBuilds: source.physicalBuilds,
+      spectaclesLensOptions: source.spectaclesLensOptions,
       mangalDoshTypes: source.mangalDoshTypes,
       nakshatras: source.nakshatras,
       rashis: source.rashis,
@@ -1292,6 +1336,147 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     return account;
   }
 
+  String? _profileAboutText() {
+    final profile = _status?.profile?.raw ?? const <String, dynamic>{};
+    return onboardingText(profile['narrative_about_me']) ??
+        onboardingText(ApiClient.currentUserProfile?['narrative_about_me']);
+  }
+
+  List<AboutTemplateSuggestion> _aboutTemplateSuggestions() {
+    final facts = <String>[
+      if (_ageFact() case final value?) value,
+      if (_heightFact() case final value?) value,
+      if (_maritalFact() case final value?) value,
+      if (_communityFact() case final value?) value,
+      if (_educationFact() case final value?) value,
+      if (_careerFact() case final value?) value,
+    ];
+    final factText = facts.take(4).join(' ');
+
+    String body(String seed) {
+      return [seed, factText].where((part) => part.trim().isNotEmpty).join(' ');
+    }
+
+    return <AboutTemplateSuggestion>[
+      AboutTemplateSuggestion(
+        label: _t('Simple & family-first', 'साधी आणि कुटुंबप्रिय'),
+        text: body(
+          'Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.',
+        ),
+      ),
+      AboutTemplateSuggestion(
+        label: _t('Career with balance', 'Career आणि balance'),
+        text: body(
+          'I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.',
+        ),
+      ),
+      AboutTemplateSuggestion(
+        label: _t('Tradition & open mind', 'परंपरा आणि खुले विचार'),
+        text: body(
+          'I respect traditions and still value practical, open-minded conversations when important decisions need to be made.',
+        ),
+      ),
+      AboutTemplateSuggestion(
+        label: _t('Honesty & respect', 'प्रामाणिकपणा आणि आदर'),
+        text: body(
+          'Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.',
+        ),
+      ),
+      AboutTemplateSuggestion(
+        label: _t('Calm & steady', 'शांत आणि स्थिर'),
+        text: body(
+          'I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.',
+        ),
+      ),
+    ];
+  }
+
+  String? _optionLabelFromDraft(Map<String, dynamic> data, String key) {
+    return optionFromData(data[key])?.label;
+  }
+
+  String? _ageFact() {
+    final dob = onboardingText(_draftStepData('basic_info')['date_of_birth']);
+    if (dob == null) return null;
+    final parsed = DateTime.tryParse(dob);
+    if (parsed == null) return null;
+    final now = DateTime.now();
+    var age = now.year - parsed.year;
+    if (now.month < parsed.month ||
+        (now.month == parsed.month && now.day < parsed.day)) {
+      age--;
+    }
+    if (age < 18 || age > 90) return null;
+    return 'Age is $age years.';
+  }
+
+  String? _heightFact() {
+    final cm = onboardingInt(_draftStepData('basic_info')['height_cm']);
+    if (cm == null || cm <= 0) return null;
+    final inches = (cm / 2.54).round();
+    final feet = inches ~/ 12;
+    final remaining = inches % 12;
+    return 'Height is about $feet ft $remaining in.';
+  }
+
+  String? _maritalFact() {
+    final basic = _draftStepData('basic_info');
+    final label =
+        _optionLabelFromDraft(basic, 'marital_status_option') ??
+        onboardingText(basic['marital_status_key']);
+    return label == null ? null : 'Marital status: $label.';
+  }
+
+  String? _communityFact() {
+    final community = _draftStepData('religion_caste');
+    final religion = _optionLabelFromDraft(community, 'religion_option');
+    final caste = _optionLabelFromDraft(community, 'caste_option');
+    final parts = [religion, caste].whereType<String>().toList();
+    if (parts.isEmpty) return null;
+    return 'Community background: ${parts.join(', ')}.';
+  }
+
+  String? _educationFact() {
+    final education = _draftStepData('education');
+    final slots = education['education_slots'];
+    if (slots is! List) return null;
+    final labels = slots
+        .whereType<Map>()
+        .map((row) => onboardingText(row['label']))
+        .whereType<String>()
+        .take(2)
+        .toList();
+    if (labels.isEmpty) return null;
+    return 'Education: ${labels.join(', ')}.';
+  }
+
+  String? _careerFact() {
+    final career = _draftStepData('career');
+    final occupation = _optionLabelFromDraft(career, 'occupation_option');
+    final workingWith = _optionLabelFromDraft(career, 'working_with_option');
+    final label = occupation ?? workingWith;
+    return label == null ? null : 'Professionally connected with $label.';
+  }
+
+  bool _hasReviewedPartnerPreference() {
+    final local = _clientStepData('partner_preferences');
+    if (onboardingBool(local['saved']) == true) return true;
+    final preferences = _status?.preferences;
+    if (preferences == null) return false;
+    return onboardingBool(preferences['has_auto_draft']) == true ||
+        onboardingText(preferences['generated_at']) != null;
+  }
+
+  void _markPartnerPreferenceReviewed() {
+    _clientDraftData = <String, dynamic>{
+      ..._clientDraftData,
+      'partner_preferences': <String, dynamic>{
+        ..._clientStepData('partner_preferences'),
+        'saved': true,
+      },
+    };
+  }
+
   void _mergeDraftStepData(String step, Map<String, dynamic> data) {
     _serverDraftData = <String, dynamic>{
       ..._serverDraftData,
@@ -1364,6 +1549,31 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   bool _isClientOnlyStepKey(String key) => key.endsWith('_option');
+
+  _SmartOnboardingStep? _serverNextStepFromResponse(
+    Map<String, dynamic>? profileResponse,
+    Map<String, dynamic> draftResponse,
+  ) {
+    String? stepFrom(Map<String, dynamic>? response) {
+      if (response == null) return null;
+      final directNext = onboardingText(response['next_step']);
+      if (directNext != null) return directNext;
+
+      final draft = response['draft'];
+      if (draft is Map) {
+        return onboardingText(draft['next_step']);
+      }
+      return null;
+    }
+
+    final serverStep =
+        stepFrom(profileResponse) ??
+        stepFrom(draftResponse) ??
+        _status?.nextStep ??
+        _status?.draft?.currentStep;
+    if (serverStep == null) return null;
+    return _stepFromServerName(serverStep);
+  }
 
   Future<bool> _saveOnboardingStep(
     String step,
@@ -1447,12 +1657,16 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       await _loadStatus(goToStatus: false);
       if (!mounted) return false;
       _mergeClientDraftStepData(step, data);
+      final serverNextStep = _serverNextStepFromResponse(
+        profileResponse,
+        draftResponse,
+      );
       setState(() {
         _loading = false;
         if (advance) {
           _step = step == 'photo'
-              ? _SmartOnboardingStep.activation
-              : _nextProfileStep(_step);
+              ? _SmartOnboardingStep.partnerPreference
+              : serverNextStep ?? _nextProfileStep(_step);
         }
       });
       _showOnboardingMessage(
@@ -1567,6 +1781,92 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _step = _SmartOnboardingStep.lifestyle;
     });
     await _saveLocalDraft();
+  }
+
+  Future<bool> _saveFamilyStatusAboutStep(
+    Map<String, dynamic> familyData,
+    String aboutText,
+  ) async {
+    final saved = await _saveOnboardingStep(
+      'family',
+      familyData,
+      saveProfile: true,
+      advance: false,
+    );
+    if (!mounted || !saved) return false;
+
+    setState(() {
+      _loading = true;
+      _error = null;
+      _message = null;
+      _fieldErrors = const <String, String>{};
+    });
+
+    try {
+      final response = await ApiClient.updateMatrimonyProfile({
+        'narrative_about_me': aboutText.trim(),
+      });
+      if (!mounted) return false;
+      if (response['success'] != true) {
+        setState(() {
+          _loading = false;
+          _error = readableApiError(
+            response,
+            _t(
+              'Could not save the about section.',
+              'About section save झाला नाही.',
+            ),
+          );
+        });
+        return false;
+      }
+
+      await _loadStatus(goToStatus: false);
+      if (!mounted) return false;
+      setState(() {
+        _loading = false;
+        _step = _SmartOnboardingStep.registrationComplete;
+        _error = null;
+        _message = null;
+        _fieldErrors = const <String, String>{};
+      });
+      await _saveLocalDraft();
+      return true;
+    } catch (error) {
+      if (!mounted) return false;
+      final message = error.toString();
+      setState(() {
+        _loading = false;
+        _error = _isTechnicalOnboardingError(message)
+            ? _genericSaveFailureMessage()
+            : message;
+      });
+      return false;
+    }
+  }
+
+  void _continueFromRegistrationComplete() {
+    setState(() {
+      _error = null;
+      _message = null;
+      _fieldErrors = const <String, String>{};
+      _step = _SmartOnboardingStep.photo;
+    });
+    unawaited(_saveLocalDraft());
+  }
+
+  void _verifyMobileFromRegistrationComplete() {
+    _startExistingMobileFlow();
+  }
+
+  Future<void> _handlePartnerPreferenceSaved() async {
+    await _loadStatus(goToStatus: false);
+    if (!mounted) return;
+    _markPartnerPreferenceReviewed();
+    await _saveLocalDraft();
+    await AppStorage.instance.clearOnboardingDraftJson();
+    if (!mounted) return;
+    Navigator.pushReplacementNamed(context, '/home');
   }
 
   Future<Map<String, dynamic>?> _dataForOnboardingStep(
@@ -2293,10 +2593,12 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _t('Family details', 'कुटुंबाची माहिती');
       case _SmartOnboardingStep.astro:
         return _t('Astro details', 'ज्योतिष माहिती');
+      case _SmartOnboardingStep.registrationComplete:
+        return _t('Registration complete', 'नोंदणी पूर्ण');
+      case _SmartOnboardingStep.partnerPreference:
+        return _t('Partner preference', 'जोडीदार पसंती');
       case _SmartOnboardingStep.photo:
         return _t('Profile photo', 'Profile photo');
-      case _SmartOnboardingStep.activation:
-        return _t('Final checklist', 'Final checklist');
     }
   }
 
@@ -2360,15 +2662,20 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           'Astro details can help families who prefer horoscope matching.',
           '$subjectMr ज्योतिष माहिती horoscope matching साठी उपयोगी ठरते.',
         );
+      case _SmartOnboardingStep.registrationComplete:
+        return _t(
+          'Registration is complete. Next settings improve match suggestions.',
+          'नोंदणी पूर्ण झाली आहे. पुढील settings योग्य स्थळे सुचवायला मदत करतात.',
+        );
+      case _SmartOnboardingStep.partnerPreference:
+        return _t(
+          'We prepared this from the information you filled. You can keep it strict or make it normal.',
+          'तुम्ही भरलेल्या माहितीवरून ही पसंती तयार केली आहे. ती strict ठेवू शकता किंवा normal करू शकता.',
+        );
       case _SmartOnboardingStep.photo:
         return _t(
           'A clear photo usually improves response quality.',
           'स्पष्ट profile photo response quality वाढवू शकतो.',
-        );
-      case _SmartOnboardingStep.activation:
-        return _t(
-          'Complete the checklist to make the profile ready.',
-          'Checklist पूर्ण केल्यावर profile पुढील टप्प्यासाठी तयार होईल.',
         );
     }
   }
@@ -2438,139 +2745,151 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   Widget _buildStepCard(BuildContext context) {
+    final stepContent = AnimatedSwitcher(
+      duration: const Duration(milliseconds: 180),
+      child: switch (_step) {
+        _SmartOnboardingStep.profileForWhom => _buildProfileForWhomStep(
+          context,
+        ),
+        _SmartOnboardingStep.mobileOtp => _buildMobileOtpStep(context),
+        _SmartOnboardingStep.maritalStatus => MaritalStatusStep(
+          title: '',
+          data: _draftStepData('basic_info'),
+          maritalStatuses: _bootstrap.maritalStatuses,
+          childrenRules: _bootstrap.childrenRules,
+          childLivingWithOptions: _childLivingWithOptions,
+          childLivingWithLoading: _childLivingWithLoading,
+          childLivingWithError: _childLivingWithError,
+          profileForWhom: _profileForWhom,
+          gender: _resolvedProfileGenderOption(),
+          fieldErrors: _fieldErrorsForStep(
+            OnboardingFieldErrorMap.basicInfoStep,
+          ),
+          locale: _localeCode,
+          loading: _loading,
+          onSave: _saveMaritalStatusStep,
+          onBack: _goBackOneStep,
+          onMessage: _showStepMessage,
+          onRetryLookups: _retryBootstrapLookups,
+          onFieldEdited: _clearCurrentFeedback,
+        ),
+        _SmartOnboardingStep.basicInfo => BasicCandidateInfoStep(
+          data: _draftStepData('basic_info'),
+          bootstrap: _bootstrap,
+          account: _status?.account ?? const <String, dynamic>{},
+          profileForWhom: _profileForWhom,
+          warmupGender: _warmupGender,
+          fieldErrors: _fieldErrorsForStep(
+            OnboardingFieldErrorMap.basicInfoStep,
+          ),
+          locale: _localeCode,
+          loading: _loading,
+          showHeader: false,
+          onSave: _saveOnboardingStep,
+          onBack: _goBackOneStep,
+          onMessage: _showStepMessage,
+          onFieldEdited: _clearCurrentFeedback,
+        ),
+        _SmartOnboardingStep.religionCaste => ReligionCasteStep(
+          data: _draftStepData('religion_caste'),
+          motherTongues: _motherTongueOptions(),
+          selectedMotherTongue: _motherTongue,
+          motherTongueError:
+              _motherTongueError ??
+              _motherTongueFieldError(
+                _fieldErrorsForStep(OnboardingFieldErrorMap.communityStep),
+              ),
+          locale: _localeCode,
+          loading: _loading,
+          onSave: _saveOnboardingStep,
+          onSaveMotherTongue: _saveCommunityMotherTongue,
+          onMotherTongueChanged: _selectMotherTongue,
+          onBack: _goBackOneStep,
+          onMessage: _showStepMessage,
+        ),
+        _SmartOnboardingStep.location => LocationStep(
+          data: _draftStepData('location'),
+          locale: _localeCode,
+          loading: _loading,
+          onSave: _saveOnboardingStep,
+          onBack: _goBackOneStep,
+          onMessage: _showStepMessage,
+        ),
+        _SmartOnboardingStep.education => EducationCareerStep(
+          educationData: _draftStepData('education'),
+          careerData: _draftStepData('career'),
+          locale: _localeCode,
+          loading: _loading,
+          onSave: _saveOnboardingStep,
+          onBack: _goBackOneStep,
+          onMessage: _showStepMessage,
+        ),
+        _SmartOnboardingStep.motherTongue => _buildMotherTongueStep(context),
+        _SmartOnboardingStep.lifestyle => LifestyleStep(
+          data: _draftStepData('lifestyle'),
+          bootstrap: _bootstrap,
+          locale: _localeCode,
+          loading: _loading,
+          onSave: _saveOnboardingStep,
+          onBack: _goBackOneStep,
+        ),
+        _SmartOnboardingStep.astro => AstroStep(
+          data: _draftStepData('astro'),
+          bootstrap: _bootstrap,
+          locale: _localeCode,
+          loading: _loading,
+          onSave: _saveOnboardingStep,
+          onBack: _goBackOneStep,
+        ),
+        _SmartOnboardingStep.family => FamilyOptionalStep(
+          data: _draftStepData('family'),
+          initialAbout: _profileAboutText(),
+          aboutSuggestions: _aboutTemplateSuggestions(),
+          locale: _localeCode,
+          loading: _loading,
+          onSaveFamilyAbout: _saveFamilyStatusAboutStep,
+          onBack: _goBackOneStep,
+        ),
+        _SmartOnboardingStep.registrationComplete => RegistrationSuccessStep(
+          account: _accountWithPendingEmail(),
+          locale: _localeCode,
+          loading: _loading,
+          onVerifyGoogleEmail: _verifyGoogleEmailFromRegistration,
+          onSendEmailOtp: _sendEmailOtpFromRegistration,
+          onVerifyEmailOtp: _verifyEmailOtpFromRegistration,
+          onSkipEmail: _continueFromRegistrationComplete,
+          onVerifyMobile: _verifyMobileFromRegistrationComplete,
+          onContinue: _continueFromRegistrationComplete,
+        ),
+        _SmartOnboardingStep.partnerPreference => PartnerPreferenceReviewStep(
+          status: _status,
+          locale: _localeCode,
+          loading: _loading,
+          onBack: _goBackOneStep,
+          onSaved: _handlePartnerPreferenceSaved,
+        ),
+        _SmartOnboardingStep.photo => PhotoStep(
+          status: _status,
+          locale: _localeCode,
+          loading: _loading,
+          onSave: _saveOnboardingStep,
+          onBack: _goBackOneStep,
+          onRefresh: () => _loadStatus(goToStatus: false),
+        ),
+      },
+    );
+
+    if (_isPostRegistrationStep) {
+      return stepContent;
+    }
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Colors.grey.shade300),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 180),
-          child: switch (_step) {
-            _SmartOnboardingStep.profileForWhom => _buildProfileForWhomStep(
-              context,
-            ),
-            _SmartOnboardingStep.mobileOtp => _buildMobileOtpStep(context),
-            _SmartOnboardingStep.maritalStatus => MaritalStatusStep(
-              title: '',
-              data: _draftStepData('basic_info'),
-              maritalStatuses: _bootstrap.maritalStatuses,
-              childrenRules: _bootstrap.childrenRules,
-              childLivingWithOptions: _childLivingWithOptions,
-              childLivingWithLoading: _childLivingWithLoading,
-              childLivingWithError: _childLivingWithError,
-              profileForWhom: _profileForWhom,
-              gender: _resolvedProfileGenderOption(),
-              fieldErrors: _fieldErrorsForStep(
-                OnboardingFieldErrorMap.basicInfoStep,
-              ),
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveMaritalStatusStep,
-              onBack: _goBackOneStep,
-              onMessage: _showStepMessage,
-              onRetryLookups: _retryBootstrapLookups,
-              onFieldEdited: _clearCurrentFeedback,
-            ),
-            _SmartOnboardingStep.basicInfo => BasicCandidateInfoStep(
-              data: _draftStepData('basic_info'),
-              bootstrap: _bootstrap,
-              account: _status?.account ?? const <String, dynamic>{},
-              profileForWhom: _profileForWhom,
-              warmupGender: _warmupGender,
-              fieldErrors: _fieldErrorsForStep(
-                OnboardingFieldErrorMap.basicInfoStep,
-              ),
-              locale: _localeCode,
-              loading: _loading,
-              showHeader: false,
-              onSave: _saveOnboardingStep,
-              onBack: _goBackOneStep,
-              onMessage: _showStepMessage,
-              onFieldEdited: _clearCurrentFeedback,
-            ),
-            _SmartOnboardingStep.religionCaste => ReligionCasteStep(
-              data: _draftStepData('religion_caste'),
-              motherTongues: _motherTongueOptions(),
-              selectedMotherTongue: _motherTongue,
-              motherTongueError:
-                  _motherTongueError ??
-                  _motherTongueFieldError(
-                    _fieldErrorsForStep(OnboardingFieldErrorMap.communityStep),
-                  ),
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveOnboardingStep,
-              onSaveMotherTongue: _saveCommunityMotherTongue,
-              onMotherTongueChanged: _selectMotherTongue,
-              onBack: _goBackOneStep,
-              onMessage: _showStepMessage,
-            ),
-            _SmartOnboardingStep.location => LocationStep(
-              data: _draftStepData('location'),
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveOnboardingStep,
-              onBack: _goBackOneStep,
-              onMessage: _showStepMessage,
-            ),
-            _SmartOnboardingStep.education => EducationCareerStep(
-              educationData: _draftStepData('education'),
-              careerData: _draftStepData('career'),
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveOnboardingStep,
-              onBack: _goBackOneStep,
-              onMessage: _showStepMessage,
-            ),
-            _SmartOnboardingStep.motherTongue => _buildMotherTongueStep(
-              context,
-            ),
-            _SmartOnboardingStep.lifestyle => LifestyleStep(
-              data: _draftStepData('lifestyle'),
-              bootstrap: _bootstrap,
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveOnboardingStep,
-              onBack: _goBackOneStep,
-            ),
-            _SmartOnboardingStep.family => FamilyOptionalStep(
-              data: _draftStepData('family'),
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveOnboardingStep,
-              onBack: _goBackOneStep,
-            ),
-            _SmartOnboardingStep.astro => AstroStep(
-              data: _draftStepData('astro'),
-              bootstrap: _bootstrap,
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveOnboardingStep,
-              onBack: _goBackOneStep,
-            ),
-            _SmartOnboardingStep.photo => PhotoStep(
-              status: _status,
-              locale: _localeCode,
-              loading: _loading,
-              onSave: _saveOnboardingStep,
-              onBack: _goBackOneStep,
-              onRefresh: () => _loadStatus(goToStatus: false),
-            ),
-            _SmartOnboardingStep.activation => ActivationChecklistStep(
-              status: _status,
-              account: _accountWithPendingEmail(),
-              locale: _localeCode,
-              loading: _loading,
-              onSaveEmail: _saveOptionalEmail,
-              onRefresh: () => _loadStatus(goToStatus: false),
-              onBack: _goBackOneStep,
-            ),
-          },
-        ),
-      ),
+      child: Padding(padding: const EdgeInsets.all(16), child: stepContent),
     );
   }
 
@@ -3115,29 +3434,81 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     );
   }
 
-  Future<String?> _saveOptionalEmail(String email) async {
-    final trimmed = email.trim();
-    if (trimmed.isEmpty) return null;
-    final creatorName =
-        onboardingText(_status?.account['creator_name']) ??
-        onboardingText(_status?.account['name']);
-    if (creatorName == null) {
+  Future<String?> _verifyGoogleEmailFromRegistration(
+    GoogleEmailCredential credential,
+  ) async {
+    final email = credential.email.trim();
+    final idToken = credential.idToken?.trim() ?? '';
+    if (email.isEmpty) {
       return _t(
-        'Add your name before saving email.',
-        'Email save करण्याआधी नाव भरा.',
+        'Could not read email from Google.',
+        'Google कडून email मिळाला नाही.',
+      );
+    }
+    if (idToken.isEmpty) {
+      return _t(
+        'Google verification is not ready. We will verify this email with OTP.',
+        'Google verification तयार नाही. हा email OTP ने verify करूया.',
       );
     }
 
-    final response = await ApiClient.updateAccountDetails(
-      creatorName: creatorName,
-      email: trimmed,
-      locale: _localeCode,
-      whatsappAlertsOptIn: _whatsappAlertsOptIn,
+    final response = await ApiClient.verifyGoogleEmail(
+      email: email,
+      idToken: idToken,
     );
     if (response['success'] != true) {
       return readableApiError(
         response,
-        _t('Could not save email.', 'Email save झाला नाही.'),
+        _t(
+          'Google verification failed. We will verify this email with OTP.',
+          'Google verification झाले नाही. हा email OTP ने verify करूया.',
+        ),
+      );
+    }
+
+    await _loadStatus(goToStatus: false);
+    return null;
+  }
+
+  Future<Map<String, dynamic>> _sendEmailOtpFromRegistration(
+    String email,
+  ) async {
+    final trimmed = email.trim();
+    if (trimmed.isEmpty) {
+      return {
+        'success': false,
+        'message': _t(
+          'Could not read email from Google.',
+          'Google कडून email मिळाला नाही.',
+        ),
+      };
+    }
+
+    return ApiClient.sendEmailOtp(email: trimmed);
+  }
+
+  Future<String?> _verifyEmailOtpFromRegistration({
+    required String challengeId,
+    required String email,
+    required String otp,
+  }) async {
+    final trimmed = email.trim();
+    if (trimmed.isEmpty) {
+      return _t(
+        'Could not read email from Google.',
+        'Google कडून email मिळाला नाही.',
+      );
+    }
+
+    final response = await ApiClient.verifyEmailOtp(
+      challengeId: challengeId,
+      email: trimmed,
+      otp: otp,
+    );
+    if (response['success'] != true) {
+      return readableApiError(
+        response,
+        _t('Could not verify email.', 'Email verify झाला नाही.'),
       );
     }
 

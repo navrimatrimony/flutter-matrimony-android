@@ -173,9 +173,7 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
       );
       final status = OnboardingStatus.fromJson(data);
       if (status.success) {
-        return status.hasProfile && status.isSearchable
-            ? '/home'
-            : '/smart-onboarding';
+        return _needsSmartOnboarding(status) ? '/smart-onboarding' : '/home';
       }
     } catch (_) {
       // Fall back to the older profile check below.
@@ -191,6 +189,15 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     }
 
     return '/home';
+  }
+
+  bool _needsSmartOnboarding(OnboardingStatus status) {
+    if (!status.hasProfile) return true;
+
+    final nextStep = (status.nextStep ?? status.draft?.currentStep)
+        ?.trim()
+        .toLowerCase();
+    return nextStep != null && nextStep != 'activation';
   }
 
   @override

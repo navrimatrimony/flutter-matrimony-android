@@ -14,6 +14,7 @@ class OnboardingFieldErrorMap {
   static const String profileForWhomStep = 'profile_for_whom';
   static const String basicInfoStep = 'basic_info';
   static const String communityStep = 'religion_caste';
+  static const String lifestyleStep = 'lifestyle';
   static const String astroStep = 'astro';
 
   static const List<String> knownBackendFields = <String>[
@@ -25,6 +26,8 @@ class OnboardingFieldErrorMap {
     'marital_status_id',
     'has_children',
     'children',
+    'physical_build_id',
+    'spectacles_lens',
     'mangal_dosh_type_id',
     'nakshatra_id',
     'rashi_id',
@@ -40,6 +43,8 @@ class OnboardingFieldErrorMap {
     'marital_status_id',
     'has_children',
     'children',
+    'physical_build_id',
+    'spectacles_lens',
     'mangal_dosh_type_id',
     'nakshatra_id',
     'rashi_id',
@@ -82,6 +87,16 @@ class OnboardingFieldErrorMap {
           backendField: 'has_children',
           ownerStep: basicInfoStep,
           uiField: 'has_children',
+        ),
+        'physical_build_id': OnboardingFieldErrorTarget(
+          backendField: 'physical_build_id',
+          ownerStep: lifestyleStep,
+          uiField: 'physical_build',
+        ),
+        'spectacles_lens': OnboardingFieldErrorTarget(
+          backendField: 'spectacles_lens',
+          ownerStep: lifestyleStep,
+          uiField: 'spectacles_lens',
         ),
         'mangal_dosh_type_id': OnboardingFieldErrorTarget(
           backendField: 'mangal_dosh_type_id',

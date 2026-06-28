@@ -20,7 +20,10 @@ import android.os.Looper
 import android.provider.Settings
 import com.google.android.gms.auth.api.identity.GetPhoneNumberHintIntentRequest
 import com.google.android.gms.auth.api.identity.Identity
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.AccountPicker
+import com.google.android.gms.common.api.ApiException
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -36,6 +39,7 @@ class MainActivity : FlutterActivity() {
     private val phoneNumberHintRequestCode = 2402
     private val emailHintRequestCode = 2403
     private val locationPermissionRequestCode = 2404
+    private val googleEmailVerificationRequestCode = 2405
     private val locationTimeoutMillis = 20000L
     private val lastKnownLocationMaxAgeMillis = 30 * 60 * 1000L
     private val relaxedLastKnownLocationMaxAgeMillis = 2 * 60 * 60 * 1000L
@@ -44,6 +48,7 @@ class MainActivity : FlutterActivity() {
     private var pendingNotificationResult: MethodChannel.Result? = null
     private var pendingPhoneNumberHintResult: MethodChannel.Result? = null
     private var pendingEmailHintResult: MethodChannel.Result? = null
+    private var pendingGoogleEmailVerificationResult: MethodChannel.Result? = null
     private var pendingLocationResult: MethodChannel.Result? = null
     private var pendingLocationLocale: String? = null
     private var pendingLocationListener: LocationListener? = null
@@ -77,6 +82,7 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "requestEmailHint" -> requestEmailHint(result)
+                "requestGoogleEmailVerification" -> requestGoogleEmailVerification(result)
                 else -> result.notImplemented()
             }
         }
@@ -172,6 +178,41 @@ class MainActivity : FlutterActivity() {
             startActivityForResult(intent, emailHintRequestCode)
         } catch (_: Exception) {
             finishEmailHint(null)
+        }
+    }
+
+    private fun requestGoogleEmailVerification(result: MethodChannel.Result) {
+        if (pendingGoogleEmailVerificationResult != null) {
+            result.success(null)
+            return
+        }
+
+        pendingGoogleEmailVerificationResult = result
+        try {
+            val builder = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+            val clientId = googleServerClientId()
+            if (clientId != null) {
+                builder.requestIdToken(clientId)
+            }
+            val options = builder.build()
+            val client = GoogleSignIn.getClient(this, options)
+            @Suppress("DEPRECATION")
+            startActivityForResult(client.signInIntent, googleEmailVerificationRequestCode)
+        } catch (_: Exception) {
+            finishGoogleEmailVerification(null)
+        }
+    }
+
+    private fun googleServerClientId(): String? {
+        val id = resources.getIdentifier("default_web_client_id", "string", packageName)
+        if (id == 0) {
+            return null
+        }
+        return try {
+            getString(id).trim().ifEmpty { null }
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -494,6 +535,11 @@ class MainActivity : FlutterActivity() {
         pendingEmailHintResult = null
     }
 
+    private fun finishGoogleEmailVerification(profile: Map<String, Any?>?) {
+        pendingGoogleEmailVerificationResult?.success(profile)
+        pendingGoogleEmailVerificationResult = null
+    }
+
     @Deprecated("Deprecated in Android framework, still used for Play Services hint intents.")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -517,6 +563,24 @@ class MainActivity : FlutterActivity() {
                     null
                 }
                 finishEmailHint(email)
+            }
+            googleEmailVerificationRequestCode -> {
+                val profile = if (resultCode == Activity.RESULT_OK && data != null) {
+                    try {
+                        val account = GoogleSignIn.getSignedInAccountFromIntent(data)
+                            .getResult(ApiException::class.java)
+                        mapOf(
+                            "email" to account.email,
+                            "id_token" to account.idToken,
+                            "is_google_account" to true
+                        )
+                    } catch (_: Exception) {
+                        null
+                    }
+                } else {
+                    null
+                }
+                finishGoogleEmailVerification(profile)
             }
         }
     }

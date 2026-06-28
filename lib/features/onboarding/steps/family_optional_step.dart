@@ -2,26 +2,37 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
-import '../models/onboarding_option.dart';
-import '../models/paged_lookup_response.dart';
-import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+
+typedef FamilyAboutStepSaver =
+    Future<bool> Function(Map<String, dynamic> familyData, String aboutText);
+
+class AboutTemplateSuggestion {
+  const AboutTemplateSuggestion({required this.label, required this.text});
+
+  final String label;
+  final String text;
+}
 
 class FamilyOptionalStep extends StatefulWidget {
   const FamilyOptionalStep({
     super.key,
     required this.data,
+    required this.initialAbout,
+    required this.aboutSuggestions,
     required this.locale,
     required this.loading,
-    required this.onSave,
+    required this.onSaveFamilyAbout,
     required this.onBack,
   });
 
   final Map<String, dynamic> data;
+  final String? initialAbout;
+  final List<AboutTemplateSuggestion> aboutSuggestions;
   final String locale;
   final bool loading;
-  final OnboardingStepSaver onSave;
+  final FamilyAboutStepSaver onSaveFamilyAbout;
   final VoidCallback onBack;
 
   @override
@@ -29,376 +40,379 @@ class FamilyOptionalStep extends StatefulWidget {
 }
 
 class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
-  final TextEditingController _fatherNameController = TextEditingController();
-  final TextEditingController _fatherInfoController = TextEditingController();
-  final TextEditingController _motherNameController = TextEditingController();
-  final TextEditingController _motherInfoController = TextEditingController();
-  final TextEditingController _brothersCountController =
-      TextEditingController();
-  final TextEditingController _sistersCountController = TextEditingController();
+  final TextEditingController _aboutController = TextEditingController();
 
-  OnboardingOption? _fatherOccupation;
-  OnboardingOption? _motherOccupation;
-  bool _showParentDetails = false;
+  List<_FamilyChoice> _statusOptions = _FamilyChoice.fallbackStatuses;
+  List<_FamilyChoice> _valueOptions = _FamilyChoice.fallbackValues;
+  String? _familyStatus;
+  String? _familyValues;
+  bool _optionsLoading = false;
+  String? _localError;
+  int? _selectedSuggestionIndex;
+
   bool get _mr => widget.locale == 'mr';
-  int get _brothersCount => onboardingInt(_brothersCountController.text) ?? 0;
-  int get _sistersCount => onboardingInt(_sistersCountController.text) ?? 0;
+  bool get _canContinue =>
+      _familyStatus != null && _aboutController.text.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
     _prefill();
+    _loadFamilyOptions();
   }
 
   @override
   void didUpdateWidget(covariant FamilyOptionalStep oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (!mapEquals(oldWidget.data, widget.data)) _prefill();
+    if (!mapEquals(oldWidget.data, widget.data) ||
+        oldWidget.initialAbout != widget.initialAbout ||
+        !listEquals(oldWidget.aboutSuggestions, widget.aboutSuggestions)) {
+      _prefill();
+    }
   }
 
   @override
   void dispose() {
-    _fatherNameController.dispose();
-    _fatherInfoController.dispose();
-    _motherNameController.dispose();
-    _motherInfoController.dispose();
-    _brothersCountController.dispose();
-    _sistersCountController.dispose();
+    _aboutController.dispose();
     super.dispose();
-  }
-
-  void _prefill() {
-    final data = widget.data;
-    _fatherNameController.text = onboardingText(data['father_name']) ?? '';
-    _fatherInfoController.text =
-        onboardingText(data['father_extra_info']) ?? '';
-    _motherNameController.text = onboardingText(data['mother_name']) ?? '';
-    _motherInfoController.text =
-        onboardingText(data['mother_extra_info']) ?? '';
-    _brothersCountController.text =
-        onboardingInt(data['brothers_count'])?.toString() ?? '';
-    _sistersCountController.text =
-        onboardingInt(data['sisters_count'])?.toString() ?? '';
-    _fatherOccupation =
-        optionFromData(data['father_occupation_option']) ??
-        _placeholder(data['father_occupation_master_id']);
-    _motherOccupation =
-        optionFromData(data['mother_occupation_option']) ??
-        _placeholder(data['mother_occupation_master_id']);
-    _showParentDetails = _hasParentDetails;
   }
 
   String _t(String en, String mr) => _mr ? mr : en;
 
-  bool get _hasParentDetails {
-    return _fatherNameController.text.trim().isNotEmpty ||
-        _fatherInfoController.text.trim().isNotEmpty ||
-        _motherNameController.text.trim().isNotEmpty ||
-        _motherInfoController.text.trim().isNotEmpty ||
-        _fatherOccupation != null ||
-        _motherOccupation != null;
-  }
-
-  void _changeCount(TextEditingController controller, int delta) {
-    final current = onboardingInt(controller.text) ?? 0;
-    final next = (current + delta).clamp(0, 20);
-    if (next == current) return;
-    setState(() => controller.text = next == 0 ? '' : next.toString());
-  }
-
-  String _siblingSummary() {
-    final parts = <String>[];
-    if (_brothersCount > 0) {
-      parts.add(
-        _t(
-          '$_brothersCount brother${_brothersCount == 1 ? '' : 's'}',
-          '$_brothersCount भाऊ',
-        ),
-      );
+  void _prefill() {
+    _familyStatus = onboardingText(widget.data['family_status']);
+    _familyValues = onboardingText(widget.data['family_values']);
+    final about = widget.initialAbout?.trim();
+    if (about != null && about.isNotEmpty && _aboutController.text.isEmpty) {
+      _aboutController.text = about;
+    } else if (_aboutController.text.isEmpty && _aboutSuggestions.isNotEmpty) {
+      _selectedSuggestionIndex = 0;
+      _aboutController.text = _suggestionText(_aboutSuggestions.first);
     }
-    if (_sistersCount > 0) {
-      parts.add(
-        _t(
-          '$_sistersCount sister${_sistersCount == 1 ? '' : 's'}',
-          '$_sistersCount बहिणी',
-        ),
-      );
-    }
-    return parts.isEmpty
-        ? _t('No siblings selected', 'भावंडे निवडलेली नाहीत')
-        : parts.join(' • ');
   }
 
-  OnboardingOption? _placeholder(dynamic id) {
-    return selectedValuePlaceholderOption(id, widget.locale, failed: true);
-  }
-
-  Future<PagedLookupResponse> _occupationPage(
-    String query,
-    int page,
-    int limit,
-  ) async {
-    return PagedLookupResponse.fromJson(
-      await ApiClient.searchOccupations(
-        query: query,
-        page: page,
-        limit: limit,
-        locale: widget.locale,
+  List<AboutTemplateSuggestion> get _aboutSuggestions {
+    if (widget.aboutSuggestions.isNotEmpty) return widget.aboutSuggestions;
+    return <AboutTemplateSuggestion>[
+      AboutTemplateSuggestion(
+        label: _t('Simple & family-first', 'साधी ओळख'),
+        text:
+            'Family values and mutual respect are important to me. I believe in a balanced life with clear communication, patience, and support from both families.',
       ),
-    );
+      AboutTemplateSuggestion(
+        label: _t('Career with balance', 'Career balance'),
+        text:
+            'I take responsibilities seriously and like keeping a healthy balance between work, family, and personal growth. I value honesty and steady understanding.',
+      ),
+      AboutTemplateSuggestion(
+        label: _t('Tradition & open mind', 'परंपरा आणि विचार'),
+        text:
+            'I respect traditions while staying open to practical modern thinking. I am looking for a relationship built on trust, kindness, and shared decisions.',
+      ),
+    ];
+  }
+
+  String? _choiceLabel(List<_FamilyChoice> options, String? key) {
+    if (key == null) return null;
+    for (final option in options) {
+      if (option.key == key) return option.label(widget.locale);
+    }
+    return null;
+  }
+
+  String _suggestionText(AboutTemplateSuggestion suggestion) {
+    final additions = <String>[];
+    final status = _choiceLabel(_statusOptions, _familyStatus);
+    final values = _choiceLabel(_valueOptions, _familyValues);
+    if (status != null) {
+      additions.add('Family background is $status.');
+    }
+    if (values != null) {
+      additions.add('Family values are $values.');
+    }
+    return [
+      ...<String>[suggestion.text],
+      ...additions,
+    ].join(' ').trim();
+  }
+
+  void _applySuggestion(int index) {
+    final suggestions = _aboutSuggestions;
+    if (index < 0 || index >= suggestions.length) return;
+    setState(() {
+      _selectedSuggestionIndex = index;
+      _aboutController.text = _suggestionText(suggestions[index]);
+      _localError = null;
+    });
+  }
+
+  void _maybePrefillAboutFromSuggestion() {
+    final suggestions = _aboutSuggestions;
+    final selectedIndex = _selectedSuggestionIndex;
+    if (selectedIndex != null &&
+        selectedIndex >= 0 &&
+        selectedIndex < suggestions.length) {
+      _aboutController.text = _suggestionText(suggestions[selectedIndex]);
+      _localError = null;
+      return;
+    }
+    if (_aboutController.text.trim().isNotEmpty || suggestions.isEmpty) {
+      return;
+    }
+    _selectedSuggestionIndex = 0;
+    _aboutController.text = _suggestionText(suggestions.first);
+    _localError = null;
+  }
+
+  Future<void> _loadFamilyOptions() async {
+    setState(() {
+      _optionsLoading = true;
+    });
+    try {
+      final results = await ApiClient.getProfileRemainingProfileOptions();
+      if (!mounted) return;
+      final statuses = _FamilyChoice.listFrom(
+        results['family_statuses'],
+        fallback: _FamilyChoice.fallbackStatuses,
+      );
+      final values = _FamilyChoice.listFrom(
+        results['family_values'],
+        fallback: _FamilyChoice.fallbackValues,
+      );
+      setState(() {
+        _statusOptions = statuses;
+        _valueOptions = values;
+        _optionsLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _optionsLoading = false;
+      });
+    }
   }
 
   Future<void> _save() async {
-    await widget.onSave(
-      'family',
+    final about = _aboutController.text.trim();
+    if (_familyStatus == null || about.isEmpty) {
+      setState(() {
+        _localError = _t(
+          'Select family status and write a short about section.',
+          'कुटुंब स्थिती निवडा आणि थोडक्यात स्वतःबद्दल लिहा.',
+        );
+      });
+      return;
+    }
+
+    setState(() {
+      _localError = null;
+    });
+
+    await widget.onSaveFamilyAbout(
       compactPayload({
-        'father_name': _fatherNameController.text.trim(),
-        'father_occupation_master_id': _fatherOccupation?.intId,
-        if (_fatherOccupation?.intId != null)
-          'father_occupation_option': _fatherOccupation!.toJson(),
-        'father_extra_info': _fatherInfoController.text.trim(),
-        'mother_name': _motherNameController.text.trim(),
-        'mother_occupation_master_id': _motherOccupation?.intId,
-        if (_motherOccupation?.intId != null)
-          'mother_occupation_option': _motherOccupation!.toJson(),
-        'mother_extra_info': _motherInfoController.text.trim(),
-        'brothers_count': onboardingInt(_brothersCountController.text),
-        'sisters_count': onboardingInt(_sistersCountController.text),
+        'family_status': _familyStatus,
+        'family_values': _familyValues,
       }),
-      saveProfile: true,
+      about,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: _t('Family details', 'कुटुंब माहिती'),
+      title: _t('Family and about', 'कुटुंब आणि ओळख'),
       subtitle: _t(
-        'Add a quick family summary now. Detailed rows can come later.',
-        'आता थोडक्यात family माहिती भरा. सविस्तर माहिती नंतर देता येईल.',
+        'One final profile detail helps families understand the match better.',
+        'शेवटची ही माहिती योग्य स्थळे सुचवण्यासाठी उपयोगी पडते.',
       ),
       loading: widget.loading,
+      continueEnabled: _canContinue,
       onBack: widget.onBack,
       onContinue: _save,
-      continueLabel: _t('Save and continue', 'सेव्ह करून पुढे जा'),
-      secondary: TextButton(
-        onPressed: widget.loading
-            ? null
-            : () => widget.onSave('family', const {}, saveProfile: false),
-        child: Text(_t('Skip family info', 'Family माहिती skip करा')),
-      ),
+      continueLabel: _t('Complete registration', 'नोंदणी पूर्ण करा'),
       children: [
-        _siblingsCard(context),
-        const SizedBox(height: 16),
-        _parentsCard(context),
-      ],
-    );
-  }
-
-  Widget _siblingsCard(BuildContext context) {
-    return _FamilySectionCard(
-      title: _t('Siblings', 'भावंडे'),
-      subtitle: _siblingSummary(),
-      child: Column(
-        children: [
-          _SiblingCounter(
-            label: _t('Brothers', 'भाऊ'),
-            value: _brothersCount,
-            onDecrement: () => _changeCount(_brothersCountController, -1),
-            onIncrement: () => _changeCount(_brothersCountController, 1),
+        _FamilyPanel(
+          title: _t('Family status', 'कुटुंब स्थिती'),
+          subtitle: _t('Required', 'आवश्यक'),
+          trailing: _optionsLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
+          child: _ChoiceWrap(
+            options: _statusOptions,
+            selectedKey: _familyStatus,
+            locale: widget.locale,
+            onChanged: widget.loading
+                ? null
+                : (key) => setState(() {
+                    _familyStatus = key;
+                    _localError = null;
+                    _maybePrefillAboutFromSuggestion();
+                  }),
           ),
+        ),
+        const SizedBox(height: 14),
+        _FamilyPanel(
+          title: _t('Family values', 'कुटुंब मूल्ये'),
+          subtitle: _t(
+            'Optional, but useful for better suggestions',
+            'Optional',
+          ),
+          child: _ChoiceWrap(
+            options: _valueOptions,
+            selectedKey: _familyValues,
+            locale: widget.locale,
+            onChanged: widget.loading
+                ? null
+                : (key) => setState(() {
+                    _familyValues = _familyValues == key ? null : key;
+                    _localError = null;
+                    _maybePrefillAboutFromSuggestion();
+                  }),
+          ),
+        ),
+        const SizedBox(height: 14),
+        _FamilyPanel(
+          title: _t('About profile', 'प्रोफाइलबद्दल'),
+          subtitle: _t('Required', 'आवश्यक'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _AboutSuggestionChips(
+                suggestions: _aboutSuggestions,
+                selectedIndex: _selectedSuggestionIndex,
+                onSelected: widget.loading ? null : _applySuggestion,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _aboutController,
+                enabled: !widget.loading,
+                minLines: 4,
+                maxLines: 7,
+                maxLength: 500,
+                textInputAction: TextInputAction.newline,
+                onChanged: (_) => setState(() {
+                  _selectedSuggestionIndex = null;
+                  _localError = null;
+                }),
+                decoration: InputDecoration(
+                  hintText: _t(
+                    'Write a natural introduction, family background, and what makes this profile easy to understand.',
+                    'स्वभाव, कुटुंब पार्श्वभूमी आणि profile समजायला मदत होईल अशी थोडक्यात माहिती लिहा.',
+                  ),
+                  alignLabelWithHint: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_localError != null) ...[
           const SizedBox(height: 10),
-          _SiblingCounter(
-            label: _t('Sisters', 'बहिणी'),
-            value: _sistersCount,
-            onDecrement: () => _changeCount(_sistersCountController, -1),
-            onIncrement: () => _changeCount(_sistersCountController, 1),
-          ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              _t(
-                'Names and married status can be added later from Edit Profile.',
-                'नावे आणि लग्नाची स्थिती नंतर Edit Profile मधून भरता येईल.',
-              ),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w600,
-              ),
+          Text(
+            _localError!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.red.shade700,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _parentsCard(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(18),
-            onTap: () =>
-                setState(() => _showParentDetails = !_showParentDetails),
-            child: Padding(
-              padding: const EdgeInsets.all(14),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _t('Parent details', 'आई-वडिलांची माहिती'),
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: Colors.grey.shade900,
-                              ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          _hasParentDetails
-                              ? _t('Some details added', 'काही माहिती भरली आहे')
-                              : _t('Optional', 'Optional'),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Colors.grey.shade600,
-                                fontWeight: FontWeight.w700,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  AnimatedRotation(
-                    turns: _showParentDetails ? 0.5 : 0,
-                    duration: const Duration(milliseconds: 180),
-                    curve: Curves.easeOutCubic,
-                    child: const Icon(Icons.keyboard_arrow_down_rounded),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          AnimatedCrossFade(
-            duration: const Duration(milliseconds: 180),
-            firstCurve: Curves.easeOutCubic,
-            secondCurve: Curves.easeOutCubic,
-            crossFadeState: _showParentDetails
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            firstChild: const SizedBox.shrink(),
-            secondChild: Padding(
-              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: _fatherNameController,
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      labelText: _t(
-                        'Father name optional',
-                        'वडिलांचे नाव optional',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _occupationPicker(
-                    label: _t('Father occupation', 'वडिलांचा व्यवसाय'),
-                    selected: _fatherOccupation,
-                    onChanged: (option) =>
-                        setState(() => _fatherOccupation = option),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _fatherInfoController,
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      labelText: _t(
-                        'Father notes optional',
-                        'वडिलांची माहिती optional',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: _motherNameController,
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      labelText: _t(
-                        'Mother name optional',
-                        'आईचे नाव optional',
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  _occupationPicker(
-                    label: _t('Mother occupation', 'आईचा व्यवसाय'),
-                    selected: _motherOccupation,
-                    onChanged: (option) =>
-                        setState(() => _motherOccupation = option),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _motherInfoController,
-                    onChanged: (_) => setState(() {}),
-                    decoration: InputDecoration(
-                      labelText: _t(
-                        'Mother notes optional',
-                        'आईची माहिती optional',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _occupationPicker({
-    required String label,
-    required OnboardingOption? selected,
-    required ValueChanged<OnboardingOption?> onChanged,
-  }) {
-    return OnboardingPickerField(
-      label: label,
-      selectedItems: selected == null ? const [] : [selected],
-      placeholder: _t('Search occupation', 'Occupation शोधा'),
-      loadPage: _occupationPage,
-      itemSubtitleBuilder: (option) => option.metaText('category_label'),
-      onChanged: (items) => onChanged(items.isEmpty ? null : items.first),
+      ],
     );
   }
 }
 
-class _FamilySectionCard extends StatelessWidget {
-  const _FamilySectionCard({
+class _FamilyChoice {
+  const _FamilyChoice({
+    required this.key,
+    required this.labelEn,
+    required this.labelMr,
+  });
+
+  final String key;
+  final String labelEn;
+  final String labelMr;
+
+  String label(String locale) => locale == 'mr' ? labelMr : labelEn;
+
+  static const List<_FamilyChoice> fallbackStatuses = <_FamilyChoice>[
+    _FamilyChoice(key: 'simple', labelEn: 'Simple', labelMr: 'साधे'),
+    _FamilyChoice(
+      key: 'middle_class',
+      labelEn: 'Middle Class',
+      labelMr: 'मध्यम वर्ग',
+    ),
+    _FamilyChoice(
+      key: 'upper_middle_class',
+      labelEn: 'Upper Middle Class',
+      labelMr: 'उच्च मध्यम वर्ग',
+    ),
+    _FamilyChoice(key: 'affluent', labelEn: 'Affluent', labelMr: 'सधन'),
+  ];
+
+  static const List<_FamilyChoice> fallbackValues = <_FamilyChoice>[
+    _FamilyChoice(
+      key: 'traditional',
+      labelEn: 'Traditional',
+      labelMr: 'परंपरागत',
+    ),
+    _FamilyChoice(key: 'moderate', labelEn: 'Moderate', labelMr: 'मध्यम'),
+    _FamilyChoice(key: 'modern', labelEn: 'Modern', labelMr: 'आधुनिक'),
+  ];
+
+  static List<_FamilyChoice> listFrom(
+    dynamic value, {
+    required List<_FamilyChoice> fallback,
+  }) {
+    if (value is! List) return fallback;
+    final rows = value
+        .whereType<Map>()
+        .map((row) => _FamilyChoice.fromMap(Map<String, dynamic>.from(row)))
+        .whereType<_FamilyChoice>()
+        .toList();
+    return rows.isEmpty ? fallback : rows;
+  }
+
+  static _FamilyChoice? fromMap(Map<String, dynamic> row) {
+    final key =
+        onboardingText(row['key']) ??
+        onboardingText(row['value']) ??
+        onboardingText(row['slug']);
+    if (key == null) return null;
+    final label =
+        onboardingText(row['label']) ??
+        onboardingText(row['name']) ??
+        onboardingText(row['display_label']) ??
+        key;
+    final labelMr =
+        onboardingText(row['label_mr']) ??
+        onboardingText(row['name_mr']) ??
+        label;
+    return _FamilyChoice(key: key, labelEn: label, labelMr: labelMr);
+  }
+}
+
+class _FamilyPanel extends StatelessWidget {
+  const _FamilyPanel({
     required this.title,
     required this.subtitle,
     required this.child,
+    this.trailing,
   });
 
   final String title;
   final String subtitle;
   final Widget child;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Padding(
@@ -406,22 +420,32 @@ class _FamilySectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: Colors.grey.shade900,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.w700,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: Colors.grey.shade900,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey.shade600,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (trailing != null) trailing!,
+              ],
             ),
             const SizedBox(height: 12),
             child,
@@ -432,101 +456,136 @@ class _FamilySectionCard extends StatelessWidget {
   }
 }
 
-class _SiblingCounter extends StatelessWidget {
-  const _SiblingCounter({
-    required this.label,
-    required this.value,
-    required this.onDecrement,
-    required this.onIncrement,
+class _ChoiceWrap extends StatelessWidget {
+  const _ChoiceWrap({
+    required this.options,
+    required this.selectedKey,
+    required this.locale,
+    required this.onChanged,
   });
 
-  final String label;
-  final int value;
-  final VoidCallback onDecrement;
-  final VoidCallback onIncrement;
+  final List<_FamilyChoice> options;
+  final String? selectedKey;
+  final String locale;
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.grey.shade900,
-                ),
-              ),
-            ),
-            _CounterButton(
-              icon: Icons.remove_rounded,
-              enabled: value > 0,
-              onTap: onDecrement,
-            ),
-            SizedBox(
-              width: 46,
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 140),
-                child: Text(
-                  value.toString(),
-                  key: ValueKey(value),
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: value > 0
-                        ? onboardingSelectedGreen
-                        : Colors.grey.shade500,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth >= 280
+            ? (constraints.maxWidth - 8) / 2
+            : constraints.maxWidth;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: options
+              .map(
+                (option) => SizedBox(
+                  width: itemWidth,
+                  child: OnboardingSelectablePill(
+                    label: option.label(locale),
+                    selected: selectedKey == option.key,
+                    onTap: onChanged == null
+                        ? null
+                        : () => onChanged!(option.key),
+                    minHeight: 48,
+                    maxLines: 2,
+                    horizontalPadding: 10,
+                    verticalPadding: 10,
                   ),
                 ),
-              ),
-            ),
-            _CounterButton(
-              icon: Icons.add_rounded,
-              enabled: value < 20,
-              onTap: onIncrement,
-            ),
-          ],
-        ),
-      ),
+              )
+              .toList(),
+        );
+      },
     );
   }
 }
 
-class _CounterButton extends StatelessWidget {
-  const _CounterButton({
-    required this.icon,
-    required this.enabled,
-    required this.onTap,
+class _AboutSuggestionChips extends StatelessWidget {
+  const _AboutSuggestionChips({
+    required this.suggestions,
+    required this.selectedIndex,
+    required this.onSelected,
   });
 
-  final IconData icon;
-  final bool enabled;
-  final VoidCallback onTap;
+  final List<AboutTemplateSuggestion> suggestions;
+  final int? selectedIndex;
+  final ValueChanged<int>? onSelected;
 
   @override
   Widget build(BuildContext context) {
-    final color = enabled ? onboardingSelectedGreen : Colors.grey.shade300;
-
-    return Material(
-      color: color.withValues(alpha: enabled ? 0.12 : 0.08),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: enabled ? onTap : null,
-        child: SizedBox(
-          width: 36,
-          height: 36,
-          child: Icon(icon, size: 20, color: color),
-        ),
-      ),
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+    final colors = Theme.of(context).colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth >= 320
+            ? (constraints.maxWidth - 8) / 2
+            : constraints.maxWidth;
+        return Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (var i = 0; i < suggestions.length; i++)
+              SizedBox(
+                width: itemWidth,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: onSelected == null ? null : () => onSelected!(i),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: selectedIndex == i
+                          ? onboardingSelectedGreen.withValues(alpha: 0.12)
+                          : colors.surfaceContainerHighest.withValues(
+                              alpha: 0.55,
+                            ),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: selectedIndex == i
+                            ? onboardingSelectedGreen
+                            : colors.outlineVariant,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 9,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_outlined,
+                            size: 16,
+                            color: selectedIndex == i
+                                ? onboardingSelectedGreen
+                                : colors.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 7),
+                          Expanded(
+                            child: Text(
+                              suggestions[i].label,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: selectedIndex == i
+                                    ? onboardingSelectedGreen
+                                    : colors.onSurfaceVariant,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                                height: 1.15,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
