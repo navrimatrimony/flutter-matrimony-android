@@ -485,7 +485,7 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _continue,
-      continueEnabled: selected != null && options.isNotEmpty,
+      continueEnabled: options.isNotEmpty,
       continueLabel: _t('Continue', 'पुढे जा'),
       children: [
         if (options.isEmpty)

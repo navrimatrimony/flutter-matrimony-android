@@ -27,6 +27,7 @@ import 'steps/partner_preference_review_step.dart';
 import 'steps/photo_step.dart';
 import 'steps/religion_caste_step.dart';
 import 'steps/registration_success_step.dart';
+import 'steps/set_password_step.dart';
 import 'widgets/onboarding_error_highlight.dart';
 import 'widgets/onboarding_picker_field.dart';
 
@@ -47,6 +48,7 @@ enum _SmartOnboardingStep {
   registrationComplete,
   photo,
   partnerPreference,
+  setPassword,
 }
 
 enum _OnboardingMessageType { success, info, warning }
@@ -99,6 +101,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   int _resendSecondsRemaining = 0;
   String? _error;
   String? _message;
+  String? _profileForWhomError;
+  String? _warmupGenderError;
   String? _motherTongueError;
   String? _childLivingWithError;
   Map<String, String> _fieldErrors = const <String, String>{};
@@ -187,6 +191,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _messageType = type;
       _error = null;
       _messageGapVisible = false;
+      _profileForWhomError = null;
+      _warmupGenderError = null;
       _motherTongueError = null;
       _fieldErrors = const <String, String>{};
     });
@@ -213,6 +219,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _error = null;
       _message = null;
       _messageGapVisible = false;
+      _profileForWhomError = null;
+      _warmupGenderError = null;
       _motherTongueError = null;
       _fieldErrors = const <String, String>{};
     });
@@ -327,6 +335,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _SmartOnboardingStep.astro => OnboardingFieldErrorMap.astroStep,
       _SmartOnboardingStep.registrationComplete => 'registration_complete',
       _SmartOnboardingStep.partnerPreference => 'partner_preferences',
+      _SmartOnboardingStep.setPassword => 'set_password',
       _SmartOnboardingStep.photo => 'photo',
       _SmartOnboardingStep.mobileOtp => 'mobile_otp',
     };
@@ -346,6 +355,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       OnboardingFieldErrorMap.astroStep => _SmartOnboardingStep.astro,
       'registration_complete' => _SmartOnboardingStep.registrationComplete,
       'partner_preferences' => _SmartOnboardingStep.partnerPreference,
+      'set_password' => _SmartOnboardingStep.setPassword,
       'photo' => _SmartOnboardingStep.photo,
       'activation' => _SmartOnboardingStep.partnerPreference,
       _ => null,
@@ -508,9 +518,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   bool get _hasMotherTongueSelection =>
       _motherTongue?.intId != null || _draftMotherTongueId() != null;
 
-  bool get _canContinueProfileForWhom =>
-      _profileForWhom != null && (!_needsGenderWarmup || _warmupGender != null);
-
   String get _genderMode {
     final explicit =
         _profileForWhom?.metaText('gender_mode') ??
@@ -546,7 +553,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   bool get _isPostRegistrationStep =>
       _step == _SmartOnboardingStep.registrationComplete ||
       _step == _SmartOnboardingStep.photo ||
-      _step == _SmartOnboardingStep.partnerPreference;
+      _step == _SmartOnboardingStep.partnerPreference ||
+      _step == _SmartOnboardingStep.setPassword;
 
   bool get _showCreateProfileChrome =>
       _step != _SmartOnboardingStep.mobileOtp && !_isPostRegistrationStep;
@@ -683,7 +691,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.photo:
         return _SmartOnboardingStep.partnerPreference;
       case _SmartOnboardingStep.partnerPreference:
-        return _SmartOnboardingStep.partnerPreference;
+        return _SmartOnboardingStep.setPassword;
+      case _SmartOnboardingStep.setPassword:
+        return _SmartOnboardingStep.setPassword;
       default:
         return step;
     }
@@ -719,6 +729,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _SmartOnboardingStep.registrationComplete;
       case _SmartOnboardingStep.partnerPreference:
         return _SmartOnboardingStep.photo;
+      case _SmartOnboardingStep.setPassword:
+        return _SmartOnboardingStep.partnerPreference;
       default:
         return step;
     }
@@ -1151,10 +1163,14 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final profileForWhom = option?.key;
     if (profileForWhom == null || profileForWhom.isEmpty) {
       setState(() {
-        _error = _t(
+        final message = _t(
           'Choose who this profile is for.',
           'हे profile कोणासाठी आहे ते निवडा.',
         );
+        _profileForWhomError = message;
+        _warmupGenderError = null;
+        _fieldErrorPulseToken++;
+        _error = message;
         _motherTongueError = null;
         _fieldErrors = const <String, String>{};
       });
@@ -1176,6 +1192,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _loading = true;
         _error = null;
         _message = null;
+        _profileForWhomError = null;
+        _warmupGenderError = null;
         _motherTongueError = null;
         _fieldErrors = const <String, String>{};
       });
@@ -1585,6 +1603,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       setState(() {
         _step = _SmartOnboardingStep.mobileOtp;
         _error = _t('Please verify mobile first.', 'आधी mobile verify करा.');
+        _profileForWhomError = null;
+        _warmupGenderError = null;
         _motherTongueError = null;
         _fieldErrors = const <String, String>{};
       });
@@ -1713,6 +1733,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _motherTongue = selected?.intId == null ? null : selected;
       _error = null;
       _message = null;
+      _profileForWhomError = null;
+      _warmupGenderError = null;
       _motherTongueError = null;
       _fieldErrors = const <String, String>{};
     });
@@ -1755,6 +1777,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       setState(() {
         _step = _SmartOnboardingStep.mobileOtp;
         _error = _t('Please verify mobile first.', 'आधी mobile verify करा.');
+        _profileForWhomError = null;
+        _warmupGenderError = null;
         _motherTongueError = null;
         _fieldErrors = const <String, String>{};
       });
@@ -1863,10 +1887,131 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     await _loadStatus(goToStatus: false);
     if (!mounted) return;
     _markPartnerPreferenceReviewed();
+    setState(() {
+      _error = null;
+      _message = null;
+      _fieldErrors = const <String, String>{};
+      _step = _SmartOnboardingStep.setPassword;
+    });
     await _saveLocalDraft();
+  }
+
+  String? _accountCreatorName() {
+    final account = _accountWithPendingEmail();
+    for (final key in const ['creator_name', 'name']) {
+      final value = onboardingText(account[key]);
+      if (value != null) return value;
+    }
+
+    final basicInfoName = onboardingText(
+      _draftStepData('basic_info')['full_name'],
+    );
+    if (basicInfoName != null) return basicInfoName;
+
+    final profile = _status?.profile?.raw ?? ApiClient.currentUserProfile;
+    if (profile != null) {
+      for (final key in const ['full_name', 'name']) {
+        final value = onboardingText(profile[key]);
+        if (value != null) return value;
+      }
+    }
+
+    return null;
+  }
+
+  Future<String?> _saveOptionalPassword({
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    if (!_isAuthenticated) {
+      final message = _t(
+        'Session expired. Verify mobile again.',
+        'Session expired. Mobile पुन्हा verify करा.',
+      );
+      setState(() {
+        _step = _SmartOnboardingStep.mobileOtp;
+        _error = message;
+      });
+      return message;
+    }
+
+    final creatorName = _accountCreatorName();
+    if (creatorName == null) {
+      return _t(
+        'Could not read account name. Please go back and try again.',
+        'Account नाव मिळाले नाही. कृपया मागे जाऊन पुन्हा प्रयत्न करा.',
+      );
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+      _message = null;
+      _fieldErrors = const <String, String>{};
+    });
+
+    try {
+      final response = await ApiClient.updateAccountDetails(
+        creatorName: creatorName,
+        locale: _localeCode,
+        password: password,
+        passwordConfirmation: passwordConfirmation,
+      );
+      if (!mounted) return null;
+
+      if (response['statusCode'] == 401) {
+        final message = _t(
+          'Session expired. Verify mobile again.',
+          'Session expired. Mobile पुन्हा verify करा.',
+        );
+        setState(() {
+          _loading = false;
+          _step = _SmartOnboardingStep.mobileOtp;
+          _error = message;
+        });
+        return message;
+      }
+
+      if (response['success'] != true) {
+        final message = readableApiError(
+          response,
+          _t('Could not save password.', 'Password save झाला नाही.'),
+        );
+        setState(() {
+          _loading = false;
+        });
+        return message;
+      }
+
+      setState(() {
+        _loading = false;
+      });
+      await _finishOnboardingAfterPasswordStep();
+      return null;
+    } catch (error) {
+      if (!mounted) return null;
+      final message = error.toString();
+      setState(() {
+        _loading = false;
+      });
+      return _isTechnicalOnboardingError(message)
+          ? _t('Could not save password.', 'Password save झाला नाही.')
+          : message;
+    }
+  }
+
+  Future<void> _finishOnboardingAfterPasswordStep() async {
     await AppStorage.instance.clearOnboardingDraftJson();
     if (!mounted) return;
-    Navigator.pushReplacementNamed(context, '/home');
+    Navigator.pushReplacementNamed(
+      context,
+      '/matches',
+      arguments: const {'showRecommendationDeck': true},
+    );
+  }
+
+  void _skipOptionalPassword() {
+    unawaited(_finishOnboardingAfterPasswordStep());
   }
 
   Future<Map<String, dynamic>?> _dataForOnboardingStep(
@@ -2085,10 +2230,14 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   Future<void> _continueFromProfileForWhom() async {
     if (_profileForWhom == null) {
       setState(() {
-        _error = _t(
+        final message = _t(
           'Choose who this profile is for.',
           'ही प्रोफाइल कोणासाठी आहे ते निवडा.',
         );
+        _profileForWhomError = message;
+        _warmupGenderError = null;
+        _fieldErrorPulseToken++;
+        _error = message;
         _motherTongueError = null;
         _fieldErrors = const <String, String>{};
       });
@@ -2098,7 +2247,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final resolvedGender = _resolvedProfileGenderOption();
     if (_needsGenderWarmup && _warmupGender == null) {
       setState(() {
-        _error = _genderPromptLabel();
+        final message = _genderPromptLabel();
+        _profileForWhomError = null;
+        _warmupGenderError = message;
+        _fieldErrorPulseToken++;
+        _error = message;
         _motherTongueError = null;
         _fieldErrors = const <String, String>{};
       });
@@ -2106,7 +2259,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
     if (resolvedGender == null) {
       setState(() {
-        _error = _t('Select gender again.', 'लिंग पुन्हा निवडा.');
+        final message = _t('Select gender again.', 'लिंग पुन्हा निवडा.');
+        _profileForWhomError = null;
+        _warmupGenderError = message;
+        _fieldErrorPulseToken++;
+        _error = message;
         _motherTongueError = null;
         _fieldErrors = const <String, String>{};
       });
@@ -2153,6 +2310,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     setState(() {
       _error = null;
       _message = null;
+      _profileForWhomError = null;
+      _warmupGenderError = null;
       _motherTongueError = null;
       _fieldErrors = const <String, String>{};
       _step = _SmartOnboardingStep.mobileOtp;
@@ -2163,6 +2322,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     setState(() {
       _error = null;
       _message = null;
+      _profileForWhomError = null;
+      _warmupGenderError = null;
       _motherTongueError = null;
       _fieldErrors = const <String, String>{};
       _step = _SmartOnboardingStep.mobileOtp;
@@ -2597,6 +2758,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _t('Registration complete', 'नोंदणी पूर्ण');
       case _SmartOnboardingStep.partnerPreference:
         return _t('Partner preference', 'जोडीदार पसंती');
+      case _SmartOnboardingStep.setPassword:
+        return _t('Set password', 'Password तयार करा');
       case _SmartOnboardingStep.photo:
         return _t('Profile photo', 'Profile photo');
     }
@@ -2671,6 +2834,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         return _t(
           'We prepared this from the information you filled. You can keep it strict or make it normal.',
           'तुम्ही भरलेल्या माहितीवरून ही पसंती तयार केली आहे. ती strict ठेवू शकता किंवा normal करू शकता.',
+        );
+      case _SmartOnboardingStep.setPassword:
+        return _t(
+          'Create a password now if you want password login later.',
+          'नंतर password ने login करायचे असल्यास आत्ता password तयार करा.',
         );
       case _SmartOnboardingStep.photo:
         return _t(
@@ -2867,6 +3035,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           loading: _loading,
           onBack: _goBackOneStep,
           onSaved: _handlePartnerPreferenceSaved,
+        ),
+        _SmartOnboardingStep.setPassword => SetPasswordStep(
+          locale: _localeCode,
+          loading: _loading,
+          onBack: _goBackOneStep,
+          onSave: _saveOptionalPassword,
+          onSkip: _skipOptionalPassword,
         ),
         _SmartOnboardingStep.photo => PhotoStep(
           status: _status,
@@ -3204,6 +3379,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                         _warmupGender = option;
                         _error = null;
                         _message = null;
+                        _profileForWhomError = null;
+                        _warmupGenderError = null;
                         _motherTongueError = null;
                         _fieldErrors = const <String, String>{};
                       });
@@ -3222,6 +3399,14 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final secondary = primary == null
         ? const <OnboardingOption>[]
         : options.skip(1).toList();
+    final choiceWidgets = <Widget>[
+      if (primary != null)
+        _buildProfileChoiceCard(context, primary, primary: true),
+      if (secondary.isNotEmpty) ...[
+        const SizedBox(height: 12),
+        ..._buildProfileChoiceRows(context, secondary),
+      ],
+    ];
 
     return _StepContent(
       key: const ValueKey('profile_for_whom'),
@@ -3234,11 +3419,24 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         fontWeight: FontWeight.w800,
       ),
       children: [
-        if (primary != null)
-          _buildProfileChoiceCard(context, primary, primary: true),
-        if (secondary.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          ..._buildProfileChoiceRows(context, secondary),
+        OnboardingErrorHighlight(
+          hasError: _profileForWhomError != null,
+          pulseKey:
+              'profile_for_whom:$_fieldErrorPulseToken:$_profileForWhomError',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: choiceWidgets,
+          ),
+        ),
+        if (_profileForWhomError != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            _profileForWhomError!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.red.shade700,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
         AnimatedSize(
           duration: const Duration(milliseconds: 180),
@@ -3255,7 +3453,22 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    _buildGenderSegmentedControl(context),
+                    OnboardingErrorHighlight(
+                      hasError: _warmupGenderError != null,
+                      pulseKey:
+                          'warmup_gender:$_fieldErrorPulseToken:$_warmupGenderError',
+                      child: _buildGenderSegmentedControl(context),
+                    ),
+                    if (_warmupGenderError != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        _warmupGenderError!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.red.shade700,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
                   ],
                 )
               : const SizedBox.shrink(),
@@ -3264,7 +3477,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         OnboardingContinueButton(
           label: _t('Continue', 'पुढे जा'),
           loading: _loading,
-          enabled: _canContinueProfileForWhom,
           onPressed: _continueFromProfileForWhom,
         ),
       ],
@@ -3314,7 +3526,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         OnboardingContinueButton(
           label: _t('Continue', 'पुढे जा'),
           loading: _loading,
-          enabled: _motherTongue?.intId != null,
           onPressed: _continueFromMotherTongue,
         ),
       ],
@@ -3380,6 +3591,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                 _warmupGender = null;
                 _error = null;
                 _message = null;
+                _profileForWhomError = null;
+                _warmupGenderError = null;
                 _motherTongueError = null;
                 _fieldErrors = const <String, String>{};
               });
@@ -3478,8 +3691,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return {
         'success': false,
         'message': _t(
-          'Could not read email from Google.',
-          'Google कडून email मिळाला नाही.',
+          'Enter a valid email address.',
+          'कृपया योग्य email address भरा.',
         ),
       };
     }
@@ -3495,8 +3708,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final trimmed = email.trim();
     if (trimmed.isEmpty) {
       return _t(
-        'Could not read email from Google.',
-        'Google कडून email मिळाला नाही.',
+        'Enter a valid email address.',
+        'कृपया योग्य email address भरा.',
       );
     }
 

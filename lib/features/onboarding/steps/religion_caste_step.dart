@@ -66,9 +66,6 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
 
   bool get _casteSelected => _caste?.intId != null;
 
-  bool get _canContinue =>
-      _motherTongueSelected && _religionSelected && _casteSelected;
-
   @override
   void initState() {
     super.initState();
@@ -366,14 +363,19 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
   }
 
   Future<void> _save() async {
+    final missingMotherTongue = !_motherTongueSelected;
     final missingReligion = !_religionSelected;
     final missingCaste = !_casteSelected;
 
-    if (missingReligion || missingCaste) {
+    if (missingMotherTongue || missingReligion || missingCaste) {
       setState(() {
         _religionError = missingReligion;
         _casteError = missingCaste;
       });
+      if (missingMotherTongue) {
+        await widget.onSaveMotherTongue(_motherTongue);
+        return;
+      }
       widget.onMessage(
         missingReligion
             ? _t('Select religion.', 'धर्म निवडा.')
@@ -417,7 +419,6 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
         'पुढे जाण्यासाठी मातृभाषा, धर्म आणि जात निवडा.',
       ),
       loading: widget.loading,
-      continueEnabled: _canContinue,
       onBack: widget.onBack,
       onContinue: _save,
       children: [

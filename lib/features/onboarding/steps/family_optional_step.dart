@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
+import '../widgets/onboarding_error_highlight.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
 
@@ -48,12 +49,11 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   String? _familyValues;
   bool _optionsLoading = false;
   String? _localError;
+  String? _familyStatusError;
+  String? _aboutError;
   int? _selectedSuggestionIndex;
 
   bool get _mr => widget.locale == 'mr';
-  bool get _canContinue =>
-      _familyStatus != null && _aboutController.text.trim().isNotEmpty;
-
   @override
   void initState() {
     super.initState();
@@ -142,6 +142,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     setState(() {
       _selectedSuggestionIndex = index;
       _aboutController.text = _suggestionText(suggestions[index]);
+      _aboutError = null;
       _localError = null;
     });
   }
@@ -153,6 +154,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
         selectedIndex >= 0 &&
         selectedIndex < suggestions.length) {
       _aboutController.text = _suggestionText(suggestions[selectedIndex]);
+      _aboutError = null;
       _localError = null;
       return;
     }
@@ -161,6 +163,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     }
     _selectedSuggestionIndex = 0;
     _aboutController.text = _suggestionText(suggestions.first);
+    _aboutError = null;
     _localError = null;
   }
 
@@ -196,6 +199,12 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     final about = _aboutController.text.trim();
     if (_familyStatus == null || about.isEmpty) {
       setState(() {
+        _familyStatusError = _familyStatus == null
+            ? _t('Select family status.', 'कुटुंब स्थिती निवडा.')
+            : null;
+        _aboutError = about.isEmpty
+            ? _t('Write a short about section.', 'थोडक्यात ओळख लिहा.')
+            : null;
         _localError = _t(
           'Select family status and write a short about section.',
           'कुटुंब स्थिती निवडा आणि थोडक्यात स्वतःबद्दल लिहा.',
@@ -206,6 +215,8 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
 
     setState(() {
       _localError = null;
+      _familyStatusError = null;
+      _aboutError = null;
     });
 
     await widget.onSaveFamilyAbout(
@@ -226,34 +237,48 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
         'शेवटची ही माहिती योग्य स्थळे सुचवण्यासाठी उपयोगी पडते.',
       ),
       loading: widget.loading,
-      continueEnabled: _canContinue,
       onBack: widget.onBack,
       onContinue: _save,
       continueLabel: _t('Complete registration', 'नोंदणी पूर्ण करा'),
       children: [
-        _FamilyPanel(
-          title: _t('Family status', 'कुटुंब स्थिती'),
-          subtitle: _t('Required', 'आवश्यक'),
-          trailing: _optionsLoading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : null,
-          child: _ChoiceWrap(
-            options: _statusOptions,
-            selectedKey: _familyStatus,
-            locale: widget.locale,
-            onChanged: widget.loading
-                ? null
-                : (key) => setState(() {
-                    _familyStatus = key;
-                    _localError = null;
-                    _maybePrefillAboutFromSuggestion();
-                  }),
+        OnboardingErrorHighlight(
+          hasError: _familyStatusError != null,
+          pulseKey: 'family_status:$_familyStatusError:$_familyStatus',
+          child: _FamilyPanel(
+            title: _t('Family status', 'कुटुंब स्थिती'),
+            subtitle: _t('Required', 'आवश्यक'),
+            trailing: _optionsLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : null,
+            child: _ChoiceWrap(
+              options: _statusOptions,
+              selectedKey: _familyStatus,
+              locale: widget.locale,
+              onChanged: widget.loading
+                  ? null
+                  : (key) => setState(() {
+                      _familyStatus = key;
+                      _familyStatusError = null;
+                      _localError = null;
+                      _maybePrefillAboutFromSuggestion();
+                    }),
+            ),
           ),
         ),
+        if (_familyStatusError != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            _familyStatusError!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.red.shade700,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
         const SizedBox(height: 14),
         _FamilyPanel(
           title: _t('Family values', 'कुटुंब मूल्ये'),
@@ -275,38 +300,44 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
           ),
         ),
         const SizedBox(height: 14),
-        _FamilyPanel(
-          title: _t('About profile', 'प्रोफाइलबद्दल'),
-          subtitle: _t('Required', 'आवश्यक'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _AboutSuggestionChips(
-                suggestions: _aboutSuggestions,
-                selectedIndex: _selectedSuggestionIndex,
-                onSelected: widget.loading ? null : _applySuggestion,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _aboutController,
-                enabled: !widget.loading,
-                minLines: 4,
-                maxLines: 7,
-                maxLength: 500,
-                textInputAction: TextInputAction.newline,
-                onChanged: (_) => setState(() {
-                  _selectedSuggestionIndex = null;
-                  _localError = null;
-                }),
-                decoration: InputDecoration(
-                  hintText: _t(
-                    'Write a natural introduction, family background, and what makes this profile easy to understand.',
-                    'स्वभाव, कुटुंब पार्श्वभूमी आणि profile समजायला मदत होईल अशी थोडक्यात माहिती लिहा.',
-                  ),
-                  alignLabelWithHint: true,
+        OnboardingErrorHighlight(
+          hasError: _aboutError != null,
+          pulseKey: 'about_profile:$_aboutError',
+          child: _FamilyPanel(
+            title: _t('About profile', 'प्रोफाइलबद्दल'),
+            subtitle: _t('Required', 'आवश्यक'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _AboutSuggestionChips(
+                  suggestions: _aboutSuggestions,
+                  selectedIndex: _selectedSuggestionIndex,
+                  onSelected: widget.loading ? null : _applySuggestion,
                 ),
-              ),
-            ],
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _aboutController,
+                  enabled: !widget.loading,
+                  minLines: 4,
+                  maxLines: 7,
+                  maxLength: 500,
+                  textInputAction: TextInputAction.newline,
+                  onChanged: (_) => setState(() {
+                    _selectedSuggestionIndex = null;
+                    _aboutError = null;
+                    _localError = null;
+                  }),
+                  decoration: InputDecoration(
+                    hintText: _t(
+                      'Write a natural introduction, family background, and what makes this profile easy to understand.',
+                      'स्वभाव, कुटुंब पार्श्वभूमी आणि profile समजायला मदत होईल अशी थोडक्यात माहिती लिहा.',
+                    ),
+                    errorText: _aboutError,
+                    alignLabelWithHint: true,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
         if (_localError != null) ...[

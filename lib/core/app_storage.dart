@@ -16,6 +16,8 @@ class AppStorage {
   static const String _onboardingDraftKey = 'smart_onboarding_draft';
   static const String _notificationPermissionPromptedKey =
       'notification_permission_prompted';
+  static const String _dailyRecommendationShownDateKey =
+      'daily_recommendation_shown_date';
 
   final FlutterSecureStorage? _secureStorage;
   final Map<String, String>? _memory;
@@ -82,6 +84,14 @@ class AppStorage {
 
   Future<void> clearOnboardingDraftJson() {
     return _delete(_onboardingDraftKey);
+  }
+
+  Future<String?> readDailyRecommendationShownDate() {
+    return _read(_dailyRecommendationShownDateKey);
+  }
+
+  Future<void> markDailyRecommendationShownDate(String value) {
+    return _write(_dailyRecommendationShownDateKey, value);
   }
 
   Future<bool> hasPromptedNotificationPermission() async {

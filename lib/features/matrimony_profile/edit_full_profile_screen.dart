@@ -3935,6 +3935,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     bool includeRelatives = false,
     bool includeAllianceNetworks = false,
     bool includeMarriageChildren = false,
+    bool includePartnerPreferences = true,
   }) {
     final casteLabel = _selectedCasteLabel?.trim().isNotEmpty == true
         ? _selectedCasteLabel!.trim()
@@ -4036,63 +4037,68 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'navras_name': _nullableText(_navrasNameController),
       'birth_weekday': _selectedBirthWeekday,
       'narrative_about_me': _nullableText(_aboutMeController),
-      'preferred_age_min': _selectedPreferredAgeMin,
-      'preferred_age_max': _selectedPreferredAgeMax,
-      'preferred_height_min_cm': _selectedPreferredHeightMinCm,
-      'preferred_height_max_cm': _selectedPreferredHeightMaxCm,
-      'preferred_income_min': _selectedPreferredIncomeMin,
-      'preferred_income_max': _selectedPreferredIncomeMax,
-      'marriage_type_preference_id': _selectedMarriageTypePreferenceId,
-      'partner_profile_with_children': _selectedPartnerProfileWithChildren,
-      'preferred_profile_managed_by': _selectedPreferredProfileManagedBy,
-      'willing_to_relocate': _selectedWillingToRelocate,
-      'preferred_intercaste': _selectedPreferredIntercaste,
-      'preferred_marital_status_ids': _orderedSelectedIds(
-        _preferredMaritalStatusOptions,
-        _selectedPreferredMaritalStatusIds,
-      ),
-      'preferred_diet_ids': _orderedSelectedIds(
-        _preferredDietOptions,
-        _selectedPreferredDietIds,
-      ),
-      'preferred_religion_ids': _orderedSelectedIds(
-        _preferredReligionOptions,
-        _selectedPreferredReligionIds,
-      ),
-      'preferred_caste_ids': _orderedSelectedIds(
-        _preferredCasteOptionsForSelectedReligions(),
-        _selectedPreferredCasteIds,
-      ),
-      'preferred_mother_tongue_ids': _orderedSelectedIds(
-        _preferredMotherTongueOptions,
-        _selectedPreferredMotherTongueIds,
-      ),
-      'preferred_education_degree_ids': _orderedSelectedIds(
-        _preferredEducationDegreeOptions,
-        _selectedPreferredEducationDegreeIds,
-      ),
-      'preferred_occupation_master_ids': _orderedSelectedIds(
-        _preferredOccupationOptions,
-        _selectedPreferredOccupationMasterIds,
-      ),
-      'preferred_country_ids': _preferredLocationPayloadIds(
-        'country_id',
-        _selectedPreferredCountryIds,
-      ),
-      'preferred_state_ids': _preferredLocationPayloadIds(
-        'state_id',
-        _selectedPreferredStateIds,
-      ),
-      'preferred_district_ids': _preferredLocationPayloadIds(
-        'district_id',
-        _selectedPreferredDistrictIds,
-      ),
-      'preferred_taluka_ids': _preferredLocationPayloadIds(
-        'id',
-        _selectedPreferredTalukaIds,
-      ),
-      'narrative_expectations': _nullableText(_expectationsController),
     };
+
+    if (includePartnerPreferences) {
+      payload.addAll({
+        'preferred_age_min': _selectedPreferredAgeMin,
+        'preferred_age_max': _selectedPreferredAgeMax,
+        'preferred_height_min_cm': _selectedPreferredHeightMinCm,
+        'preferred_height_max_cm': _selectedPreferredHeightMaxCm,
+        'preferred_income_min': _selectedPreferredIncomeMin,
+        'preferred_income_max': _selectedPreferredIncomeMax,
+        'marriage_type_preference_id': _selectedMarriageTypePreferenceId,
+        'partner_profile_with_children': _selectedPartnerProfileWithChildren,
+        'preferred_profile_managed_by': _selectedPreferredProfileManagedBy,
+        'willing_to_relocate': _selectedWillingToRelocate,
+        'preferred_intercaste': _selectedPreferredIntercaste,
+        'preferred_marital_status_ids': _orderedSelectedIds(
+          _preferredMaritalStatusOptions,
+          _selectedPreferredMaritalStatusIds,
+        ),
+        'preferred_diet_ids': _orderedSelectedIds(
+          _preferredDietOptions,
+          _selectedPreferredDietIds,
+        ),
+        'preferred_religion_ids': _orderedSelectedIds(
+          _preferredReligionOptions,
+          _selectedPreferredReligionIds,
+        ),
+        'preferred_caste_ids': _orderedSelectedIds(
+          _preferredCasteOptionsForSelectedReligions(),
+          _selectedPreferredCasteIds,
+        ),
+        'preferred_mother_tongue_ids': _orderedSelectedIds(
+          _preferredMotherTongueOptions,
+          _selectedPreferredMotherTongueIds,
+        ),
+        'preferred_education_degree_ids': _orderedSelectedIds(
+          _preferredEducationDegreeOptions,
+          _selectedPreferredEducationDegreeIds,
+        ),
+        'preferred_occupation_master_ids': _orderedSelectedIds(
+          _preferredOccupationOptions,
+          _selectedPreferredOccupationMasterIds,
+        ),
+        'preferred_country_ids': _preferredLocationPayloadIds(
+          'country_id',
+          _selectedPreferredCountryIds,
+        ),
+        'preferred_state_ids': _preferredLocationPayloadIds(
+          'state_id',
+          _selectedPreferredStateIds,
+        ),
+        'preferred_district_ids': _preferredLocationPayloadIds(
+          'district_id',
+          _selectedPreferredDistrictIds,
+        ),
+        'preferred_taluka_ids': _preferredLocationPayloadIds(
+          'id',
+          _selectedPreferredTalukaIds,
+        ),
+        'narrative_expectations': _nullableText(_expectationsController),
+      });
+    }
 
     if (includeParentContacts) {
       payload['father_contact_1'] = _nullableText(_fatherContact1Controller);
@@ -4174,8 +4180,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     String successMessage = 'Profile update यशस्वी!',
     _EditProfileSection? section,
   }) async {
+    final includePartnerPreferences =
+        section == null || section == _EditProfileSection.partnerPreferences;
     if (!_validateRequiredFields()) return false;
-    if (!_validatePreferenceRanges()) return false;
+    if (includePartnerPreferences && !_validatePreferenceRanges()) {
+      return false;
+    }
     if (!_validateIncomeFields()) return false;
 
     setState(() {
@@ -4190,6 +4200,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       includeRelatives: section == _EditProfileSection.relatives,
       includeAllianceNetworks: section == _EditProfileSection.relatives,
       includeMarriageChildren: section == _EditProfileSection.basic,
+      includePartnerPreferences: includePartnerPreferences,
     );
     Map<String, dynamic> response;
     try {
@@ -4879,6 +4890,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       includeRelatives: section == _EditProfileSection.relatives,
       includeAllianceNetworks: section == _EditProfileSection.relatives,
       includeMarriageChildren: section == _EditProfileSection.basic,
+      includePartnerPreferences:
+          section == _EditProfileSection.partnerPreferences,
     );
     return <String, dynamic>{
       for (final key in _sectionPayloadKeys(section))

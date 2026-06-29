@@ -687,6 +687,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final photoUrl =
         _displayString(hero?['primary_photo_url']) ??
         ApiClient.resolveProfilePhotoUrl(profile);
+    final galleryPhotos = _profileGalleryPhotos(profile, hero);
     final statusHeight = MediaQuery.of(context).padding.top;
     final heroHeight = _heroHeight(photoUrl != null);
     final location =
@@ -707,18 +708,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           left: 0,
           right: 0,
           height: heroHeight,
-          child: _buildHeroPhoto(
-            photoUrl: photoUrl,
-            profile: profile,
-            hero: hero,
-          ),
+          child: _buildHeroPhoto(photoUrl: photoUrl),
         ),
         ListView(
           controller: _scrollController,
           padding: EdgeInsets.zero,
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            SizedBox(height: statusHeight + heroHeight - 18),
+            GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: galleryPhotos.isEmpty ? null : _openPhotoGallery,
+              child: SizedBox(height: statusHeight + heroHeight - 18),
+            ),
             Container(
               decoration: const BoxDecoration(
                 color: Color(0xFFFAF7F5),
@@ -753,6 +754,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             ),
           ],
         ),
+        _buildHeroTopActions(
+          profile: profile,
+          hero: hero,
+          galleryPhotos: galleryPhotos,
+        ),
       ],
     );
   }
@@ -764,18 +770,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         .toDouble();
   }
 
-  Widget _buildHeroPhoto({
-    required String? photoUrl,
-    required Map<String, dynamic> profile,
-    required Map<String, dynamic>? hero,
-  }) {
+  Widget _buildHeroPhoto({required String? photoUrl}) {
     final hasPhoto = photoUrl != null;
     final heroHeight = _heroHeight(hasPhoto);
-    final photoCount =
-        _displayInt(hero?['photo_count']) ?? _photoCount(profile, photoUrl);
-    final isPremium =
-        _displaySafeBool(hero?['premium']) ??
-        (hero == null ? _isPremium(profile) : false);
 
     return SizedBox(
       width: double.infinity,
@@ -798,49 +795,70 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
             ),
           ),
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: AnimatedBuilder(
-              animation: _scrollController,
-              builder: (context, child) {
-                final progress = _headerCollapseProgress();
-                final opacity = (1 - progress).clamp(0.0, 1.0).toDouble();
-
-                return IgnorePointer(
-                  ignoring: opacity < 0.08,
-                  child: Opacity(opacity: opacity, child: child),
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (isPremium) ...[
-                      _buildStatusPill(
-                        icon: Icons.workspace_premium,
-                        label: 'Premium',
-                        color: const Color(0xFFFFB84D),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    if (photoCount > 0) ...[
-                      _buildStatusPill(
-                        icon: Icons.photo_library_outlined,
-                        label: photoCount.toString(),
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    _buildMoreMenu(),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHeroTopActions({
+    required Map<String, dynamic> profile,
+    required Map<String, dynamic>? hero,
+    required List<_ProfilePhotoItem> galleryPhotos,
+  }) {
+    final statusHeight = MediaQuery.of(context).padding.top;
+    final photoUrl =
+        _displayString(hero?['primary_photo_url']) ??
+        ApiClient.resolveProfilePhotoUrl(profile);
+    final photoCount =
+        _displayInt(hero?['photo_count']) ??
+        (galleryPhotos.isNotEmpty
+            ? galleryPhotos.length
+            : _photoCount(profile, photoUrl));
+    final isPremium =
+        _displaySafeBool(hero?['premium']) ??
+        (hero == null ? _isPremium(profile) : false);
+
+    return Positioned(
+      top: statusHeight + 8,
+      left: 0,
+      right: 0,
+      child: AnimatedBuilder(
+        animation: _scrollController,
+        builder: (context, child) {
+          final progress = _headerCollapseProgress();
+          final opacity = (1 - progress).clamp(0.0, 1.0).toDouble();
+
+          return IgnorePointer(
+            ignoring: opacity < 0.08,
+            child: Opacity(opacity: opacity, child: child),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(72, 0, 12, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (isPremium) ...[
+                _buildStatusPill(
+                  icon: Icons.workspace_premium,
+                  label: 'Premium',
+                  color: const Color(0xFFFFB84D),
+                ),
+                const SizedBox(width: 8),
+              ],
+              if (photoCount > 0) ...[
+                _buildStatusPill(
+                  icon: Icons.photo_library_outlined,
+                  label: photoCount.toString(),
+                  color: Colors.white,
+                  onTap: _openPhotoGallery,
+                ),
+                const SizedBox(width: 8),
+              ],
+              _buildMoreMenu(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1085,29 +1103,190 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     required IconData icon,
     required String label,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.35),
+    return Material(
+      color: Colors.black.withValues(alpha: 0.35),
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
         borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 18),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-            ),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 18),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  void _openPhotoGallery() {
+    final profile = _profile;
+    if (profile == null) return;
+
+    final photos = _profileGalleryPhotos(profile, _displayHero());
+    if (photos.isEmpty) {
+      _showSnackBar('फोटो उपलब्ध नाही.', Colors.black87);
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        fullscreenDialog: true,
+        builder: (routeContext) {
+          return _ProfilePhotoGalleryViewer(
+            photos: photos,
+            title: _galleryTitle(profile),
+            subtitle: _gallerySubtitle(profile),
+            onMenuAction: (action) async {
+              if (action == 'share') {
+                await _shareProfile();
+              } else if (action == 'report') {
+                await _reportProfile();
+              }
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  String _galleryTitle(Map<String, dynamic> profile) {
+    final hero = _displayHero();
+    final name = _displayString(hero?['name']) ?? _nameText(profile);
+    final age =
+        _displayInt(hero?['age']) ??
+        _calculateAge(profile['date_of_birth']?.toString());
+
+    return age != null ? '$name, $age' : name;
+  }
+
+  String? _gallerySubtitle(Map<String, dynamic> profile) {
+    final hero = _displayHero();
+    final heightLabel =
+        _displayString(hero?['height_label']) ??
+        ApiClient.profileHeightLabel(profile);
+    final communityLabel =
+        _displayString(hero?['community_label']) ?? _communityText(profile);
+    final location =
+        _displayString(hero?['location_label']) ??
+        ApiClient.profileLocationLabel(profile, allowIdFallback: false);
+
+    return _joinNonEmpty([
+      _joinNonEmpty([heightLabel, communityLabel]),
+      location,
+    ]);
+  }
+
+  List<_ProfilePhotoItem> _profileGalleryPhotos(
+    Map<String, dynamic> profile,
+    Map<String, dynamic>? hero,
+  ) {
+    final photos = <_ProfilePhotoItem>[];
+    final seen = <String>{};
+
+    void addPhoto(dynamic rawValue) {
+      final url = ApiClient.normalizeProfilePhotoUrl(rawValue);
+      if (url == null || seen.contains(url)) return;
+
+      seen.add(url);
+      photos.add(_ProfilePhotoItem(url: url));
+    }
+
+    void addPhotoFromMap(Map<String, dynamic> row) {
+      if (!_photoRowAllowsDisplay(row)) return;
+
+      for (final key in const [
+        'primary_photo_url',
+        'profile_photo_url',
+        'photo_url',
+        'image_url',
+        'avatar_url',
+        'url',
+        'path',
+        'file_path',
+        'profile_photo',
+      ]) {
+        addPhoto(row[key]);
+      }
+    }
+
+    addPhoto(hero?['primary_photo_url']);
+    addPhotoFromMap(profile);
+
+    for (final key in const ['photos', 'profile_photos']) {
+      final rows = profile[key];
+      if (rows is List) {
+        for (final item in rows) {
+          final row = _safeMap(item);
+          if (row != null) {
+            addPhotoFromMap(row);
+          } else {
+            addPhoto(item);
+          }
+        }
+        continue;
+      }
+
+      final rowMap = _safeMap(rows);
+      final nested = rowMap?['data'] ?? rowMap?['items'] ?? rowMap?['results'];
+      if (nested is List) {
+        for (final item in nested) {
+          final row = _safeMap(item);
+          if (row != null) {
+            addPhotoFromMap(row);
+          } else {
+            addPhoto(item);
+          }
+        }
+      }
+    }
+
+    if (photos.isEmpty) {
+      addPhoto(ApiClient.resolveProfilePhotoUrl(profile));
+    }
+
+    return photos;
+  }
+
+  bool _photoRowAllowsDisplay(Map<String, dynamic> row) {
+    for (final key in const ['photo_approved', 'approved', 'is_approved']) {
+      if (_displaySafeBool(row[key]) == false) return false;
+    }
+
+    for (final key in const [
+      'status',
+      'approval_status',
+      'approved_status',
+      'photo_status',
+      'moderation_status',
+      'admin_override_status',
+    ]) {
+      final normalized = row[key]?.toString().trim().toLowerCase();
+      if (normalized == null || normalized.isEmpty) continue;
+      if (normalized.contains('reject') ||
+          normalized == 'pending' ||
+          normalized == 'review' ||
+          normalized == 'processing' ||
+          normalized == 'error') {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   Widget _buildHeroChip({
@@ -2620,6 +2799,304 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
 
     return photoUrl != null ? 1 : 0;
+  }
+}
+
+class _ProfilePhotoItem {
+  const _ProfilePhotoItem({required this.url});
+
+  final String url;
+}
+
+class _ProfilePhotoGalleryViewer extends StatefulWidget {
+  const _ProfilePhotoGalleryViewer({
+    required this.photos,
+    required this.title,
+    required this.subtitle,
+    required this.onMenuAction,
+  });
+
+  final List<_ProfilePhotoItem> photos;
+  final String title;
+  final String? subtitle;
+  final Future<void> Function(String action) onMenuAction;
+
+  @override
+  State<_ProfilePhotoGalleryViewer> createState() =>
+      _ProfilePhotoGalleryViewerState();
+}
+
+class _ProfilePhotoGalleryViewerState
+    extends State<_ProfilePhotoGalleryViewer> {
+  late final PageController _pageController;
+  int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final current = widget.photos[_index];
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildTopBar(context),
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildBlurredBackdrop(current.url),
+                  PageView.builder(
+                    controller: _pageController,
+                    itemCount: widget.photos.length,
+                    onPageChanged: (value) {
+                      setState(() {
+                        _index = value;
+                      });
+                    },
+                    itemBuilder: (context, index) {
+                      return _buildPhotoPage(widget.photos[index].url);
+                    },
+                  ),
+                ],
+              ),
+            ),
+            _buildBottomPanel(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context) {
+    return SizedBox(
+      height: 56,
+      child: Row(
+        children: [
+          const SizedBox(width: 4),
+          IconButton(
+            tooltip: 'Close',
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.maybePop(context),
+          ),
+          Expanded(
+            child: Text(
+              'Photos ${_index + 1}/${widget.photos.length}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Photo actions',
+            color: Colors.white,
+            icon: const Icon(Icons.more_vert, color: Colors.white),
+            onSelected: widget.onMenuAction,
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: 'share',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.ios_share),
+                  title: Text('Share profile'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'report',
+                child: ListTile(
+                  dense: true,
+                  leading: Icon(Icons.flag_outlined),
+                  title: Text('Report this Profile'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBlurredBackdrop(String photoUrl) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          child: Image.network(
+            photoUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const ColoredBox(color: Colors.black);
+            },
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.62),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhotoPage(String photoUrl) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = (constraints.maxWidth - 28).clamp(
+          1.0,
+          double.infinity,
+        );
+        final maxHeight = (constraints.maxHeight - 16).clamp(
+          1.0,
+          double.infinity,
+        );
+        var frameWidth = maxWidth;
+        var frameHeight = frameWidth * 4 / 3;
+
+        if (frameHeight > maxHeight) {
+          frameHeight = maxHeight;
+          frameWidth = frameHeight * 3 / 4;
+        }
+
+        return Center(
+          child: SizedBox(
+            width: frameWidth,
+            height: frameHeight,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: DecoratedBox(
+                decoration: const BoxDecoration(color: Colors.black),
+                child: Image.network(
+                  photoUrl,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        color: Colors.white70,
+                        size: 54,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildBottomPanel(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(16, 12, 16, bottomInset > 0 ? 10 : 14),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.88),
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (widget.subtitle != null) ...[
+            const SizedBox(height: 3),
+            Text(
+              widget.subtitle!,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.78),
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 58,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: widget.photos.length,
+              separatorBuilder: (context, index) => const SizedBox(width: 9),
+              itemBuilder: (context, index) {
+                final selected = index == _index;
+                return GestureDetector(
+                  onTap: () => _pageController.animateToPage(
+                    index,
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutCubic,
+                  ),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    width: 44,
+                    height: 58,
+                    padding: EdgeInsets.all(selected ? 2 : 0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: selected
+                            ? const Color(0xFFE11D48)
+                            : Colors.white.withValues(alpha: 0.26),
+                        width: selected ? 2 : 1,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(9),
+                      child: Image.network(
+                        widget.photos[index].url,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return ColoredBox(
+                            color: Colors.white.withValues(alpha: 0.10),
+                            child: const Icon(
+                              Icons.photo_outlined,
+                              color: Colors.white70,
+                              size: 20,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -6,6 +6,7 @@ import 'core/notification_permission_service.dart';
 import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
+import 'features/browse/browse_profiles_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
 import 'features/onboarding/models/onboarding_status.dart';
@@ -110,8 +111,9 @@ class _MyAppState extends State<MyApp> {
         '/language': (context) => const LanguageChoiceScreen(),
         '/landing': (context) => const LandingScreen(),
         '/login': (context) => const LoginScreen(),
-        '/register': (context) => const SmartOnboardingScreen(),
+        '/register': (context) => const LandingScreen(),
         '/home': (context) => const HomeScreen(),
+        '/matches': (context) => const BrowseProfilesScreen(),
         '/create-profile': (context) => const SmartOnboardingScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
         '/smart-onboarding': (context) => const SmartOnboardingScreen(),
@@ -173,7 +175,9 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
       );
       final status = OnboardingStatus.fromJson(data);
       if (status.success) {
-        return _needsSmartOnboarding(status) ? '/smart-onboarding' : '/home';
+        return _needsSmartOnboarding(status)
+            ? '/smart-onboarding'
+            : _completedProfileRoute();
       }
     } catch (_) {
       // Fall back to the older profile check below.
@@ -185,10 +189,23 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
         return '/smart-onboarding';
       }
     } catch (_) {
-      return '/home';
+      return _completedProfileRoute();
     }
 
-    return '/home';
+    return _completedProfileRoute();
+  }
+
+  Future<String> _completedProfileRoute() async {
+    final shownDate = await AppStorage.instance
+        .readDailyRecommendationShownDate();
+    return shownDate == _todayKey() ? '/home' : '/matches';
+  }
+
+  String _todayKey() {
+    final now = DateTime.now();
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    return '${now.year}-$month-$day';
   }
 
   bool _needsSmartOnboarding(OnboardingStatus status) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
-import '../onboarding/smart_onboarding_screen.dart';
+import '../../core/app_storage.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -63,7 +63,9 @@ class _LoginScreenState extends State<LoginScreen> {
           setState(() {
             isLoading = false;
           });
-          Navigator.pushReplacementNamed(context, '/home');
+          final route = await _completedProfileRoute();
+          if (!mounted) return;
+          Navigator.pushReplacementNamed(context, route);
           return;
         }
 
@@ -96,6 +98,19 @@ class _LoginScreenState extends State<LoginScreen> {
     loginController.dispose();
     passwordController.dispose();
     super.dispose();
+  }
+
+  Future<String> _completedProfileRoute() async {
+    final shownDate = await AppStorage.instance
+        .readDailyRecommendationShownDate();
+    return shownDate == _todayKey() ? '/home' : '/matches';
+  }
+
+  String _todayKey() {
+    final now = DateTime.now();
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    return '${now.year}-$month-$day';
   }
 
   @override
@@ -139,12 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
             const SizedBox(height: 12),
             TextButton(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const SmartOnboardingScreen(),
-                  ),
-                );
+                Navigator.pushNamed(context, '/register');
               },
               child: const Text('New user? Register here'),
             ),

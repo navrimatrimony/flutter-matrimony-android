@@ -296,10 +296,6 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
 
   bool get _hasDob => _dobController.text.trim().isNotEmpty;
 
-  bool get _hasHeight => _height != null;
-
-  bool get _canContinue => _hasName && _hasDob && _hasHeight;
-
   OnboardingOption? _warmupGenderOption() {
     final warmup = widget.warmupGender;
     if (warmup == null) return null;
@@ -599,7 +595,6 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
-      continueEnabled: _canContinue,
       continueLabel: _t('Continue', 'पुढे जा'),
       children: [
         OnboardingErrorHighlight.forField(

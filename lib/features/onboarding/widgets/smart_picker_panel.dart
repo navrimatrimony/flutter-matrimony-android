@@ -45,8 +45,10 @@ class SmartPickerPanel extends StatefulWidget {
     this.pageSize = 20,
     this.showDividers = false,
     this.showOptionSubtitles = true,
+    this.showSearch = true,
     this.groupOptions = false,
     this.initialScrollIndex,
+    this.initialFilterKey,
     this.filterOptions = const <SmartPickerFilterOption>[],
     this.emptyTitle,
     this.emptyMessage,
@@ -72,8 +74,10 @@ class SmartPickerPanel extends StatefulWidget {
   final int pageSize;
   final bool showDividers;
   final bool showOptionSubtitles;
+  final bool showSearch;
   final bool groupOptions;
   final int? initialScrollIndex;
+  final String? initialFilterKey;
   final List<SmartPickerFilterOption> filterOptions;
   final String? emptyTitle;
   final String? emptyMessage;
@@ -100,8 +104,10 @@ class SmartPickerPanel extends StatefulWidget {
     int pageSize = 20,
     bool showDividers = false,
     bool showOptionSubtitles = true,
+    bool showSearch = true,
     bool groupOptions = false,
     int? initialScrollIndex,
+    String? initialFilterKey,
     List<SmartPickerFilterOption> filterOptions =
         const <SmartPickerFilterOption>[],
     String? emptyTitle,
@@ -135,8 +141,10 @@ class SmartPickerPanel extends StatefulWidget {
           pageSize: pageSize,
           showDividers: showDividers,
           showOptionSubtitles: showOptionSubtitles,
+          showSearch: showSearch,
           groupOptions: groupOptions,
           initialScrollIndex: initialScrollIndex,
+          initialFilterKey: initialFilterKey,
           filterOptions: filterOptions,
           emptyTitle: emptyTitle,
           emptyMessage: emptyMessage,
@@ -185,6 +193,10 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
     super.initState();
     _selectedFilterKey = widget.filterOptions.isEmpty
         ? null
+        : widget.filterOptions.any(
+            (option) => option.key == widget.initialFilterKey,
+          )
+        ? widget.initialFilterKey
         : widget.filterOptions.first.key;
     for (final item in widget.selectedItems) {
       _selected[item.identity] = item;
@@ -382,24 +394,27 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
                     child: Column(
                       children: [
                         _PanelHeader(title: widget.title),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-                          child: TextField(
-                            controller: _searchController,
-                            autofocus: true,
-                            decoration: InputDecoration(
-                              prefixIcon: const Icon(Icons.search),
-                              hintText: widget.searchHint ?? 'Search',
-                              suffixIcon: _searchController.text.isEmpty
-                                  ? null
-                                  : IconButton(
-                                      tooltip: 'Clear',
-                                      icon: const Icon(Icons.close),
-                                      onPressed: _searchController.clear,
-                                    ),
+                        if (widget.showSearch)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+                            child: TextField(
+                              controller: _searchController,
+                              autofocus: true,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.search),
+                                hintText: widget.searchHint ?? 'Search',
+                                suffixIcon: _searchController.text.isEmpty
+                                    ? null
+                                    : IconButton(
+                                        tooltip: 'Clear',
+                                        icon: const Icon(Icons.close),
+                                        onPressed: _searchController.clear,
+                                      ),
+                              ),
                             ),
-                          ),
-                        ),
+                          )
+                        else
+                          const SizedBox(height: 6),
                         if (widget.filterOptions.length > 1)
                           _FilterChips(
                             options: widget.filterOptions,

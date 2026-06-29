@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
+import '../../core/app_storage.dart';
 import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
@@ -17,7 +19,8 @@ class BrowseProfilesScreen extends StatefulWidget {
   State<BrowseProfilesScreen> createState() => _BrowseProfilesScreenState();
 }
 
-class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
+class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
+    with SingleTickerProviderStateMixin {
   static const Color _brandColor = Color(0xFFDC2626);
   static const Color _brandDark = Color(0xFFB91C1C);
   static const Color _brandSoft = Color(0xFFFEE2E2);
@@ -51,9 +54,23 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   int _selectedTabIndex = 0;
   int _activeMainNavIndex = _navMatches;
   int _selectedConnectTabIndex = 0;
+  bool _routeArgumentsRead = false;
+  bool _forceRecommendationDeck = false;
+  bool _dailyRecommendationChecked = false;
+  bool _recommendationDeckClosed = false;
+  bool _showRecommendationDeck = false;
+  bool _recommendationComplete = false;
+  bool _recommendationActionBusy = false;
+  bool _recommendationDragging = false;
+  bool _recommendationExiting = false;
+  int _recommendationIndex = 0;
+  double _recommendationDragDx = 0;
+  Timer? _recommendationCompletionTimer;
   final Set<int> _sendingInterestIds = <int>{};
   final Set<String> _failedPhotoUrls = <String>{};
   List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
+  late final AnimationController _recommendationHintController;
+  late final Animation<double> _recommendationHintOffset;
 
   final TextEditingController _ageFromController = TextEditingController();
   final TextEditingController _ageToController = TextEditingController();
@@ -63,11 +80,50 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
   @override
   void initState() {
     super.initState();
+    _recommendationHintController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1150),
+    );
+    _recommendationHintOffset =
+        TweenSequence<double>([
+          TweenSequenceItem(tween: ConstantTween<double>(0), weight: 18),
+          TweenSequenceItem(
+            tween: Tween<double>(begin: 0, end: 22),
+            weight: 18,
+          ),
+          TweenSequenceItem(
+            tween: Tween<double>(begin: 22, end: -18),
+            weight: 24,
+          ),
+          TweenSequenceItem(
+            tween: Tween<double>(begin: -18, end: 0),
+            weight: 20,
+          ),
+        ]).animate(
+          CurvedAnimation(
+            parent: _recommendationHintController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
     _fetchProfileList(feed: _feedForTab(_selectedTabIndex));
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_routeArgumentsRead) return;
+    _routeArgumentsRead = true;
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    if (arguments is Map && arguments['showRecommendationDeck'] == true) {
+      _forceRecommendationDeck = true;
+      _scheduleRecommendationDeckCheck();
+    }
+  }
+
+  @override
   void dispose() {
+    _recommendationCompletionTimer?.cancel();
+    _recommendationHintController.dispose();
     _ageFromController.dispose();
     _ageToController.dispose();
     _casteController.dispose();
@@ -120,6 +176,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
           _profiles = List<dynamic>.from(response['profiles']);
           _isLoading = false;
         });
+        _scheduleRecommendationDeckCheck();
       } else {
         setState(() {
           _profiles = [];
@@ -134,6 +191,60 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  void _scheduleRecommendationDeckCheck() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeShowRecommendationDeck();
+    });
+  }
+
+  Future<void> _maybeShowRecommendationDeck() async {
+    if (!mounted ||
+        _isLoading ||
+        _showRecommendationDeck ||
+        _recommendationDeckClosed) {
+      return;
+    }
+
+    final profiles = _recommendationProfiles();
+    if (profiles.isEmpty) return;
+
+    final force = _forceRecommendationDeck;
+    if (!force) {
+      if (_dailyRecommendationChecked) return;
+      _dailyRecommendationChecked = true;
+      final shownDate = await AppStorage.instance
+          .readDailyRecommendationShownDate();
+      if (shownDate == _todayKey()) return;
+    }
+
+    await AppStorage.instance.markDailyRecommendationShownDate(_todayKey());
+    if (!mounted) return;
+
+    setState(() {
+      _forceRecommendationDeck = false;
+      _showRecommendationDeck = true;
+      _recommendationComplete = false;
+      _recommendationDragging = false;
+      _recommendationExiting = false;
+      _recommendationIndex = 0;
+      _recommendationDragDx = 0;
+    });
+    _runRecommendationHint();
+  }
+
+  void _runRecommendationHint() {
+    _recommendationHintController
+      ..reset()
+      ..forward();
+  }
+
+  String _todayKey() {
+    final now = DateTime.now();
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    return '${now.year}-$month-$day';
   }
 
   String? _feedForTab(int tabIndex) {
@@ -267,6 +378,13 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final recommendationProfiles = _recommendationProfiles();
+    if (_showRecommendationDeck &&
+        recommendationProfiles.isNotEmpty &&
+        _recommendationIndex < recommendationProfiles.length) {
+      return _buildRecommendationScaffold(recommendationProfiles);
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppStrings.browseProfiles),
@@ -379,6 +497,460 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
         ),
       ),
     );
+  }
+
+  Scaffold _buildRecommendationScaffold(List<Map<String, dynamic>> profiles) {
+    if (_recommendationComplete) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8FFF8),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildRecommendationHeader(profiles.length),
+                Expanded(child: _buildRecommendationCompleteState()),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    final profile = profiles[_recommendationIndex];
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8FFF8),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildRecommendationHeader(profiles.length),
+              const SizedBox(height: 14),
+              Expanded(child: _buildRecommendationDeck(profiles)),
+              const SizedBox(height: 14),
+              _buildRecommendationActions(profile),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationHeader(int total) {
+    return Row(
+      children: [
+        Expanded(
+          child: FittedBox(
+            alignment: Alignment.centerLeft,
+            fit: BoxFit.scaleDown,
+            child: Text(
+              _recommendationComplete
+                  ? 'Recommendation'
+                  : 'Recommendation ${_recommendationIndex + 1}/$total',
+              maxLines: 1,
+              style: const TextStyle(
+                color: Color(0xFF111827),
+                fontSize: 19,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 44,
+          height: 44,
+          child: IconButton(
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+            onPressed: _closeRecommendationDeck,
+            icon: const Icon(Icons.close_rounded, size: 30),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRecommendationCompleteState() {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 82,
+              height: 82,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDCFCE7),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFF86EFAC), width: 1.4),
+              ),
+              child: const Icon(
+                Icons.done_all_rounded,
+                color: Color(0xFF15803D),
+                size: 42,
+              ),
+            ),
+            const SizedBox(height: 22),
+            const Text(
+              'आजचे recommendations पूर्ण झाले',
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Color(0xFF111827),
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                height: 1.12,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'नवीन set उपलब्ध झाल्यावर इथे दिसेल. तोपर्यंत तुम्ही regular matches पाहू शकता.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _closeRecommendationDeck,
+                icon: const Icon(Icons.favorite_border_rounded),
+                label: const Text('Matches पहा'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'काही क्षणात matches screen दिसेल.',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationDeck(List<Map<String, dynamic>> profiles) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final height = constraints.maxHeight;
+        final current = profiles[_recommendationIndex];
+        final nextIndex = _recommendationIndex + 1;
+        final next = nextIndex < profiles.length ? profiles[nextIndex] : null;
+
+        return AnimatedBuilder(
+          animation: _recommendationHintController,
+          builder: (context, child) {
+            final hintOffset = _recommendationDragDx == 0
+                ? _recommendationHintOffset.value
+                : 0.0;
+            final offset = _recommendationDragDx + hintOffset;
+            final reveal = (offset.abs() / width).clamp(0.0, 1.0).toDouble();
+
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                if (next != null)
+                  Positioned.fill(
+                    top: 12 - (reveal * 10),
+                    child: Transform.scale(
+                      scale: 0.96 + (reveal * 0.035),
+                      child: Opacity(
+                        opacity: 0.55 + (reveal * 0.20),
+                        child: _buildRecommendationCard(next, height),
+                      ),
+                    ),
+                  ),
+                Semantics(
+                  label: 'Swipe right to send interest. Swipe left to skip.',
+                  child: GestureDetector(
+                    onHorizontalDragStart: (_) {
+                      if (_recommendationActionBusy ||
+                          _recommendationExiting ||
+                          _recommendationComplete) {
+                        return;
+                      }
+                      _recommendationHintController.stop();
+                      setState(() {
+                        _recommendationDragging = true;
+                      });
+                    },
+                    onHorizontalDragUpdate: (details) {
+                      if (_recommendationActionBusy ||
+                          _recommendationExiting ||
+                          _recommendationComplete) {
+                        return;
+                      }
+                      setState(() {
+                        _recommendationDragDx =
+                            (_recommendationDragDx + details.delta.dx).clamp(
+                              -width,
+                              width,
+                            );
+                      });
+                    },
+                    onHorizontalDragEnd: (details) {
+                      if (_recommendationActionBusy ||
+                          _recommendationExiting ||
+                          _recommendationComplete) {
+                        return;
+                      }
+                      final velocity = details.primaryVelocity ?? 0;
+                      final threshold = width * 0.24;
+                      setState(() {
+                        _recommendationDragging = false;
+                      });
+                      if (_recommendationDragDx > threshold || velocity > 650) {
+                        _sendRecommendationInterest();
+                        return;
+                      }
+                      if (_recommendationDragDx < -threshold ||
+                          velocity < -650) {
+                        _skipRecommendationProfile();
+                        return;
+                      }
+                      setState(() {
+                        _recommendationDragDx = 0;
+                      });
+                    },
+                    child: TweenAnimationBuilder<double>(
+                      key: ValueKey<int>(_recommendationIndex),
+                      tween: Tween<double>(end: offset),
+                      duration: _recommendationDragging
+                          ? Duration.zero
+                          : const Duration(milliseconds: 260),
+                      curve: _recommendationExiting
+                          ? Curves.easeInCubic
+                          : Curves.easeOutCubic,
+                      builder: (context, animatedOffset, child) {
+                        final progress = (animatedOffset / width)
+                            .clamp(-1.0, 1.0)
+                            .toDouble();
+                        final rotation = progress * 0.18;
+                        final lift =
+                            -8 * (animatedOffset.abs() / width).clamp(0, 1);
+
+                        return Transform.translate(
+                          offset: Offset(animatedOffset, lift.toDouble()),
+                          child: Transform.rotate(
+                            alignment: Alignment.bottomCenter,
+                            angle: rotation,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                _buildRecommendationCard(current, height),
+                                _buildRecommendationSwipeLabel(animatedOffset),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRecommendationCard(Map<String, dynamic> profile, double height) {
+    return _buildMatchCard(
+      profile,
+      height: height,
+      margin: EdgeInsets.zero,
+      showActionStrip: false,
+    );
+  }
+
+  Widget _buildRecommendationSwipeLabel(double offset) {
+    if (offset.abs() < 24) return const SizedBox.shrink();
+    final interested = offset > 0;
+    final color = interested ? const Color(0xFF16A34A) : _brandColor;
+    return Positioned(
+      top: 32,
+      left: interested ? null : 24,
+      right: interested ? 24 : null,
+      child: Transform.rotate(
+        angle: interested ? 0.12 : -0.12,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white, width: 2),
+          ),
+          child: Text(
+            interested ? 'INTERESTED' : 'SKIP',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendationActions(Map<String, dynamic> profile) {
+    final canSend = _canSendInterest(profile);
+    final sent = _interestSent(profile);
+    final profileId = _displayInt(profile['id']);
+    final busy =
+        _recommendationActionBusy ||
+        (profileId != null && _sendingInterestIds.contains(profileId));
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: busy ? null : _skipRecommendationProfile,
+            icon: const Icon(Icons.close_rounded),
+            label: const Text('Skip'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: _brandDark,
+              side: BorderSide(color: _brandColor.withValues(alpha: 0.45)),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: canSend && !busy ? _sendRecommendationInterest : null,
+            icon: busy
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
+                  )
+                : Icon(sent ? Icons.check_rounded : Icons.favorite_rounded),
+            label: Text(
+              sent ? AppStrings.interestSent : AppStrings.sendInterest,
+            ),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _sendRecommendationInterest() async {
+    if (_recommendationActionBusy || _recommendationExiting) return;
+    final profiles = _recommendationProfiles();
+    if (_recommendationIndex >= profiles.length) return;
+    final profile = profiles[_recommendationIndex];
+
+    setState(() {
+      _recommendationActionBusy = true;
+      _recommendationDragging = false;
+    });
+    final sent = await _sendInterestFromCard(profile);
+    if (!mounted) return;
+    setState(() {
+      _recommendationActionBusy = false;
+    });
+    if (sent) {
+      await _advanceRecommendationDeck(direction: 1);
+    } else if (mounted) {
+      setState(() {
+        _recommendationDragDx = 0;
+      });
+    }
+  }
+
+  void _skipRecommendationProfile() {
+    if (_recommendationActionBusy || _recommendationExiting) return;
+    unawaited(_advanceRecommendationDeck(direction: -1));
+  }
+
+  Future<void> _advanceRecommendationDeck({required int direction}) async {
+    final profiles = _recommendationProfiles();
+    if (_recommendationIndex >= profiles.length) return;
+    final exitWidth = MediaQuery.sizeOf(context).width + 160;
+    setState(() {
+      _recommendationDragging = false;
+      _recommendationExiting = true;
+      _recommendationDragDx = direction * exitWidth;
+    });
+
+    await Future<void>.delayed(const Duration(milliseconds: 260));
+    if (!mounted) return;
+
+    if (_recommendationIndex + 1 >= profiles.length) {
+      _showRecommendationCompletion();
+      return;
+    }
+
+    setState(() {
+      _recommendationIndex += 1;
+      _recommendationDragDx = 0;
+      _recommendationExiting = false;
+    });
+  }
+
+  void _showRecommendationCompletion() {
+    _recommendationCompletionTimer?.cancel();
+    setState(() {
+      _recommendationComplete = true;
+      _recommendationActionBusy = false;
+      _recommendationDragging = false;
+      _recommendationExiting = false;
+      _recommendationDragDx = 0;
+    });
+
+    _recommendationCompletionTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      _closeRecommendationDeck();
+    });
+  }
+
+  void _closeRecommendationDeck() {
+    _recommendationCompletionTimer?.cancel();
+    setState(() {
+      _showRecommendationDeck = false;
+      _recommendationDeckClosed = true;
+      _recommendationComplete = false;
+      _recommendationActionBusy = false;
+      _recommendationDragging = false;
+      _recommendationExiting = false;
+      _recommendationDragDx = 0;
+    });
   }
 
   Widget _buildBottomNavItem({
@@ -1907,14 +2479,21 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     );
   }
 
-  Widget _buildMatchCard(Map<String, dynamic> profile) {
+  Widget _buildMatchCard(
+    Map<String, dynamic> profile, {
+    double? height,
+    EdgeInsetsGeometry margin = const EdgeInsets.only(bottom: 18),
+    bool showActionStrip = true,
+  }) {
     final data = _cardData(profile);
-    final cardHeight = (MediaQuery.sizeOf(context).height * 0.58)
-        .clamp(390.0, 520.0)
-        .toDouble();
+    final cardHeight =
+        height ??
+        (MediaQuery.sizeOf(context).height * 0.58)
+            .clamp(390.0, 520.0)
+            .toDouble();
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 18),
+      margin: margin,
       height: cardHeight,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
@@ -1960,7 +2539,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
                 left: 18,
                 right: 18,
                 bottom: 18,
-                child: _buildCardOverlay(profile, data),
+                child: _buildCardOverlay(
+                  profile,
+                  data,
+                  showActionStrip: showActionStrip,
+                ),
               ),
             ],
           ),
@@ -2085,7 +2668,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     );
   }
 
-  Widget _buildCardOverlay(Map<String, dynamic> profile, _MatchCardData data) {
+  Widget _buildCardOverlay(
+    Map<String, dynamic> profile,
+    _MatchCardData data, {
+    bool showActionStrip = true,
+  }) {
     final communityLine = _joinNonEmpty([
       data.heightLabel,
       data.communityLabel,
@@ -2118,8 +2705,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
           const SizedBox(height: 10),
           Wrap(spacing: 8, runSpacing: 8, children: chips),
         ],
-        const SizedBox(height: 14),
-        _buildCardActionStrip(profile, data),
+        if (showActionStrip) ...[
+          const SizedBox(height: 14),
+          _buildCardActionStrip(profile, data),
+        ],
       ],
     );
   }
@@ -2426,9 +3015,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
     return ids;
   }
 
-  Future<void> _sendInterestFromCard(Map<String, dynamic> profile) async {
+  Future<bool> _sendInterestFromCard(Map<String, dynamic> profile) async {
     final profileId = _displayInt(profile['id']);
-    if (profileId == null || _sendingInterestIds.contains(profileId)) return;
+    if (profileId == null || _sendingInterestIds.contains(profileId)) {
+      return false;
+    }
 
     if (!_canSendInterest(profile)) {
       _showSnackBar(
@@ -2436,7 +3027,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
             ? 'Interest आधीच पाठवला आहे.'
             : 'या प्रोफाइलसाठी interest पाठवता येत नाही.',
       );
-      return;
+      return _interestSent(profile);
     }
 
     setState(() {
@@ -2445,7 +3036,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
     try {
       final response = await ApiClient.sendInterest(profileId);
-      if (!mounted) return;
+      if (!mounted) return false;
 
       final statusCode = _displayInt(response['statusCode']);
       final success =
@@ -2456,15 +3047,18 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
       if (success) {
         _markInterestSent(profileId);
         _showSnackBar(AppStrings.interestSent);
+        return true;
       } else {
         _showSnackBar(
           _displayString(response['message']) ??
               'Interest पाठवता आला नाही. पुन्हा प्रयत्न करा.',
         );
+        return false;
       }
     } catch (_) {
-      if (!mounted) return;
+      if (!mounted) return false;
       _showSnackBar('Interest पाठवता आला नाही. पुन्हा प्रयत्न करा.');
+      return false;
     } finally {
       if (mounted) {
         setState(() {
@@ -2544,6 +3138,23 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen> {
 
   List<Map<String, dynamic>> _profileRows() {
     return _profiles.map(_safeMap).whereType<Map<String, dynamic>>().toList();
+  }
+
+  List<Map<String, dynamic>> _recommendationProfiles() {
+    return _profileRows().where(_hasRecommendationPhoto).take(13).toList();
+  }
+
+  bool _hasRecommendationPhoto(Map<String, dynamic> profile) {
+    final display = _safeMap(profile['display']);
+    final card = _safeMap(display?['card']) ?? _safeMap(display?['hero']);
+    final primaryPhotoUrl = ApiClient.normalizeProfilePhotoUrl(
+      _displayString(card?['primary_photo_url']),
+    );
+    final resolvedPhotoUrl =
+        primaryPhotoUrl ?? ApiClient.resolveProfilePhotoUrl(profile);
+
+    return resolvedPhotoUrl != null &&
+        !_failedPhotoUrls.contains(resolvedPhotoUrl);
   }
 
   _MatchCardData _cardData(Map<String, dynamic> profile) {

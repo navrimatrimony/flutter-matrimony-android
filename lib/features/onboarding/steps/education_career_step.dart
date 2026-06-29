@@ -16,101 +16,376 @@ class _IncomeBand {
     required this.label,
     required this.min,
     required this.max,
-    required this.defaultMin,
-    required this.defaultMax,
+    required this.groupKey,
   });
 
   final String key;
   final String label;
   final int min;
   final int max;
-  final int defaultMin;
-  final int defaultMax;
+  final String groupKey;
 }
 
 const List<_IncomeBand> _annualIncomeBands = <_IncomeBand>[
   _IncomeBand(
-    key: 'annual_1_10l',
-    label: '1-10L',
+    key: 'annual_1_125l',
+    label: '1L - 1.25L',
     min: 100000,
+    max: 125000,
+    groupKey: 'annual_1_2l',
+  ),
+  _IncomeBand(
+    key: 'annual_125_150l',
+    label: '1.25L - 1.5L',
+    min: 125000,
+    max: 150000,
+    groupKey: 'annual_1_2l',
+  ),
+  _IncomeBand(
+    key: 'annual_150_175l',
+    label: '1.5L - 1.75L',
+    min: 150000,
+    max: 175000,
+    groupKey: 'annual_1_2l',
+  ),
+  _IncomeBand(
+    key: 'annual_175_2l',
+    label: '1.75L - 2L',
+    min: 175000,
+    max: 200000,
+    groupKey: 'annual_1_2l',
+  ),
+  _IncomeBand(
+    key: 'annual_2_250l',
+    label: '2L - 2.5L',
+    min: 200000,
+    max: 250000,
+    groupKey: 'annual_2_5l',
+  ),
+  _IncomeBand(
+    key: 'annual_250_3l',
+    label: '2.5L - 3L',
+    min: 250000,
+    max: 300000,
+    groupKey: 'annual_2_5l',
+  ),
+  _IncomeBand(
+    key: 'annual_3_350l',
+    label: '3L - 3.5L',
+    min: 300000,
+    max: 350000,
+    groupKey: 'annual_2_5l',
+  ),
+  _IncomeBand(
+    key: 'annual_350_4l',
+    label: '3.5L - 4L',
+    min: 350000,
+    max: 400000,
+    groupKey: 'annual_2_5l',
+  ),
+  _IncomeBand(
+    key: 'annual_4_450l',
+    label: '4L - 4.5L',
+    min: 400000,
+    max: 450000,
+    groupKey: 'annual_2_5l',
+  ),
+  _IncomeBand(
+    key: 'annual_450_5l',
+    label: '4.5L - 5L',
+    min: 450000,
+    max: 500000,
+    groupKey: 'annual_2_5l',
+  ),
+  _IncomeBand(
+    key: 'annual_5_6l',
+    label: '5L - 6L',
+    min: 500000,
+    max: 600000,
+    groupKey: 'annual_5_10l',
+  ),
+  _IncomeBand(
+    key: 'annual_6_7l',
+    label: '6L - 7L',
+    min: 600000,
+    max: 700000,
+    groupKey: 'annual_5_10l',
+  ),
+  _IncomeBand(
+    key: 'annual_7_8l',
+    label: '7L - 8L',
+    min: 700000,
+    max: 800000,
+    groupKey: 'annual_5_10l',
+  ),
+  _IncomeBand(
+    key: 'annual_8_9l',
+    label: '8L - 9L',
+    min: 800000,
+    max: 900000,
+    groupKey: 'annual_5_10l',
+  ),
+  _IncomeBand(
+    key: 'annual_9_10l',
+    label: '9L - 10L',
+    min: 900000,
     max: 1000000,
-    defaultMin: 400000,
-    defaultMax: 600000,
+    groupKey: 'annual_5_10l',
   ),
   _IncomeBand(
-    key: 'annual_10_20l',
-    label: '10-20L',
+    key: 'annual_10_15l',
+    label: '10L - 15L',
     min: 1000000,
+    max: 1500000,
+    groupKey: 'annual_10_30l',
+  ),
+  _IncomeBand(
+    key: 'annual_15_20l',
+    label: '15L - 20L',
+    min: 1500000,
     max: 2000000,
-    defaultMin: 1200000,
-    defaultMax: 1600000,
+    groupKey: 'annual_10_30l',
   ),
   _IncomeBand(
-    key: 'annual_20_50l',
-    label: '20-50L',
+    key: 'annual_20_25l',
+    label: '20L - 25L',
     min: 2000000,
+    max: 2500000,
+    groupKey: 'annual_10_30l',
+  ),
+  _IncomeBand(
+    key: 'annual_25_30l',
+    label: '25L - 30L',
+    min: 2500000,
+    max: 3000000,
+    groupKey: 'annual_10_30l',
+  ),
+  _IncomeBand(
+    key: 'annual_30_40l',
+    label: '30L - 40L',
+    min: 3000000,
+    max: 4000000,
+    groupKey: 'annual_30_50l',
+  ),
+  _IncomeBand(
+    key: 'annual_40_50l',
+    label: '40L - 50L',
+    min: 4000000,
     max: 5000000,
-    defaultMin: 3000000,
-    defaultMax: 4000000,
+    groupKey: 'annual_30_50l',
   ),
   _IncomeBand(
-    key: 'annual_50l_1cr',
-    label: '50L-1Cr',
+    key: 'annual_50_75l',
+    label: '50L - 75L',
     min: 5000000,
-    max: 10000000,
-    defaultMin: 6000000,
-    defaultMax: 8000000,
+    max: 7500000,
+    groupKey: 'annual_50l_plus',
   ),
   _IncomeBand(
-    key: 'annual_1_10cr',
-    label: '1-10Cr',
+    key: 'annual_75l_1cr',
+    label: '75L - 1Cr',
+    min: 7500000,
+    max: 10000000,
+    groupKey: 'annual_50l_plus',
+  ),
+  _IncomeBand(
+    key: 'annual_1_2cr',
+    label: '1Cr - 2Cr',
     min: 10000000,
+    max: 20000000,
+    groupKey: 'annual_50l_plus',
+  ),
+  _IncomeBand(
+    key: 'annual_2_5cr',
+    label: '2Cr - 5Cr',
+    min: 20000000,
+    max: 50000000,
+    groupKey: 'annual_50l_plus',
+  ),
+  _IncomeBand(
+    key: 'annual_5_10cr',
+    label: '5Cr - 10Cr',
+    min: 50000000,
     max: 100000000,
-    defaultMin: 40000000,
-    defaultMax: 60000000,
+    groupKey: 'annual_50l_plus',
+  ),
+  _IncomeBand(
+    key: 'annual_10cr_plus',
+    label: '10Cr+',
+    min: 100000000,
+    max: 1000000000,
+    groupKey: 'annual_50l_plus',
   ),
 ];
 
 const List<_IncomeBand> _monthlyIncomeBands = <_IncomeBand>[
   _IncomeBand(
-    key: 'monthly_10_50k',
-    label: '10K-50K',
+    key: 'monthly_10_15k',
+    label: '10K - 15K',
     min: 10000,
+    max: 15000,
+    groupKey: 'monthly_10_30k',
+  ),
+  _IncomeBand(
+    key: 'monthly_15_20k',
+    label: '15K - 20K',
+    min: 15000,
+    max: 20000,
+    groupKey: 'monthly_10_30k',
+  ),
+  _IncomeBand(
+    key: 'monthly_20_25k',
+    label: '20K - 25K',
+    min: 20000,
+    max: 25000,
+    groupKey: 'monthly_10_30k',
+  ),
+  _IncomeBand(
+    key: 'monthly_25_30k',
+    label: '25K - 30K',
+    min: 25000,
+    max: 30000,
+    groupKey: 'monthly_10_30k',
+  ),
+  _IncomeBand(
+    key: 'monthly_30_40k',
+    label: '30K - 40K',
+    min: 30000,
+    max: 40000,
+    groupKey: 'monthly_30k_1l',
+  ),
+  _IncomeBand(
+    key: 'monthly_40_50k',
+    label: '40K - 50K',
+    min: 40000,
     max: 50000,
-    defaultMin: 20000,
-    defaultMax: 35000,
+    groupKey: 'monthly_30k_1l',
   ),
   _IncomeBand(
-    key: 'monthly_50k_1l',
-    label: '50K-1L',
+    key: 'monthly_50_60k',
+    label: '50K - 60K',
     min: 50000,
+    max: 60000,
+    groupKey: 'monthly_30k_1l',
+  ),
+  _IncomeBand(
+    key: 'monthly_60_70k',
+    label: '60K - 70K',
+    min: 60000,
+    max: 70000,
+    groupKey: 'monthly_30k_1l',
+  ),
+  _IncomeBand(
+    key: 'monthly_70_80k',
+    label: '70K - 80K',
+    min: 70000,
+    max: 80000,
+    groupKey: 'monthly_30k_1l',
+  ),
+  _IncomeBand(
+    key: 'monthly_80_90k',
+    label: '80K - 90K',
+    min: 80000,
+    max: 90000,
+    groupKey: 'monthly_30k_1l',
+  ),
+  _IncomeBand(
+    key: 'monthly_90k_1l',
+    label: '90K - 1L',
+    min: 90000,
     max: 100000,
-    defaultMin: 60000,
-    defaultMax: 80000,
+    groupKey: 'monthly_30k_1l',
   ),
   _IncomeBand(
-    key: 'monthly_1_2l',
-    label: '1-2L',
+    key: 'monthly_1_125l',
+    label: '1L - 1.25L',
     min: 100000,
+    max: 125000,
+    groupKey: 'monthly_1_2l',
+  ),
+  _IncomeBand(
+    key: 'monthly_125_150l',
+    label: '1.25L - 1.5L',
+    min: 125000,
+    max: 150000,
+    groupKey: 'monthly_1_2l',
+  ),
+  _IncomeBand(
+    key: 'monthly_150_175l',
+    label: '1.5L - 1.75L',
+    min: 150000,
+    max: 175000,
+    groupKey: 'monthly_1_2l',
+  ),
+  _IncomeBand(
+    key: 'monthly_175_2l',
+    label: '1.75L - 2L',
+    min: 175000,
     max: 200000,
-    defaultMin: 120000,
-    defaultMax: 160000,
+    groupKey: 'monthly_1_2l',
   ),
   _IncomeBand(
-    key: 'monthly_2_5l',
-    label: '2-5L',
+    key: 'monthly_2_250l',
+    label: '2L - 2.5L',
     min: 200000,
-    max: 500000,
-    defaultMin: 300000,
-    defaultMax: 400000,
+    max: 250000,
+    groupKey: 'monthly_2_5l',
   ),
   _IncomeBand(
-    key: 'monthly_5l_plus',
-    label: '5L+',
+    key: 'monthly_250_3l',
+    label: '2.5L - 3L',
+    min: 250000,
+    max: 300000,
+    groupKey: 'monthly_2_5l',
+  ),
+  _IncomeBand(
+    key: 'monthly_3_350l',
+    label: '3L - 3.5L',
+    min: 300000,
+    max: 350000,
+    groupKey: 'monthly_2_5l',
+  ),
+  _IncomeBand(
+    key: 'monthly_350_4l',
+    label: '3.5L - 4L',
+    min: 350000,
+    max: 400000,
+    groupKey: 'monthly_2_5l',
+  ),
+  _IncomeBand(
+    key: 'monthly_4_450l',
+    label: '4L - 4.5L',
+    min: 400000,
+    max: 450000,
+    groupKey: 'monthly_2_5l',
+  ),
+  _IncomeBand(
+    key: 'monthly_450_5l',
+    label: '4.5L - 5L',
+    min: 450000,
+    max: 500000,
+    groupKey: 'monthly_2_5l',
+  ),
+  _IncomeBand(
+    key: 'monthly_5_750l',
+    label: '5L - 7.5L',
     min: 500000,
-    max: 2000000,
-    defaultMin: 600000,
-    defaultMax: 1000000,
+    max: 750000,
+    groupKey: 'monthly_5l_plus',
+  ),
+  _IncomeBand(
+    key: 'monthly_750_10l',
+    label: '7.5L - 10L',
+    min: 750000,
+    max: 1000000,
+    groupKey: 'monthly_5l_plus',
+  ),
+  _IncomeBand(
+    key: 'monthly_10l_plus',
+    label: '10L+',
+    min: 1000000,
+    max: 10000000,
+    groupKey: 'monthly_5l_plus',
   ),
 ];
 
@@ -166,6 +441,8 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
   String? _incomeError;
   String? _incomeErrorField;
   String? _educationError;
+  String? _workingWithError;
+  String? _occupationError;
   String? _incomeBandKey;
   bool _workExtrasExpanded = false;
 
@@ -445,50 +722,18 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     required List<OnboardingOption> options,
     required OnboardingOption? selected,
     required ValueChanged<OnboardingOption> onSelected,
-  }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 320),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: options.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final option = options[index];
-                    final active = selected?.identity == option.identity;
-                    return ListTile(
-                      dense: true,
-                      title: Text(_incomeOptionLabel(option)),
-                      trailing: active ? const Icon(Icons.check) : null,
-                      onTap: () {
-                        Navigator.pop(context);
-                        onSelected(option);
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
+  }) async {
+    await SmartPickerPanel.show(
+      context,
+      title: title,
+      selectedItems: selected == null ? const [] : [selected],
+      showSearch: false,
+      showOptionSubtitles: false,
+      loadPage: (query, page, limit) async =>
+          PagedLookupResponse.fromOptions(options),
+      onChanged: (items) {
+        if (items.isEmpty) return;
+        onSelected(items.first);
       },
     );
   }
@@ -512,6 +757,23 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     _valueType ?? _fallbackOption('range', 'Range', 'श्रेणी'),
   );
 
+  String _incomeGroupLabel(String key) {
+    return switch (key) {
+      'monthly_10_30k' => _t('10K to 30K', '10K ते 30K'),
+      'monthly_30k_1l' => _t('30K to 1L', '30K ते 1L'),
+      'monthly_1_2l' => _t('1L to 2L', '1L ते 2L'),
+      'monthly_2_5l' => _t('2L to 5L', '2L ते 5L'),
+      'monthly_5l_plus' => _t('5L and above', '5L आणि पुढे'),
+      'annual_1_2l' => _t('1L to 2L', '1L ते 2L'),
+      'annual_2_5l' => _t('2L to 5L', '2L ते 5L'),
+      'annual_5_10l' => _t('5L to 10L', '5L ते 10L'),
+      'annual_10_30l' => _t('10L to 30L', '10L ते 30L'),
+      'annual_30_50l' => _t('30L to 50L', '30L ते 50L'),
+      'annual_50l_plus' => _t('50L and above', '50L आणि पुढे'),
+      _ => '',
+    };
+  }
+
   void _syncRangeBandFromAmounts({required bool applyDefaultIfEmpty}) {
     if (!_incomeIsRange) return;
     final minAmount = onboardingInt(_minAmountController.text);
@@ -530,6 +792,10 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     for (final band in _incomeBands) {
       if (low >= band.min && high <= band.max) return band;
     }
+    final midpoint = ((low + high) / 2).round();
+    for (final band in _incomeBands) {
+      if (midpoint >= band.min && midpoint <= band.max) return band;
+    }
     return null;
   }
 
@@ -544,54 +810,125 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   void _applyIncomeBand(_IncomeBand band) {
     _incomeBandKey = band.key;
-    _minAmountController.text = band.defaultMin.toString();
-    _maxAmountController.text = band.defaultMax.toString();
+    _minAmountController.text = band.min.toString();
+    _maxAmountController.text = band.max.toString();
   }
 
-  int _incomeStep(_IncomeBand band) {
-    if (band.max <= 100000) return 5000;
-    if (band.max <= 1000000) return 50000;
-    if (band.max <= 10000000) return 100000;
-    return 1000000;
+  String _periodKeyForIncomeBand(_IncomeBand band) {
+    return band.key.startsWith('monthly_') ? 'monthly' : 'annual';
   }
 
-  int _roundIncomeValue(double value, _IncomeBand band) {
-    final step = _incomeStep(band);
-    final rounded = (value / step).round() * step;
-    return rounded.clamp(band.min, band.max).toInt();
+  List<_IncomeBand> _incomeBandsForPeriod(String periodKey) {
+    return periodKey == 'monthly' ? _monthlyIncomeBands : _annualIncomeBands;
   }
 
-  RangeValues _rangeValuesForBand(_IncomeBand band) {
-    final start = onboardingInt(_minAmountController.text) ?? band.defaultMin;
-    final end = onboardingInt(_maxAmountController.text) ?? band.defaultMax;
-    final clampedStart = start.clamp(band.min, band.max).toDouble();
-    final clampedEnd = end.clamp(band.min, band.max).toDouble();
-    if (clampedEnd < clampedStart) {
-      return RangeValues(clampedStart, clampedStart);
+  OnboardingOption _incomeBandOption(_IncomeBand band, String periodKey) {
+    final periodLabel = periodKey == 'monthly'
+        ? _t('per month', 'दर महिना')
+        : _t('per year', 'दर वर्ष');
+    return OnboardingOption(
+      key: '${periodKey}_${band.key}',
+      label: '$_currencySymbol${band.label}',
+      meta: <String, dynamic>{
+        'period_key': periodKey,
+        'period_label': periodLabel,
+        'group_label': _incomeGroupLabel(band.groupKey),
+        'band_key': band.key,
+      },
+    );
+  }
+
+  List<OnboardingOption> _incomeRangeOptionsForPeriod(String periodKey) {
+    return _incomeBandsForPeriod(
+      periodKey,
+    ).map((band) => _incomeBandOption(band, periodKey)).toList();
+  }
+
+  Future<PagedLookupResponse> _incomeRangePage(
+    String query,
+    int page,
+    int limit,
+  ) async {
+    final periodKey = _incomeIsMonthly ? 'monthly' : 'annual';
+    return _incomeRangeFilteredPage(query, page, limit, periodKey);
+  }
+
+  Future<PagedLookupResponse> _incomeRangeFilteredPage(
+    String query,
+    int page,
+    int limit,
+    String? filterKey,
+  ) async {
+    final periodKey = filterKey == 'monthly' ? 'monthly' : 'annual';
+    final normalizedQuery = query.trim().toLowerCase();
+    final options = _incomeRangeOptionsForPeriod(periodKey).where((option) {
+      if (normalizedQuery.isEmpty) return true;
+      return option.label.toLowerCase().contains(normalizedQuery) ||
+          (option
+                  .metaText('group_label')
+                  ?.toLowerCase()
+                  .contains(normalizedQuery) ??
+              false);
+    }).toList();
+    return PagedLookupResponse.fromOptions(options);
+  }
+
+  OnboardingOption _selectedIncomeRangeOption() {
+    final band = _currentIncomeBand;
+    return _incomeBandOption(band, _periodKeyForIncomeBand(band));
+  }
+
+  void _applyIncomeRangeOption(OnboardingOption option) {
+    final periodKey = option.metaText('period_key') ?? 'annual';
+    final bandKey = option.metaText('band_key');
+    _IncomeBand? band;
+    for (final item in _incomeBandsForPeriod(periodKey)) {
+      if (item.key == bandKey) {
+        band = item;
+        break;
+      }
     }
-    return RangeValues(clampedStart, clampedEnd);
+    if (band == null) return;
+    final selectedBand = band;
+
+    setState(() {
+      _clearIncomeErrorState();
+      _period =
+          optionByKey(_periodOptions, periodKey) ??
+          _fallbackOption(
+            periodKey,
+            periodKey == 'monthly' ? 'Monthly' : 'Annual',
+            periodKey == 'monthly' ? 'मासिक' : 'वार्षिक',
+          );
+      _valueType =
+          optionByKey(_valueTypeOptions, 'range') ??
+          _fallbackOption('range', 'Range', 'श्रेणी');
+      _applyIncomeBand(selectedBand);
+    });
   }
 
-  String _formatIncomeAmount(num amount) {
-    if (amount >= 10000000) {
-      return '₹${_formatIncomeUnit(amount / 10000000)}Cr';
-    }
-    if (amount >= 100000) {
-      return '₹${_formatIncomeUnit(amount / 100000)}L';
-    }
-    if (amount >= 1000) {
-      return '₹${_formatIncomeUnit(amount / 1000)}K';
-    }
-    return '₹${amount.round()}';
-  }
-
-  String _formatIncomeUnit(num value) {
-    if (value == value.roundToDouble()) return value.round().toString();
-    return value.toStringAsFixed(1);
-  }
-
-  String _incomeRangeSummary(RangeValues values) {
-    return '${_formatIncomeAmount(values.start)} - ${_formatIncomeAmount(values.end)}';
+  Future<void> _showIncomeRangePicker(BuildContext context) async {
+    final selected = _selectedIncomeRangeOption();
+    await SmartPickerPanel.show(
+      context,
+      title: _t('Select income range', 'उत्पन्न श्रेणी निवडा'),
+      selectedItems: [selected],
+      showSearch: false,
+      showDividers: true,
+      groupOptions: true,
+      initialFilterKey: _incomeIsMonthly ? 'monthly' : 'annual',
+      filterOptions: [
+        SmartPickerFilterOption(key: 'monthly', label: _t('Monthly', 'मासिक')),
+        SmartPickerFilterOption(key: 'annual', label: _t('Annual', 'वार्षिक')),
+      ],
+      loadPage: _incomeRangePage,
+      filteredLoadPage: _incomeRangeFilteredPage,
+      itemSubtitleBuilder: (option) => option.metaText('period_label'),
+      onChanged: (items) {
+        if (items.isEmpty) return;
+        _applyIncomeRangeOption(items.first);
+      },
+    );
   }
 
   String _incomePeriodSuffix() {
@@ -743,12 +1080,16 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     }
 
     if (_workingWith == null) {
-      widget.onMessage(_t('Choose work details.', 'कामाची माहिती निवडा.'));
+      final message = _t('Choose work details.', 'कामाची माहिती निवडा.');
+      setState(() => _workingWithError = message);
+      widget.onMessage(message);
       return;
     }
 
     if (!_notWorking && _occupation == null) {
-      widget.onMessage(_t('Choose occupation.', 'व्यवसाय निवडा.'));
+      final message = _t('Choose occupation.', 'व्यवसाय निवडा.');
+      setState(() => _occupationError = message);
+      widget.onMessage(message);
       return;
     }
 
@@ -1160,135 +1501,70 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   Widget _rangeIncomeSection(BuildContext context) {
     final band = _currentIncomeBand;
-    final values = _rangeValuesForBand(band);
-    final selectedRange = _incomeRangeSummary(values);
+    final selectedRange = '$_currencySymbol${band.label}';
     final rangeError = _rangeIncomeError();
+    final colorScheme = Theme.of(context).colorScheme;
+    final privacyIcon = _incomePrivate
+        ? Icons.lock_outline_rounded
+        : Icons.lock_open_rounded;
+    final privacyIconColor = _incomePrivate
+        ? Colors.grey.shade700
+        : colorScheme.primary;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AnimatedSwitcher(
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: () => _showIncomeRangePicker(context),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: _t('Income range', 'उत्पन्न श्रेणी'),
+          errorText: rangeError,
+          isDense: true,
+          contentPadding: const EdgeInsets.fromLTRB(12, 10, 6, 8),
+          suffixIconConstraints: const BoxConstraints(
+            minWidth: 34,
+            minHeight: 32,
+          ),
+          suffixIcon: Icon(Icons.chevron_right, color: colorScheme.primary),
+        ),
+        child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 160),
-          child: Column(
-            key: ValueKey<String>(selectedRange),
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            key: ValueKey<String>(
+              'income-range:$selectedRange:${_incomePeriodSuffix()}:$_incomePrivate',
+            ),
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                selectedRange,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: const Color(0xFF111827),
-                  fontWeight: FontWeight.w900,
+              Flexible(
+                child: Text(
+                  selectedRange,
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: const Color(0xFF111827),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                  ),
                 ),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(width: 8),
               Text(
                 _incomePeriodSuffix(),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                maxLines: 1,
+                softWrap: false,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
                   color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
                 ),
               ),
+              const SizedBox(width: 6),
+              Icon(privacyIcon, size: 16, color: privacyIconColor),
             ],
           ),
         ),
-        const SizedBox(height: 8),
-        RangeSlider(
-          values: values,
-          min: band.min.toDouble(),
-          max: band.max.toDouble(),
-          divisions: 20,
-          labels: RangeLabels(
-            _formatIncomeAmount(values.start),
-            _formatIncomeAmount(values.end),
-          ),
-          onChanged: (next) => setState(() {
-            _clearIncomeErrorState();
-            _incomeBandKey = band.key;
-            _minAmountController.text = _roundIncomeValue(
-              next.start,
-              band,
-            ).toString();
-            _maxAmountController.text = _roundIncomeValue(
-              next.end,
-              band,
-            ).toString();
-          }),
-        ),
-        Row(
-          children: [
-            Text(
-              _formatIncomeAmount(band.min),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              _formatIncomeAmount(band.max),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey.shade700,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: [
-              for (var i = 0; i < _incomeBands.length; i++) ...[
-                if (i > 0) const SizedBox(width: 6),
-                Builder(
-                  builder: (context) {
-                    final item = _incomeBands[i];
-                    final selected = item.key == band.key;
-                    return ChoiceChip(
-                      label: Text(item.label),
-                      selected: selected,
-                      visualDensity: const VisualDensity(
-                        horizontal: -4,
-                        vertical: -4,
-                      ),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: EdgeInsets.zero,
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: selected ? Colors.white : Colors.grey.shade900,
-                      ),
-                      selectedColor: const Color(0xFF0F8F5F),
-                      backgroundColor: Colors.white,
-                      side: BorderSide(
-                        color: selected
-                            ? const Color(0xFF0F8F5F)
-                            : Colors.grey.shade300,
-                      ),
-                      onSelected: (_) => setState(() {
-                        _clearIncomeErrorState();
-                        _applyIncomeBand(item);
-                      }),
-                    );
-                  },
-                ),
-              ],
-            ],
-          ),
-        ),
-        if (rangeError != null) ...[
-          const SizedBox(height: 6),
-          Text(
-            rangeError,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.error,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ],
+      ),
     );
   }
 
@@ -1341,22 +1617,29 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
       children: [
         _compactEducationPicker(context),
         const SizedBox(height: 12),
-        OnboardingPickerField(
-          label: _t('Working with', 'कामाचा प्रकार'),
-          selectedItems: _workingWith == null ? const [] : [_workingWith!],
-          placeholder: _t('Select work type', 'कामाचा प्रकार निवडा'),
-          searchHint: _t('Search work type', 'कामाचा प्रकार शोधा'),
-          loadPage: _workingWithPage,
-          onChanged: (items) => setState(() {
-            final next = items.isEmpty ? null : items.first;
-            if (_workingWith?.identity != next?.identity) {
-              _occupation = null;
-              _amountController.clear();
-              _minAmountController.clear();
-              _maxAmountController.clear();
-            }
-            _workingWith = next;
-          }),
+        OnboardingErrorHighlight(
+          hasError: _workingWithError != null,
+          pulseKey: 'working_with:$_workingWithError:${_workingWith?.identity}',
+          child: OnboardingPickerField(
+            label: _t('Working with', 'कामाचा प्रकार'),
+            selectedItems: _workingWith == null ? const [] : [_workingWith!],
+            placeholder: _t('Select work type', 'कामाचा प्रकार निवडा'),
+            searchHint: _t('Search work type', 'कामाचा प्रकार शोधा'),
+            loadPage: _workingWithPage,
+            errorText: _workingWithError,
+            onChanged: (items) => setState(() {
+              final next = items.isEmpty ? null : items.first;
+              if (_workingWith?.identity != next?.identity) {
+                _occupation = null;
+                _amountController.clear();
+                _minAmountController.clear();
+                _maxAmountController.clear();
+              }
+              _workingWith = next;
+              _workingWithError = null;
+              _occupationError = null;
+            }),
+          ),
         ),
         if (_notWorking) ...[
           const SizedBox(height: 8),
@@ -1369,19 +1652,26 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         ],
         if (_showOccupationSection) ...[
           const SizedBox(height: 12),
-          OnboardingPickerField(
-            label: _t('Working as', 'व्यवसाय'),
-            selectedItems: _occupation == null ? const [] : [_occupation!],
-            enabled: _workingWith != null,
-            placeholder: _t('Select occupation', 'व्यवसाय निवडा'),
-            searchHint: _t('Search occupation', 'व्यवसाय शोधा'),
-            loadPage: _occupationPage,
-            itemSubtitleBuilder: (option) => option.metaText('category_label'),
-            allowRequestToAdd: true,
-            onRequestToAdd: _showOccupationSuggestionDialog,
-            onChanged: (items) => setState(() {
-              _occupation = items.isEmpty ? null : items.first;
-            }),
+          OnboardingErrorHighlight(
+            hasError: _occupationError != null,
+            pulseKey: 'occupation:$_occupationError:${_occupation?.identity}',
+            child: OnboardingPickerField(
+              label: _t('Working as', 'व्यवसाय'),
+              selectedItems: _occupation == null ? const [] : [_occupation!],
+              enabled: _workingWith != null,
+              placeholder: _t('Select occupation', 'व्यवसाय निवडा'),
+              searchHint: _t('Search occupation', 'व्यवसाय शोधा'),
+              loadPage: _occupationPage,
+              itemSubtitleBuilder: (option) =>
+                  option.metaText('category_label'),
+              allowRequestToAdd: true,
+              onRequestToAdd: _showOccupationSuggestionDialog,
+              errorText: _occupationError,
+              onChanged: (items) => setState(() {
+                _occupation = items.isEmpty ? null : items.first;
+                _occupationError = null;
+              }),
+            ),
           ),
           if (_occupation != null) ...[
             const SizedBox(height: 8),

@@ -52,6 +52,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   String? _detailMessage;
   bool _uploading = false;
   bool _checkingStatus = false;
+  bool _autoContinuing = false;
   _PhotoStepState _stage = _PhotoStepState.missing;
 
   bool get _mr => widget.locale == 'mr';
@@ -89,6 +90,17 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   }
 
   Future<void> _continue() async {
+    if (_stage == _PhotoStepState.rejected) {
+      _showMessage(
+        _t(
+          'This photo was not approved. Please upload another clear photo.',
+          'हा photo approve झाला नाही. कृपया दुसरा clear photo upload करा.',
+        ),
+        _NoticeTone.warning,
+      );
+      return;
+    }
+
     final profile = widget.status?.profile;
     final photoUrl =
         _approvedPhotoUrl ??
@@ -305,9 +317,10 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       if (response['success'] == true && response['data'] is Map) {
         final uploadData = Map<String, dynamic>.from(response['data'] as Map);
         final status = uploadData['status']?.toString().trim().toLowerCase();
+        final uploadStage = _stageFromUploadStatus(status);
 
         setState(() {
-          _stage = _stageFromUploadStatus(status);
+          _stage = uploadStage;
           _detailMessage = _t(
             'Photo reached backend. Quality and safety check is in progress.',
             'Photo backend ला मिळाला आहे. Quality आणि safety check चालू आहे.',
@@ -318,13 +331,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         await widget.onRefresh();
         if (!mounted) return;
 
-        _showMessage(
-          _t(
-            'Photo uploaded. Status will update here.',
-            'Photo upload झाला. Status इथे update होईल.',
-          ),
-          _NoticeTone.success,
-        );
+        await _handlePostUploadFlow(uploadStage);
         return;
       }
 
@@ -347,6 +354,83 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         setState(() {
           _uploading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _handlePostUploadFlow(_PhotoStepState uploadStage) async {
+    if (!mounted) return;
+
+    final effectiveStage = switch (_stage) {
+      _PhotoStepState.approved ||
+      _PhotoStepState.pending ||
+      _PhotoStepState.rejected => _stage,
+      _ => uploadStage,
+    };
+
+    if (effectiveStage != _stage) {
+      setState(() {
+        _stage = effectiveStage;
+      });
+    }
+
+    if (effectiveStage == _PhotoStepState.rejected) {
+      final message =
+          _detailMessage ??
+          _t(
+            'This photo was not approved. Please upload another clear photo.',
+            'हा photo approve झाला नाही. कृपया दुसरा clear photo upload करा.',
+          );
+      setState(() {
+        _selectedImage = null;
+        _fileInfo = null;
+        _detailMessage = message;
+      });
+      _showMessage(message, _NoticeTone.warning);
+      return;
+    }
+
+    final canContinue =
+        effectiveStage == _PhotoStepState.approved ||
+        effectiveStage == _PhotoStepState.pending;
+    if (!canContinue) {
+      _showMessage(
+        _t(
+          'Photo uploaded. Please check the status before continuing.',
+          'Photo upload झाला. पुढे जाण्याआधी status तपासा.',
+        ),
+        _NoticeTone.info,
+      );
+      return;
+    }
+
+    final message = effectiveStage == _PhotoStepState.approved
+        ? _t(
+            'Photo approved. Moving to partner preference.',
+            'Photo approve झाला. Partner preference कडे जात आहोत.',
+          )
+        : _t(
+            'Photo uploaded. Review is pending, so we will continue.',
+            'Photo upload झाला. Review pending आहे, त्यामुळे पुढे जात आहोत.',
+          );
+
+    setState(() {
+      _detailMessage = message;
+      _autoContinuing = true;
+    });
+    _showMessage(message, _NoticeTone.success);
+
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
+      if (!mounted) return;
+      await _continue();
+    } finally {
+      if (mounted) {
+        setState(() {
+          _autoContinuing = false;
+        });
+      } else {
+        _autoContinuing = false;
       }
     }
   }
@@ -455,6 +539,8 @@ class _PhotoStepControllerState extends State<PhotoStep> {
 
       if (rejected) {
         _stage = _PhotoStepState.rejected;
+        _selectedImage = null;
+        _fileInfo = null;
         _detailMessage =
             rejectionReason ??
             _t(
@@ -508,7 +594,8 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         _approvedPhotoUrl ?? ApiClient.resolveProfilePhotoUrl(rawProfile);
     final currentStage = _stage;
     final approved = currentStage == _PhotoStepState.approved;
-    final busy = widget.loading || _uploading || _checkingStatus;
+    final busy =
+        widget.loading || _uploading || _checkingStatus || _autoContinuing;
 
     return OnboardingStepScaffold(
       title: _t('Profile Photo', 'Profile Photo'),
@@ -517,7 +604,10 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         'Clear photo add करा. गरज असल्यास crop करा आणि approval साठी upload करा.',
       ),
       loading: busy,
-      continueEnabled: !_uploading,
+      continueEnabled:
+          !_uploading &&
+          !_autoContinuing &&
+          currentStage != _PhotoStepState.rejected,
       onBack: widget.onBack,
       onContinue: _continue,
       continueLabel: _t(
