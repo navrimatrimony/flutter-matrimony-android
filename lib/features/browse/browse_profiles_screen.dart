@@ -518,7 +518,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       );
     }
 
-    final profile = profiles[_recommendationIndex];
     return Scaffold(
       backgroundColor: const Color(0xFFF8FFF8),
       body: SafeArea(
@@ -530,8 +529,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               _buildRecommendationHeader(profiles.length),
               const SizedBox(height: 14),
               Expanded(child: _buildRecommendationDeck(profiles)),
-              const SizedBox(height: 14),
-              _buildRecommendationActions(profile),
             ],
           ),
         ),
@@ -540,37 +537,46 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   Widget _buildRecommendationHeader(int total) {
-    return Row(
-      children: [
-        Expanded(
-          child: FittedBox(
-            alignment: Alignment.centerLeft,
-            fit: BoxFit.scaleDown,
-            child: Text(
-              _recommendationComplete
-                  ? 'Recommendation'
-                  : 'Recommendation ${_recommendationIndex + 1}/$total',
-              maxLines: 1,
-              style: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 19,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0,
+    return SizedBox(
+      height: 44,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 54),
+              child: FittedBox(
+                alignment: Alignment.center,
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  _recommendationComplete
+                      ? 'Recommendation'
+                      : 'Recommendation ${_recommendationIndex + 1}/$total',
+                  maxLines: 1,
+                  style: const TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 44,
-          height: 44,
-          child: IconButton(
-            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
-            onPressed: _closeRecommendationDeck,
-            icon: const Icon(Icons.close_rounded, size: 30),
+          Align(
+            alignment: Alignment.centerRight,
+            child: SizedBox(
+              width: 44,
+              height: 44,
+              child: IconButton(
+                tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                onPressed: _closeRecommendationDeck,
+                icon: const Icon(Icons.close_rounded, size: 30),
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -749,11 +755,16 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                         final rotation = progress * 0.18;
                         final lift =
                             -8 * (animatedOffset.abs() / width).clamp(0, 1);
+                        final pivot = animatedOffset > 0
+                            ? Alignment.bottomRight
+                            : animatedOffset < 0
+                            ? Alignment.bottomLeft
+                            : Alignment.bottomCenter;
 
                         return Transform.translate(
                           offset: Offset(animatedOffset, lift.toDouble()),
                           child: Transform.rotate(
-                            alignment: Alignment.bottomCenter,
+                            alignment: pivot,
                             angle: rotation,
                             child: Stack(
                               fit: StackFit.expand,
@@ -791,10 +802,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     final color = interested ? const Color(0xFF16A34A) : _brandColor;
     return Positioned(
       top: 32,
-      left: interested ? null : 24,
-      right: interested ? 24 : null,
-      child: Transform.rotate(
-        angle: interested ? 0.12 : -0.12,
+      left: 0,
+      right: 0,
+      child: Center(
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 9),
           decoration: BoxDecoration(
@@ -816,69 +826,18 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildRecommendationActions(Map<String, dynamic> profile) {
-    final canSend = _canSendInterest(profile);
-    final sent = _interestSent(profile);
-    final profileId = _displayInt(profile['id']);
-    final busy =
-        _recommendationActionBusy ||
-        (profileId != null && _sendingInterestIds.contains(profileId));
-
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: busy ? null : _skipRecommendationProfile,
-            icon: const Icon(Icons.close_rounded),
-            label: const Text('Skip'),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: _brandDark,
-              side: BorderSide(color: _brandColor.withValues(alpha: 0.45)),
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: canSend && !busy ? _sendRecommendationInterest : null,
-            icon: busy
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Icon(sent ? Icons.check_rounded : Icons.favorite_rounded),
-            label: Text(
-              sent ? AppStrings.interestSent : AppStrings.sendInterest,
-            ),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Future<void> _sendRecommendationInterest() async {
     if (_recommendationActionBusy || _recommendationExiting) return;
     final profiles = _recommendationProfiles();
     if (_recommendationIndex >= profiles.length) return;
     final profile = profiles[_recommendationIndex];
+    final exitWidth = MediaQuery.sizeOf(context).width + 160;
 
     setState(() {
       _recommendationActionBusy = true;
       _recommendationDragging = false;
+      _recommendationExiting = true;
+      _recommendationDragDx = exitWidth;
     });
     final sent = await _sendInterestFromCard(profile);
     if (!mounted) return;
@@ -886,10 +845,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       _recommendationActionBusy = false;
     });
     if (sent) {
-      await _advanceRecommendationDeck(direction: 1);
+      _finishRecommendationAdvance();
     } else if (mounted) {
       setState(() {
         _recommendationDragDx = 0;
+        _recommendationExiting = false;
       });
     }
   }
@@ -909,8 +869,15 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       _recommendationDragDx = direction * exitWidth;
     });
 
-    await Future<void>.delayed(const Duration(milliseconds: 260));
+    await Future<void>.delayed(const Duration(milliseconds: 180));
     if (!mounted) return;
+
+    _finishRecommendationAdvance();
+  }
+
+  void _finishRecommendationAdvance() {
+    final profiles = _recommendationProfiles();
+    if (_recommendationIndex >= profiles.length) return;
 
     if (_recommendationIndex + 1 >= profiles.length) {
       _showRecommendationCompletion();
@@ -1413,20 +1380,44 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  ListView _buildStandardMatchesList(List<Map<String, dynamic>> profiles) {
-    final showMini = _selectedTabIndex == 2;
-    return ListView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
-      children: [
-        if (showMini) _buildMiniCarousel(profiles),
-        if (showMini) const SizedBox(height: 16),
-        if (_selectedTabIndex == 3 && _selectedLocationId == null)
-          _buildNearMePromptCard(),
-        if (_selectedTabIndex == 3 && _selectedLocationId == null)
-          const SizedBox(height: 14),
-        ...profiles.map(_buildMatchCard),
-      ],
+  Widget _buildStandardMatchesList(List<Map<String, dynamic>> profiles) {
+    final showNearPrompt =
+        _selectedTabIndex == 3 && _selectedLocationId == null;
+    final promptOffset = showNearPrompt ? 1 : 0;
+    final itemCount = profiles.length + promptOffset;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final pageHeight = constraints.maxHeight;
+
+        return PageView.builder(
+          scrollDirection: Axis.vertical,
+          physics: const PageScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          itemCount: itemCount,
+          itemBuilder: (context, index) {
+            if (showNearPrompt && index == 0) {
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+                child: Center(child: _buildNearMePromptCard()),
+              );
+            }
+
+            final profile = profiles[index - promptOffset];
+            final cardHeight = (pageHeight - 34).clamp(360.0, 720.0);
+
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+              child: _buildMatchCard(
+                profile,
+                height: cardHeight.toDouble(),
+                margin: EdgeInsets.zero,
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
