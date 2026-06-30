@@ -12,6 +12,11 @@ class AppStrings {
 
   static String get chooseLanguageBilingual => 'भाषा निवडा\nChoose language';
 
+  static String get languageMenu => _mr ? 'भाषा' : 'Language';
+
+  static String get languageSwitchSubtitle =>
+      _mr ? 'App भाषा बदला' : 'Change app language';
+
   static String get marathi => 'मराठी';
 
   static String get english => 'English';

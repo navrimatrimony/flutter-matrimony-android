@@ -4,6 +4,8 @@ import '../matrimony_profile/edit_full_profile_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../interests/received_interests_screen.dart';
 import '../browse/browse_profiles_screen.dart';
+import '../../core/app_language.dart';
+import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../../main.dart';
@@ -151,6 +153,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         _isLoadingStats = false;
       });
     }
+  }
+
+  Future<void> _changeLanguage(AppLanguage? language) async {
+    if (language == null || language == currentAppLanguage) return;
+
+    setAppLanguage(language);
+    setState(() {});
+    await AppStorage.instance.saveLanguage(language);
   }
 
   @override
@@ -338,6 +348,33 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       Navigator.pop(context); // Close drawer
                       Navigator.pushNamed(context, '/plans');
                     },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.translate),
+                    title: Text(AppStrings.languageMenu),
+                    subtitle: Text(AppStrings.languageSwitchSubtitle),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    trailing: DropdownButtonHideUnderline(
+                      child: DropdownButton<AppLanguage>(
+                        value: currentAppLanguage,
+                        isDense: true,
+                        items: [
+                          DropdownMenuItem(
+                            value: AppLanguage.marathi,
+                            child: Text(AppStrings.marathi),
+                          ),
+                          DropdownMenuItem(
+                            value: AppLanguage.english,
+                            child: Text(AppStrings.english),
+                          ),
+                        ],
+                        onChanged: _changeLanguage,
+                      ),
+                    ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.settings),
