@@ -289,6 +289,37 @@ class AppStrings {
       ? 'सूचना लवकरच app मध्ये येतील.'
       : 'Notifications will be available soon.';
 
+  static String get settingsTitle => _mr ? 'सेटिंग्ज' : 'Settings';
+
+  static String get settingsAccountSummary =>
+      _mr ? 'अकाउंट माहिती' : 'Account summary';
+
+  static String get settingsPrivacy => _mr ? 'गोपनीयता' : 'Privacy';
+
+  static String get settingsCommunication =>
+      _mr ? 'संपर्क प्राधान्ये' : 'Communication';
+
+  static String get settingsNotifications => _mr ? 'सूचना' : 'Notifications';
+
+  static String get settingsSecurity => _mr ? 'सुरक्षा' : 'Security';
+
+  static String get settingsSave => _mr ? 'सेव्ह करा' : 'Save';
+
+  static String get settingsSaved =>
+      _mr ? 'सेटिंग्ज सेव्ह झाल्या.' : 'Settings saved.';
+
+  static String get settingsLoadFailed =>
+      _mr ? 'सेटिंग्ज load झाल्या नाहीत.' : 'Settings could not be loaded.';
+
+  static String get settingsNoProfile => _mr
+      ? 'प्रोफाइल पूर्ण केल्यानंतर या सेटिंग्ज उपलब्ध होतील.'
+      : 'These settings will be available after your profile is complete.';
+
+  static String get settingsReadOnly => _mr ? 'फक्त पाहण्यासाठी' : 'Read only';
+
+  static String get settingsNotAvailable =>
+      _mr ? 'उपलब्ध नाही' : 'Not available';
+
   static String get chatComingSoon => _mr
       ? 'Chat सुविधा लवकरच app मध्ये येईल.'
       : 'Chat will be available in the app soon.';

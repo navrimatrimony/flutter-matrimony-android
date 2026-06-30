@@ -152,6 +152,21 @@ class ApiClient {
     return _decodeResponse(response);
   }
 
+  static Future<Map<String, dynamic>> _putJson(
+    String route,
+    Map<String, dynamic> body, {
+    bool authenticated = false,
+    Map<String, dynamic>? query,
+  }) async {
+    final response = await http.put(
+      _apiUri(route, query: query),
+      headers: _jsonHeaders(authenticated: authenticated),
+      body: jsonEncode(_compactBody(body)),
+    );
+
+    return _decodeResponse(response);
+  }
+
   static Future<Map<String, dynamic>> _patchJson(
     String route,
     Map<String, dynamic> body, {
@@ -2283,6 +2298,36 @@ class ApiClient {
     return _postJson(
       ApiRoutes.notificationsReadAll,
       <String, dynamic>{},
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> getSettings() {
+    return _getJson(ApiRoutes.settings, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> updatePrivacySettings(
+    Map<String, dynamic> values,
+  ) {
+    return _putJson(ApiRoutes.settingsPrivacy, values, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> updateNotificationSettings(
+    Map<String, dynamic> values,
+  ) {
+    return _putJson(
+      ApiRoutes.settingsNotifications,
+      values,
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> updateCommunicationSettings(
+    Map<String, dynamic> values,
+  ) {
+    return _putJson(
+      ApiRoutes.settingsCommunication,
+      values,
       authenticated: true,
     );
   }

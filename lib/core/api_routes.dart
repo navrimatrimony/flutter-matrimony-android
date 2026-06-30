@@ -117,6 +117,11 @@ class ApiRoutes {
   static const String notificationUnreadCount = '/notifications/unread-count';
   static const String notificationsReadAll = '/notifications/read-all';
 
+  static const String settings = '/settings';
+  static const String settingsPrivacy = '/settings/privacy';
+  static const String settingsNotifications = '/settings/notifications';
+  static const String settingsCommunication = '/settings/communication';
+
   static String notificationRead(String id) => '/notifications/$id/read';
 
   static String profileHide(int profileId) =>
