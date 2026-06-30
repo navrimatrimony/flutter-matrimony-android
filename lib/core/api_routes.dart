@@ -132,10 +132,16 @@ class ApiRoutes {
   static const String settingsNotifications = '/settings/notifications';
   static const String settingsCommunication = '/settings/communication';
 
+  static const String shortlistedProfiles = '/profile-lists/shortlisted';
+  static const String blockedProfiles = '/profile-lists/blocked';
+  static const String hiddenProfiles = '/profile-lists/hidden';
+
   static String notificationRead(String id) => '/notifications/$id/read';
 
   static String profileHide(int profileId) =>
       '$matrimonyProfiles/$profileId/hide';
+
+  static String profileUnhide(int profileId) => profileHide(profileId);
 
   static String profileBlock(int profileId) =>
       '$matrimonyProfiles/$profileId/block';

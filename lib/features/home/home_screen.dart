@@ -288,6 +288,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     },
                   ),
                   ListTile(
+                    leading: const Icon(Icons.bookmarks_outlined),
+                    title: Text(AppStrings.profileListsMenu),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamed(context, '/profile-lists');
+                    },
+                  ),
+                  ListTile(
                     leading: const Icon(Icons.workspace_premium),
                     title: Text(AppStrings.plansUpgradeMenu),
                     dense: false,

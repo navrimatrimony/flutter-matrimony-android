@@ -2419,8 +2419,28 @@ class ApiClient {
     );
   }
 
+  static Future<Map<String, dynamic>> getShortlistedProfiles() {
+    return _getJson(ApiRoutes.shortlistedProfiles, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> getBlockedProfiles() {
+    return _getJson(ApiRoutes.blockedProfiles, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> getHiddenProfiles() {
+    return _getJson(ApiRoutes.hiddenProfiles, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> removeShortlist(int profileId) {
+    return unshortlistProfile(profileId);
+  }
+
   static Future<Map<String, dynamic>> hideProfile(int profileId) {
     return _profileActionPost(ApiRoutes.profileHide(profileId));
+  }
+
+  static Future<Map<String, dynamic>> unhideProfile(int profileId) {
+    return _profileActionDelete(ApiRoutes.profileUnhide(profileId));
   }
 
   static Future<Map<String, dynamic>> blockProfile(int profileId) {

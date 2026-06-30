@@ -320,6 +320,57 @@ class AppStrings {
   static String get settingsNotAvailable =>
       _mr ? 'उपलब्ध नाही' : 'Not available';
 
+  static String get profileListsTitle =>
+      _mr ? 'शॉर्टलिस्ट / ब्लॉक' : 'Shortlist / Blocked';
+
+  static String get profileListsMenu =>
+      _mr ? 'शॉर्टलिस्ट / ब्लॉक' : 'Shortlist / Blocked';
+
+  static String get profileListsShortlist => _mr ? 'शॉर्टलिस्ट' : 'Shortlist';
+
+  static String get profileListsBlocked => _mr ? 'ब्लॉक केलेले' : 'Blocked';
+
+  static String get profileListsHidden => _mr ? 'लपवलेले' : 'Hidden';
+
+  static String get profileListsLoadFailed => _mr
+      ? 'प्रोफाइल यादी load झाली नाही.'
+      : 'Profile list could not be loaded.';
+
+  static String get noShortlistedProfiles =>
+      _mr ? 'अजून कोणतीही shortlist नाही.' : 'No shortlisted profiles yet.';
+
+  static String get noBlockedProfiles =>
+      _mr ? 'कोणतेही blocked profiles नाहीत.' : 'No blocked profiles.';
+
+  static String get noHiddenProfiles =>
+      _mr ? 'कोणतेही hidden profiles नाहीत.' : 'No hidden profiles.';
+
+  static String get removeFromShortlist =>
+      _mr ? 'Shortlist मधून काढा' : 'Remove from shortlist';
+
+  static String get unblockProfile => _mr ? 'Unblock करा' : 'Unblock';
+
+  static String get unhideProfile => _mr ? 'Unhide करा' : 'Unhide';
+
+  static String get profileRemovedFromShortlist =>
+      _mr ? 'Profile shortlist मधून काढले.' : 'Profile removed from shortlist.';
+
+  static String get profileUnblocked =>
+      _mr ? 'Profile unblock केले.' : 'Profile unblocked.';
+
+  static String get profileUnhidden =>
+      _mr ? 'Profile unhide केले.' : 'Profile unhidden.';
+
+  static String get profileOpenNotAllowed => _mr
+      ? 'हे profile सध्या उघडता येत नाही.'
+      : 'This profile cannot be opened right now.';
+
+  static String get confirmAction => _mr ? 'Confirm करा' : 'Confirm';
+
+  static String get cancel => _mr ? 'रद्द करा' : 'Cancel';
+
+  static String get retry => _mr ? 'पुन्हा प्रयत्न करा' : 'Retry';
+
   static String get chatComingSoon => _mr
       ? 'Chat सुविधा लवकरच app मध्ये येईल.'
       : 'Chat will be available in the app soon.';

@@ -15,6 +15,7 @@ import 'features/onboarding/models/onboarding_status.dart';
 import 'features/onboarding/smart_onboarding_screen.dart';
 import 'features/photo/photo_gallery_screen.dart';
 import 'features/plans/plans_screen.dart';
+import 'features/profile_lists/profile_lists_screen.dart';
 import 'features/settings/settings_screen.dart';
 
 // RouteObserver for RouteAware lifecycle management
@@ -123,6 +124,7 @@ class _MyAppState extends State<MyApp> {
         '/plans': (context) => const PlansScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/settings': (context) => const SettingsScreen(),
+        '/profile-lists': (context) => const ProfileListsScreen(),
         '/photo-gallery': (context) => const PhotoGalleryScreen(),
         '/create-profile': (context) => const SmartOnboardingScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
