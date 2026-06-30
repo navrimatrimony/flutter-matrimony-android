@@ -266,6 +266,63 @@ class AppStrings {
   static String get plansActiveSubscription =>
       _mr ? 'Active subscription' : 'Active subscription';
 
+  static String get biodataExportTitle =>
+      _mr ? 'बायोडाटा एक्सपोर्ट' : 'Biodata Export';
+
+  static String get biodataExportMenu =>
+      _mr ? 'बायोडाटा एक्सपोर्ट' : 'Biodata Export';
+
+  static String get biodataExportSubtitle => _mr
+      ? 'तुमचा स्वतःचा बायोडाटा PDF म्हणून download किंवा share करा.'
+      : 'Download or share your own biodata as a PDF.';
+
+  static String get biodataExportTemplate =>
+      _mr ? 'Template निवडा' : 'Choose template';
+
+  static String get biodataExportFormat =>
+      _mr ? 'Format निवडा' : 'Choose format';
+
+  static String get biodataExportPdf => 'PDF';
+
+  static String get biodataExportJpg => 'JPG';
+
+  static String get biodataExportDownload => _mr ? 'Download करा' : 'Download';
+
+  static String get biodataExportShare => _mr ? 'Share करा' : 'Share';
+
+  static String get biodataExportWarnings =>
+      _mr ? 'पूर्णता सूचना' : 'Completeness warnings';
+
+  static String get biodataExportLoadFailed => _mr
+      ? 'बायोडाटा export options load झाले नाहीत.'
+      : 'Biodata export options could not be loaded.';
+
+  static String get biodataExportFailed =>
+      _mr ? 'बायोडाटा export तयार झाला नाही.' : 'Biodata export failed.';
+
+  static String get biodataExportUnavailable => _mr
+      ? 'बायोडाटा export सध्या उपलब्ध नाही.'
+      : 'Biodata export is not available right now.';
+
+  static String get biodataExportLinkMissing => _mr
+      ? 'Backend कडून download link मिळाली नाही.'
+      : 'The backend did not return a download link.';
+
+  static String get biodataExportBrowserOpened => _mr
+      ? 'Biodata browser मध्ये उघडले आहे.'
+      : 'Biodata opened in the browser.';
+
+  static String get biodataExportOpenFailedCopied => _mr
+      ? 'Browser उघडू शकला नाही. Link clipboard मध्ये copy केली.'
+      : 'Could not open the browser. Link copied to clipboard.';
+
+  static String get biodataExportShared =>
+      _mr ? 'Biodata share link तयार आहे.' : 'Biodata share link is ready.';
+
+  static String get biodataExportLinkExpires => _mr
+      ? 'Share/download link थोड्या वेळासाठीच valid असते.'
+      : 'Share/download links are valid for a short time.';
+
   static String get notificationsTitle => _mr ? 'सूचना' : 'Notifications';
 
   static String get notificationsEmpty =>

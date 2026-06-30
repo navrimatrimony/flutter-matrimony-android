@@ -2365,6 +2365,20 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  static Future<Map<String, dynamic>> getBiodataExportOptions() {
+    return _getJson(ApiRoutes.biodataExportOptions, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> exportBiodata({
+    required String format,
+    String? template,
+  }) {
+    return _postJson(ApiRoutes.biodataExport, <String, dynamic>{
+      'format': format,
+      'template': template,
+    }, authenticated: true);
+  }
+
   static Future<Map<String, dynamic>> getNotifications() {
     return _getJson(ApiRoutes.notifications, authenticated: true);
   }

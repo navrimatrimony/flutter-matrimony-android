@@ -288,6 +288,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     },
                   ),
                   ListTile(
+                    leading: const Icon(Icons.article_outlined),
+                    title: Text(AppStrings.biodataExportMenu),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamed(context, '/biodata-export');
+                    },
+                  ),
+                  ListTile(
                     leading: const Icon(Icons.bookmarks_outlined),
                     title: Text(AppStrings.profileListsMenu),
                     dense: false,

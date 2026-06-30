@@ -123,6 +123,9 @@ class ApiRoutes {
 
   static String planCheckout(int planId) => '/plans/$planId/checkout';
 
+  static const String biodataExportOptions = '/biodata/export-options';
+  static const String biodataExport = '/biodata/export';
+
   static const String notifications = '/notifications';
   static const String notificationUnreadCount = '/notifications/unread-count';
   static const String notificationsReadAll = '/notifications/read-all';

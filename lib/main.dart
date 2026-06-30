@@ -6,6 +6,7 @@ import 'core/notification_permission_service.dart';
 import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
+import 'features/biodata/biodata_export_screen.dart';
 import 'features/browse/browse_profiles_screen.dart';
 import 'features/contact/contact_inbox_screen.dart';
 import 'features/home/home_screen.dart';
@@ -122,6 +123,7 @@ class _MyAppState extends State<MyApp> {
         '/matches': (context) => const BrowseProfilesScreen(),
         '/contact-inbox': (context) => const ContactInboxScreen(),
         '/plans': (context) => const PlansScreen(),
+        '/biodata-export': (context) => const BiodataExportScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/profile-lists': (context) => const ProfileListsScreen(),
