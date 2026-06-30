@@ -64,6 +64,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   bool _recommendationActionBusy = false;
   bool _recommendationDragging = false;
   bool _recommendationExiting = false;
+  int _notificationUnreadCount = 0;
   int _recommendationIndex = 0;
   double _recommendationDragDx = 0;
   Timer? _recommendationCompletionTimer;
@@ -107,6 +108,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           ),
         );
     _fetchProfileList(feed: _feedForTab(_selectedTabIndex));
+    _loadNotificationUnreadCount();
   }
 
   @override
@@ -396,8 +398,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         actions: [
           IconButton(
             tooltip: 'Notifications',
-            icon: const Icon(Icons.notifications_none),
-            onPressed: _openNotificationsOrSoon,
+            icon: _buildNotificationIcon(),
+            onPressed: _openNotifications,
           ),
           IconButton(
             tooltip: AppStrings.matchesFilter,
@@ -979,8 +981,63 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     });
   }
 
-  void _openNotificationsOrSoon() {
-    _showSnackBar(AppStrings.notificationsSoon);
+  Future<void> _loadNotificationUnreadCount() async {
+    try {
+      final response = await ApiClient.getNotificationUnreadCount();
+      if (!mounted) return;
+      if (response['success'] == true) {
+        setState(() {
+          _notificationUnreadCount = _displayInt(response['unread_count']) ?? 0;
+        });
+      }
+    } catch (_) {
+      // Unread badge is best-effort; the Notifications screen shows errors.
+    }
+  }
+
+  Future<void> _openNotifications() async {
+    await Navigator.pushNamed(context, '/notifications');
+    if (!mounted) return;
+    await _loadNotificationUnreadCount();
+  }
+
+  Widget _buildNotificationIcon() {
+    if (_notificationUnreadCount <= 0) {
+      return const Icon(Icons.notifications_none);
+    }
+
+    final count = _notificationUnreadCount > 99
+        ? '99+'
+        : _notificationUnreadCount.toString();
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        const Icon(Icons.notifications_none),
+        Positioned(
+          right: -6,
+          top: -7,
+          child: Container(
+            constraints: const BoxConstraints(minWidth: 17, minHeight: 17),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            decoration: BoxDecoration(
+              color: _premiumGold,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Colors.white, width: 1),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              count,
+              style: const TextStyle(
+                color: Color(0xFF35191D),
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void _openReceivedInterests() {

@@ -2263,6 +2263,30 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  static Future<Map<String, dynamic>> getNotifications() {
+    return _getJson(ApiRoutes.notifications, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> getNotificationUnreadCount() {
+    return _getJson(ApiRoutes.notificationUnreadCount, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> markNotificationRead(String id) {
+    return _postJson(
+      ApiRoutes.notificationRead(id),
+      <String, dynamic>{},
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> markAllNotificationsRead() {
+    return _postJson(
+      ApiRoutes.notificationsReadAll,
+      <String, dynamic>{},
+      authenticated: true,
+    );
+  }
+
   static Future<Map<String, dynamic>> hideProfile(int profileId) {
     return _profileActionPost(ApiRoutes.profileHide(profileId));
   }

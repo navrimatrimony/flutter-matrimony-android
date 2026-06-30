@@ -113,6 +113,12 @@ class ApiRoutes {
 
   static String planCheckout(int planId) => '/plans/$planId/checkout';
 
+  static const String notifications = '/notifications';
+  static const String notificationUnreadCount = '/notifications/unread-count';
+  static const String notificationsReadAll = '/notifications/read-all';
+
+  static String notificationRead(String id) => '/notifications/$id/read';
+
   static String profileHide(int profileId) =>
       '$matrimonyProfiles/$profileId/hide';
 

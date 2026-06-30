@@ -10,6 +10,7 @@ import 'features/browse/browse_profiles_screen.dart';
 import 'features/contact/contact_inbox_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
+import 'features/notifications/notifications_screen.dart';
 import 'features/onboarding/models/onboarding_status.dart';
 import 'features/onboarding/smart_onboarding_screen.dart';
 import 'features/plans/plans_screen.dart';
@@ -118,6 +119,7 @@ class _MyAppState extends State<MyApp> {
         '/matches': (context) => const BrowseProfilesScreen(),
         '/contact-inbox': (context) => const ContactInboxScreen(),
         '/plans': (context) => const PlansScreen(),
+        '/notifications': (context) => const NotificationsScreen(),
         '/create-profile': (context) => const SmartOnboardingScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
         '/smart-onboarding': (context) => const SmartOnboardingScreen(),

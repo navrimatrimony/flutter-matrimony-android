@@ -214,6 +214,9 @@ class AppStrings {
 
   static String get plansTitle => _mr ? 'प्लॅन्स' : 'Plans';
 
+  static String get plansUpgradeMenu =>
+      _mr ? 'प्लॅन / अपग्रेड' : 'Plans / Upgrade';
+
   static String get plansCurrentPlan => _mr ? 'सध्याचा प्लॅन' : 'Current plan';
 
   static String get plansAvailablePlans =>
@@ -262,6 +265,25 @@ class AppStrings {
 
   static String get plansActiveSubscription =>
       _mr ? 'Active subscription' : 'Active subscription';
+
+  static String get notificationsTitle => _mr ? 'सूचना' : 'Notifications';
+
+  static String get notificationsEmpty =>
+      _mr ? 'सध्या कोणतीही सूचना नाही.' : 'No notifications yet.';
+
+  static String get notificationsLoadFailed =>
+      _mr ? 'सूचना load झाल्या नाहीत.' : 'Notifications could not be loaded.';
+
+  static String get notificationsMarkAllRead =>
+      _mr ? 'सर्व वाचले' : 'Mark all read';
+
+  static String get notificationsUnread => _mr ? 'न वाचलेल्या' : 'Unread';
+
+  static String get notificationsRead => _mr ? 'वाचले' : 'Read';
+
+  static String get notificationsOpenFailed => _mr
+      ? 'ही सूचना app मध्ये उघडण्यासाठी route उपलब्ध नाही.'
+      : 'This notification does not have an app action.';
 
   static String get notificationsSoon => _mr
       ? 'सूचना लवकरच app मध्ये येतील.'
