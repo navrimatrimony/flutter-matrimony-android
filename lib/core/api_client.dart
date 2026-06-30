@@ -2198,6 +2198,54 @@ class ApiClient {
     return _profileActionDelete(ApiRoutes.profileShortlist(profileId));
   }
 
+  static Future<Map<String, dynamic>> revealProfileContact(int profileId) {
+    return _profileActionPost(ApiRoutes.profileContactReveal(profileId));
+  }
+
+  static Future<Map<String, dynamic>> sendContactRequest({
+    required int profileId,
+    required String reason,
+    required List<String> requestedScopes,
+    String? otherReasonText,
+  }) {
+    return _postJson(
+      ApiRoutes.profileContactRequests(profileId),
+      <String, dynamic>{
+        'reason': reason,
+        'requested_scopes': requestedScopes,
+        'other_reason_text': otherReasonText,
+      },
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> getContactInbox() {
+    return _getJson(ApiRoutes.contactInbox, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> approveContactRequest({
+    required int requestId,
+    required List<String> grantedScopes,
+    required String durationKey,
+  }) {
+    return _postJson(
+      ApiRoutes.contactRequestApprove(requestId),
+      <String, dynamic>{
+        'granted_scopes': grantedScopes,
+        'duration_key': durationKey,
+      },
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> rejectContactRequest(int requestId) {
+    return _postJson(
+      ApiRoutes.contactRequestReject(requestId),
+      <String, dynamic>{},
+      authenticated: true,
+    );
+  }
+
   static Future<Map<String, dynamic>> hideProfile(int profileId) {
     return _profileActionPost(ApiRoutes.profileHide(profileId));
   }

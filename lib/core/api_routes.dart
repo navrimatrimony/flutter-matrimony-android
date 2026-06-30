@@ -94,6 +94,20 @@ class ApiRoutes {
   static String profileShortlist(int profileId) =>
       '$matrimonyProfiles/$profileId/shortlist';
 
+  static String profileContactReveal(int profileId) =>
+      '$matrimonyProfiles/$profileId/contact-reveal';
+
+  static String profileContactRequests(int profileId) =>
+      '$matrimonyProfiles/$profileId/contact-requests';
+
+  static const String contactInbox = '/contact-inbox';
+
+  static String contactRequestApprove(int requestId) =>
+      '/contact-requests/$requestId/approve';
+
+  static String contactRequestReject(int requestId) =>
+      '/contact-requests/$requestId/reject';
+
   static String profileHide(int profileId) =>
       '$matrimonyProfiles/$profileId/hide';
 

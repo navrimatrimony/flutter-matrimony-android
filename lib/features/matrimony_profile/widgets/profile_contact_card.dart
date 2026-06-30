@@ -7,6 +7,7 @@ class ProfileContactData {
   final String? phone;
   final String? email;
   final ProfileContactCtaData? primaryCta;
+  final ProfileContactRequestOptionsData requestOptions;
   final ProfileContactWhatsAppData whatsAppResponse;
 
   const ProfileContactData({
@@ -16,6 +17,7 @@ class ProfileContactData {
     required this.phone,
     required this.email,
     required this.primaryCta,
+    this.requestOptions = const ProfileContactRequestOptionsData(),
     required this.whatsAppResponse,
   });
 
@@ -50,11 +52,33 @@ class ProfileContactWhatsAppData {
   });
 }
 
+class ProfileContactRequestOptionsData {
+  final List<ProfileContactOptionData> reasons;
+  final List<ProfileContactOptionData> scopes;
+  final List<String> defaultScopes;
+
+  const ProfileContactRequestOptionsData({
+    this.reasons = const <ProfileContactOptionData>[],
+    this.scopes = const <ProfileContactOptionData>[],
+    this.defaultScopes = const <String>[],
+  });
+
+  bool get isUsable => reasons.isNotEmpty && scopes.isNotEmpty;
+}
+
+class ProfileContactOptionData {
+  final String key;
+  final String label;
+
+  const ProfileContactOptionData({required this.key, required this.label});
+}
+
 class ProfileContactCard extends StatelessWidget {
   final ProfileContactData contact;
   final Future<void> Function(String label, String value) onCopy;
   final void Function(ProfileContactCtaData cta) onPrimaryAction;
   final VoidCallback onWhatsAppResponse;
+  final bool primaryActionLoading;
 
   const ProfileContactCard({
     super.key,
@@ -62,6 +86,7 @@ class ProfileContactCard extends StatelessWidget {
     required this.onCopy,
     required this.onPrimaryAction,
     required this.onWhatsAppResponse,
+    this.primaryActionLoading = false,
   });
 
   @override
@@ -119,6 +144,7 @@ class ProfileContactCard extends StatelessWidget {
             const SizedBox(height: 14),
             _ContactActionButton(
               cta: contact.primaryCta!,
+              isLoading: primaryActionLoading,
               onPressed: () => onPrimaryAction(contact.primaryCta!),
             ),
           ],
@@ -267,13 +293,20 @@ class _ContactValueRow extends StatelessWidget {
 
 class _ContactActionButton extends StatelessWidget {
   final ProfileContactCtaData cta;
+  final bool isLoading;
   final VoidCallback onPressed;
 
-  const _ContactActionButton({required this.cta, required this.onPressed});
+  const _ContactActionButton({
+    required this.cta,
+    required this.isLoading,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final action = cta.action.trim().toLowerCase();
     final enabledStyle = cta.enabled && cta.style != 'disabled';
+    final canPress = !isLoading && (cta.enabled || action == 'upgrade');
     final foreground = enabledStyle ? Colors.white : Colors.grey.shade700;
     final background = enabledStyle
         ? const Color(0xFF9B1B46)
@@ -282,8 +315,17 @@ class _ContactActionButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: onPressed,
-        icon: Icon(_ctaIcon(cta.action), size: 18),
+        onPressed: canPress ? onPressed : null,
+        icon: isLoading
+            ? SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: foreground,
+                ),
+              )
+            : Icon(_ctaIcon(cta.action), size: 18),
         label: Text(cta.label, maxLines: 1, overflow: TextOverflow.ellipsis),
         style: ElevatedButton.styleFrom(
           elevation: enabledStyle ? 1 : 0,
@@ -371,6 +413,14 @@ IconData _stateIcon(String state) {
       return Icons.workspace_premium_outlined;
     case 'whatsapp_response_available':
       return Icons.chat_bubble_outline;
+    case 'contact_request_available':
+      return Icons.mark_email_unread_outlined;
+    case 'contact_request_pending':
+      return Icons.hourglass_top_outlined;
+    case 'contact_request_rejected':
+      return Icons.block_outlined;
+    case 'contact_request_unavailable':
+      return Icons.mail_lock_outlined;
     case 'locked':
       return Icons.lock_outline;
     default:
@@ -388,6 +438,14 @@ Color _stateColor(String state) {
       return const Color(0xFFC78318);
     case 'whatsapp_response_available':
       return const Color(0xFF237A57);
+    case 'contact_request_available':
+      return const Color(0xFF237A57);
+    case 'contact_request_pending':
+      return const Color(0xFFC78318);
+    case 'contact_request_rejected':
+      return const Color(0xFFC2410C);
+    case 'contact_request_unavailable':
+      return const Color(0xFF6E625F);
     case 'locked':
       return const Color(0xFF6E625F);
     default:
@@ -405,6 +463,14 @@ String _stateLabel(String state) {
       return 'Upgrade';
     case 'whatsapp_response_available':
       return 'Response';
+    case 'contact_request_available':
+      return 'Request';
+    case 'contact_request_pending':
+      return 'Pending';
+    case 'contact_request_rejected':
+      return 'Rejected';
+    case 'contact_request_unavailable':
+      return 'Info';
     case 'locked':
       return 'Locked';
     default:
@@ -418,6 +484,8 @@ IconData _ctaIcon(String action) {
       return Icons.workspace_premium_outlined;
     case 'view_contact':
       return Icons.lock_open_outlined;
+    case 'send_contact_request':
+      return Icons.mark_email_unread_outlined;
     default:
       return Icons.info_outline;
   }

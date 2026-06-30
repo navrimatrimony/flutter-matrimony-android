@@ -7,6 +7,7 @@ import '../../core/api_client.dart';
 import '../../core/app_storage.dart';
 import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
+import '../contact/contact_inbox_screen.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
 /// ===============================
@@ -1011,7 +1012,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   Widget _buildConnectTabs() {
     // Future mobile-backed tabs: Contact Requests, WhatsApp Response/Mediation,
     // and Chat. Add them here only when real mobile APIs exist.
-    final tabs = [AppStrings.connectReceived, AppStrings.connectSent];
+    final tabs = [
+      AppStrings.connectContactRequests,
+      AppStrings.connectReceived,
+      AppStrings.connectSent,
+    ];
 
     return SizedBox(
       height: 56,
@@ -1046,6 +1051,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 _selectedConnectTabIndex = index;
               });
               if (index == 0) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ContactInboxScreen()),
+                );
+              } else if (index == 1) {
                 _openReceivedInterests();
               } else {
                 _openSentInterests();

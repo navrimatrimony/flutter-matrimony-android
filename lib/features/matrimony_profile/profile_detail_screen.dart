@@ -48,6 +48,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool? _canHide;
   bool? _canBlock;
   bool _isProfileActionInFlight = false;
+  bool _isContactRevealInFlight = false;
+  bool _isContactRequestInFlight = false;
   bool _showScrolledStatusStrip = false;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _comparisonKey = GlobalKey();
@@ -137,6 +139,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       _canHide = null;
       _canBlock = null;
       _isProfileActionInFlight = false;
+      _isContactRevealInFlight = false;
+      _isContactRequestInFlight = false;
       _showScrolledStatusStrip = false;
     });
 
@@ -1430,6 +1434,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       onCopy: _copyContactValue,
       onPrimaryAction: _handleContactPrimaryAction,
       onWhatsAppResponse: _handleWhatsAppResponseAction,
+      primaryActionLoading:
+          _isContactRevealInFlight || _isContactRequestInFlight,
     );
   }
 
@@ -1792,14 +1798,343 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     _showSnackBar('$label copied.', Colors.black87);
   }
 
-  void _handleContactPrimaryAction(ProfileContactCtaData cta) {
+  Future<void> _handleContactPrimaryAction(ProfileContactCtaData cta) async {
     final action = cta.action.trim().toLowerCase();
     if (action == 'upgrade') {
       _showSnackBar('Upgrade सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
       return;
     }
 
-    _showSnackBar('Contact unlock सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
+    if (action == 'send_contact_request') {
+      await _handleSendContactRequest(cta);
+      return;
+    }
+
+    if (action != 'view_contact') {
+      _showSnackBar('Contact unlock सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
+      return;
+    }
+
+    if (_isContactRevealInFlight) return;
+
+    if (!cta.enabled) {
+      _showSnackBar('Contact unlock सध्या उपलब्ध नाही.', Colors.black87);
+      return;
+    }
+
+    final requestedProfileId = _currentProfileId;
+    setState(() {
+      _isContactRevealInFlight = true;
+    });
+
+    try {
+      final response = await ApiClient.revealProfileContact(requestedProfileId);
+      if (!mounted) return;
+      if (requestedProfileId != _currentProfileId) return;
+
+      if (_responseSuccess(response)) {
+        final refreshedDisplay = _safeMap(response['display']);
+        final refreshedContact = _safeMap(refreshedDisplay?['contact']);
+
+        if (refreshedContact != null) {
+          setState(() {
+            final currentDisplay = Map<String, dynamic>.from(
+              _display ?? <String, dynamic>{},
+            );
+            currentDisplay['contact'] = refreshedContact;
+            _display = currentDisplay;
+            _isContactRevealInFlight = false;
+          });
+        } else {
+          setState(() {
+            _isContactRevealInFlight = false;
+          });
+          await _fetchProfile();
+        }
+
+        if (!mounted) return;
+        _showSnackBar(
+          _backendMessage(response, 'Contact details unlocked.'),
+          Colors.green,
+        );
+        return;
+      }
+
+      setState(() {
+        _isContactRevealInFlight = false;
+      });
+      _showSnackBar(
+        _responseErrorMessage(response, 'Contact unlock करता आली नाही.'),
+        Colors.red,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isContactRevealInFlight = false;
+      });
+      _showSnackBar('एक अनपेक्षित एरर आली: ${e.toString()}', Colors.red);
+    }
+  }
+
+  Future<void> _handleSendContactRequest(ProfileContactCtaData cta) async {
+    if (_isContactRequestInFlight) return;
+
+    if (!cta.enabled) {
+      _showSnackBar('Contact request सध्या उपलब्ध नाही.', Colors.black87);
+      return;
+    }
+
+    final options = _contactData()?.requestOptions;
+    if (options == null || !options.isUsable) {
+      _showSnackBar('Contact request options उपलब्ध नाहीत.', Colors.red);
+      return;
+    }
+
+    final draft = await _showContactRequestDialog(options);
+    if (draft == null) return;
+
+    final requestedProfileId = _currentProfileId;
+    setState(() {
+      _isContactRequestInFlight = true;
+    });
+
+    try {
+      final response = await ApiClient.sendContactRequest(
+        profileId: requestedProfileId,
+        reason: draft.reason,
+        requestedScopes: draft.requestedScopes,
+        otherReasonText: draft.otherReasonText,
+      );
+      if (!mounted) return;
+      if (requestedProfileId != _currentProfileId) return;
+
+      if (_responseSuccess(response)) {
+        final refreshedDisplay = _safeMap(response['display']);
+        final refreshedContact = _safeMap(refreshedDisplay?['contact']);
+
+        if (refreshedContact != null) {
+          setState(() {
+            final currentDisplay = Map<String, dynamic>.from(
+              _display ?? <String, dynamic>{},
+            );
+            currentDisplay['contact'] = refreshedContact;
+            _display = currentDisplay;
+            _isContactRequestInFlight = false;
+          });
+        } else {
+          setState(() {
+            _isContactRequestInFlight = false;
+          });
+          await _fetchProfile();
+        }
+
+        if (!mounted) return;
+        _showSnackBar(
+          _backendMessage(response, 'Contact request sent.'),
+          Colors.green,
+        );
+        return;
+      }
+
+      setState(() {
+        _isContactRequestInFlight = false;
+      });
+      _showSnackBar(
+        _responseErrorMessage(response, 'Contact request पाठवता आली नाही.'),
+        Colors.red,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isContactRequestInFlight = false;
+      });
+      _showSnackBar('एक अनपेक्षित एरर आली: ${e.toString()}', Colors.red);
+    }
+  }
+
+  Future<_ContactRequestDraft?> _showContactRequestDialog(
+    ProfileContactRequestOptionsData options,
+  ) async {
+    final reasonOptions = options.reasons;
+    final scopeOptions = options.scopes;
+    if (reasonOptions.isEmpty || scopeOptions.isEmpty) return null;
+
+    var selectedReason = reasonOptions.first.key;
+    final validScopes = scopeOptions.map((scope) => scope.key).toSet();
+    final selectedScopes = options.defaultScopes
+        .where(validScopes.contains)
+        .toSet();
+    final otherController = TextEditingController();
+
+    try {
+      return await showModalBottomSheet<_ContactRequestDraft>(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+        ),
+        builder: (sheetContext) {
+          String? errorText;
+
+          return StatefulBuilder(
+            builder: (context, setSheetState) {
+              void submit() {
+                if (selectedScopes.isEmpty) {
+                  setSheetState(() {
+                    errorText = 'किमान एक contact method निवडा.';
+                  });
+                  return;
+                }
+
+                final otherText = otherController.text.trim();
+                if (selectedReason == 'other' && otherText.isEmpty) {
+                  setSheetState(() {
+                    errorText = 'Other reason लिहा.';
+                  });
+                  return;
+                }
+
+                Navigator.pop(
+                  sheetContext,
+                  _ContactRequestDraft(
+                    reason: selectedReason,
+                    requestedScopes: selectedScopes.toList(growable: false),
+                    otherReasonText: selectedReason == 'other'
+                        ? otherText
+                        : null,
+                  ),
+                );
+              }
+
+              return SafeArea(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    18,
+                    18,
+                    18,
+                    MediaQuery.of(context).viewInsets.bottom + 18,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Request Contact',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                                color: Color(0xFF2E2220),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            tooltip: 'Close',
+                            onPressed: () => Navigator.pop(sheetContext),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<String>(
+                        initialValue: selectedReason,
+                        decoration: const InputDecoration(
+                          labelText: 'Reason',
+                          prefixIcon: Icon(Icons.help_outline),
+                        ),
+                        items: reasonOptions
+                            .map(
+                              (reason) => DropdownMenuItem<String>(
+                                value: reason.key,
+                                child: Text(reason.label),
+                              ),
+                            )
+                            .toList(growable: false),
+                        onChanged: (value) {
+                          if (value == null) return;
+                          setSheetState(() {
+                            selectedReason = value;
+                            errorText = null;
+                          });
+                        },
+                      ),
+                      if (selectedReason == 'other') ...[
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: otherController,
+                          maxLines: 2,
+                          decoration: const InputDecoration(
+                            labelText: 'Other reason',
+                            prefixIcon: Icon(Icons.edit_note),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Contact methods',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF594044),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: scopeOptions
+                            .map((scope) {
+                              final selected = selectedScopes.contains(
+                                scope.key,
+                              );
+                              return FilterChip(
+                                label: Text(scope.label),
+                                selected: selected,
+                                showCheckmark: true,
+                                onSelected: (value) {
+                                  setSheetState(() {
+                                    if (value) {
+                                      selectedScopes.add(scope.key);
+                                    } else {
+                                      selectedScopes.remove(scope.key);
+                                    }
+                                    errorText = null;
+                                  });
+                                },
+                              );
+                            })
+                            .toList(growable: false),
+                      ),
+                      if (errorText != null) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          errorText!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 18),
+                      ElevatedButton.icon(
+                        onPressed: submit,
+                        icon: const Icon(Icons.mark_email_unread_outlined),
+                        label: const Text('Send Request'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    } finally {
+      otherController.dispose();
+    }
   }
 
   void _handleWhatsAppResponseAction() {
@@ -2318,6 +2653,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final state = _contactState(contact['state']);
     final primaryCta = _contactPrimaryCta(contact['primary_cta'], state);
     final whatsapp = _contactWhatsAppResponse(contact['whatsapp_response']);
+    final requestOptions = _contactRequestOptions(contact['request_options']);
     final phone = _displayString(contact['phone']);
     final email = _displayString(contact['email']);
     final message =
@@ -2338,6 +2674,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       phone: phone,
       email: email,
       primaryCta: primaryCta,
+      requestOptions: requestOptions,
       whatsAppResponse: whatsapp,
     );
   }
@@ -2349,6 +2686,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         state == 'unlock_available' ||
         state == 'upgrade_required' ||
         state == 'whatsapp_response_available' ||
+        state == 'contact_request_available' ||
+        state == 'contact_request_pending' ||
+        state == 'contact_request_rejected' ||
+        state == 'contact_request_unavailable' ||
         state == 'unavailable') {
       return state!;
     }
@@ -2379,6 +2720,45 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
+  ProfileContactRequestOptionsData _contactRequestOptions(dynamic value) {
+    final map = _safeMap(value);
+    if (map == null) return const ProfileContactRequestOptionsData();
+
+    return ProfileContactRequestOptionsData(
+      reasons: _contactOptionList(map['reasons']),
+      scopes: _contactOptionList(map['scopes']),
+      defaultScopes: _stringList(map['default_scopes']),
+    );
+  }
+
+  List<ProfileContactOptionData> _contactOptionList(dynamic value) {
+    return _safeMapList(value)
+        .map((item) {
+          final key =
+              _displayString(item['key']) ??
+              _displayString(item['id']) ??
+              _displayString(item['value']);
+          final label =
+              _displayString(item['label']) ??
+              _displayString(item['name']) ??
+              key;
+          if (key == null || label == null) return null;
+
+          return ProfileContactOptionData(key: key, label: label);
+        })
+        .whereType<ProfileContactOptionData>()
+        .toList(growable: false);
+  }
+
+  List<String> _stringList(dynamic value) {
+    if (value is! List) return const <String>[];
+
+    return value
+        .map(_displayString)
+        .whereType<String>()
+        .toList(growable: false);
+  }
+
   String? _fallbackContactMessage(String state) {
     switch (state) {
       case 'revealed':
@@ -2390,6 +2770,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         return 'Contact details पाहण्यासाठी upgrade आवश्यक आहे.';
       case 'whatsapp_response_available':
         return 'WhatsApp Response उपलब्ध आहे.';
+      case 'contact_request_available':
+        return 'या profile साठी contact request पाठवू शकता.';
+      case 'contact_request_pending':
+        return 'तुमची contact request pending आहे.';
+      case 'contact_request_rejected':
+        return 'तुमची contact request reject झाली आहे.';
+      case 'contact_request_unavailable':
+        return 'Contact request सध्या उपलब्ध नाही.';
       case 'unavailable':
         return 'Contact information सध्या उपलब्ध नाही.';
       default:
@@ -2403,6 +2791,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         return 'View Contact';
       case 'upgrade_required':
         return 'Upgrade to View Contact';
+      case 'contact_request_available':
+        return 'Request Contact';
       default:
         return null;
     }
@@ -2806,6 +3196,18 @@ class _ProfilePhotoItem {
   const _ProfilePhotoItem({required this.url});
 
   final String url;
+}
+
+class _ContactRequestDraft {
+  const _ContactRequestDraft({
+    required this.reason,
+    required this.requestedScopes,
+    required this.otherReasonText,
+  });
+
+  final String reason;
+  final List<String> requestedScopes;
+  final String? otherReasonText;
 }
 
 class _ProfilePhotoGalleryViewer extends StatefulWidget {

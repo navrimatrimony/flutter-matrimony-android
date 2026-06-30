@@ -7,6 +7,7 @@ import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/browse/browse_profiles_screen.dart';
+import 'features/contact/contact_inbox_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
 import 'features/onboarding/models/onboarding_status.dart';
@@ -114,6 +115,7 @@ class _MyAppState extends State<MyApp> {
         '/register': (context) => const LandingScreen(),
         '/home': (context) => const HomeScreen(),
         '/matches': (context) => const BrowseProfilesScreen(),
+        '/contact-inbox': (context) => const ContactInboxScreen(),
         '/create-profile': (context) => const SmartOnboardingScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
         '/smart-onboarding': (context) => const SmartOnboardingScreen(),

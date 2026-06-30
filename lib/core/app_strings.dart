@@ -205,6 +205,11 @@ class AppStrings {
 
   static String get connectSent => _mr ? 'पाठवलेले' : 'Sent';
 
+  static String get connectContactRequests => _mr ? 'कॉन्टॅक्ट' : 'Contact';
+
+  static String get contactRequests =>
+      _mr ? 'कॉन्टॅक्ट रिक्वेस्ट' : 'Contact Requests';
+
   static String get notificationsSoon => _mr
       ? 'सूचना लवकरच app मध्ये येतील.'
       : 'Notifications will be available soon.';
