@@ -371,6 +371,23 @@ class AppStrings {
 
   static String get retry => _mr ? 'पुन्हा प्रयत्न करा' : 'Retry';
 
+  static String get gunamilanTitle =>
+      _mr ? 'गुणमिलन / पत्रिका जुळवणी' : 'Gunamilan / Horoscope Match';
+
+  static String get gunamilanScore =>
+      _mr ? 'गुणमिलन स्कोअर' : 'Gunamilan score';
+
+  static String get gunamilanIncomplete =>
+      _mr ? 'पत्रिका माहिती अपूर्ण आहे.' : 'Horoscope data is incomplete.';
+
+  static String get gunamilanViewDetails => _mr ? 'तपशील पहा' : 'View details';
+
+  static String get gunamilanHideDetails => _mr ? 'तपशील लपवा' : 'Hide details';
+
+  static String get gunamilanDisclaimer => _mr
+      ? 'गुणमिलन हा फक्त compatibility reference आहे. अंतिम निर्णय कुटुंबीयांनी चर्चा करून घ्यावा.'
+      : 'Gunamilan is only a compatibility reference. Families should make the final decision after discussion.';
+
   static String get chatComingSoon => _mr
       ? 'Chat सुविधा लवकरच app मध्ये येईल.'
       : 'Chat will be available in the app soon.';

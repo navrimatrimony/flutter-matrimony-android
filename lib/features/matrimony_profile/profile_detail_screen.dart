@@ -50,6 +50,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool _isProfileActionInFlight = false;
   bool _isContactRevealInFlight = false;
   bool _isContactRequestInFlight = false;
+  bool _showGunamilanDetails = false;
   bool _showScrolledStatusStrip = false;
   final ScrollController _scrollController = ScrollController();
   final GlobalKey _comparisonKey = GlobalKey();
@@ -687,6 +688,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final about = _displayAbout();
     final comparison = _comparisonData();
     final contact = _contactData();
+    final gunamilan = _gunamilanMap();
     final displaySections = _displaySections();
     final photoUrl =
         _displayString(hero?['primary_photo_url']) ??
@@ -746,6 +748,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     if (contact != null) _buildContactCard(contact),
                     ..._buildFallbackProfileDetails(profile, age, location),
                   ],
+                  if (gunamilan != null) _buildGunamilanCard(gunamilan),
                   if (comparison != null)
                     KeyedSubtree(
                       key: _comparisonKey,
@@ -1436,6 +1439,288 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       onWhatsAppResponse: _handleWhatsAppResponseAction,
       primaryActionLoading:
           _isContactRevealInFlight || _isContactRequestInFlight,
+    );
+  }
+
+  Widget _buildGunamilanCard(Map<String, dynamic> gunamilan) {
+    final available = _displaySafeBool(gunamilan['available']) == true;
+    final rows = _safeMapList(gunamilan['rows']);
+    final missingFields = _safeMapList(gunamilan['missing_fields']);
+    final visibleRows = _showGunamilanDetails || rows.length <= 4
+        ? rows
+        : rows.take(4);
+    final summary =
+        _displayString(gunamilan['summary_label']) ??
+        _gunamilanScoreLabel(gunamilan);
+    final message =
+        _displayString(gunamilan['message']) ??
+        (available ? null : AppStrings.gunamilanIncomplete);
+    final disclaimer =
+        _displayString(gunamilan['disclaimer']) ??
+        AppStrings.gunamilanDisclaimer;
+    final progress = _gunamilanProgress(gunamilan);
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFEDE2DE)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9B1B46).withValues(alpha: 0.09),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Color(0xFF9B1B46),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.gunamilanTitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF2E2220),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      available
+                          ? AppStrings.gunamilanScore
+                          : AppStrings.gunamilanIncomplete,
+                      style: const TextStyle(
+                        color: Color(0xFF6E625F),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (summary != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF7F0),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    summary,
+                    style: const TextStyle(
+                      color: Color(0xFF1D7A4D),
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (message != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: const TextStyle(
+                color: Color(0xFF6E625F),
+                fontSize: 13,
+                height: 1.35,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+          if (progress != null) ...[
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 8,
+                backgroundColor: const Color(0xFFF1ECE9),
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  Color(0xFF2F9E67),
+                ),
+              ),
+            ),
+          ],
+          if (available && rows.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            ...visibleRows.map(_buildGunamilanRow),
+            if (rows.length > 4)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _showGunamilanDetails = !_showGunamilanDetails;
+                    });
+                  },
+                  icon: Icon(
+                    _showGunamilanDetails
+                        ? Icons.expand_less
+                        : Icons.expand_more,
+                    size: 19,
+                  ),
+                  label: Text(
+                    _showGunamilanDetails
+                        ? AppStrings.gunamilanHideDetails
+                        : AppStrings.gunamilanViewDetails,
+                  ),
+                ),
+              ),
+          ],
+          if (!available && missingFields.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ...missingFields.take(5).map(_buildGunamilanMissingRow),
+          ],
+          const SizedBox(height: 12),
+          Text(
+            disclaimer,
+            style: const TextStyle(
+              color: Color(0xFF8B6F6A),
+              fontSize: 11.5,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGunamilanRow(Map<String, dynamic> row) {
+    final label =
+        _displayString(row['guna_name']) ??
+        _displayString(row['label']) ??
+        AppStrings.noInformation;
+    final score = _gunamilanRowScore(row);
+    final note = _displayString(row['note']);
+    final matchLabel = _displayString(row['match_label']);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFF3E8),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.stars_outlined,
+              color: Color(0xFFC47A1B),
+              size: 18,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          color: Color(0xFF2E2220),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    if (score != null)
+                      Text(
+                        score,
+                        style: const TextStyle(
+                          color: Color(0xFF1D7A4D),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                  ],
+                ),
+                if (matchLabel != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    matchLabel,
+                    style: const TextStyle(
+                      color: Color(0xFF6E625F),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+                if (note != null) ...[
+                  const SizedBox(height: 3),
+                  Text(
+                    note,
+                    style: const TextStyle(
+                      color: Color(0xFF8B6F6A),
+                      fontSize: 12,
+                      height: 1.3,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGunamilanMissingRow(Map<String, dynamic> row) {
+    final label = _displayString(row['label']);
+    if (label == null) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, size: 16, color: Color(0xFF8B6F6A)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF6E625F),
+                fontSize: 12.5,
+                height: 1.3,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -2802,6 +3087,40 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return _safeMap(_display?['comparison']);
   }
 
+  Map<String, dynamic>? _gunamilanMap() {
+    return _safeMap(_display?['gunamilan']);
+  }
+
+  double? _gunamilanProgress(Map<String, dynamic> gunamilan) {
+    final score =
+        _displayDouble(gunamilan['score']) ??
+        _displayDouble(gunamilan['total_score']);
+    final maxScore = _displayDouble(gunamilan['max_score']);
+    if (score == null || maxScore == null || maxScore <= 0) return null;
+
+    return (score / maxScore).clamp(0.0, 1.0).toDouble();
+  }
+
+  String? _gunamilanScoreLabel(Map<String, dynamic> gunamilan) {
+    final score =
+        _displayDouble(gunamilan['score']) ??
+        _displayDouble(gunamilan['total_score']);
+    final maxScore = _displayDouble(gunamilan['max_score']);
+    if (score == null || maxScore == null || maxScore <= 0) return null;
+
+    return '${_numberLabel(score)}/${_numberLabel(maxScore)}';
+  }
+
+  String? _gunamilanRowScore(Map<String, dynamic> row) {
+    final points =
+        _displayDouble(row['obtained']) ?? _displayDouble(row['points']);
+    final maxPoints =
+        _displayDouble(row['max']) ?? _displayDouble(row['max_points']);
+    if (points == null || maxPoints == null || maxPoints <= 0) return null;
+
+    return '${_numberLabel(points)}/${_numberLabel(maxPoints)}';
+  }
+
   List<Map<String, dynamic>> _comparisonItems(Map<String, dynamic> comparison) {
     final rows = _safeMapList(comparison['rows']);
     if (rows.isNotEmpty) return rows;
@@ -3048,6 +3367,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value.trim());
     return null;
+  }
+
+  double? _displayDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value.trim());
+    return null;
+  }
+
+  String _numberLabel(double value) {
+    if ((value - value.round()).abs() < 0.01) {
+      return value.round().toString();
+    }
+
+    return value.toStringAsFixed(1).replaceFirst(RegExp(r'\.0$'), '');
   }
 
   String? _joinNonEmpty(List<String?> values) {
