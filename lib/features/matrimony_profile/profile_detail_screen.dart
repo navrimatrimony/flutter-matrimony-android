@@ -748,7 +748,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     if (contact != null) _buildContactCard(contact),
                     ..._buildFallbackProfileDetails(profile, age, location),
                   ],
-                  if (gunamilan != null) _buildGunamilanCard(gunamilan),
+                  if (gunamilan != null) _buildGunamilanEntryCard(gunamilan),
                   if (comparison != null)
                     KeyedSubtree(
                       key: _comparisonKey,
@@ -1442,13 +1442,171 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildGunamilanCard(Map<String, dynamic> gunamilan) {
+  Widget _buildGunamilanEntryCard(Map<String, dynamic> gunamilan) {
+    final available = _displaySafeBool(gunamilan['available']) == true;
+    final summary =
+        _displayString(gunamilan['summary_label']) ??
+        _gunamilanScoreLabel(gunamilan);
+    final message =
+        _displayString(gunamilan['message']) ??
+        (available
+            ? AppStrings.gunamilanScore
+            : AppStrings.gunamilanIncomplete);
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFEDE2DE)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF9B1B46).withValues(alpha: 0.09),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.auto_awesome,
+                  color: Color(0xFF9B1B46),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.gunamilanTitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: const Color(0xFF2E2220),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      message,
+                      style: const TextStyle(
+                        color: Color(0xFF6E625F),
+                        fontSize: 12.5,
+                        height: 1.35,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (summary != null)
+                Flexible(
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7E6),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      summary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF9A5B00),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: () => _openGunamilanDetails(gunamilan),
+              icon: const Icon(Icons.auto_awesome, size: 18),
+              label: Text(AppStrings.gunamilanViewDetails),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openGunamilanDetails(Map<String, dynamic> gunamilan) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFFFAF7F5),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              12,
+              16,
+              16 + MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 42,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFD8CBC7),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildGunamilanCard(
+                    gunamilan,
+                    forceExpanded: true,
+                    showOuterMargin: false,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGunamilanCard(
+    Map<String, dynamic> gunamilan, {
+    bool forceExpanded = false,
+    bool showOuterMargin = true,
+  }) {
     final available = _displaySafeBool(gunamilan['available']) == true;
     final rows = _safeMapList(gunamilan['rows']);
     final missingFields = _safeMapList(gunamilan['missing_fields']);
-    final visibleRows = _showGunamilanDetails || rows.length <= 4
-        ? rows
-        : rows.take(4);
+    final showAllRows =
+        forceExpanded || _showGunamilanDetails || rows.length <= 4;
+    final visibleRows = showAllRows ? rows : rows.take(4);
     final summary =
         _displayString(gunamilan['summary_label']) ??
         _gunamilanScoreLabel(gunamilan);
@@ -1462,7 +1620,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 14),
+      margin: showOuterMargin
+          ? const EdgeInsets.only(bottom: 14)
+          : EdgeInsets.zero,
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -1570,7 +1730,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           if (available && rows.isNotEmpty) ...[
             const SizedBox(height: 14),
             ...visibleRows.map(_buildGunamilanRow),
-            if (rows.length > 4)
+            if (!forceExpanded && rows.length > 4)
               Align(
                 alignment: Alignment.centerLeft,
                 child: TextButton.icon(
