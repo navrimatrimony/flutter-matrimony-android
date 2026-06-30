@@ -449,6 +449,42 @@ class AppStrings {
       ? 'Chat सुविधा लवकरच app मध्ये येईल.'
       : 'Chat will be available in the app soon.';
 
+  static String get chatTitle => _mr ? 'चॅट' : 'Chat';
+
+  static String get chatInbox => _mr ? 'चॅट इनबॉक्स' : 'Chat Inbox';
+
+  static String get chatMenu => _mr ? 'चॅट' : 'Chat';
+
+  static String get chatAll => _mr ? 'सर्व' : 'All';
+
+  static String get chatUnread => _mr ? 'न वाचलेले' : 'Unread';
+
+  static String get chatRequests => _mr ? 'रिक्वेस्ट' : 'Requests';
+
+  static String get chatEmpty =>
+      _mr ? 'अजून कोणतीही chat नाही.' : 'No chats yet.';
+
+  static String get chatLoadFailed =>
+      _mr ? 'Chat load झाली नाही.' : 'Chat could not be loaded.';
+
+  static String get chatMessageHint =>
+      _mr ? 'Message लिहा...' : 'Type a message...';
+
+  static String get chatSend => _mr ? 'पाठवा' : 'Send';
+
+  static String get chatOpenFailed =>
+      _mr ? 'Chat उघडता आली नाही.' : 'Chat could not be opened.';
+
+  static String get chatSendFailed =>
+      _mr ? 'Message पाठवता आला नाही.' : 'Message could not be sent.';
+
+  static String get chatReadLocked => _mr
+      ? 'हा message वाचण्यासाठी upgrade आवश्यक असू शकते.'
+      : 'Upgrade may be required to read this message.';
+
+  static String get chatUpgradeToRead =>
+      _mr ? 'वाचण्यासाठी अपग्रेड करा' : 'Upgrade to read';
+
   static String get likeThisProfile =>
       _mr ? 'हे स्थळ आवडले?' : 'Like this profile?';
 

@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import '../chat/chat_screen.dart';
 import 'widgets/profile_comparison_card.dart';
 import 'widgets/profile_contact_card.dart';
 import 'widgets/profile_display_section.dart';
@@ -48,6 +49,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool? _canHide;
   bool? _canBlock;
   bool _isProfileActionInFlight = false;
+  bool _isChatStartInFlight = false;
   bool _isContactRevealInFlight = false;
   bool _isContactRequestInFlight = false;
   bool _showGunamilanDetails = false;
@@ -140,6 +142,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       _canHide = null;
       _canBlock = null;
       _isProfileActionInFlight = false;
+      _isChatStartInFlight = false;
       _isContactRevealInFlight = false;
       _isContactRequestInFlight = false;
       _showScrolledStatusStrip = false;
@@ -2186,8 +2189,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: _showChatComingSoon,
-                  icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                  onPressed: _isChatStartInFlight ? null : _handleChatAction,
+                  icon: _isChatStartInFlight
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.chat_bubble_outline, size: 18),
                   label: const Text(
                     'Chat',
                     maxLines: 1,
@@ -2233,8 +2242,87 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  void _showChatComingSoon() {
-    _showSnackBar('Chat सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
+  Future<void> _handleChatAction() async {
+    if (_isChatStartInFlight) return;
+
+    final chat = _chatMap();
+    final chatState = _displayString(chat?['state'])?.trim().toLowerCase();
+    final chatMessage =
+        _displayString(chat?['message']) ?? AppStrings.chatOpenFailed;
+    final action = _displayString(
+      _safeMap(chat?['action'])?['action'],
+    )?.trim().toLowerCase();
+    final existingConversationId = _displayInt(chat?['conversation_id']);
+
+    if (action == 'open_chat' && existingConversationId != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) =>
+              ChatScreen(initialConversationId: existingConversationId),
+        ),
+      );
+      return;
+    }
+
+    if (action == 'chat_locked' || chatState == 'locked') {
+      _showSnackBar(chatMessage, Colors.black87);
+      return;
+    }
+
+    final requestedProfileId = _currentProfileId;
+    setState(() {
+      _isChatStartInFlight = true;
+    });
+
+    try {
+      final response = await ApiClient.startProfileChat(requestedProfileId);
+      if (!mounted) return;
+      if (requestedProfileId != _currentProfileId) {
+        setState(() {
+          _isChatStartInFlight = false;
+        });
+        return;
+      }
+
+      if (_responseSuccess(response)) {
+        final conversation = _safeMap(response['conversation']);
+        final conversationId =
+            _displayInt(conversation?['id']) ??
+            _displayInt(response['conversation_id']);
+
+        setState(() {
+          _isChatStartInFlight = false;
+        });
+
+        if (conversationId == null) {
+          _showSnackBar(AppStrings.chatOpenFailed, Colors.red);
+          return;
+        }
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ChatScreen(initialConversationId: conversationId),
+          ),
+        );
+        return;
+      }
+
+      setState(() {
+        _isChatStartInFlight = false;
+      });
+      _showSnackBar(
+        _responseErrorMessage(response, AppStrings.chatOpenFailed),
+        Colors.red,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isChatStartInFlight = false;
+      });
+      _showSnackBar('${AppStrings.chatOpenFailed} ${e.toString()}', Colors.red);
+    }
   }
 
   Future<void> _copyContactValue(String label, String value) async {
@@ -3088,6 +3176,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   Map<String, dynamic>? _contactMap() {
     return _safeMap(_display?['contact']);
+  }
+
+  Map<String, dynamic>? _chatMap() {
+    return _safeMap(_display?['chat']);
   }
 
   ProfileContactData? _contactData() {

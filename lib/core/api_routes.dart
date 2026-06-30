@@ -130,6 +130,19 @@ class ApiRoutes {
   static const String notificationUnreadCount = '/notifications/unread-count';
   static const String notificationsReadAll = '/notifications/read-all';
 
+  static const String chats = '/chats';
+  static const String chatUnreadCount = '/chats/unread-count';
+
+  static String profileChatStart(int profileId) =>
+      '$matrimonyProfiles/$profileId/chat/start';
+
+  static String chatThread(int conversationId) => '$chats/$conversationId';
+
+  static String chatMessages(int conversationId) =>
+      '$chats/$conversationId/messages';
+
+  static String chatRead(int conversationId) => '$chats/$conversationId/read';
+
   static const String settings = '/settings';
   static const String settingsPrivacy = '/settings/privacy';
   static const String settingsNotifications = '/settings/notifications';

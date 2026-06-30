@@ -2403,6 +2403,54 @@ class ApiClient {
     );
   }
 
+  static Future<Map<String, dynamic>> getChats({String? tab}) {
+    return _getJson(
+      ApiRoutes.chats,
+      authenticated: true,
+      query: <String, dynamic>{'tab': tab},
+    );
+  }
+
+  static Future<Map<String, dynamic>> getChatUnreadCount() {
+    return _getJson(ApiRoutes.chatUnreadCount, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> startProfileChat(int profileId) {
+    return _postJson(
+      ApiRoutes.profileChatStart(profileId),
+      <String, dynamic>{},
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> getChatThread(
+    int conversationId, {
+    int? sinceId,
+  }) {
+    return _getJson(
+      ApiRoutes.chatThread(conversationId),
+      authenticated: true,
+      query: <String, dynamic>{'since_id': sinceId},
+    );
+  }
+
+  static Future<Map<String, dynamic>> sendChatText({
+    required int conversationId,
+    required String bodyText,
+  }) {
+    return _postJson(ApiRoutes.chatMessages(conversationId), <String, dynamic>{
+      'body_text': bodyText,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> markChatRead(int conversationId) {
+    return _postJson(
+      ApiRoutes.chatRead(conversationId),
+      <String, dynamic>{},
+      authenticated: true,
+    );
+  }
+
   static Future<Map<String, dynamic>> getSettings() {
     return _getJson(ApiRoutes.settings, authenticated: true);
   }

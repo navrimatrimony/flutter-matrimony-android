@@ -314,6 +314,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     },
                   ),
                   ListTile(
+                    leading: const Icon(Icons.chat_bubble_outline),
+                    title: Text(AppStrings.chatMenu),
+                    dense: false,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamed(context, '/chats');
+                    },
+                  ),
+                  ListTile(
                     leading: const Icon(Icons.workspace_premium),
                     title: Text(AppStrings.plansUpgradeMenu),
                     dense: false,

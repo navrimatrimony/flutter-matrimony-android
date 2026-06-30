@@ -8,6 +8,7 @@ import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/biodata/biodata_export_screen.dart';
 import 'features/browse/browse_profiles_screen.dart';
+import 'features/chat/chat_screen.dart';
 import 'features/contact/contact_inbox_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
@@ -121,6 +122,7 @@ class _MyAppState extends State<MyApp> {
         '/register': (context) => const LandingScreen(),
         '/home': (context) => const HomeScreen(),
         '/matches': (context) => const BrowseProfilesScreen(),
+        '/chats': (context) => const ChatScreen(),
         '/contact-inbox': (context) => const ContactInboxScreen(),
         '/plans': (context) => const PlansScreen(),
         '/biodata-export': (context) => const BiodataExportScreen(),

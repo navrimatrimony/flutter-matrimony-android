@@ -1055,7 +1055,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   void _openChatOrSoon() {
-    _showSnackBar(AppStrings.chatComingSoon);
+    Navigator.pushNamed(context, '/chats');
   }
 
   Widget _buildTopSubmenu() {
