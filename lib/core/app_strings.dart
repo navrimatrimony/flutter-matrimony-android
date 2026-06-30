@@ -51,6 +51,158 @@ class AppStrings {
       ? 'प्रोफाइल, फोटो आणि इंटरेस्ट एका ठिकाणी व्यवस्थापित करा.'
       : 'Manage your profile, photo and interests in one place.';
 
+  static String dashboardGreeting(String name) =>
+      _mr ? 'नमस्कार, $name!' : 'Hello, $name!';
+
+  static String get dashboardHeroFallback => _mr
+      ? 'तुमच्या योग्य स्थळांसाठी dashboard तयार आहे.'
+      : 'Your matrimony dashboard is ready.';
+
+  static String get dashboardPremiumMember =>
+      _mr ? 'Premium Member' : 'Premium Member';
+
+  static String get dashboardFreePlan => _mr ? 'Free Plan' : 'Free Plan';
+
+  static String get dashboardProfileActive =>
+      _mr ? 'Profile active' : 'Profile active';
+
+  static String get dashboardProfileMissing =>
+      _mr ? 'Profile तयार नाही' : 'Profile missing';
+
+  static String get dashboardPhotoMissing =>
+      _mr ? 'Photo missing' : 'Photo missing';
+
+  static String get dashboardPhotoPending =>
+      _mr ? 'Photo pending' : 'Photo pending';
+
+  static String get dashboardPhotoApproved =>
+      _mr ? 'Photo approved' : 'Photo approved';
+
+  static String get dashboardViewMatches => _mr ? 'स्थळे पहा' : 'View Matches';
+
+  static String get dashboardChangePlan => _mr ? 'प्लॅन बदला' : 'Change plan';
+
+  static String dashboardContactCreditsRemaining(int count) =>
+      _mr ? 'Contact credits: $count शिल्लक' : 'Contact credits: $count left';
+
+  static String get dashboardNextBestAction =>
+      _mr ? 'पुढचे योग्य पाऊल' : 'Next best action';
+
+  static String get dashboardCreateProfile =>
+      _mr ? 'प्रोफाइल तयार करा' : 'Create Profile';
+
+  static String get dashboardCreateProfileSubtitle => _mr
+      ? 'Dashboard fallback: profile नसल्यास इथून onboarding सुरू करा.'
+      : 'Dashboard fallback: start onboarding if your profile is missing.';
+
+  static String get dashboardUploadPhotoPrompt => _mr
+      ? 'Clear photo upload करा आणि जास्त प्रतिसाद मिळवा.'
+      : 'Upload a clear photo to get better responses.';
+
+  static String get dashboardPhotoPendingSubtitle => _mr
+      ? 'तुमच्या photo verification ची स्थिती तपासा.'
+      : 'Check your photo verification status.';
+
+  static String get dashboardCompleteProfile =>
+      _mr ? 'Profile पूर्ण करा' : 'Complete Profile';
+
+  static String get dashboardCompleteProfileSubtitle => _mr
+      ? 'महत्त्वाची माहिती पूर्ण केल्यावर matching चांगले होते.'
+      : 'Complete key details to improve matching.';
+
+  static String get dashboardRespondInterests =>
+      _mr ? 'आलेल्या इंटरेस्टला उत्तर द्या' : 'Respond to Interests';
+
+  static String get dashboardRespondInterestsSubtitle => _mr
+      ? 'Pending proposals पाहून accept/reject करा.'
+      : 'Review pending proposals and respond.';
+
+  static String get dashboardReplyMessages =>
+      _mr ? 'Messages ला reply द्या' : 'Reply to Messages';
+
+  static String get dashboardReplyMessagesSubtitle => _mr
+      ? 'Unread chat तुमच्या प्रतिसादाची वाट पाहत आहे.'
+      : 'Unread chats are waiting for your response.';
+
+  static String get dashboardReviewContactRequests =>
+      _mr ? 'Contact requests तपासा' : 'Review Contact Requests';
+
+  static String get dashboardReviewContactRequestsSubtitle => _mr
+      ? 'Pending contact requests सुरक्षितपणे review करा.'
+      : 'Review pending contact requests safely.';
+
+  static String get dashboardCheckNotifications =>
+      _mr ? 'सूचना तपासा' : 'Check Notifications';
+
+  static String get dashboardCheckNotificationsSubtitle => _mr
+      ? 'नवीन सूचना आणि updates पहा.'
+      : 'See new notifications and updates.';
+
+  static String get dashboardUpgradePlan =>
+      _mr ? 'Plan upgrade करा' : 'Upgrade Plan';
+
+  static String get dashboardUpgradePlanSubtitle => _mr
+      ? 'Contact unlock आणि premium benefits पाहा.'
+      : 'View contact unlocks and premium benefits.';
+
+  static String get dashboardViewMatchesSubtitle => _mr
+      ? 'तुमच्यासाठी योग्य स्थळे पाहा.'
+      : 'Explore suitable profiles for you.';
+
+  static String get dashboardQuickActions =>
+      _mr ? 'क्विक लिंक्स' : 'Quick actions';
+
+  static String get dashboardReadiness =>
+      _mr ? 'तुमची तयारी' : 'Profile readiness';
+
+  static String get dashboardReadinessSubtitle => _mr
+      ? 'Fake percentage नाही; उपलब्ध माहितीवर आधारित checklist.'
+      : 'No fake percentage; checklist based on available data.';
+
+  static String get dashboardReady => _mr ? 'पूर्ण' : 'Ready';
+
+  static String get dashboardNeedsAttention =>
+      _mr ? 'पूर्ण करणे बाकी' : 'Needs attention';
+
+  static String get dashboardAddNow => _mr ? 'Add now' : 'Add now';
+
+  static String get dashboardBasicDetails =>
+      _mr ? 'Basic details' : 'Basic details';
+
+  static String get dashboardPhoto => _mr ? 'Photo' : 'Photo';
+
+  static String get dashboardLocationDetails =>
+      _mr ? 'Location details' : 'Location details';
+
+  static String get dashboardEducationCareer =>
+      _mr ? 'Education / Career' : 'Education / Career';
+
+  static String get dashboardPartnerPreference =>
+      _mr ? 'Partner Preference' : 'Partner Preference';
+
+  static String get dashboardPlanContact =>
+      _mr ? 'Plan / Contact status' : 'Plan / Contact status';
+
+  static String get dashboardActivity =>
+      _mr ? 'तुमची activity' : 'Your activity';
+
+  static String get dashboardAccountTools =>
+      _mr ? 'इतर पर्याय' : 'Account tools';
+
+  static String get dashboardPlanToolSubtitle => _mr
+      ? 'Plan, payment आणि contact credits'
+      : 'Plans, payment and contact credits';
+
+  static String get dashboardListsToolSubtitle =>
+      _mr ? 'Shortlist, block आणि hidden list' : 'Shortlist, block and hidden';
+
+  static String get dashboardSettingsToolSubtitle =>
+      _mr ? 'Privacy आणि notification preferences' : 'Privacy and preferences';
+
+  static String get featureNotAvailable => _mr
+      ? 'ही सुविधा सध्या उपलब्ध नाही.'
+      : 'This feature is not available right now.';
+
   static String get browseProfiles => _mr ? 'स्थळे' : 'Matches';
 
   static String get browseProfilesSubtitle => _mr
