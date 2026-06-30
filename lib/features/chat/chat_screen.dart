@@ -445,8 +445,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         if (unread > 0) ...[
                           const SizedBox(width: 8),
                           Container(
-                            minWidth: 22,
                             height: 22,
+                            constraints: const BoxConstraints(minWidth: 22),
                             alignment: Alignment.center,
                             padding: const EdgeInsets.symmetric(horizontal: 6),
                             decoration: const BoxDecoration(
