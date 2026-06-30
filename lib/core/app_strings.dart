@@ -586,9 +586,46 @@ class AppStrings {
 
   static String get addPhotos => _mr ? 'फोटो जोडा' : 'Add photos';
 
+  static String get photoUploadHelp => _mr
+      ? 'Clear face, single person आणि चांगल्या light मधला photo upload करा.'
+      : 'Upload a clear, single-person photo in good light.';
+
+  static String photoSlotsRemaining(int count) =>
+      _mr ? '$count photo slots बाकी आहेत' : '$count photo slots remaining';
+
+  static String get camera => _mr ? 'Camera' : 'Camera';
+
+  static String get gallery => _mr ? 'Gallery' : 'Gallery';
+
+  static String get yourPhotos => _mr ? 'तुमचे फोटो' : 'Your photos';
+
+  static String get selectedPhoto => _mr ? 'Selected photo' : 'Selected photo';
+
+  static String get replacePhoto => _mr ? 'Photo बदला' : 'Replace photo';
+
   static String get setPrimary => _mr ? 'Primary करा' : 'Set primary';
 
   static String get deletePhoto => _mr ? 'फोटो delete करा' : 'Delete photo';
+
+  static String get moveLeft => _mr ? 'डावीकडे' : 'Move left';
+
+  static String get moveRight => _mr ? 'उजवीकडे' : 'Move right';
+
+  static String get primaryPhoto => _mr ? 'Primary' : 'Primary';
+
+  static String get photoManagementHint => _mr
+      ? 'खालील thumbnail निवडा आणि त्या photo साठी action करा.'
+      : 'Select a thumbnail below, then manage that photo.';
+
+  static String get photoDeleteConfirm => _mr
+      ? 'हा photo profile मधून काढायचा आहे का?'
+      : 'Remove this photo from your profile?';
+
+  static String get delete => _mr ? 'Delete' : 'Delete';
+
+  static String get refresh => _mr ? 'Refresh' : 'Refresh';
+
+  static String get uploading => _mr ? 'Uploading...' : 'Uploading...';
 
   static String get verificationStatus =>
       _mr ? 'पडताळणी स्थिती' : 'Verification status';
