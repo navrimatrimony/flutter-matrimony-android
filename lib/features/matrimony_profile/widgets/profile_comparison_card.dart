@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/app_strings.dart';
+
 class ProfileComparisonData {
   final String title;
   final String? summary;
@@ -65,19 +67,22 @@ class ProfileComparisonCard extends StatefulWidget {
 }
 
 class _ProfileComparisonCardState extends State<ProfileComparisonCard> {
+  static const int _visibleLimit = 12;
+
   bool _showAll = false;
 
   @override
   Widget build(BuildContext context) {
     final comparison = widget.comparison;
-    final visibleItems = _showAll || comparison.items.length <= 5
+    final visibleItems = _showAll || comparison.items.length <= _visibleLimit
         ? comparison.items
-        : comparison.items.take(5).toList();
+        : comparison.items.take(_visibleLimit).toList();
+    final groups = _groupItems(visibleItems);
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(18),
@@ -91,40 +96,15 @@ class _ProfileComparisonCardState extends State<ProfileComparisonCard> {
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _ComparisonHeader(comparison: comparison),
-          if (comparison.summary != null || comparison.hasValidCount) ...[
-            const SizedBox(height: 12),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (comparison.summary != null)
-                  Expanded(
-                    child: Text(
-                      comparison.summary!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.grey.shade700,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  )
-                else
-                  const Spacer(),
-                const SizedBox(width: 10),
-                if (comparison.hasValidCount)
-                  _MatchCountBadge(
-                    matchedCount: comparison.matchedCount!,
-                    totalCount: comparison.totalCount!,
-                  ),
-              ],
-            ),
-          ],
+          _PreferenceTitle(
+            title: AppStrings.comparisonPreferenceTitle(comparison.title),
+          ),
+          const SizedBox(height: 12),
+          _PreferenceHeroSummary(comparison: comparison),
           if (comparison.progressValue != null) ...[
-            const SizedBox(height: 14),
+            const SizedBox(height: 12),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
               child: LinearProgressIndicator(
@@ -138,127 +118,271 @@ class _ProfileComparisonCardState extends State<ProfileComparisonCard> {
             ),
           ],
           const SizedBox(height: 14),
-          ...visibleItems.map(
-            (item) => _ComparisonRow(
-              item,
-              viewerLabel: comparison.viewerName,
-              targetLabel: comparison.targetName,
+          for (final group in groups) ...[
+            _PreferenceGroupHeader(
+              title: AppStrings.comparisonPreferenceGroup(group.key),
             ),
-          ),
-          if (comparison.items.length > 5) ...[
-            const SizedBox(height: 4),
-            TextButton.icon(
-              onPressed: () {
-                setState(() {
-                  _showAll = !_showAll;
-                });
-              },
-              icon: Icon(
-                _showAll ? Icons.expand_less : Icons.expand_more,
-                size: 19,
+            const SizedBox(height: 8),
+            for (final item in group.items) _PreferenceRow(item: item),
+            const SizedBox(height: 8),
+          ],
+          if (comparison.items.length > _visibleLimit) ...[
+            const SizedBox(height: 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () {
+                  setState(() {
+                    _showAll = !_showAll;
+                  });
+                },
+                icon: Icon(
+                  _showAll ? Icons.expand_less : Icons.expand_more,
+                  size: 19,
+                ),
+                label: Text(
+                  _showAll
+                      ? AppStrings.comparisonShowLess
+                      : AppStrings.comparisonViewAll,
+                ),
               ),
-              label: Text(_showAll ? 'Show less' : 'View all'),
             ),
           ],
         ],
       ),
     );
   }
+
+  List<_ComparisonGroup> _groupItems(List<ProfileComparisonItemData> items) {
+    final grouped = <String, List<ProfileComparisonItemData>>{
+      'basic': [],
+      'religious': [],
+      'professional': [],
+      'location': [],
+      'lifestyle': [],
+      'other': [],
+    };
+
+    for (final item in items) {
+      final groupKey = _groupKeyForItem(item);
+      grouped.putIfAbsent(groupKey, () => []).add(item);
+    }
+
+    return grouped.entries
+        .where((entry) => entry.value.isNotEmpty)
+        .map((entry) => _ComparisonGroup(entry.key, entry.value))
+        .toList();
+  }
 }
 
-class _ComparisonHeader extends StatelessWidget {
-  final ProfileComparisonData comparison;
+class _PreferenceTitle extends StatelessWidget {
+  final String title;
 
-  const _ComparisonHeader({required this.comparison});
+  const _PreferenceTitle({required this.title});
 
   @override
   Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.auto_awesome, color: Color(0xFF9B1B46), size: 18),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: const Color(0xFF2E2220),
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        const Icon(Icons.auto_awesome, color: Color(0xFF9B1B46), size: 18),
+      ],
+    );
+  }
+}
+
+class _PreferenceHeroSummary extends StatelessWidget {
+  final ProfileComparisonData comparison;
+
+  const _PreferenceHeroSummary({required this.comparison});
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = comparison.hasValidCount
+        ? AppStrings.comparisonPreferenceMatchSummary(
+            comparison.matchedCount!,
+            comparison.totalCount!,
+            comparison.title,
+          )
+        : comparison.summary ??
+              AppStrings.comparisonPreferenceFallbackSummary(comparison.title);
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color(0xFFFFF8F4),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFF0E2DD)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 6),
-          ),
-        ],
+        color: const Color(0xFFFFF8FC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE7B7DA)),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _ComparisonPersonBadge(
-            name: comparison.viewerName,
-            photoUrl: comparison.viewerPhotoUrl,
-          ),
+          _ComparisonProfilePhoto(photoUrl: comparison.targetPhotoUrl),
+          const SizedBox(width: 10),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.82),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  comparison.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 13.5,
-                    height: 1.15,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+            child: Text(
+              summary,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Color(0xFF2E2220),
+                fontSize: 14,
+                height: 1.25,
+                fontWeight: FontWeight.w900,
               ),
             ),
           ),
-          _ComparisonPersonBadge(
-            name: comparison.targetName,
-            photoUrl: comparison.targetPhotoUrl,
-          ),
+          const SizedBox(width: 10),
+          _ComparisonProfilePhoto(photoUrl: comparison.viewerPhotoUrl),
         ],
       ),
     );
   }
 }
 
-class _ComparisonPersonBadge extends StatelessWidget {
-  final String name;
-  final String? photoUrl;
+class _PreferenceGroupHeader extends StatelessWidget {
+  final String title;
 
-  const _ComparisonPersonBadge({required this.name, required this.photoUrl});
+  const _PreferenceGroupHeader({required this.title});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 76,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF9F7),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF5ECE8)),
+      ),
+      child: Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Color(0xFF2E2220),
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _PreferenceRow extends StatelessWidget {
+  final ProfileComparisonItemData item;
+
+  const _PreferenceRow({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final targetValue = item.targetValue ?? AppStrings.comparisonValueUnknown;
+    final viewerValue = item.viewerValue?.trim();
+    final showViewerValue =
+        viewerValue != null &&
+        viewerValue.isNotEmpty &&
+        item.status != 'strong' &&
+        item.status != 'match';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.fromLTRB(12, 11, 10, 11),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF1E6E1)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _ComparisonProfilePhoto(photoUrl: photoUrl),
-          const SizedBox(height: 7),
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xFF2E2220),
-              fontSize: 11.5,
-              fontWeight: FontWeight.w900,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.comparisonPreferredLabel(item.label),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.grey.shade600,
+                    fontSize: 12.2,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  targetValue,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF2E2220),
+                    fontSize: 13.5,
+                    height: 1.25,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                if (showViewerValue) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    AppStrings.comparisonYourValue(viewerValue),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF7A6F6A),
+                      fontSize: 11.5,
+                      height: 1.25,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
+          const SizedBox(width: 12),
+          _PreferenceStatusIcon(status: item.status, label: item.statusLabel),
         ],
+      ),
+    );
+  }
+}
+
+class _PreferenceStatusIcon extends StatelessWidget {
+  final String status;
+  final String? label;
+
+  const _PreferenceStatusIcon({required this.status, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final style = _statusStyle(status);
+
+    return Tooltip(
+      message: label ?? style.label,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: style.chipColor,
+          shape: BoxShape.circle,
+          border: Border.all(color: style.borderColor),
+        ),
+        child: Icon(style.icon, color: style.color, size: 22),
       ),
     );
   }
@@ -274,21 +398,22 @@ class _ComparisonProfilePhoto extends StatelessWidget {
     final url = photoUrl;
 
     return Container(
-      width: 64,
-      height: 64,
+      width: 62,
+      height: 62,
       decoration: BoxDecoration(
-        color: Colors.black,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.black, width: 3),
+        color: const Color(0xFFF6E7E2),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white, width: 3),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
+            color: Colors.black.withValues(alpha: 0.10),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: ClipOval(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(11),
         child: url == null
             ? const _ComparisonFallbackAvatar()
             : Image.network(
@@ -311,224 +436,103 @@ class _ComparisonFallbackAvatar extends StatelessWidget {
     return Container(
       color: const Color(0xFFF6E7E2),
       alignment: Alignment.center,
-      child: const Icon(Icons.person, color: Color(0xFF9B1B46), size: 34),
+      child: const Icon(Icons.person, color: Color(0xFF9B1B46), size: 32),
     );
   }
 }
 
-class _MatchCountBadge extends StatelessWidget {
-  final int matchedCount;
-  final int totalCount;
+class _ComparisonGroup {
+  final String key;
+  final List<ProfileComparisonItemData> items;
 
-  const _MatchCountBadge({
-    required this.matchedCount,
-    required this.totalCount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF7F0),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFCDEBDA)),
-      ),
-      child: Text(
-        '$matchedCount/$totalCount',
-        style: const TextStyle(
-          color: Color(0xFF21784D),
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
-  }
+  const _ComparisonGroup(this.key, this.items);
 }
 
-class _ComparisonRow extends StatelessWidget {
-  final ProfileComparisonItemData item;
-  final String viewerLabel;
-  final String targetLabel;
+String _groupKeyForItem(ProfileComparisonItemData item) {
+  final value = '${item.key ?? ''} ${item.label}'.toLowerCase();
 
-  const _ComparisonRow(
-    this.item, {
-    required this.viewerLabel,
-    required this.targetLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final status = _statusStyle(item.status);
-    final showStatusChip =
-        item.status == 'strong' ||
-        item.status == 'match' ||
-        item.status == 'near';
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: status.backgroundColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: status.borderColor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(status.icon, color: status.color, size: 21),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  item.label,
-                  style: const TextStyle(
-                    color: Color(0xFF2E2220),
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              if (showStatusChip)
-                _StatusChip(
-                  label: item.statusLabel ?? status.label,
-                  style: status,
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: _ValueBlock(label: viewerLabel, value: item.viewerValue),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _ValueBlock(label: targetLabel, value: item.targetValue),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+  if (value.contains('age') ||
+      value.contains('height') ||
+      value.contains('marital')) {
+    return 'basic';
   }
-}
-
-class _StatusChip extends StatelessWidget {
-  final String label;
-  final _ComparisonStatusStyle style;
-
-  const _StatusChip({required this.label, required this.style});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: style.chipColor,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: style.borderColor),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: style.color,
-          fontSize: 11,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-    );
+  if (value.contains('religion') ||
+      value.contains('caste') ||
+      value.contains('community') ||
+      value.contains('sub-caste') ||
+      value.contains('sub_caste') ||
+      value.contains('gunamilan')) {
+    return 'religious';
   }
-}
-
-class _ValueBlock extends StatelessWidget {
-  final String label;
-  final String? value;
-
-  const _ValueBlock({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final displayValue = value ?? 'माहिती नाही';
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF1E6E1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            displayValue,
-            maxLines: 3,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: Color(0xFF2E2220),
-              fontSize: 13,
-              height: 1.25,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
-    );
+  if (value.contains('education') ||
+      value.contains('profession') ||
+      value.contains('occupation') ||
+      value.contains('income') ||
+      value.contains('work')) {
+    return 'professional';
   }
+  if (value.contains('location') ||
+      value.contains('country') ||
+      value.contains('state') ||
+      value.contains('district') ||
+      value.contains('taluka') ||
+      value.contains('city')) {
+    return 'location';
+  }
+  if (value.contains('diet') ||
+      value.contains('eating') ||
+      value.contains('smoking') ||
+      value.contains('drinking') ||
+      value.contains('lifestyle')) {
+    return 'lifestyle';
+  }
+
+  return 'other';
 }
 
 _ComparisonStatusStyle _statusStyle(String status) {
   switch (status) {
     case 'strong':
       return const _ComparisonStatusStyle(
-        label: 'Strong',
-        icon: Icons.verified,
+        label: 'Strong match',
+        icon: Icons.verified_outlined,
         color: Color(0xFF13795B),
-        backgroundColor: Color(0xFFEAF8F2),
-        chipColor: Color(0xFFD7F1E5),
-        borderColor: Color(0xFFBFE7D5),
+        chipColor: Color(0xFFE2F4EB),
+        borderColor: Color(0xFFAEDCC8),
       );
     case 'match':
       return const _ComparisonStatusStyle(
         label: 'Match',
-        icon: Icons.check_circle,
+        icon: Icons.check_circle_outline,
         color: Color(0xFF2F8F55),
-        backgroundColor: Color(0xFFF1FAF4),
-        chipColor: Color(0xFFE1F4E8),
-        borderColor: Color(0xFFCDEBDA),
+        chipColor: Color(0xFFE7F6ED),
+        borderColor: Color(0xFFBFE7D5),
       );
     case 'near':
+    case 'flexible':
       return const _ComparisonStatusStyle(
-        label: 'Near',
-        icon: Icons.auto_awesome,
+        label: 'Near match',
+        icon: Icons.check_circle_outline,
         color: Color(0xFF9A6A00),
-        backgroundColor: Color(0xFFFFF8E7),
-        chipColor: Color(0xFFFFEAB5),
-        borderColor: Color(0xFFF3D993),
+        chipColor: Color(0xFFFFF4D8),
+        borderColor: Color(0xFFEED088),
+      );
+    case 'not_matched':
+    case 'mismatch':
+      return const _ComparisonStatusStyle(
+        label: 'Needs review',
+        icon: Icons.cancel_outlined,
+        color: Color(0xFFB33A3A),
+        chipColor: Color(0xFFFFEEEE),
+        borderColor: Color(0xFFF0B8B8),
       );
     default:
       return const _ComparisonStatusStyle(
-        label: 'Basic',
-        icon: Icons.info_outline,
+        label: 'Review',
+        icon: Icons.help_outline,
         color: Color(0xFF7A6F6A),
-        backgroundColor: Color(0xFFFFFCFA),
         chipColor: Color(0xFFF4ECE8),
-        borderColor: Color(0xFFF0E6E1),
+        borderColor: Color(0xFFE5D8D2),
       );
   }
 }
@@ -537,7 +541,6 @@ class _ComparisonStatusStyle {
   final String label;
   final IconData icon;
   final Color color;
-  final Color backgroundColor;
   final Color chipColor;
   final Color borderColor;
 
@@ -545,7 +548,6 @@ class _ComparisonStatusStyle {
     required this.label,
     required this.icon,
     required this.color,
-    required this.backgroundColor,
     required this.chipColor,
     required this.borderColor,
   });

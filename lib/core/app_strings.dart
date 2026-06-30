@@ -465,6 +465,102 @@ class AppStrings {
     return label;
   }
 
+  static String comparisonPreferenceTitle(String comparisonLabel) {
+    final subject = _comparisonPreferenceSubject(comparisonLabel);
+    if (_mr) {
+      return switch (subject) {
+        'her' => 'तिच्या जोडीदार अपेक्षा',
+        'his' => 'त्याच्या जोडीदार अपेक्षा',
+        _ => 'जोडीदार अपेक्षा',
+      };
+    }
+
+    return switch (subject) {
+      'her' => 'Her Partner Preferences',
+      'his' => 'His Partner Preferences',
+      _ => 'Partner Preferences',
+    };
+  }
+
+  static String comparisonPreferenceMatchSummary(
+    int matched,
+    int total,
+    String comparisonLabel,
+  ) {
+    final subject = _comparisonPreferenceSubject(comparisonLabel);
+    if (_mr) {
+      final owner = switch (subject) {
+        'her' => 'तिच्या',
+        'his' => 'त्याच्या',
+        _ => 'या स्थळाच्या',
+      };
+      return '$owner अपेक्षांपैकी $matched/$total जुळतात';
+    }
+
+    final owner = switch (subject) {
+      'her' => 'her',
+      'his' => 'his',
+      _ => 'this profile',
+    };
+    return 'You match $matched/$total of $owner preferences';
+  }
+
+  static String comparisonPreferenceFallbackSummary(String comparisonLabel) {
+    final subject = _comparisonPreferenceSubject(comparisonLabel);
+    if (_mr) {
+      return switch (subject) {
+        'her' => 'तिच्या अपेक्षांशी तुमचे profile किती जुळते ते पहा',
+        'his' => 'त्याच्या अपेक्षांशी तुमचे profile किती जुळते ते पहा',
+        _ => 'या स्थळाच्या अपेक्षांशी तुमचे profile किती जुळते ते पहा',
+      };
+    }
+
+    return switch (subject) {
+      'her' => 'See how well you fit her preferences',
+      'his' => 'See how well you fit his preferences',
+      _ => 'See how well you fit this profile',
+    };
+  }
+
+  static String comparisonPreferenceGroup(String groupKey) {
+    return switch (groupKey) {
+      'basic' => _mr ? 'मूलभूत अपेक्षा' : 'Basic Preferences',
+      'religious' => _mr ? 'धार्मिक अपेक्षा' : 'Religious Preferences',
+      'professional' =>
+        _mr ? 'शिक्षण / करिअर अपेक्षा' : 'Professional Preferences',
+      'location' => _mr ? 'ठिकाण अपेक्षा' : 'Location Preferences',
+      'lifestyle' => _mr ? 'जीवनशैली अपेक्षा' : 'Lifestyle Preferences',
+      _ => _mr ? 'इतर अपेक्षा' : 'Other Preferences',
+    };
+  }
+
+  static String comparisonPreferredLabel(String label) {
+    final normalized = label.trim().toLowerCase();
+    if (normalized.startsWith('preferred ') ||
+        label.trim().startsWith('अपेक्षित ')) {
+      return label;
+    }
+    return _mr ? 'अपेक्षित $label' : 'Preferred $label';
+  }
+
+  static String comparisonYourValue(String value) {
+    return _mr ? 'तुमचे: $value' : 'You: $value';
+  }
+
+  static String get comparisonValueUnknown =>
+      _mr ? 'माहिती नाही' : 'Not specified';
+
+  static String get comparisonViewAll => _mr ? 'सर्व पहा' : 'View all';
+
+  static String get comparisonShowLess => _mr ? 'कमी दाखवा' : 'Show less';
+
+  static String _comparisonPreferenceSubject(String label) {
+    final normalized = label.trim().toLowerCase();
+    if (normalized.contains('her') || normalized.contains('ती')) return 'her';
+    if (normalized.contains('him') || normalized.contains('तो')) return 'his';
+    return 'profile';
+  }
+
   static String get myProfile => _mr ? 'माझे प्रोफाइल' : 'My Profile';
 
   static String get myProfileSubtitle =>

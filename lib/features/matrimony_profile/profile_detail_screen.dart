@@ -3350,12 +3350,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (rawStatus == 'strong' ||
         rawStatus == 'match' ||
         rawStatus == 'near' ||
+        rawStatus == 'flexible' ||
+        rawStatus == 'not_matched' ||
+        rawStatus == 'mismatch' ||
+        rawStatus == 'unknown' ||
         rawStatus == 'neutral') {
       return rawStatus!;
     }
 
     final matched = _comparisonBoolOrNull(row['matched']);
-    return matched == true ? 'match' : 'neutral';
+    if (matched == true) return 'match';
+    if (matched == false) return 'not_matched';
+    return 'neutral';
   }
 
   List<ProfileDisplaySectionData> _displaySections() {
