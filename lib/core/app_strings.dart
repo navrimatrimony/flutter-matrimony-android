@@ -207,8 +207,61 @@ class AppStrings {
 
   static String get connectContactRequests => _mr ? 'कॉन्टॅक्ट' : 'Contact';
 
+  static String get connectUpgrade => _mr ? 'अपग्रेड' : 'Upgrade';
+
   static String get contactRequests =>
       _mr ? 'कॉन्टॅक्ट रिक्वेस्ट' : 'Contact Requests';
+
+  static String get plansTitle => _mr ? 'प्लॅन्स' : 'Plans';
+
+  static String get plansCurrentPlan => _mr ? 'सध्याचा प्लॅन' : 'Current plan';
+
+  static String get plansAvailablePlans =>
+      _mr ? 'उपलब्ध प्लॅन्स' : 'Available plans';
+
+  static String get plansRefresh => _mr ? 'रिफ्रेश' : 'Refresh';
+
+  static String get plansChoose => _mr ? 'निवडा' : 'Choose';
+
+  static String get plansOpeningCheckout =>
+      _mr ? 'Checkout उघडत आहे...' : 'Opening checkout...';
+
+  static String get plansEmpty => _mr
+      ? 'सध्या upgrade साठी कोणताही प्लॅन उपलब्ध नाही.'
+      : 'No upgrade plan is available right now.';
+
+  static String get plansNoCurrentPlan =>
+      _mr ? 'सध्याचा प्लॅन उपलब्ध नाही' : 'Current plan is not available';
+
+  static String get plansContactQuota =>
+      _mr ? 'Contact unlock quota' : 'Contact unlock quota';
+
+  static String get plansRemaining => _mr ? 'शिल्लक' : 'remaining';
+
+  static String get plansManualRefreshHint => _mr
+      ? 'Payment पूर्ण झाल्यावर app मध्ये परत येऊन Refresh करा.'
+      : 'After payment, return to the app and tap Refresh.';
+
+  static String get plansBrowserNote => _mr
+      ? 'Checkout browser मध्ये उघडले आहे. Payment status Laravel कडून update होईल.'
+      : 'Checkout opened in the browser. Payment status will update from Laravel.';
+
+  static String get plansCheckoutUrlMissing => _mr
+      ? 'Checkout link backend कडून मिळाला नाही.'
+      : 'Checkout link was not returned by the backend.';
+
+  static String get plansOpenFailedCopied => _mr
+      ? 'Browser उघडू शकला नाही. Checkout link clipboard मध्ये copy केला.'
+      : 'Could not open the browser. Checkout link was copied to the clipboard.';
+
+  static String get plansLoadFailed =>
+      _mr ? 'Plans load झाले नाहीत.' : 'Plans could not be loaded.';
+
+  static String get plansFreeOrLocked =>
+      _mr ? 'Free / locked state' : 'Free / locked state';
+
+  static String get plansActiveSubscription =>
+      _mr ? 'Active subscription' : 'Active subscription';
 
   static String get notificationsSoon => _mr
       ? 'सूचना लवकरच app मध्ये येतील.'

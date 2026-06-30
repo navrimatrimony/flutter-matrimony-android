@@ -2246,6 +2246,23 @@ class ApiClient {
     );
   }
 
+  static Future<Map<String, dynamic>> getCurrentPlan() {
+    return _getJson(ApiRoutes.plansCurrent, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> getPlans() {
+    return _getJson(ApiRoutes.plans, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> startPlanCheckout(
+    int planId, {
+    int? planTermId,
+  }) {
+    return _postJson(ApiRoutes.planCheckout(planId), <String, dynamic>{
+      'plan_term_id': planTermId,
+    }, authenticated: true);
+  }
+
   static Future<Map<String, dynamic>> hideProfile(int profileId) {
     return _profileActionPost(ApiRoutes.profileHide(profileId));
   }

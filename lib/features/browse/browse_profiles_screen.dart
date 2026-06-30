@@ -1016,6 +1016,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       AppStrings.connectContactRequests,
       AppStrings.connectReceived,
       AppStrings.connectSent,
+      AppStrings.connectUpgrade,
     ];
 
     return SizedBox(
@@ -1057,8 +1058,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 );
               } else if (index == 1) {
                 _openReceivedInterests();
-              } else {
+              } else if (index == 2) {
                 _openSentInterests();
+              } else {
+                Navigator.pushNamed(context, '/plans');
               }
             },
           );

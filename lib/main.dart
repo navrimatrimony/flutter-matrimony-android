@@ -12,6 +12,7 @@ import 'features/home/home_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
 import 'features/onboarding/models/onboarding_status.dart';
 import 'features/onboarding/smart_onboarding_screen.dart';
+import 'features/plans/plans_screen.dart';
 
 // RouteObserver for RouteAware lifecycle management
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
@@ -116,6 +117,7 @@ class _MyAppState extends State<MyApp> {
         '/home': (context) => const HomeScreen(),
         '/matches': (context) => const BrowseProfilesScreen(),
         '/contact-inbox': (context) => const ContactInboxScreen(),
+        '/plans': (context) => const PlansScreen(),
         '/create-profile': (context) => const SmartOnboardingScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
         '/smart-onboarding': (context) => const SmartOnboardingScreen(),

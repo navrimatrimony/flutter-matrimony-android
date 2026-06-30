@@ -108,6 +108,11 @@ class ApiRoutes {
   static String contactRequestReject(int requestId) =>
       '/contact-requests/$requestId/reject';
 
+  static const String plansCurrent = '/plans/current';
+  static const String plans = '/plans';
+
+  static String planCheckout(int planId) => '/plans/$planId/checkout';
+
   static String profileHide(int profileId) =>
       '$matrimonyProfiles/$profileId/hide';
 

@@ -1801,7 +1801,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Future<void> _handleContactPrimaryAction(ProfileContactCtaData cta) async {
     final action = cta.action.trim().toLowerCase();
     if (action == 'upgrade') {
-      _showSnackBar('Upgrade सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
+      Navigator.pushNamed(context, '/plans');
       return;
     }
 
