@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../matrimony_profile/edit_full_profile_screen.dart';
-import '../photo/photo_upload_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../interests/received_interests_screen.dart';
 import '../browse/browse_profiles_screen.dart';
@@ -358,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   ),
                   ListTile(
                     leading: const Icon(Icons.photo_camera),
-                    title: Text(AppStrings.uploadPhoto),
+                    title: Text(AppStrings.photosVerification),
                     dense: false,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -366,12 +365,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     ),
                     onTap: () {
                       Navigator.pop(context); // Close drawer
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const PhotoUploadScreen(),
-                        ),
-                      );
+                      Navigator.pushNamed(context, '/photo-gallery');
                     },
                   ),
                   ListTile(
@@ -543,13 +537,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           const SizedBox(height: 16),
           _buildDashboardCard(
             icon: Icons.photo_camera,
-            title: AppStrings.uploadPhoto,
-            subtitle: AppStrings.uploadPhotoSubtitle,
+            title: AppStrings.photosVerification,
+            subtitle: AppStrings.photosVerificationSubtitle,
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const PhotoUploadScreen()),
-              );
+              Navigator.pushNamed(context, '/photo-gallery');
             },
           ),
           const SizedBox(height: 32),

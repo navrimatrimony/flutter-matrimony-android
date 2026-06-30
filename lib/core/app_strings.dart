@@ -353,6 +353,25 @@ class AppStrings {
   static String get uploadPhotoSubtitle =>
       _mr ? 'प्रोफाइलसाठी फोटो अपडेट करा' : 'Update your profile photo';
 
+  static String get photosVerification =>
+      _mr ? 'फोटो / पडताळणी' : 'Photos / Verification';
+
+  static String get photosVerificationSubtitle => _mr
+      ? 'फोटो gallery आणि verification status पहा'
+      : 'Manage gallery and verification status';
+
+  static String get photoGalleryEmpty =>
+      _mr ? 'अजून photo upload केलेले नाहीत.' : 'No photos uploaded yet.';
+
+  static String get addPhotos => _mr ? 'फोटो जोडा' : 'Add photos';
+
+  static String get setPrimary => _mr ? 'Primary करा' : 'Set primary';
+
+  static String get deletePhoto => _mr ? 'फोटो delete करा' : 'Delete photo';
+
+  static String get verificationStatus =>
+      _mr ? 'पडताळणी स्थिती' : 'Verification status';
+
   static String get sentInterests =>
       _mr ? 'पाठवलेले इंटरेस्ट' : 'Sent Interests';
 

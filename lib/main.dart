@@ -13,6 +13,7 @@ import 'features/matrimony_profile/view_profile_screen.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/onboarding/models/onboarding_status.dart';
 import 'features/onboarding/smart_onboarding_screen.dart';
+import 'features/photo/photo_gallery_screen.dart';
 import 'features/plans/plans_screen.dart';
 import 'features/settings/settings_screen.dart';
 
@@ -122,6 +123,7 @@ class _MyAppState extends State<MyApp> {
         '/plans': (context) => const PlansScreen(),
         '/notifications': (context) => const NotificationsScreen(),
         '/settings': (context) => const SettingsScreen(),
+        '/photo-gallery': (context) => const PhotoGalleryScreen(),
         '/create-profile': (context) => const SmartOnboardingScreen(),
         '/view-profile': (context) => const ViewProfileScreen(),
         '/smart-onboarding': (context) => const SmartOnboardingScreen(),

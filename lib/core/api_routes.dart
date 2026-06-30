@@ -67,6 +67,11 @@ class ApiRoutes {
   // Matrimony Profile
   static const String matrimonyProfile = '/matrimony-profile';
   static const String matrimonyProfilePhoto = '/matrimony-profile/photo';
+  static const String profilePhotos = '/matrimony-profile/photos';
+  static const String profilePhotoUpload = '/matrimony-profile/photos';
+  static const String profilePhotoReorder = '/matrimony-profile/photos/reorder';
+  static const String profileVerificationStatus =
+      '/matrimony-profile/verification-status';
   static const String matrimonyProfiles = '/matrimony-profiles'; // For listing
   static const String matrimonyProfileMoreSections =
       '/matrimony-profiles/more-sections';
@@ -99,6 +104,11 @@ class ApiRoutes {
 
   static String profileContactRequests(int profileId) =>
       '$matrimonyProfiles/$profileId/contact-requests';
+
+  static String profilePhotoPrimary(int photoId) =>
+      '$profilePhotos/$photoId/primary';
+
+  static String profilePhotoDelete(int photoId) => '$profilePhotos/$photoId';
 
   static const String contactInbox = '/contact-inbox';
 

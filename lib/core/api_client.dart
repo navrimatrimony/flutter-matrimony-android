@@ -2044,6 +2044,93 @@ class ApiClient {
     return data;
   }
 
+  static Future<Map<String, dynamic>> getProfilePhotos() {
+    return _getJson(ApiRoutes.profilePhotos, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> uploadProfilePhotos(
+    List<File> imageFiles,
+  ) async {
+    if (authToken == null) {
+      throw Exception('Auth token is missing. User not logged in.');
+    }
+    if (imageFiles.isEmpty) {
+      throw Exception('No photo selected.');
+    }
+
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.profilePhotoUpload);
+    final request = http.MultipartRequest('POST', url);
+    request.headers['Accept'] = 'application/json';
+    request.headers['Authorization'] = 'Bearer $authToken';
+
+    for (var i = 0; i < imageFiles.length; i++) {
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          i == 0 ? 'profile_photo' : 'profile_photos[]',
+          imageFiles[i].path,
+        ),
+      );
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+    final data = _decodeResponse(response);
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      _mergeProfilePhotoSummary(data);
+    }
+
+    return data;
+  }
+
+  static Future<Map<String, dynamic>> setPrimaryProfilePhoto(
+    int photoId,
+  ) async {
+    final data = await _postJson(
+      ApiRoutes.profilePhotoPrimary(photoId),
+      <String, dynamic>{},
+      authenticated: true,
+    );
+    _mergeProfilePhotoSummary(data);
+    return data;
+  }
+
+  static Future<Map<String, dynamic>> deleteProfilePhoto(int photoId) async {
+    final data = await _profileActionDelete(
+      ApiRoutes.profilePhotoDelete(photoId),
+    );
+    _mergeProfilePhotoSummary(data);
+    return data;
+  }
+
+  static Future<Map<String, dynamic>> reorderProfilePhotos(
+    List<int> photoIds,
+  ) async {
+    final data = await _putJson(
+      ApiRoutes.profilePhotoReorder,
+      <String, dynamic>{'photo_ids': photoIds},
+      authenticated: true,
+    );
+    _mergeProfilePhotoSummary(data);
+    return data;
+  }
+
+  static Future<Map<String, dynamic>> getProfileVerificationStatus() {
+    return _getJson(ApiRoutes.profileVerificationStatus, authenticated: true);
+  }
+
+  static void _mergeProfilePhotoSummary(Map<String, dynamic> data) {
+    final summary = data['profile'];
+    if (summary is! Map) return;
+
+    final profile = currentUserProfile ??= <String, dynamic>{};
+    profile.addAll(Map<String, dynamic>.from(summary));
+    final photoUrl = resolveProfilePhotoUrl(profile);
+    if (photoUrl != null) {
+      profile['profile_photo_url'] = photoUrl;
+    }
+  }
+
   static Future<Map<String, dynamic>> getProfileList({
     int? ageFrom,
     int? ageTo,
