@@ -51,9 +51,10 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
       }
 
       if (firstError != null) {
+        final errorResponse = firstError;
         setState(() {
           _errorMessage = _responseMessage(
-            firstError,
+            errorResponse,
             AppStrings.profileListsLoadFailed,
           );
           _isLoading = false;
