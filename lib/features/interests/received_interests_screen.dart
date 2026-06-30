@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
+import '../../core/profile_photo_view.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
 /// ===============================
@@ -9,7 +10,8 @@ class ReceivedInterestsScreen extends StatefulWidget {
   const ReceivedInterestsScreen({super.key});
 
   @override
-  State<ReceivedInterestsScreen> createState() => _ReceivedInterestsScreenState();
+  State<ReceivedInterestsScreen> createState() =>
+      _ReceivedInterestsScreenState();
 }
 
 class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
@@ -92,7 +94,8 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
         // Refresh the list
         _fetchReceivedInterests();
       } else {
-        final errorMessage = response['message'] ?? 'Interest accept करता आला नाही.';
+        final errorMessage =
+            response['message'] ?? 'Interest accept करता आला नाही.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ $errorMessage'),
@@ -131,7 +134,8 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
         // Refresh the list
         _fetchReceivedInterests();
       } else {
-        final errorMessage = response['message'] ?? 'Interest reject करता आला नाही.';
+        final errorMessage =
+            response['message'] ?? 'Interest reject करता आला नाही.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ $errorMessage'),
@@ -182,9 +186,7 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Received Interests'),
-      ),
+      appBar: AppBar(title: const Text('Received Interests')),
       body: _buildBody(),
     );
   }
@@ -219,10 +221,7 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
 
     if (_interests.isEmpty) {
       return const Center(
-        child: Text(
-          'No received interests.',
-          style: TextStyle(fontSize: 16),
-        ),
+        child: Text('No received interests.', style: TextStyle(fontSize: 16)),
       );
     }
 
@@ -233,7 +232,8 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
         itemCount: _interests.length,
         itemBuilder: (context, index) {
           final interest = _interests[index] as Map<String, dynamic>;
-          final senderProfile = interest['sender_profile'] as Map<String, dynamic>?;
+          final senderProfile =
+              interest['sender_profile'] as Map<String, dynamic>?;
           final status = interest['status']?.toString();
           final interestId = interest['id'] as int?;
 
@@ -242,7 +242,8 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
           }
 
           final photoUrl = ApiClient.resolveProfilePhotoUrl(senderProfile);
-          final senderName = senderProfile['full_name']?.toString() ?? 'Unknown';
+          final senderName =
+              senderProfile['full_name']?.toString() ?? 'Unknown';
           final senderProfileId = senderProfile['id'] as int?;
 
           return Card(
@@ -260,18 +261,22 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ProfileDetailScreen(profileId: senderProfileId),
+                                builder: (_) => ProfileDetailScreen(
+                                  profileId: senderProfileId,
+                                ),
                               ),
                             );
                           }
                         : null,
-                    child: CircleAvatar(
-                      radius: 40,
+                    child: ProfilePhotoView(
+                      photoUrl: photoUrl,
+                      width: 80,
+                      height: 80,
+                      circle: true,
                       backgroundColor: Colors.grey.shade300,
-                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                      child: photoUrl == null
-                          ? const Icon(Icons.person, size: 40, color: Colors.grey)
-                          : null,
+                      placeholderColor: Colors.grey,
+                      placeholderIcon: Icons.person,
+                      placeholderSize: 40,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -286,7 +291,9 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => ProfileDetailScreen(profileId: senderProfileId),
+                                      builder: (_) => ProfileDetailScreen(
+                                        profileId: senderProfileId,
+                                      ),
                                     ),
                                   );
                                 }
@@ -304,7 +311,10 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
                           children: [
                             const Text(
                               'Status: ',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
                             Text(
                               _getStatusText(status),
@@ -329,7 +339,9 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.green,
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
                                   ),
                                   child: const Text('Accept'),
                                 ),
@@ -343,7 +355,9 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: Colors.red,
                                     foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
                                   ),
                                   child: const Text('Reject'),
                                 ),

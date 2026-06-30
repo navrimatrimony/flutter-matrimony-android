@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/app_strings.dart';
+import '../../../core/profile_photo_view.dart';
 
 class ProfileComparisonData {
   final String title;
@@ -412,31 +413,16 @@ class _ComparisonProfilePhoto extends StatelessWidget {
           ),
         ],
       ),
-      child: ClipRRect(
+      child: ProfilePhotoView(
+        photoUrl: url,
+        width: 62,
+        height: 62,
         borderRadius: BorderRadius.circular(11),
-        child: url == null
-            ? const _ComparisonFallbackAvatar()
-            : Image.network(
-                url,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const _ComparisonFallbackAvatar();
-                },
-              ),
+        backgroundColor: const Color(0xFFF6E7E2),
+        placeholderColor: const Color(0xFF9B1B46),
+        placeholderIcon: Icons.person,
+        placeholderSize: 32,
       ),
-    );
-  }
-}
-
-class _ComparisonFallbackAvatar extends StatelessWidget {
-  const _ComparisonFallbackAvatar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFFF6E7E2),
-      alignment: Alignment.center,
-      child: const Icon(Icons.person, color: Color(0xFF9B1B46), size: 32),
     );
   }
 }

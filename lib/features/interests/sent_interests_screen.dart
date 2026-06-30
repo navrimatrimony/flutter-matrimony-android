@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
+import '../../core/profile_photo_view.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
 /// ===============================
@@ -92,7 +93,8 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
         // Refresh the list
         _fetchSentInterests();
       } else {
-        final errorMessage = response['message'] ?? 'Interest withdraw करता आला नाही.';
+        final errorMessage =
+            response['message'] ?? 'Interest withdraw करता आला नाही.';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ $errorMessage'),
@@ -143,9 +145,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sent Interests'),
-      ),
+      appBar: AppBar(title: const Text('Sent Interests')),
       body: _buildBody(),
     );
   }
@@ -194,7 +194,8 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
         itemCount: _interests.length,
         itemBuilder: (context, index) {
           final interest = _interests[index] as Map<String, dynamic>;
-          final receiverProfile = interest['receiver_profile'] as Map<String, dynamic>?;
+          final receiverProfile =
+              interest['receiver_profile'] as Map<String, dynamic>?;
           final status = interest['status']?.toString();
           final interestId = interest['id'] as int?;
 
@@ -203,7 +204,8 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
           }
 
           final photoUrl = ApiClient.resolveProfilePhotoUrl(receiverProfile);
-          final receiverName = receiverProfile['full_name']?.toString() ?? 'Unknown';
+          final receiverName =
+              receiverProfile['full_name']?.toString() ?? 'Unknown';
           final receiverProfileId = receiverProfile['id'] as int?;
 
           return Card(
@@ -221,18 +223,22 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ProfileDetailScreen(profileId: receiverProfileId),
+                                builder: (_) => ProfileDetailScreen(
+                                  profileId: receiverProfileId,
+                                ),
                               ),
                             );
                           }
                         : null,
-                    child: CircleAvatar(
-                      radius: 40,
+                    child: ProfilePhotoView(
+                      photoUrl: photoUrl,
+                      width: 80,
+                      height: 80,
+                      circle: true,
                       backgroundColor: Colors.grey.shade300,
-                      backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                      child: photoUrl == null
-                          ? const Icon(Icons.person, size: 40, color: Colors.grey)
-                          : null,
+                      placeholderColor: Colors.grey,
+                      placeholderIcon: Icons.person,
+                      placeholderSize: 40,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -247,7 +253,9 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (_) => ProfileDetailScreen(profileId: receiverProfileId),
+                                      builder: (_) => ProfileDetailScreen(
+                                        profileId: receiverProfileId,
+                                      ),
                                     ),
                                   );
                                 }
@@ -265,7 +273,10 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
                           children: [
                             const Text(
                               'Status: ',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey,
+                              ),
                             ),
                             Text(
                               _getStatusText(status),
@@ -289,7 +300,9 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
                                 foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                               ),
                               child: const Text('Withdraw Interest'),
                             ),

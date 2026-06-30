@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import '../../core/profile_photo_view.dart';
 
 class ChatScreen extends StatefulWidget {
   final int? initialConversationId;
@@ -387,15 +388,14 @@ class _ChatScreenState extends State<ChatScreen> {
           padding: const EdgeInsets.all(12),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 27,
+              ProfilePhotoView(
+                photoUrl: photoUrl,
+                width: 54,
+                height: 54,
+                circle: true,
                 backgroundColor: const Color(0xFFE0F2EA),
-                backgroundImage: photoUrl == null
-                    ? null
-                    : NetworkImage(photoUrl),
-                child: photoUrl == null
-                    ? const Icon(Icons.person_outline, color: _chatHeader)
-                    : null,
+                placeholderColor: _chatHeader,
+                placeholderIcon: Icons.person_outline,
               ),
               const SizedBox(width: 12),
               Expanded(

@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
+import '../../core/profile_photo_view.dart';
 import '../../main.dart';
 import '../browse/browse_profiles_screen.dart';
 import '../interests/received_interests_screen.dart';
@@ -775,20 +776,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.white.withValues(alpha: 0.55)),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: photoUrl != null
-          ? Image.network(
-              photoUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(Icons.person, color: Colors.white, size: 38);
-              },
-            )
-          : Icon(
-              hasPhoto ? Icons.person : Icons.add_a_photo_outlined,
-              color: Colors.white,
-              size: 34,
-            ),
+      child: ProfilePhotoView(
+        photoUrl: photoUrl,
+        width: 76,
+        height: 76,
+        borderRadius: BorderRadius.circular(8),
+        backgroundColor: Colors.white.withValues(alpha: 0.18),
+        placeholderColor: Colors.white,
+        placeholderIcon: hasPhoto ? Icons.person : Icons.add_a_photo_outlined,
+        placeholderSize: hasPhoto ? 38 : 34,
+      ),
     );
   }
 

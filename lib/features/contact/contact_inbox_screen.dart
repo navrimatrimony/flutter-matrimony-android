@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import '../../core/profile_photo_view.dart';
 
 class ContactInboxScreen extends StatefulWidget {
   const ContactInboxScreen({super.key});
@@ -301,18 +302,14 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       profile?['profile_photo_url'] ?? profile?['profile_photo'],
     );
 
-    if (photoUrl == null) {
-      return const CircleAvatar(
-        radius: 28,
-        backgroundColor: Color(0xFFF1E7E3),
-        child: Icon(Icons.person_outline, color: Color(0xFF9B1B46)),
-      );
-    }
-
-    return CircleAvatar(
-      radius: 28,
+    return ProfilePhotoView(
+      photoUrl: photoUrl,
+      width: 56,
+      height: 56,
+      circle: true,
       backgroundColor: const Color(0xFFF1E7E3),
-      backgroundImage: NetworkImage(photoUrl),
+      placeholderColor: const Color(0xFF9B1B46),
+      placeholderIcon: Icons.person_outline,
     );
   }
 

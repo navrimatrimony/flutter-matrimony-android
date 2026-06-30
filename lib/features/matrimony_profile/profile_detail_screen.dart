@@ -4071,6 +4071,7 @@ class _ProfilePhotoGalleryViewerState
                       child: Image.network(
                         widget.photos[index].url,
                         fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
                         errorBuilder: (context, error, stackTrace) {
                           return ColoredBox(
                             color: Colors.white.withValues(alpha: 0.10),

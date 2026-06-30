@@ -548,6 +548,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
                 Image.network(
                   url,
                   fit: BoxFit.cover,
+                  alignment: Alignment.topCenter,
                   errorBuilder: (_, _, _) => _photoPlaceholder(status),
                 ),
               Positioned(left: 5, bottom: 5, child: _statusDot(status)),
