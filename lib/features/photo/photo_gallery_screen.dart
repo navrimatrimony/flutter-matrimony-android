@@ -1,4 +1,8 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,20 +19,29 @@ class PhotoGalleryScreen extends StatefulWidget {
 
 class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
   final ImagePicker _picker = ImagePicker();
+  static const int _pendingApprovalRefreshLimit = 2;
+  static const Duration _pendingApprovalRefreshDelay = Duration(seconds: 6);
 
   bool _isLoading = true;
   bool _isUploading = false;
   String? _errorMessage;
   List<Map<String, dynamic>> _photos = <Map<String, dynamic>>[];
   Map<String, dynamic> _meta = <String, dynamic>{};
-  Map<String, dynamic> _verification = <String, dynamic>{};
   int? _selectedPhotoId;
   final Set<int> _busyPhotoIds = <int>{};
+  Timer? _pendingApprovalRefreshTimer;
+  int _pendingApprovalRefreshAttempts = 0;
 
   @override
   void initState() {
     super.initState();
     _loadGallery();
+  }
+
+  @override
+  void dispose() {
+    _pendingApprovalRefreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadGallery() async {
@@ -64,15 +77,19 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
 
   Future<void> _pickAndUpload() async {
     try {
-      final picked = await _picker.pickMultiImage(
+      final picked = await _picker.pickImage(
+        source: ImageSource.gallery,
         imageQuality: 90,
         maxWidth: 1600,
         maxHeight: 2134,
         requestFullMetadata: false,
       );
-      if (picked.isEmpty) return;
+      if (picked == null) return;
 
-      await _uploadFiles(picked.map((item) => File(item.path)).toList());
+      final cropped = await _cropPickedPhoto(File(picked.path));
+      if (cropped == null) return;
+
+      await _uploadFiles(<File>[cropped]);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isUploading = false);
@@ -91,12 +108,39 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
       );
       if (picked == null) return;
 
-      await _uploadFiles(<File>[File(picked.path)]);
+      final cropped = await _cropPickedPhoto(File(picked.path));
+      if (cropped == null) return;
+
+      await _uploadFiles(<File>[cropped]);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isUploading = false);
       _showMessage(e.toString());
     }
+  }
+
+  Future<File?> _cropPickedPhoto(File imageFile) async {
+    final image = await _decodeImage(imageFile);
+    try {
+      if (!mounted) return null;
+      return showModalBottomSheet<File>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => _PhotoCropSheet(image: image),
+      );
+    } finally {
+      image.dispose();
+    }
+  }
+
+  Future<ui.Image> _decodeImage(File imageFile) async {
+    final bytes = await imageFile.readAsBytes();
+    final codec = await ui.instantiateImageCodec(bytes);
+    final frame = await codec.getNextFrame();
+    codec.dispose();
+    return frame.image;
   }
 
   Future<void> _uploadFiles(List<File> files) async {
@@ -116,11 +160,53 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
         _isUploading = false;
       });
       _showMessage(_responseMessage(response, 'Photo upload झाला.'));
+      _schedulePendingApprovalRefresh();
       return;
     }
 
     setState(() => _isUploading = false);
     _showMessage(_responseMessage(response, 'Photo upload fail झाला.'));
+  }
+
+  void _schedulePendingApprovalRefresh() {
+    _pendingApprovalRefreshTimer?.cancel();
+    _pendingApprovalRefreshAttempts = 0;
+    if (!_hasPendingApprovalPhotos) return;
+
+    _pendingApprovalRefreshTimer = Timer(
+      _pendingApprovalRefreshDelay,
+      _refreshPendingApprovalPhotos,
+    );
+  }
+
+  Future<void> _refreshPendingApprovalPhotos() async {
+    if (!mounted || !_hasPendingApprovalPhotos) return;
+    if (_pendingApprovalRefreshAttempts >= _pendingApprovalRefreshLimit) {
+      return;
+    }
+
+    _pendingApprovalRefreshAttempts++;
+
+    try {
+      final response = await ApiClient.getProfilePhotos();
+      if (!mounted) return;
+      if (_responseSuccess(response)) {
+        setState(() => _applyResponse(response));
+      }
+    } catch (_) {
+      // Silent refresh should never interrupt the user's photo flow.
+    }
+
+    if (!mounted) return;
+    if (_hasPendingApprovalPhotos &&
+        _pendingApprovalRefreshAttempts < _pendingApprovalRefreshLimit) {
+      _pendingApprovalRefreshTimer = Timer(
+        _pendingApprovalRefreshDelay,
+        _refreshPendingApprovalPhotos,
+      );
+    } else {
+      _pendingApprovalRefreshTimer = null;
+    }
   }
 
   Future<void> _setPrimary(Map<String, dynamic> photo) async {
@@ -224,7 +310,6 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
   void _applyResponse(Map<String, dynamic> response, {int? preferredPhotoId}) {
     _photos = _safeMapList(response['photos']);
     _meta = _safeMap(response['meta']) ?? <String, dynamic>{};
-    _verification = _safeMap(response['verification']) ?? _verification;
     _syncSelectedPhoto(preferredPhotoId: preferredPhotoId);
   }
 
@@ -260,6 +345,15 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
         title: Text(AppStrings.photosVerification),
         actions: [
           IconButton(
+            tooltip: 'Dashboard',
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/home', (route) => false);
+            },
+            icon: const Icon(Icons.home_outlined),
+          ),
+          IconButton(
             tooltip: AppStrings.refresh,
             onPressed: _isLoading ? null : _loadGallery,
             icon: const Icon(Icons.refresh),
@@ -267,6 +361,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
         ],
       ),
       body: _buildBody(),
+      bottomNavigationBar: _buildBottomActionStrip(),
     );
   }
 
@@ -305,21 +400,73 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     return RefreshIndicator(
       onRefresh: _loadGallery,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 116),
         children: [
-          _buildUploadCard(),
-          const SizedBox(height: 14),
           if (_photos.isEmpty) _buildEmptyState() else _buildPhotoManager(),
           const SizedBox(height: 14),
-          _buildVerificationCard(),
+          _buildUploadGuidanceCard(),
         ],
       ),
     );
   }
 
-  Widget _buildUploadCard() {
+  Widget _buildBottomActionStrip() {
+    final enabled = !_isLoading && _canUpload && !_isUploading;
+
+    return SafeArea(
+      top: false,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 16,
+              offset: const Offset(0, -6),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: enabled ? _pickCameraAndUpload : null,
+                  icon: const Icon(Icons.photo_camera_outlined),
+                  label: Text(AppStrings.camera),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: enabled ? _pickAndUpload : null,
+                  icon: _isUploading
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.photo_library_outlined),
+                  label: Text(_isUploading ? AppStrings.uploading : 'Upload'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(50),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUploadGuidanceCard() {
     final remaining = _intValue(_meta['remaining_slots']);
-    final canUpload = _canUpload;
 
     return _panel(
       title: AppStrings.uploadPhoto,
@@ -344,42 +491,6 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
             'Good light',
             'Safe photo',
           ]),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: canUpload && !_isUploading
-                      ? _pickCameraAndUpload
-                      : null,
-                  icon: const Icon(Icons.photo_camera_outlined),
-                  label: Text(AppStrings.camera),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: canUpload && !_isUploading ? _pickAndUpload : null,
-                  icon: _isUploading
-                      ? const SizedBox(
-                          height: 18,
-                          width: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.photo_library_outlined),
-                  label: Text(
-                    _isUploading ? AppStrings.uploading : AppStrings.gallery,
-                  ),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -597,32 +708,17 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: _canUpload && !_isUploading ? _pickAndUpload : null,
-                icon: const Icon(Icons.swap_horiz_outlined),
-                label: Text(AppStrings.replacePhoto),
-                style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                ),
-              ),
+        if (!_isPrimaryPhoto(photo) || canSetPrimary) ...[
+          FilledButton.icon(
+            onPressed: canSetPrimary ? () => _setPrimary(photo) : null,
+            icon: const Icon(Icons.star_border),
+            label: Text(AppStrings.setPrimary),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(48),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: FilledButton.icon(
-                onPressed: canSetPrimary ? () => _setPrimary(photo) : null,
-                icon: const Icon(Icons.star_border),
-                label: Text(AppStrings.setPrimary),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 10),
+          ),
+          const SizedBox(height: 10),
+        ],
         Row(
           children: [
             if (canReorder && selectedIndex != null) ...[
@@ -661,53 +757,6 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
           const LinearProgressIndicator(minHeight: 2),
         ],
       ],
-    );
-  }
-
-  Widget _buildVerificationCard() {
-    final profile = _safeMap(_verification['profile']) ?? <String, dynamic>{};
-    final account = _safeMap(_verification['account']) ?? <String, dynamic>{};
-    final kyc = _safeMap(_verification['kyc']) ?? <String, dynamic>{};
-    final tags =
-        _safeMap(_verification['verification_tags']) ?? <String, dynamic>{};
-    final verified = _safeMapList(tags['verified']);
-
-    return _panel(
-      title: AppStrings.verificationStatus,
-      icon: Icons.verified_user_outlined,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _statusLine('Profile', _displayValue(profile['lifecycle_state'])),
-          _statusLine('Photo', _displayValue(profile['photo_status'])),
-          _statusLine('Email', _boolText(account['email_verified'])),
-          _statusLine('Mobile', _boolText(account['mobile_verified'])),
-          _statusLine('KYC', _displayValue(kyc['status'])),
-          if ((kyc['message']?.toString().trim() ?? '').isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                kyc['message'].toString(),
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
-            ),
-          if (verified.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: verified
-                  .map(
-                    (row) => Chip(
-                      avatar: const Icon(Icons.check_circle, size: 16),
-                      label: Text(row['label']?.toString() ?? ''),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-        ],
-      ),
     );
   }
 
@@ -849,23 +898,6 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     );
   }
 
-  Widget _statusLine(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-          Text(value),
-        ],
-      ),
-    );
-  }
-
   Map<String, dynamic>? _selectedPhoto() {
     final selectedId = _selectedPhotoId;
     if (selectedId != null) {
@@ -909,6 +941,13 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
   bool get _canUpload {
     final remaining = _intValue(_meta['remaining_slots']);
     return _meta['can_upload'] != false && (remaining ?? 1) > 0;
+  }
+
+  bool get _hasPendingApprovalPhotos {
+    return _photos.any((photo) {
+      final status = _photoStatus(photo);
+      return status == 'pending' || status == 'pending_review';
+    });
   }
 
   bool _photoBusy(Map<String, dynamic> photo) {
@@ -997,16 +1036,6 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     return int.tryParse(value?.toString() ?? '');
   }
 
-  String _boolText(dynamic value) {
-    return value == true ? 'Verified' : 'Not verified';
-  }
-
-  String _displayValue(dynamic value) {
-    final text = value?.toString().trim();
-    if (text == null || text.isEmpty) return AppStrings.settingsNotAvailable;
-    return text;
-  }
-
   void _showMessage(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -1019,4 +1048,519 @@ class _PhotoStatusStyle {
   final Color color;
 
   const _PhotoStatusStyle(this.label, this.color);
+}
+
+enum _PhotoCropDragMode {
+  none,
+  move,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
+
+class _PhotoCropSheet extends StatefulWidget {
+  const _PhotoCropSheet({required this.image});
+
+  final ui.Image image;
+
+  @override
+  State<_PhotoCropSheet> createState() => _PhotoCropSheetState();
+}
+
+class _PhotoCropSheetState extends State<_PhotoCropSheet> {
+  static const double _targetAspectRatio = 3 / 4;
+  static const int _outputWidth = 900;
+  static const int _outputHeight = 1200;
+
+  late Rect _cropRect;
+  Rect? _dragStartRect;
+  _PhotoCropDragMode _dragMode = _PhotoCropDragMode.none;
+  bool _saving = false;
+
+  Size get _imageSize =>
+      Size(widget.image.width.toDouble(), widget.image.height.toDouble());
+
+  @override
+  void initState() {
+    super.initState();
+    _cropRect = _initialCropRect();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.92,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
+          Container(
+            width: 42,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 10, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Adjust 3:4 crop',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: AppStrings.cancel,
+                  onPressed: _saving ? null : () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildCropCanvas(),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+            child: Row(
+              children: [
+                const Icon(Icons.open_with, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Drag the frame. Pull corners to resize.',
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    child: Text(AppStrings.cancel),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _saving ? null : _saveCrop,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check),
+                    label: const Text('Use photo'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCropCanvas() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final imageAspect = widget.image.width / widget.image.height;
+        var width = constraints.maxWidth;
+        var height = width / imageAspect;
+        if (height > constraints.maxHeight) {
+          height = constraints.maxHeight;
+          width = height * imageAspect;
+        }
+
+        final viewSize = Size(width, height);
+        return Center(
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: (details) =>
+                  _startDrag(details.localPosition, viewSize),
+              onPanUpdate: (details) =>
+                  _updateDrag(details.localPosition, details.delta, viewSize),
+              onPanEnd: (_) => _endDrag(),
+              onPanCancel: _endDrag,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  RawImage(image: widget.image, fit: BoxFit.fill),
+                  CustomPaint(
+                    painter: _PhotoCropOverlayPainter(
+                      image: widget.image,
+                      cropRect: _cropRect,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Rect _initialCropRect() {
+    final size = _imageSize;
+    var cropWidth = size.width;
+    var cropHeight = cropWidth / _targetAspectRatio;
+
+    if (cropHeight > size.height) {
+      cropHeight = size.height;
+      cropWidth = cropHeight * _targetAspectRatio;
+    }
+
+    return Rect.fromLTWH(
+      (size.width - cropWidth) / 2,
+      0,
+      cropWidth,
+      cropHeight,
+    );
+  }
+
+  void _startDrag(Offset localPosition, Size viewSize) {
+    final viewRect = _toViewRect(_cropRect, viewSize);
+    _dragMode = _hitTest(localPosition, viewRect);
+    _dragStartRect = _cropRect;
+  }
+
+  void _updateDrag(Offset localPosition, Offset delta, Size viewSize) {
+    final startRect = _dragStartRect;
+    if (startRect == null || _dragMode == _PhotoCropDragMode.none) return;
+
+    setState(() {
+      if (_dragMode == _PhotoCropDragMode.move) {
+        final sourceDelta = Offset(
+          delta.dx * widget.image.width / viewSize.width,
+          delta.dy * widget.image.height / viewSize.height,
+        );
+        _cropRect = _clampRect(_cropRect.shift(sourceDelta));
+        return;
+      }
+
+      final sourcePoint = _toSourcePoint(localPosition, viewSize);
+      _cropRect = _resizeRect(startRect, sourcePoint, _dragMode);
+    });
+  }
+
+  void _endDrag() {
+    _dragMode = _PhotoCropDragMode.none;
+    _dragStartRect = null;
+  }
+
+  _PhotoCropDragMode _hitTest(Offset localPosition, Rect viewRect) {
+    const handleSize = 48.0;
+    final corners = <_PhotoCropDragMode, Offset>{
+      _PhotoCropDragMode.topLeft: viewRect.topLeft,
+      _PhotoCropDragMode.topRight: viewRect.topRight,
+      _PhotoCropDragMode.bottomLeft: viewRect.bottomLeft,
+      _PhotoCropDragMode.bottomRight: viewRect.bottomRight,
+    };
+
+    for (final entry in corners.entries) {
+      final handle = Rect.fromCenter(
+        center: entry.value,
+        width: handleSize,
+        height: handleSize,
+      );
+      if (handle.contains(localPosition)) return entry.key;
+    }
+
+    if (viewRect.contains(localPosition)) return _PhotoCropDragMode.move;
+    return _PhotoCropDragMode.none;
+  }
+
+  Rect _resizeRect(
+    Rect startRect,
+    Offset sourcePoint,
+    _PhotoCropDragMode mode,
+  ) {
+    final point = _clampPoint(sourcePoint);
+
+    return switch (mode) {
+      _PhotoCropDragMode.topLeft => _rectFromBottomRight(
+        startRect.bottomRight,
+        point,
+      ),
+      _PhotoCropDragMode.topRight => _rectFromBottomLeft(
+        startRect.bottomLeft,
+        point,
+      ),
+      _PhotoCropDragMode.bottomLeft => _rectFromTopRight(
+        startRect.topRight,
+        point,
+      ),
+      _PhotoCropDragMode.bottomRight => _rectFromTopLeft(
+        startRect.topLeft,
+        point,
+      ),
+      _ => startRect,
+    };
+  }
+
+  Rect _rectFromTopLeft(Offset origin, Offset point) {
+    final maxWidth = _imageSize.width - origin.dx;
+    final maxHeight = _imageSize.height - origin.dy;
+    final size = _fitCropSize(point.dx - origin.dx, maxWidth, maxHeight);
+    return Rect.fromLTWH(origin.dx, origin.dy, size.width, size.height);
+  }
+
+  Rect _rectFromTopRight(Offset origin, Offset point) {
+    final maxWidth = origin.dx;
+    final maxHeight = _imageSize.height - origin.dy;
+    final size = _fitCropSize(origin.dx - point.dx, maxWidth, maxHeight);
+    return Rect.fromLTWH(
+      origin.dx - size.width,
+      origin.dy,
+      size.width,
+      size.height,
+    );
+  }
+
+  Rect _rectFromBottomLeft(Offset origin, Offset point) {
+    final maxWidth = _imageSize.width - origin.dx;
+    final maxHeight = origin.dy;
+    final size = _fitCropSize(point.dx - origin.dx, maxWidth, maxHeight);
+    return Rect.fromLTWH(
+      origin.dx,
+      origin.dy - size.height,
+      size.width,
+      size.height,
+    );
+  }
+
+  Rect _rectFromBottomRight(Offset origin, Offset point) {
+    final maxWidth = origin.dx;
+    final maxHeight = origin.dy;
+    final size = _fitCropSize(origin.dx - point.dx, maxWidth, maxHeight);
+    return Rect.fromLTWH(
+      origin.dx - size.width,
+      origin.dy - size.height,
+      size.width,
+      size.height,
+    );
+  }
+
+  Size _fitCropSize(double rawWidth, double maxWidth, double maxHeight) {
+    final maxRatioWidth = math.max(
+      1.0,
+      math.min(maxWidth, maxHeight * _targetAspectRatio),
+    );
+    final minWidth = math.min(maxRatioWidth, _minimumCropWidth);
+    final width = rawWidth.abs().clamp(minWidth, maxRatioWidth);
+    return Size(width, width / _targetAspectRatio);
+  }
+
+  double get _minimumCropWidth {
+    final size = _imageSize;
+    final fullRatioWidth = math.min(
+      size.width,
+      size.height * _targetAspectRatio,
+    );
+    return fullRatioWidth * 0.28;
+  }
+
+  Rect _clampRect(Rect rect) {
+    final size = _imageSize;
+    final left = rect.left
+        .clamp(0.0, math.max(0.0, size.width - rect.width))
+        .toDouble();
+    final top = rect.top
+        .clamp(0.0, math.max(0.0, size.height - rect.height))
+        .toDouble();
+    return Rect.fromLTWH(left, top, rect.width, rect.height);
+  }
+
+  Offset _clampPoint(Offset point) {
+    return Offset(
+      point.dx.clamp(0.0, _imageSize.width).toDouble(),
+      point.dy.clamp(0.0, _imageSize.height).toDouble(),
+    );
+  }
+
+  Offset _toSourcePoint(Offset localPosition, Size viewSize) {
+    return _clampPoint(
+      Offset(
+        localPosition.dx * widget.image.width / viewSize.width,
+        localPosition.dy * widget.image.height / viewSize.height,
+      ),
+    );
+  }
+
+  Rect _toViewRect(Rect sourceRect, Size viewSize) {
+    return Rect.fromLTRB(
+      sourceRect.left * viewSize.width / widget.image.width,
+      sourceRect.top * viewSize.height / widget.image.height,
+      sourceRect.right * viewSize.width / widget.image.width,
+      sourceRect.bottom * viewSize.height / widget.image.height,
+    );
+  }
+
+  Future<void> _saveCrop() async {
+    setState(() => _saving = true);
+    try {
+      final file = await _writeCroppedImage();
+      if (!mounted) return;
+      Navigator.pop(context, file);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(e.toString())));
+    }
+  }
+
+  Future<File> _writeCroppedImage() async {
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    final outputRect = Rect.fromLTWH(
+      0,
+      0,
+      _outputWidth.toDouble(),
+      _outputHeight.toDouble(),
+    );
+
+    canvas.drawImageRect(
+      widget.image,
+      _cropRect,
+      outputRect,
+      ui.Paint()..filterQuality = ui.FilterQuality.high,
+    );
+
+    final picture = recorder.endRecording();
+    final croppedImage = await picture.toImage(_outputWidth, _outputHeight);
+    picture.dispose();
+
+    final byteData = await croppedImage.toByteData(
+      format: ui.ImageByteFormat.png,
+    );
+    croppedImage.dispose();
+
+    if (byteData == null) {
+      throw StateError('Crop encoding failed.');
+    }
+
+    final bytes = Uint8List.view(byteData.buffer);
+    final file = File(
+      '${Directory.systemTemp.path}${Platform.pathSeparator}'
+      'matrimony_photo_crop_${DateTime.now().millisecondsSinceEpoch}.png',
+    );
+    await file.writeAsBytes(bytes, flush: true);
+    return file;
+  }
+}
+
+class _PhotoCropOverlayPainter extends CustomPainter {
+  const _PhotoCropOverlayPainter({required this.image, required this.cropRect});
+
+  final ui.Image image;
+  final Rect cropRect;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final viewRect = Rect.fromLTRB(
+      cropRect.left * size.width / image.width,
+      cropRect.top * size.height / image.height,
+      cropRect.right * size.width / image.width,
+      cropRect.bottom * size.height / image.height,
+    );
+
+    final overlayPath = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size)
+      ..addRRect(RRect.fromRectAndRadius(viewRect, const Radius.circular(8)));
+
+    canvas.drawPath(
+      overlayPath,
+      Paint()..color = Colors.black.withValues(alpha: 0.46),
+    );
+
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(viewRect, const Radius.circular(8)),
+      borderPaint,
+    );
+
+    final guidePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.62)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    for (var i = 1; i < 3; i++) {
+      final dx = viewRect.left + viewRect.width * i / 3;
+      canvas.drawLine(
+        Offset(dx, viewRect.top),
+        Offset(dx, viewRect.bottom),
+        guidePaint,
+      );
+      final dy = viewRect.top + viewRect.height * i / 3;
+      canvas.drawLine(
+        Offset(viewRect.left, dy),
+        Offset(viewRect.right, dy),
+        guidePaint,
+      );
+    }
+
+    final handlePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    for (final corner in <Offset>[
+      viewRect.topLeft,
+      viewRect.topRight,
+      viewRect.bottomLeft,
+      viewRect.bottomRight,
+    ]) {
+      canvas.drawCircle(corner, 8, handlePaint);
+      canvas.drawCircle(
+        corner,
+        8,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.18)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PhotoCropOverlayPainter oldDelegate) {
+    return oldDelegate.image != image || oldDelegate.cropRect != cropRect;
+  }
 }
