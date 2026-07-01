@@ -21,6 +21,27 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   static const Color _muted = Color(0xFF786A64);
   static const Color _surface = Color(0xFFFFFBF7);
   static const Color _border = Color(0xFFE7DAD4);
+  static const Set<String> _integerCoreKeys = <String>{
+    'gender_id',
+    'height_cm',
+    'marital_status_id',
+    'mother_tongue_id',
+    'religion_id',
+    'caste_id',
+    'sub_caste_id',
+    'location_id',
+    'working_with_type_id',
+    'occupation_master_id',
+    'annual_income',
+    'income_amount',
+    'income_min_amount',
+    'income_max_amount',
+    'income_currency_id',
+    'diet_id',
+    'smoking_status_id',
+    'drinking_status_id',
+    'physical_build_id',
+  };
 
   final ImagePicker _picker = ImagePicker();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -101,8 +122,8 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
         _rawText = normalizedText;
         _intake = intake;
         _snapshot = _snapshotFromPreview(preview);
-        _fields = _fieldsFromSnapshot(_snapshot);
-        _errorMessage = _fields.isEmpty
+        _fields = _onboardingFieldsFromPreview(preview);
+        _errorMessage = !_hasSaveableDraft
             ? AppStrings.biodataIntakeFieldsEmpty
             : null;
       });
@@ -155,7 +176,7 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   }
 
   Future<void> _approveSnapshot() async {
-    if (_processing || _saving || _fields.isEmpty) return;
+    if (_processing || _saving || !_hasSaveableDraft) return;
     if (!(_formKey.currentState?.validate() ?? false)) return;
     _formKey.currentState?.save();
 
@@ -208,27 +229,28 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   }
 
   Map<String, dynamic> _editedSnapshot() {
-    final snapshot = Map<String, dynamic>.from(_snapshot);
-    snapshot['snapshot_schema_version'] =
-        snapshot['snapshot_schema_version'] ?? 1;
-
-    final core = Map<String, dynamic>.from(_safeMap(snapshot['core']) ?? {});
+    final core = <String, dynamic>{};
     for (final field in _fields) {
-      final value = field.value.trim();
-      if (value.isEmpty) {
-        core.remove(field.key);
-      } else {
-        core[field.key] = _coerceFieldValue(field.key, value);
+      if (!field.saveEnabled) continue;
+
+      final value = field.editable
+          ? _coerceFieldValue(field.key, field.value.trim())
+          : field.saveValue;
+      if (!_isEmptyDraftValue(value)) {
+        core[field.key] = value;
       }
     }
-    snapshot['core'] = core;
 
-    return snapshot;
+    return <String, dynamic>{
+      'snapshot_schema_version':
+          _intValue(_snapshot['snapshot_schema_version']) ?? 1,
+      'core': core,
+    };
   }
 
   dynamic _coerceFieldValue(String key, String value) {
-    if (key == 'height_cm' || key == 'annual_income') {
-      return int.tryParse(value.replaceAll(RegExp(r'[^0-9]'), '')) ?? value;
+    if (_integerCoreKeys.contains(key)) {
+      return _cleanInteger(value) ?? value;
     }
     return value;
   }
@@ -246,178 +268,567 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     return <String, dynamic>{'snapshot_schema_version': 1, 'core': {}};
   }
 
-  List<_DraftField> _fieldsFromSnapshot(Map<String, dynamic> snapshot) {
-    final core = _safeMap(snapshot['core']) ?? <String, dynamic>{};
+  bool get _hasSaveableDraft =>
+      _fields.any((field) => field.saveEnabled && field.key.isNotEmpty);
+
+  List<_DraftField> _onboardingFieldsFromPreview(
+    Map<String, dynamic>? preview,
+  ) {
+    final snapshot = _snapshotFromPreview(preview);
+    final rawDraft = _rawDraftFromPreview(preview);
+    final core = _mergedCoreFromPreview(snapshot, rawDraft);
+    final address = _firstCurrentAddress(snapshot, rawDraft);
     final fields = <_DraftField>[];
-    final usedKeys = <String>{};
 
-    for (final seed in _preferredSeeds()) {
-      final found = seed.sourceKeys
-          .map((key) => MapEntry(key, _stringValue(core[key])))
-          .firstWhere(
-            (entry) => entry.value != null,
-            orElse: () => const MapEntry('', null),
-          );
-      if (found.value == null) continue;
-
+    void addText({
+      required String section,
+      required String key,
+      required String label,
+      required List<String> sourceKeys,
+      TextInputType keyboardType = TextInputType.text,
+      int maxLines = 1,
+    }) {
+      final value = _firstString(core, sourceKeys);
+      if (value == null) return;
       fields.add(
         _DraftField(
-          key: seed.key,
-          label: seed.label,
-          value: found.value!,
-          keyboardType: seed.keyboardType,
-          maxLines: seed.maxLines,
+          section: section,
+          key: key,
+          label: label,
+          value: value,
+          keyboardType: keyboardType,
+          maxLines: maxLines,
         ),
       );
-      usedKeys.addAll(seed.sourceKeys);
-      usedKeys.add(seed.key);
     }
 
-    for (final entry in core.entries) {
-      final key = entry.key.toString();
-      if (usedKeys.contains(key) || !_showExtraCoreField(key, entry.value)) {
-        continue;
+    void addParsedInteger({
+      required String section,
+      required String key,
+      required String label,
+      required List<String> sourceKeys,
+      required int? Function(String? value) parser,
+    }) {
+      final rawValue = _firstString(core, sourceKeys);
+      final parsedValue = parser(rawValue);
+      if (parsedValue != null) {
+        fields.add(
+          _DraftField(
+            section: section,
+            key: key,
+            label: label,
+            value: parsedValue.toString(),
+            helperText: rawValue != null && rawValue != parsedValue.toString()
+                ? rawValue
+                : null,
+            keyboardType: TextInputType.number,
+          ),
+        );
+        return;
+      }
+      if (rawValue == null) return;
+      fields.add(
+        _DraftField.note(
+          section: section,
+          label: label,
+          value: rawValue,
+          helperText: _text(
+            'Detected text needs numeric review before saving',
+            'Save करण्याआधी हा आकडा तपासावा लागेल',
+          ),
+        ),
+      );
+    }
+
+    void addControlled({
+      required String section,
+      required String idKey,
+      required String label,
+      required List<String> idKeys,
+      required List<String> labelKeys,
+      String? textFallbackKey,
+    }) {
+      final id = _firstInt(core, idKeys);
+      final displayLabel = _firstDisplayLabel(core, labelKeys);
+      if (id != null && id > 0) {
+        fields.add(
+          _DraftField.readOnly(
+            section: section,
+            key: idKey,
+            label: label,
+            value: displayLabel ?? _selectedIdLabel(id),
+            saveValue: id,
+          ),
+        );
+        return;
       }
 
-      final value = _stringValue(entry.value);
-      if (value == null) continue;
+      if (displayLabel == null) return;
       fields.add(
-        _DraftField(
-          key: key,
-          label: _fieldLabel(key),
-          value: value,
-          maxLines: value.length > 70 ? 3 : 1,
-        ),
+        textFallbackKey == null
+            ? _DraftField.note(
+                section: section,
+                label: label,
+                value: displayLabel,
+                helperText: _text(
+                  'Needs selection before saving',
+                  'Save करण्याआधी निवड करावी लागेल',
+                ),
+              )
+            : _DraftField(
+                section: section,
+                key: textFallbackKey,
+                label: label,
+                value: displayLabel,
+              ),
       );
-      if (fields.length >= 18) break;
     }
+
+    final basic = _text('Basic details', 'मूलभूत माहिती');
+    final community = _text('Community', 'समुदाय');
+    final residence = _text('Residence', 'राहण्याचे ठिकाण');
+    final career = _text('Education & career', 'शिक्षण आणि करिअर');
+    final lifestyle = _text('Lifestyle', 'जीवनशैली');
+
+    addText(
+      section: basic,
+      key: 'full_name',
+      label: AppStrings.name,
+      sourceKeys: const <String>['full_name', 'name', 'candidate_name'],
+      keyboardType: TextInputType.name,
+    );
+    addControlled(
+      section: basic,
+      idKey: 'gender_id',
+      label: _text('Gender', 'लिंग'),
+      idKeys: const <String>['gender_id'],
+      labelKeys: const <String>['gender', 'gender_label', 'gender_option'],
+    );
+    addText(
+      section: basic,
+      key: 'date_of_birth',
+      label: AppStrings.dateOfBirth,
+      sourceKeys: const <String>['date_of_birth', 'dob', 'birth_date'],
+      keyboardType: TextInputType.datetime,
+    );
+    addParsedInteger(
+      section: basic,
+      key: 'height_cm',
+      label: _text('Height', 'उंची'),
+      sourceKeys: const <String>['height_cm', 'height', 'height_text'],
+      parser: _parseHeightCm,
+    );
+    addControlled(
+      section: basic,
+      idKey: 'marital_status_id',
+      label: _text('Marital status', 'वैवाहिक स्थिती'),
+      idKeys: const <String>['marital_status_id'],
+      labelKeys: const <String>[
+        'marital_status',
+        'marital_status_label',
+        'marital_status_option',
+      ],
+      textFallbackKey: 'marital_status',
+    );
+    addControlled(
+      section: community,
+      idKey: 'mother_tongue_id',
+      label: _text('Mother tongue', 'मातृभाषा'),
+      idKeys: const <String>['mother_tongue_id'],
+      labelKeys: const <String>[
+        'mother_tongue',
+        'mother_tongue_label',
+        'mother_tongue_option',
+      ],
+      textFallbackKey: 'mother_tongue',
+    );
+    addControlled(
+      section: community,
+      idKey: 'religion_id',
+      label: _text('Religion', 'धर्म'),
+      idKeys: const <String>['religion_id'],
+      labelKeys: const <String>[
+        'religion',
+        'religion_label',
+        'religion_option',
+      ],
+      textFallbackKey: 'religion',
+    );
+    addControlled(
+      section: community,
+      idKey: 'caste_id',
+      label: AppStrings.caste,
+      idKeys: const <String>['caste_id'],
+      labelKeys: const <String>['caste', 'caste_label', 'caste_option'],
+      textFallbackKey: 'caste',
+    );
+    addControlled(
+      section: community,
+      idKey: 'sub_caste_id',
+      label: _text('Sub caste', 'पोटजात'),
+      idKeys: const <String>['sub_caste_id'],
+      labelKeys: const <String>[
+        'sub_caste',
+        'sub_caste_label',
+        'sub_caste_option',
+      ],
+      textFallbackKey: 'sub_caste',
+    );
+
+    _addLocationField(fields, residence, core, address);
+
+    addText(
+      section: career,
+      key: 'highest_education',
+      label: AppStrings.education,
+      sourceKeys: const <String>[
+        'highest_education',
+        'education',
+        'education_text',
+      ],
+    );
+    addControlled(
+      section: career,
+      idKey: 'working_with_type_id',
+      label: _text('Working with', 'कामाचे स्वरूप'),
+      idKeys: const <String>['working_with_type_id'],
+      labelKeys: const <String>[
+        'working_with',
+        'working_with_label',
+        'working_with_type',
+      ],
+    );
+    addControlled(
+      section: career,
+      idKey: 'occupation_master_id',
+      label: _text('Occupation', 'व्यवसाय'),
+      idKeys: const <String>['occupation_master_id'],
+      labelKeys: const <String>[
+        'occupation_title',
+        'occupation',
+        'profession',
+        'profession_label',
+      ],
+      textFallbackKey: 'occupation_title',
+    );
+    addText(
+      section: career,
+      key: 'company_name',
+      label: _text('Company', 'कंपनी'),
+      sourceKeys: const <String>['company_name'],
+    );
+    addText(
+      section: career,
+      key: 'work_location_text',
+      label: _text('Work location', 'कामाचे ठिकाण'),
+      sourceKeys: const <String>['work_location_text', 'work_location'],
+    );
+    addParsedInteger(
+      section: career,
+      key: 'annual_income',
+      label: _text('Annual income', 'वार्षिक उत्पन्न'),
+      sourceKeys: const <String>[
+        'annual_income',
+        'income_normalized_annual_amount',
+        'income_amount',
+      ],
+      parser: _cleanInteger,
+    );
+    addText(
+      section: career,
+      key: 'income_period',
+      label: _text('Income period', 'उत्पन्न कालावधी'),
+      sourceKeys: const <String>['income_period'],
+    );
+    addText(
+      section: career,
+      key: 'income_value_type',
+      label: _text('Income type', 'उत्पन्न प्रकार'),
+      sourceKeys: const <String>['income_value_type'],
+    );
+
+    addControlled(
+      section: lifestyle,
+      idKey: 'diet_id',
+      label: _text('Diet', 'आहार'),
+      idKeys: const <String>['diet_id'],
+      labelKeys: const <String>['diet', 'diet_label', 'diet_option'],
+      textFallbackKey: 'diet',
+    );
+    addControlled(
+      section: lifestyle,
+      idKey: 'smoking_status_id',
+      label: _text('Smoking', 'धूम्रपान'),
+      idKeys: const <String>['smoking_status_id'],
+      labelKeys: const <String>[
+        'smoking_status',
+        'smoking',
+        'smoking_status_label',
+      ],
+      textFallbackKey: 'smoking_status',
+    );
+    addControlled(
+      section: lifestyle,
+      idKey: 'drinking_status_id',
+      label: _text('Drinking', 'मद्यपान'),
+      idKeys: const <String>['drinking_status_id'],
+      labelKeys: const <String>[
+        'drinking_status',
+        'drinking',
+        'drinking_status_label',
+      ],
+      textFallbackKey: 'drinking_status',
+    );
+    addControlled(
+      section: lifestyle,
+      idKey: 'physical_build_id',
+      label: _text('Physical build', 'शारीरिक बांधा'),
+      idKeys: const <String>['physical_build_id'],
+      labelKeys: const <String>[
+        'physical_build',
+        'physical_build_label',
+        'physical_build_option',
+      ],
+      textFallbackKey: 'physical_build',
+    );
+    addText(
+      section: lifestyle,
+      key: 'spectacles_lens',
+      label: _text('Spectacles / lens', 'चष्मा / लेन्स'),
+      sourceKeys: const <String>['spectacles_lens'],
+    );
 
     return fields;
   }
 
-  List<_DraftFieldSeed> _preferredSeeds() {
-    return <_DraftFieldSeed>[
-      _DraftFieldSeed(
-        key: 'full_name',
-        label: AppStrings.name,
-        sourceKeys: const <String>['full_name', 'name', 'candidate_name'],
-        keyboardType: TextInputType.name,
+  void _addLocationField(
+    List<_DraftField> fields,
+    String section,
+    Map<String, dynamic> core,
+    Map<String, dynamic>? address,
+  ) {
+    final locationId =
+        _firstInt(core, const <String>['location_id', 'city_id']) ??
+        _firstInt(address, const <String>['location_id', 'city_id']);
+    final label =
+        _firstDisplayLabel(core, const <String>[
+          'location_label',
+          'location_option',
+          'location',
+          'city',
+          'city_name',
+          'address_line',
+        ]) ??
+        _firstDisplayLabel(address, const <String>[
+          'label',
+          'display_label',
+          'location',
+          'city',
+          'city_name',
+          'address_line',
+          'raw',
+        ]);
+
+    if (locationId != null && locationId > 0) {
+      fields.add(
+        _DraftField.readOnly(
+          section: section,
+          key: 'location_id',
+          label: _text('Residence location', 'राहण्याचे ठिकाण'),
+          value: label ?? _selectedIdLabel(locationId),
+          saveValue: locationId,
+        ),
+      );
+      final addressLine =
+          _firstString(core, const <String>['address_line']) ??
+          _firstString(address, const <String>['address_line', 'raw']);
+      if (addressLine != null) {
+        fields.add(
+          _DraftField(
+            section: section,
+            key: 'address_line',
+            label: _text('Address line', 'पत्ता'),
+            value: addressLine,
+            maxLines: addressLine.length > 70 ? 2 : 1,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (label == null) return;
+    fields.add(
+      _DraftField.note(
+        section: section,
+        label: _text('Detected location', 'ओळखलेले ठिकाण'),
+        value: label,
+        helperText: _text(
+          'Match a residence location before saving',
+          'Save करण्याआधी राहण्याचे ठिकाण निवडावे लागेल',
+        ),
       ),
-      _DraftFieldSeed(
-        key: 'date_of_birth',
-        label: AppStrings.dateOfBirth,
-        sourceKeys: const <String>['date_of_birth', 'dob', 'birth_date'],
-        keyboardType: TextInputType.datetime,
-      ),
-      _DraftFieldSeed(
-        key: 'birth_time',
-        label: AppStrings.isMarathi ? 'जन्मवेळ' : 'Birth time',
-        sourceKeys: const <String>['birth_time'],
-        keyboardType: TextInputType.datetime,
-      ),
-      _DraftFieldSeed(
-        key: 'birth_place',
-        label: AppStrings.isMarathi ? 'जन्म ठिकाण' : 'Birth place',
-        sourceKeys: const <String>['birth_place', 'birth_place_text'],
-      ),
-      _DraftFieldSeed(
-        key: 'height_cm',
-        label: AppStrings.isMarathi ? 'उंची' : 'Height',
-        sourceKeys: const <String>['height_cm', 'height'],
-        keyboardType: TextInputType.number,
-      ),
-      _DraftFieldSeed(
-        key: 'education',
-        label: AppStrings.education,
-        sourceKeys: const <String>[
-          'education',
-          'highest_education',
-          'education_text',
-        ],
-      ),
-      _DraftFieldSeed(
-        key: 'profession',
-        label: AppStrings.isMarathi ? 'व्यवसाय' : 'Profession',
-        sourceKeys: const <String>[
-          'profession',
-          'occupation',
-          'occupation_text',
-        ],
-      ),
-      _DraftFieldSeed(
-        key: 'company_name',
-        label: AppStrings.isMarathi ? 'कंपनी' : 'Company',
-        sourceKeys: const <String>['company_name'],
-      ),
-      _DraftFieldSeed(
-        key: 'annual_income',
-        label: AppStrings.isMarathi ? 'वार्षिक उत्पन्न' : 'Annual income',
-        sourceKeys: const <String>['annual_income', 'income'],
-        keyboardType: TextInputType.number,
-      ),
-      _DraftFieldSeed(
-        key: 'religion',
-        label: AppStrings.isMarathi ? 'धर्म' : 'Religion',
-        sourceKeys: const <String>['religion'],
-      ),
-      _DraftFieldSeed(
-        key: 'caste',
-        label: AppStrings.caste,
-        sourceKeys: const <String>['caste'],
-      ),
-      _DraftFieldSeed(
-        key: 'sub_caste',
-        label: AppStrings.isMarathi ? 'पोटजात' : 'Sub caste',
-        sourceKeys: const <String>['sub_caste'],
-      ),
-      _DraftFieldSeed(
-        key: 'gotra',
-        label: AppStrings.isMarathi ? 'गोत्र' : 'Gotra',
-        sourceKeys: const <String>['gotra'],
-      ),
-      _DraftFieldSeed(
-        key: 'rashi',
-        label: AppStrings.isMarathi ? 'राशी' : 'Rashi',
-        sourceKeys: const <String>['rashi'],
-      ),
-      _DraftFieldSeed(
-        key: 'nakshatra',
-        label: AppStrings.isMarathi ? 'नक्षत्र' : 'Nakshatra',
-        sourceKeys: const <String>['nakshatra'],
-      ),
-      _DraftFieldSeed(
-        key: 'father_name',
-        label: AppStrings.isMarathi ? 'वडिलांचे नाव' : 'Father name',
-        sourceKeys: const <String>['father_name'],
-      ),
-      _DraftFieldSeed(
-        key: 'mother_name',
-        label: AppStrings.isMarathi ? 'आईचे नाव' : 'Mother name',
-        sourceKeys: const <String>['mother_name'],
-      ),
-      _DraftFieldSeed(
-        key: 'other_relatives_text',
-        label: AppStrings.isMarathi ? 'नातेवाईक' : 'Relatives',
-        sourceKeys: const <String>['other_relatives_text'],
-        maxLines: 3,
-      ),
-    ];
+    );
   }
 
-  bool _showExtraCoreField(String key, dynamic value) {
-    if (value is Map || value is List) return false;
-    if (key == 'primary_contact_number') return false;
-    if (key.endsWith('_id') || key.endsWith('_ids')) return false;
-    if (key.endsWith('_suggestion_applied')) return false;
-    if (key.startsWith('_')) return false;
-    return _stringValue(value) != null;
+  Map<String, dynamic>? _rawDraftFromPreview(Map<String, dynamic>? preview) {
+    final normalizedDraft = _safeMap(preview?['normalized_draft']);
+    return _safeMap(normalizedDraft?['raw_draft_json']);
   }
 
-  String _fieldLabel(String key) {
-    final normalized = key.replaceAll('_', ' ').trim();
-    if (normalized.isEmpty) return AppStrings.noInformation;
-    return normalized[0].toUpperCase() + normalized.substring(1);
+  Map<String, dynamic> _mergedCoreFromPreview(
+    Map<String, dynamic> snapshot,
+    Map<String, dynamic>? rawDraft,
+  ) {
+    final core = <String, dynamic>{};
+    final rawCore = _safeMap(rawDraft?['core']);
+    if (rawCore != null) core.addAll(rawCore);
+    final snapshotCore = _safeMap(snapshot['core']);
+    if (snapshotCore != null) core.addAll(snapshotCore);
+    return core;
   }
+
+  Map<String, dynamic>? _firstCurrentAddress(
+    Map<String, dynamic> snapshot,
+    Map<String, dynamic>? rawDraft,
+  ) {
+    final candidates = <Map<String, dynamic>>[];
+    for (final source in <Map<String, dynamic>?>[snapshot, rawDraft]) {
+      final addresses = source?['addresses'];
+      if (addresses is! List) continue;
+      for (final row in addresses) {
+        final map = _safeMap(row);
+        if (map != null) candidates.add(map);
+      }
+    }
+    if (candidates.isEmpty) return null;
+
+    bool hasResidenceValue(Map<String, dynamic> row) {
+      return _firstInt(row, const <String>['location_id', 'city_id']) != null ||
+          _firstString(row, const <String>['address_line', 'raw']) != null;
+    }
+
+    bool isSelfCurrent(Map<String, dynamic> row) {
+      final scope =
+          _stringValue(row['address_scope'] ?? row['scope']) ?? 'self';
+      final type =
+          _stringValue(
+            row['type'] ?? row['address_type_key'] ?? row['address_type'],
+          ) ??
+          'current';
+      return (scope == 'self' || scope.isEmpty) &&
+          (type == 'current' || type.isEmpty);
+    }
+
+    for (final row in candidates) {
+      if (isSelfCurrent(row) && hasResidenceValue(row)) return row;
+    }
+    for (final row in candidates) {
+      if (hasResidenceValue(row)) return row;
+    }
+    return null;
+  }
+
+  String? _firstString(Map<String, dynamic>? values, List<String> keys) {
+    if (values == null) return null;
+    for (final key in keys) {
+      final value = _stringValue(values[key]);
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  int? _firstInt(Map<String, dynamic>? values, List<String> keys) {
+    if (values == null) return null;
+    for (final key in keys) {
+      final value = _intFromValue(values[key]);
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  int? _intFromValue(dynamic value) {
+    if (value is Map) {
+      for (final key in const <String>['id', 'value', 'key', 'location_id']) {
+        final id = _intValue(value[key]);
+        if (id != null) return id;
+      }
+      return null;
+    }
+    return _intValue(value);
+  }
+
+  String? _firstDisplayLabel(Map<String, dynamic>? values, List<String> keys) {
+    if (values == null) return null;
+    for (final key in keys) {
+      final value = _displayLabelFromValue(values[key]);
+      if (value != null) return value;
+    }
+    return null;
+  }
+
+  String? _displayLabelFromValue(dynamic value) {
+    if (value is Map) {
+      for (final key in const <String>[
+        'label',
+        'display_label',
+        'name',
+        'name_mr',
+        'title',
+        'text',
+        'value',
+      ]) {
+        final label = _displayLabelFromValue(value[key]);
+        if (label != null) return label;
+      }
+      return null;
+    }
+    final text = _stringValue(value);
+    if (text == null || _intValue(text) != null) return null;
+    return text;
+  }
+
+  int? _cleanInteger(String? value) {
+    if (value == null) return null;
+    final normalized = value.replaceAll(',', '').trim();
+    if (!RegExp(r'^\d+$').hasMatch(normalized)) return null;
+    return int.tryParse(normalized);
+  }
+
+  int? _parseHeightCm(String? value) {
+    if (value == null) return null;
+    final text = value.toLowerCase().trim();
+    final direct = _cleanInteger(text);
+    if (direct != null && direct >= 50 && direct <= 250) return direct;
+
+    final cmMatch = RegExp(r'(\d{2,3})\s*cm').firstMatch(text);
+    if (cmMatch != null) {
+      final cm = int.tryParse(cmMatch.group(1) ?? '');
+      if (cm != null && cm >= 50 && cm <= 250) return cm;
+    }
+
+    final feetMatch = RegExp(
+      r"(\d)\s*(?:ft|feet|')\s*(\d{1,2})?",
+    ).firstMatch(text);
+    if (feetMatch == null) return null;
+    final feet = int.tryParse(feetMatch.group(1) ?? '');
+    final inches = int.tryParse(feetMatch.group(2) ?? '0') ?? 0;
+    if (feet == null || feet <= 0 || inches < 0 || inches > 11) return null;
+    final cm = ((feet * 12 + inches) * 2.54).round();
+    if (cm < 50 || cm > 250) return null;
+    return cm;
+  }
+
+  bool _isEmptyDraftValue(dynamic value) {
+    if (value == null) return true;
+    if (value is String) return value.trim().isEmpty;
+    return false;
+  }
+
+  String _selectedIdLabel(int id) =>
+      AppStrings.isMarathi ? 'निवडलेले #$id' : 'Selected #$id';
+
+  String _text(String english, String marathi) =>
+      AppStrings.isMarathi ? marathi : english;
 
   String _cleanOcrText(String text) {
     return text
@@ -582,6 +993,11 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   }
 
   Widget _reviewForm() {
+    final grouped = <String, List<_DraftField>>{};
+    for (final field in _fields) {
+      grouped.putIfAbsent(field.section, () => <_DraftField>[]).add(field);
+    }
+
     return Form(
       key: _formKey,
       child: Container(
@@ -613,21 +1029,54 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            for (final field in _fields) ...[
-              TextFormField(
-                initialValue: field.value,
-                keyboardType: field.keyboardType,
-                maxLines: field.maxLines,
-                textInputAction: field.maxLines > 1
-                    ? TextInputAction.newline
-                    : TextInputAction.next,
-                decoration: InputDecoration(labelText: field.label),
-                onChanged: (value) => field.value = value,
-                onSaved: (value) => field.value = value?.trim() ?? '',
-              ),
-              const SizedBox(height: 12),
+            for (final entry in grouped.entries) ...[
+              _sectionHeader(entry.key),
+              for (final field in entry.value) ...[
+                TextFormField(
+                  initialValue: field.value,
+                  readOnly: !field.editable,
+                  keyboardType: field.keyboardType,
+                  maxLines: field.maxLines,
+                  textInputAction: field.maxLines > 1
+                      ? TextInputAction.newline
+                      : TextInputAction.next,
+                  decoration: InputDecoration(
+                    labelText: field.label,
+                    helperText: field.helperText,
+                    suffixIcon: field.saveEnabled
+                        ? field.editable
+                              ? null
+                              : const Icon(
+                                  Icons.check_circle_outline,
+                                  color: Color(0xFF047857),
+                                )
+                        : const Icon(Icons.info_outline, color: _muted),
+                  ),
+                  onChanged: field.editable
+                      ? (value) => field.value = value
+                      : null,
+                  onSaved: field.editable
+                      ? (value) => field.value = value?.trim() ?? ''
+                      : null,
+                ),
+                const SizedBox(height: 12),
+              ],
             ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 9),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: _ink,
+          fontSize: 15,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
@@ -721,7 +1170,7 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   }
 
   Widget _bottomActionBar() {
-    final hasDraft = _fields.isNotEmpty;
+    final hasDraft = _hasSaveableDraft;
     return SafeArea(
       top: false,
       child: Container(
@@ -828,32 +1277,49 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
 
 class _DraftField {
   _DraftField({
+    required this.section,
     required this.key,
     required this.label,
     required this.value,
+    this.helperText,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
-  });
+  }) : saveValue = null,
+       editable = true,
+       saveEnabled = true;
 
+  _DraftField.readOnly({
+    required this.section,
+    required this.key,
+    required this.label,
+    required this.value,
+    required this.saveValue,
+  }) : editable = false,
+       saveEnabled = true,
+       helperText = null,
+       keyboardType = TextInputType.text,
+       maxLines = 1;
+
+  _DraftField.note({
+    required this.section,
+    required this.label,
+    required this.value,
+    this.helperText,
+  }) : key = '',
+       saveValue = null,
+       editable = false,
+       saveEnabled = false,
+       keyboardType = TextInputType.text,
+       maxLines = 1;
+
+  final String section;
   final String key;
   final String label;
   String value;
-  final TextInputType keyboardType;
-  final int maxLines;
-}
-
-class _DraftFieldSeed {
-  const _DraftFieldSeed({
-    required this.key,
-    required this.label,
-    required this.sourceKeys,
-    this.keyboardType = TextInputType.text,
-    this.maxLines = 1,
-  });
-
-  final String key;
-  final String label;
-  final List<String> sourceKeys;
+  final dynamic saveValue;
+  final bool editable;
+  final bool saveEnabled;
+  final String? helperText;
   final TextInputType keyboardType;
   final int maxLines;
 }
