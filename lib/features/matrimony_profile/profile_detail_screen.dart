@@ -693,10 +693,15 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final contact = _contactData();
     final gunamilan = _gunamilanMap();
     final displaySections = _displaySections();
+    final photoAlbum = _photoAlbumMap();
+    final galleryPhotos = _profileGalleryPhotos(profile, hero, photoAlbum);
     final photoUrl =
+        (galleryPhotos.isNotEmpty ? galleryPhotos.first.url : null) ??
         _displayString(hero?['primary_photo_url']) ??
         ApiClient.resolveProfilePhotoUrl(profile);
-    final galleryPhotos = _profileGalleryPhotos(profile, hero);
+    final heroPhotoBlur = galleryPhotos.isNotEmpty
+        ? galleryPhotos.first.blur
+        : (_displaySafeBool(hero?['primary_photo_blur']) ?? false);
     final statusHeight = MediaQuery.of(context).padding.top;
     final heroHeight = _heroHeight(photoUrl != null);
     final location =
@@ -717,7 +722,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           left: 0,
           right: 0,
           height: heroHeight,
-          child: _buildHeroPhoto(photoUrl: photoUrl),
+          child: _buildHeroPhoto(photoUrl: photoUrl, blur: heroPhotoBlur),
         ),
         ListView(
           controller: _scrollController,
@@ -780,7 +785,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         .toDouble();
   }
 
-  Widget _buildHeroPhoto({required String? photoUrl}) {
+  Widget _buildHeroPhoto({required String? photoUrl, required bool blur}) {
     final hasPhoto = photoUrl != null;
     final heroHeight = _heroHeight(hasPhoto);
 
@@ -790,7 +795,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _buildHeroImage(photoUrl),
+          _buildHeroImage(photoUrl, blur: blur),
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -805,6 +810,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               ),
             ),
           ),
+          if (blur) _buildPhotoLockOverlay(compact: true),
         ],
       ),
     );
@@ -819,11 +825,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final photoUrl =
         _displayString(hero?['primary_photo_url']) ??
         ApiClient.resolveProfilePhotoUrl(profile);
-    final photoCount =
-        _displayInt(hero?['photo_count']) ??
-        (galleryPhotos.isNotEmpty
-            ? galleryPhotos.length
-            : _photoCount(profile, photoUrl));
+    final photoCount = galleryPhotos.isNotEmpty
+        ? galleryPhotos.length
+        : (_displayInt(hero?['photo_count']) ?? _photoCount(profile, photoUrl));
     final isPremium =
         _displaySafeBool(hero?['premium']) ??
         (hero == null ? _isPremium(profile) : false);
@@ -873,7 +877,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     );
   }
 
-  Widget _buildHeroImage(String? photoUrl) {
+  Widget _buildHeroImage(String? photoUrl, {bool blur = false}) {
     if (photoUrl == null) {
       return _buildHeroFallback();
     }
@@ -891,15 +895,73 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             },
           ),
         ),
-        Image.network(
-          photoUrl,
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          errorBuilder: (context, error, stackTrace) {
-            return _buildHeroFallback();
-          },
+        ImageFiltered(
+          imageFilter: blur
+              ? ImageFilter.blur(sigmaX: 18, sigmaY: 18)
+              : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+          child: Transform.scale(
+            scale: blur ? 1.04 : 1.0,
+            child: Image.network(
+              photoUrl,
+              fit: BoxFit.cover,
+              alignment: Alignment.topCenter,
+              errorBuilder: (context, error, stackTrace) {
+                return _buildHeroFallback();
+              },
+            ),
+          ),
         ),
       ],
+    );
+  }
+
+  Widget _buildPhotoLockOverlay({bool compact = false}) {
+    final photoAlbum = _photoAlbumMap();
+    final route = _photoAlbumCtaRoute(photoAlbum);
+
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: compact ? 28 : 20),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.52),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+          ),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: compact ? 16 : 18,
+              vertical: compact ? 14 : 16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.lock_outline, color: Colors.white, size: 26),
+                const SizedBox(height: 8),
+                Text(
+                  _photoAlbumMessage(photoAlbum),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13.5,
+                    height: 1.25,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (!compact && route != null) ...[
+                  const SizedBox(height: 12),
+                  FilledButton(
+                    onPressed: () => Navigator.pushNamed(context, route),
+                    child: Text(
+                      route == '/plans' ? 'View Plans' : 'Upload Photo',
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1147,7 +1209,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final profile = _profile;
     if (profile == null) return;
 
-    final photos = _profileGalleryPhotos(profile, _displayHero());
+    final photoAlbum = _photoAlbumMap();
+    final photos = _profileGalleryPhotos(profile, _displayHero(), photoAlbum);
     if (photos.isEmpty) {
       _showSnackBar('फोटो उपलब्ध नाही.', Colors.black87);
       return;
@@ -1161,6 +1224,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             photos: photos,
             title: _galleryTitle(profile),
             subtitle: _gallerySubtitle(profile),
+            lockedMessage: _photoAlbumMessage(photoAlbum),
+            lockedCtaRoute: _photoAlbumCtaRoute(photoAlbum),
             onMenuAction: (action) async {
               if (action == 'share') {
                 await _shareProfile();
@@ -1204,20 +1269,22 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   List<_ProfilePhotoItem> _profileGalleryPhotos(
     Map<String, dynamic> profile,
     Map<String, dynamic>? hero,
+    Map<String, dynamic>? photoAlbum,
   ) {
     final photos = <_ProfilePhotoItem>[];
     final seen = <String>{};
 
-    void addPhoto(dynamic rawValue) {
+    void addPhoto(dynamic rawValue, {bool blur = false}) {
       final url = ApiClient.normalizeProfilePhotoUrl(rawValue);
       if (url == null || seen.contains(url)) return;
 
       seen.add(url);
-      photos.add(_ProfilePhotoItem(url: url));
+      photos.add(_ProfilePhotoItem(url: url, blur: blur));
     }
 
     void addPhotoFromMap(Map<String, dynamic> row) {
       if (!_photoRowAllowsDisplay(row)) return;
+      final blur = _displaySafeBool(row['blur']) ?? false;
 
       for (final key in const [
         'primary_photo_url',
@@ -1230,8 +1297,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         'file_path',
         'profile_photo',
       ]) {
-        addPhoto(row[key]);
+        addPhoto(row[key], blur: blur);
       }
+    }
+
+    final albumSlots = _safeMapList(photoAlbum?['slots']);
+    if (albumSlots.isNotEmpty) {
+      for (final slot in albumSlots) {
+        addPhotoFromMap(slot);
+      }
+      if (photos.isNotEmpty) return photos;
     }
 
     addPhoto(hero?['primary_photo_url']);
@@ -3280,6 +3355,32 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return _safeMap(_display?['gunamilan']);
   }
 
+  Map<String, dynamic>? _photoAlbumMap() {
+    return _safeMap(_display?['photo_album']);
+  }
+
+  String _photoAlbumMessage(Map<String, dynamic>? photoAlbum) {
+    final message = _displayString(photoAlbum?['message']);
+    if (message != null) return message;
+
+    final tier = _displayString(photoAlbum?['tier'])?.toLowerCase();
+    if (tier == 'free_own_photo') {
+      return 'Upgrade to view all photos.';
+    }
+    if (tier == 'free_no_photo') {
+      return 'Upload your photo to unlock more profiles.';
+    }
+
+    return 'Photo access is locked for your current plan.';
+  }
+
+  String? _photoAlbumCtaRoute(Map<String, dynamic>? photoAlbum) {
+    final tier = _displayString(photoAlbum?['tier'])?.toLowerCase();
+    if (tier == 'free_own_photo') return '/plans';
+    if (tier == 'free_no_photo') return '/photo-gallery';
+    return null;
+  }
+
   double? _gunamilanProgress(Map<String, dynamic> gunamilan) {
     final score =
         _displayDouble(gunamilan['score']) ??
@@ -3722,9 +3823,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 }
 
 class _ProfilePhotoItem {
-  const _ProfilePhotoItem({required this.url});
+  const _ProfilePhotoItem({required this.url, this.blur = false});
 
   final String url;
+  final bool blur;
 }
 
 class _ContactRequestDraft {
@@ -3744,12 +3846,16 @@ class _ProfilePhotoGalleryViewer extends StatefulWidget {
     required this.photos,
     required this.title,
     required this.subtitle,
+    required this.lockedMessage,
+    required this.lockedCtaRoute,
     required this.onMenuAction,
   });
 
   final List<_ProfilePhotoItem> photos;
   final String title;
   final String? subtitle;
+  final String lockedMessage;
+  final String? lockedCtaRoute;
   final Future<void> Function(String action) onMenuAction;
 
   @override
@@ -3798,7 +3904,7 @@ class _ProfilePhotoGalleryViewerState
                       });
                     },
                     itemBuilder: (context, index) {
-                      return _buildPhotoPage(widget.photos[index].url);
+                      return _buildPhotoPage(widget.photos[index]);
                     },
                   ),
                 ],
@@ -3887,7 +3993,7 @@ class _ProfilePhotoGalleryViewerState
     );
   }
 
-  Widget _buildPhotoPage(String photoUrl) {
+  Widget _buildPhotoPage(_ProfilePhotoItem photo) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final maxWidth = (constraints.maxWidth - 28).clamp(
@@ -3914,24 +4020,92 @@ class _ProfilePhotoGalleryViewerState
               borderRadius: BorderRadius.circular(18),
               child: DecoratedBox(
                 decoration: const BoxDecoration(color: Colors.black),
-                child: Image.network(
-                  photoUrl,
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Center(
-                      child: Icon(
-                        Icons.broken_image_outlined,
-                        color: Colors.white70,
-                        size: 54,
-                      ),
-                    );
-                  },
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _galleryPhotoImage(photo),
+                    if (photo.blur) _buildGalleryLockOverlay(context),
+                  ],
                 ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  Widget _galleryPhotoImage(_ProfilePhotoItem photo) {
+    final image = Image.network(
+      photo.url,
+      fit: BoxFit.contain,
+      errorBuilder: (context, error, stackTrace) {
+        return const Center(
+          child: Icon(
+            Icons.broken_image_outlined,
+            color: Colors.white70,
+            size: 54,
+          ),
+        );
+      },
+    );
+
+    if (!photo.blur) return image;
+
+    return ClipRect(
+      child: ImageFiltered(
+        imageFilter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Transform.scale(scale: 1.04, child: image),
+      ),
+    );
+  }
+
+  Widget _buildGalleryLockOverlay(BuildContext context) {
+    final route = widget.lockedCtaRoute;
+
+    return DecoratedBox(
+      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.42)),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.58),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.lock_outline, color: Colors.white, size: 30),
+                  const SizedBox(height: 9),
+                  Text(
+                    widget.lockedMessage,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      height: 1.28,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  if (route != null) ...[
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () => Navigator.pushNamed(context, route),
+                      child: Text(
+                        route == '/plans' ? 'View Plans' : 'Upload Photo',
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -4005,20 +4179,51 @@ class _ProfilePhotoGalleryViewerState
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(9),
-                      child: Image.network(
-                        widget.photos[index].url,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        errorBuilder: (context, error, stackTrace) {
-                          return ColoredBox(
-                            color: Colors.white.withValues(alpha: 0.10),
-                            child: const Icon(
-                              Icons.photo_outlined,
-                              color: Colors.white70,
-                              size: 20,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Image.network(
+                            widget.photos[index].url,
+                            fit: BoxFit.cover,
+                            alignment: Alignment.topCenter,
+                            errorBuilder: (context, error, stackTrace) {
+                              return ColoredBox(
+                                color: Colors.white.withValues(alpha: 0.10),
+                                child: const Icon(
+                                  Icons.photo_outlined,
+                                  color: Colors.white70,
+                                  size: 20,
+                                ),
+                              );
+                            },
+                          ),
+                          if (widget.photos[index].blur)
+                            ClipRect(
+                              child: ImageFiltered(
+                                imageFilter: ImageFilter.blur(
+                                  sigmaX: 5,
+                                  sigmaY: 5,
+                                ),
+                                child: Transform.scale(
+                                  scale: 1.04,
+                                  child: Image.network(
+                                    widget.photos[index].url,
+                                    fit: BoxFit.cover,
+                                    alignment: Alignment.topCenter,
+                                    errorBuilder: (_, _, _) => const SizedBox(),
+                                  ),
+                                ),
+                              ),
                             ),
-                          );
-                        },
+                          if (widget.photos[index].blur)
+                            const Center(
+                              child: Icon(
+                                Icons.lock_outline,
+                                color: Colors.white,
+                                size: 17,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ),
