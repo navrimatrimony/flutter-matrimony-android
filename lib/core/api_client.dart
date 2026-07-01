@@ -2373,6 +2373,34 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  static Future<Map<String, dynamic>> createBiodataIntakeFromText({
+    required String rawText,
+    bool parseNow = true,
+  }) {
+    return _postJson(ApiRoutes.biodataIntakes, <String, dynamic>{
+      'raw_text': rawText,
+      'parse_now': parseNow,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> getBiodataIntakePreview(int intakeId) {
+    return _getJson(
+      ApiRoutes.biodataIntakePreview(intakeId),
+      authenticated: true,
+    );
+  }
+
+  static Future<Map<String, dynamic>> approveBiodataIntake({
+    required int intakeId,
+    required Map<String, dynamic> snapshot,
+  }) {
+    return _postJson(
+      ApiRoutes.biodataIntakeApprove(intakeId),
+      <String, dynamic>{'snapshot': snapshot},
+      authenticated: true,
+    );
+  }
+
   static Future<Map<String, dynamic>> getNotifications() {
     return _getJson(ApiRoutes.notifications, authenticated: true);
   }

@@ -7,6 +7,7 @@ import 'core/notification_permission_service.dart';
 import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
+import 'features/biodata/biodata_intake_lab_screen.dart';
 import 'features/biodata/biodata_export_screen.dart';
 import 'features/browse/browse_profiles_screen.dart';
 import 'features/chat/chat_screen.dart';
@@ -130,6 +131,8 @@ class _MyAppState extends State<MyApp> {
         '/plans': (context) => _authenticatedScreen(const PlansScreen()),
         '/biodata-export': (context) =>
             _authenticatedScreen(const BiodataExportScreen()),
+        '/biodata-intake': (context) =>
+            _authenticatedScreen(const BiodataIntakeLabScreen()),
         '/notifications': (context) =>
             _authenticatedScreen(const NotificationsScreen()),
         '/settings': (context) => _authenticatedScreen(const SettingsScreen()),

@@ -124,6 +124,15 @@ class ApiRoutes {
 
   static const String biodataExportOptions = '/biodata/export-options';
   static const String biodataExport = '/biodata/export';
+  static const String biodataIntakes = '/biodata-intakes';
+
+  static String biodataIntake(int intakeId) => '$biodataIntakes/$intakeId';
+
+  static String biodataIntakePreview(int intakeId) =>
+      '${biodataIntake(intakeId)}/preview';
+
+  static String biodataIntakeApprove(int intakeId) =>
+      '${biodataIntake(intakeId)}/approve';
 
   static const String notifications = '/notifications';
   static const String notificationUnreadCount = '/notifications/unread-count';

@@ -550,6 +550,79 @@ class AppStrings {
   static String get biodataExpiresAt =>
       _mr ? 'Link valid until' : 'Link valid until';
 
+  static String get biodataIntakeTitle =>
+      _mr ? 'बायोडाटा स्कॅन' : 'Biodata Scan';
+
+  static String get biodataIntakeMenu =>
+      _mr ? 'बायोडाटा स्कॅन' : 'Biodata Scan';
+
+  static String get biodataIntakeSubtitle => _mr
+      ? 'फोटोमधून माहिती वाचून profile draft तयार करा.'
+      : 'Read biodata photo text and prepare a profile draft.';
+
+  static String get biodataIntakeIntroTitle =>
+      _mr ? 'बायोडाटा फोटो निवडा' : 'Choose a biodata photo';
+
+  static String get biodataIntakeIntroSubtitle => _mr
+      ? 'Clear फोटो किंवा screenshot द्या. App text वाचून पुढच्या screen वर edit करण्यासाठी माहिती भरून दाखवेल.'
+      : 'Use a clear photo or screenshot. The app will read the text and show editable details on the next screen.';
+
+  static List<String> get biodataIntakeProcessingMessages => _mr
+      ? <String>[
+          'बायोडाटा प्रोसेस होत आहे...',
+          'मजकूर वाचत आहोत...',
+          'माहिती व्यवस्थित फॉरमॅट करत आहोत...',
+          'Review screen तयार करत आहोत...',
+        ]
+      : <String>[
+          'Processing biodata...',
+          'Reading text from the photo...',
+          'Formatting the information...',
+          'Preparing the review screen...',
+        ];
+
+  static String get biodataIntakeReviewTitle =>
+      _mr ? 'माहिती तपासा' : 'Review details';
+
+  static String get biodataIntakeReviewSubtitle => _mr
+      ? 'चुकलेली माहिती edit करा आणि मग save करा.'
+      : 'Edit anything that looks wrong, then save.';
+
+  static String get biodataIntakeExtractedText =>
+      _mr ? 'वाचलेला मजकूर' : 'Extracted text';
+
+  static String get biodataIntakeConfirmSave =>
+      _mr ? 'Confirm & Save' : 'Confirm & Save';
+
+  static String get biodataIntakeTryAnother =>
+      _mr ? 'दुसरा फोटो' : 'Another photo';
+
+  static String get biodataIntakeNoReadableText => _mr
+      ? 'या फोटोमधून पुरेसा text वाचता आला नाही. कृपया clear, सरळ आणि उजेडातला फोटो वापरा.'
+      : 'Could not read enough text from this photo. Please use a clearer, straight, well-lit photo.';
+
+  static String get biodataIntakeProcessFailed => _mr
+      ? 'बायोडाटा प्रोसेस करता आला नाही. पुन्हा प्रयत्न करा.'
+      : 'Biodata could not be processed. Please try again.';
+
+  static String get biodataIntakeSaveSuccess => _mr
+      ? 'माहिती save झाली. Profile update झाले.'
+      : 'Details saved. Profile has been updated.';
+
+  static String get biodataIntakeSavePending => _mr
+      ? 'माहिती review साठी save झाली आहे.'
+      : 'Details have been saved for review.';
+
+  static String get biodataIntakeSaveFailed =>
+      _mr ? 'माहिती save करता आली नाही.' : 'Details could not be saved.';
+
+  static String get biodataIntakeFieldsEmpty => _mr
+      ? 'System ने structured fields ओळखले नाहीत. खालील text तपासा आणि clear photo वापरून पुन्हा प्रयत्न करा.'
+      : 'No structured fields were detected. Check the text below and try again with a clearer photo.';
+
+  static String get biodataIntakeOpenProfile =>
+      _mr ? 'Profile पहा' : 'View Profile';
+
   static String get notificationsTitle => _mr ? 'सूचना' : 'Notifications';
 
   static String get notificationsEmpty =>

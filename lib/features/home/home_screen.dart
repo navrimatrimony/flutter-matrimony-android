@@ -8,7 +8,6 @@ import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_photo_view.dart';
 import '../../main.dart';
-import '../browse/browse_profiles_screen.dart';
 import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../matrimony_profile/edit_full_profile_screen.dart';
@@ -26,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   static const Color _gold = Color(0xFFC79A3B);
   static const Color _ink = Color(0xFF2D2323);
   static const Color _muted = Color(0xFF7C6A64);
-  static const Color _surface = Color(0xFFFFFBF7);
   static const Color _cardBorder = Color(0xFFE8DDD7);
   static const Color _success = Color(0xFF12805C);
   static const Color _warning = Color(0xFFC78318);
@@ -45,12 +43,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   int _sentTotal = 0;
   int _sentPending = 0;
-  int _sentAccepted = 0;
-  int _sentRejected = 0;
   int _receivedTotal = 0;
   int _receivedPending = 0;
-  int _receivedAccepted = 0;
-  int _receivedRejected = 0;
 
   int _chatUnreadCount = 0;
   int _notificationUnreadCount = 0;
@@ -230,12 +224,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       setState(() {
         _sentTotal = sent.total;
         _sentPending = sent.pending;
-        _sentAccepted = sent.accepted;
-        _sentRejected = sent.rejected;
         _receivedTotal = received.total;
         _receivedPending = received.pending;
-        _receivedAccepted = received.accepted;
-        _receivedRejected = received.rejected;
         _interestsLoading = false;
       });
     } catch (_) {
@@ -451,6 +441,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   },
                 ),
                 _drawerTile(
+                  icon: Icons.document_scanner_outlined,
+                  title: AppStrings.biodataIntakeMenu,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _safePushNamed('/biodata-intake');
+                  },
+                ),
+                _drawerTile(
                   icon: Icons.bookmarks_outlined,
                   title: AppStrings.profileListsMenu,
                   onTap: () {
@@ -547,10 +545,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   title: AppStrings.logout,
                   danger: true,
                   onTap: () async {
+                    final navigator = Navigator.of(context);
                     Navigator.pop(context);
                     await ApiClient.logout();
-                    if (!context.mounted) return;
-                    Navigator.pushReplacementNamed(context, '/login');
+                    navigator.pushReplacementNamed('/login');
                   },
                 ),
               ],
@@ -1253,6 +1251,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         title: AppStrings.biodataExportMenu,
         subtitle: AppStrings.biodataExportSubtitle,
         onTap: () => _safePushNamed('/biodata-export'),
+      ),
+      _ToolAction(
+        icon: Icons.document_scanner_outlined,
+        title: AppStrings.biodataIntakeMenu,
+        subtitle: AppStrings.biodataIntakeSubtitle,
+        onTap: () => _safePushNamed('/biodata-intake'),
       ),
       _ToolAction(
         icon: Icons.bookmarks_outlined,
