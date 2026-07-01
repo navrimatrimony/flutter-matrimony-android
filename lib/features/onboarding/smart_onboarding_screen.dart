@@ -96,7 +96,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   bool _childLivingWithLoading = false;
   bool _profileForWhomChangedAfterMaritalSelection = false;
   bool _whatsappAlertsOptIn = true;
-  bool _debugOtpAutoVerifyQueued = false;
   bool _messageGapVisible = false;
   int _resendSecondsRemaining = 0;
   String? _error;
@@ -848,21 +847,16 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     if (!mounted) return;
     final response = MobileOtpSendResponse.fromJson(data);
-    final debugOtp = kReleaseMode ? null : response.debugOtp;
+    final debugOtp = response.debugOtp;
     setState(() {
       _loading = false;
       _otpChallenge = response;
       if (response.success && response.challengeId != null) {
         if (debugOtp != null && debugOtp.length == 6) {
           _otpController.text = debugOtp;
-          _debugOtpAutoVerifyQueued = true;
-          _message = null;
-        } else {
-          _debugOtpAutoVerifyQueued = false;
-          _message = null;
         }
+        _message = null;
       } else {
-        _debugOtpAutoVerifyQueued = false;
         _error =
             response.message ??
             _t('Could not send OTP.', 'OTP पाठवता आला नाही.');
@@ -872,9 +866,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     if (response.success && response.challengeId != null) {
       _startResendCooldown(response.resendAfter);
       await _saveLocalDraft();
-      if (debugOtp != null && debugOtp.length == 6) {
-        unawaited(_autoVerifyDebugOtp(response.challengeId!, debugOtp));
-      }
     }
   }
 
@@ -905,20 +896,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     });
   }
 
-  Future<void> _autoVerifyDebugOtp(String challengeId, String otp) async {
-    await Future<void>.delayed(const Duration(milliseconds: 650));
-    if (!mounted || kReleaseMode || !_debugOtpAutoVerifyQueued || _loading) {
-      return;
-    }
-    if (_otpChallenge?.challengeId != challengeId ||
-        _otpController.text.trim() != otp) {
-      return;
-    }
-
-    _debugOtpAutoVerifyQueued = false;
-    await _verifyOtp();
-  }
-
   Future<void> _verifyOtp() async {
     final mobile = _normalizeMobile(_mobileController.text);
     final challengeId = _otpChallenge?.challengeId;
@@ -939,7 +916,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     setState(() {
       _loading = true;
-      _debugOtpAutoVerifyQueued = false;
       _error = null;
       _message = null;
     });
@@ -2334,7 +2310,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     setState(() {
       _otpChallenge = null;
       _otpController.clear();
-      _debugOtpAutoVerifyQueued = false;
       _resendTimer?.cancel();
       _resendAvailableAt = null;
       _resendSecondsRemaining = 0;
@@ -3054,7 +3029,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       },
     );
 
-    if (_isPostRegistrationStep) {
+    if (_step == _SmartOnboardingStep.mobileOtp || _isPostRegistrationStep) {
       return stepContent;
     }
 
@@ -3070,26 +3045,76 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
   Widget _buildMobileOtpStep(BuildContext context) {
     final otpSent = _otpChallenge?.challengeId != null;
-    return otpSent
-        ? _buildOtpVerificationStep(context)
-        : _buildMobileNumberEntryStep(context);
+    final media = MediaQuery.of(context);
+    final screenHeight = media.size.height - media.padding.vertical - 32;
+    final panelHeight = screenHeight < 680 ? 680.0 : screenHeight;
+
+    return SizedBox(
+      height: panelHeight,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(2, 8, 2, 24),
+        child: otpSent
+            ? _buildOtpVerificationStep(context)
+            : _buildMobileNumberEntryStep(context),
+      ),
+    );
   }
 
   Widget _buildMobileNumberEntryStep(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+
     return AutofillGroup(
       key: const ValueKey('mobile_number'),
-      child: _StepContent(
-        title: _t('Verify mobile number', 'मोबाइल नंबर verify करा'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const Spacer(flex: 1),
+          Center(
+            child: Container(
+              width: 72,
+              height: 72,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: colors.primary.withValues(alpha: 0.18),
+                  width: 8,
+                ),
+              ),
+              child: Icon(
+                Icons.verified_user_outlined,
+                size: 34,
+                color: colors.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 26),
           Text(
-            _t(
-              'We will send a 6 digit code to continue.',
-              'पुढे जाण्यासाठी ६ अंकी code पाठवू.',
+            _t('Verify mobile number', 'मोबाइल नंबर verify करा'),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: colors.onSurface,
+              height: 1.05,
             ),
           ),
           const SizedBox(height: 12),
+          Text(
+            _t(
+              'Enter your mobile number to receive a secure 6 digit code.',
+              'सुरक्षित ६ अंकी code मिळण्यासाठी मोबाइल नंबर भरा.',
+            ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colors.onSurfaceVariant,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 34),
           _mobileNumberField(context),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           CheckboxListTile(
             value: _whatsappAlertsOptIn,
             dense: true,
@@ -3110,17 +3135,26 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             controlAffinity: ListTileControlAffinity.leading,
             contentPadding: EdgeInsets.zero,
           ),
-          const SizedBox(height: 10),
-          ElevatedButton(
-            onPressed: _loading ? null : _sendOtp,
-            child: _loading
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(_t('Get OTP', 'OTP मिळवा')),
+          const SizedBox(height: 18),
+          SizedBox(
+            height: 56,
+            child: ElevatedButton.icon(
+              onPressed: _loading ? null : _sendOtp,
+              icon: _loading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.arrow_forward_rounded),
+              label: Text(
+                _loading
+                    ? _t('Sending OTP', 'OTP पाठवत आहे')
+                    : _t('Get OTP', 'OTP मिळवा'),
+              ),
+            ),
           ),
+          const Spacer(flex: 2),
         ],
       ),
     );
@@ -3188,62 +3222,132 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   Widget _buildOtpVerificationStep(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final mobile = _normalizeMobile(_mobileController.text);
-    final debugOtpAvailable = !kReleaseMode && _otpChallenge?.debugOtp != null;
+    final debugOtp = _otpChallenge?.debugOtp;
+    final debugOtpAvailable = debugOtp != null && debugOtp.length == 6;
 
     return AutofillGroup(
       key: const ValueKey('otp_verification'),
-      child: _StepContent(
-        title: _t('Verify Mobile Number', 'मोबाइल नंबर verify करा'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              IconButton(
+                onPressed: _loading ? null : _editMobileNumber,
+                icon: const Icon(Icons.arrow_back_rounded),
+                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+              ),
+              const Spacer(),
+              TextButton.icon(
+                onPressed: _loading ? null : _editMobileNumber,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: Text(_t('Edit', 'Edit')),
+              ),
+            ],
+          ),
+          const Spacer(flex: 1),
+          Center(
+            child: Container(
+              width: 76,
+              height: 76,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: colors.primary.withValues(alpha: 0.10),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: colors.primary.withValues(alpha: 0.18),
+                  width: 8,
+                ),
+              ),
+              child: Icon(Icons.sms_outlined, size: 34, color: colors.primary),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            _t('Verify Mobile Number', 'मोबाइल नंबर verify करा'),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: colors.onSurface,
+              height: 1.05,
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
             _t(
               'We’ve sent a verification code to',
               'verification code पाठवला आहे',
             ),
+            textAlign: TextAlign.center,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: colors.onSurfaceVariant,
+              height: 1.35,
+            ),
           ),
           const SizedBox(height: 8),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 8,
-            children: [
-              Text(
-                '+91 $mobile',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              TextButton(
-                onPressed: _loading ? null : _editMobileNumber,
-                child: Text(_t('Edit', 'Edit')),
-              ),
-            ],
+          Text(
+            '+91 $mobile',
+            textAlign: TextAlign.center,
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: colors.onSurface,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 28),
           _otpCodeField(context),
           if (debugOtpAvailable) ...[
-            const SizedBox(height: 8),
-            Text(
-              _t('Test OTP filled automatically.', 'Test OTP आपोआप भरला आहे.'),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.green.shade700,
-                fontWeight: FontWeight.w700,
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.green.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.green.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.bolt_rounded,
+                    size: 18,
+                    color: Colors.green.shade700,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _t('Test OTP: $debugOtp', 'Test OTP: $debugOtp'),
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: Colors.green.shade800,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: _loading ? null : _verifyOtp,
-            child: _loading
-                ? const SizedBox(
-                    height: 18,
-                    width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(_t('Verify and continue', 'पडताळून पुढे जा')),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 56,
+            child: ElevatedButton.icon(
+              onPressed: _loading ? null : _verifyOtp,
+              icon: _loading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.verified_rounded),
+              label: Text(_t('Verify and continue', 'पडताळून पुढे जा')),
+            ),
           ),
           const SizedBox(height: 12),
           _buildResendControl(context),
+          const Spacer(flex: 2),
         ],
       ),
     );
@@ -3251,15 +3355,15 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
   Widget _otpCodeField(BuildContext context) {
     final theme = Theme.of(context);
-    final focusedColor = Theme.of(context).colorScheme.primary;
-    final filledDigits = _otpController.text.trim().length.clamp(0, 6);
+    final colors = theme.colorScheme;
+    final digits = _otpController.text.trim().split('').take(6).toList();
 
     return Container(
-      height: 76,
+      height: 74,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: colors.primary.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.04),
@@ -3271,54 +3375,67 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Positioned(
-            left: 24,
-            right: 24,
-            bottom: 14,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             child: Row(
               children: List.generate(6, (index) {
-                final active = index < filledDigits;
+                final digit = index < digits.length ? digits[index] : '_';
+                final active = index < digits.length;
                 return Expanded(
-                  child: Container(
-                    height: 3,
-                    margin: EdgeInsets.only(right: index == 5 ? 0 : 10),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 120),
+                    height: 52,
+                    margin: EdgeInsets.only(right: index == 5 ? 0 : 8),
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: active ? focusedColor : Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(999),
+                      color: active
+                          ? colors.primary.withValues(alpha: 0.08)
+                          : Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: active
+                            ? colors.primary.withValues(alpha: 0.55)
+                            : Colors.grey.shade300,
+                      ),
+                    ),
+                    child: Text(
+                      digit,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: active ? colors.onSurface : Colors.grey.shade500,
+                        height: 1,
+                      ),
                     ),
                   ),
                 );
               }),
             ),
           ),
-          TextField(
-            controller: _otpController,
-            enabled: !_loading,
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            autofillHints: const [AutofillHints.oneTimeCode],
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(6),
-            ],
-            maxLength: 6,
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 12,
-              color: Colors.grey.shade900,
-              height: 1,
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.01,
+              child: TextField(
+                controller: _otpController,
+                enabled: !_loading,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                autofillHints: const [AutofillHints.oneTimeCode],
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(6),
+                ],
+                maxLength: 6,
+                style: theme.textTheme.headlineSmall,
+                cursorColor: Colors.transparent,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  counterText: '',
+                ),
+                onChanged: (_) => setState(() {}),
+              ),
             ),
-            cursorColor: focusedColor,
-            cursorWidth: 2.2,
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              counterText: '',
-              contentPadding: EdgeInsets.only(left: 18, right: 6, bottom: 10),
-            ),
-            onChanged: (_) => setState(() {}),
           ),
         ],
       ),
