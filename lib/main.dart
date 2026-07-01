@@ -132,7 +132,7 @@ class _MyAppState extends State<MyApp> {
         '/biodata-export': (context) =>
             _authenticatedScreen(const BiodataExportScreen()),
         '/biodata-intake': (context) =>
-            _authenticatedScreen(const BiodataIntakeLabScreen()),
+            _authenticatedScreen(const BiodataIntakeScreen()),
         '/notifications': (context) =>
             _authenticatedScreen(const NotificationsScreen()),
         '/settings': (context) => _authenticatedScreen(const SettingsScreen()),

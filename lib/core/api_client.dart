@@ -2429,6 +2429,10 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  static Future<Map<String, dynamic>> getBiodataIntakes() {
+    return _getJson(ApiRoutes.biodataIntakes, authenticated: true);
+  }
+
   static Future<Map<String, dynamic>> getBiodataIntakePreview(int intakeId) {
     return _getJson(
       ApiRoutes.biodataIntakePreview(intakeId),

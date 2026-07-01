@@ -10,14 +10,14 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
 
-class BiodataIntakeLabScreen extends StatefulWidget {
-  const BiodataIntakeLabScreen({super.key});
+class BiodataIntakeScreen extends StatefulWidget {
+  const BiodataIntakeScreen({super.key});
 
   @override
-  State<BiodataIntakeLabScreen> createState() => _BiodataIntakeLabScreenState();
+  State<BiodataIntakeScreen> createState() => _BiodataIntakeScreenState();
 }
 
-class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
+class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   static const Color _brand = Color(0xFFDC2626);
   static const Color _ink = Color(0xFF251D1D);
   static const Color _muted = Color(0xFF786A64);
@@ -50,18 +50,54 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
 
   Timer? _messageTimer;
   int _messageIndex = 0;
+  bool _loadingIntakes = false;
   bool _processing = false;
   bool _saving = false;
   String? _errorMessage;
   String? _rawText;
+  String? _pickedImagePath;
   Map<String, dynamic>? _intake;
+  Map<String, dynamic>? _preview;
+  Map<String, dynamic>? _intakeSettings;
   Map<String, dynamic> _snapshot = <String, dynamic>{};
+  List<Map<String, dynamic>> _intakes = <Map<String, dynamic>>[];
   List<_DraftField> _fields = <_DraftField>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadIntakes();
+  }
 
   @override
   void dispose() {
     _messageTimer?.cancel();
+    unawaited(_deleteTemporaryPickedFile(_pickedImagePath));
     super.dispose();
+  }
+
+  Future<void> _loadIntakes() async {
+    if (_loadingIntakes) return;
+    setState(() {
+      _loadingIntakes = true;
+    });
+    try {
+      final response = await ApiClient.getBiodataIntakes();
+      final rows = _listOfMaps(response['intakes'] ?? response['data']);
+      if (!mounted) return;
+      setState(() {
+        _intakes = rows;
+        _intakeSettings = _safeMap(response['intake_settings']);
+      });
+    } catch (_) {
+      // Intake history is helpful, but upload/review should still work.
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingIntakes = false;
+        });
+      }
+    }
   }
 
   Future<void> _pickAndProcess(ImageSource source) async {
@@ -75,14 +111,21 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     );
     if (picked == null) return;
 
+    final previousPickedPath = _pickedImagePath;
+    if (previousPickedPath != null && previousPickedPath != picked.path) {
+      unawaited(_deleteTemporaryPickedFile(previousPickedPath));
+    }
+
     setState(() {
       _processing = true;
       _saving = false;
       _errorMessage = null;
       _rawText = null;
+      _preview = null;
       _intake = null;
       _snapshot = <String, dynamic>{};
       _fields = <_DraftField>[];
+      _pickedImagePath = picked.path;
       _messageIndex = 0;
     });
     _startMessageRotation();
@@ -123,8 +166,13 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
       setState(() {
         _rawText = normalizedText;
         _intake = intake;
+        _preview = preview;
+        _intakeSettings =
+            _safeMap(response['intake_settings']) ??
+            _safeMap(preview?['intake_settings']) ??
+            _intakeSettings;
         _snapshot = _snapshotFromPreview(preview);
-        _fields = _onboardingFieldsFromPreview(preview);
+        _fields = _draftFieldsFromPreview(preview);
         _errorMessage = !_hasSaveableDraft
             ? AppStrings.biodataIntakeFieldsEmpty
             : null;
@@ -134,7 +182,72 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
         '${AppStrings.biodataIntakeProcessFailed} ${error.toString()}',
       );
     } finally {
-      await _deleteTemporaryPickedFile(picked.path);
+      _stopProcessing();
+      unawaited(_loadIntakes());
+    }
+  }
+
+  Future<void> _openExistingIntake(Map<String, dynamic> row) async {
+    if (_processing || _saving) return;
+    final intakeId = _intValue(row['id']);
+    if (intakeId == null) return;
+
+    setState(() {
+      _processing = true;
+      _saving = false;
+      _errorMessage = null;
+      _rawText = null;
+      _preview = null;
+      _intake = row;
+      _snapshot = <String, dynamic>{};
+      _fields = <_DraftField>[];
+      _messageIndex = 0;
+    });
+    _startMessageRotation();
+
+    try {
+      final response = await ApiClient.getBiodataIntakePreview(intakeId);
+      if (!_responseOk(response)) {
+        _setProcessingError(
+          _responseMessage(response, AppStrings.biodataIntakeProcessFailed),
+        );
+        return;
+      }
+      final preview = _safeMap(response['preview']);
+      if (preview == null || response['ready'] == false) {
+        _setProcessingError(
+          _text(
+            'This biodata is not ready for review yet.',
+            'हा बायोडाटा अजून review साठी तयार नाही.',
+          ),
+        );
+        return;
+      }
+      if (!mounted) return;
+      final previousPickedPath = _pickedImagePath;
+      if (previousPickedPath != null) {
+        unawaited(_deleteTemporaryPickedFile(previousPickedPath));
+      }
+      setState(() {
+        _rawText = _stringValue(preview['raw_text']);
+        _preview = preview;
+        _intake = _safeMap(response['intake']) ?? row;
+        _intakeSettings =
+            _safeMap(response['intake_settings']) ??
+            _safeMap(preview['intake_settings']) ??
+            _intakeSettings;
+        _snapshot = _snapshotFromPreview(preview);
+        _fields = _draftFieldsFromPreview(preview);
+        _pickedImagePath = null;
+        _errorMessage = !_hasSaveableDraft
+            ? AppStrings.biodataIntakeFieldsEmpty
+            : null;
+      });
+    } catch (error) {
+      _setProcessingError(
+        '${AppStrings.biodataIntakeProcessFailed} ${error.toString()}',
+      );
+    } finally {
       _stopProcessing();
     }
   }
@@ -375,10 +488,18 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     final core = _safeMap(snapshot['core']) ?? <String, dynamic>{};
     final fieldsByKey = <String, _DraftField>{
       for (final field in _fields)
-        if (field.key.isNotEmpty) field.key: field,
+        if (field.isCoreField && field.key.isNotEmpty) field.key: field,
     };
     for (final field in _fields) {
+      if (!field.saveEnabled || field.path.isEmpty) continue;
       final value = _fieldSaveValue(field);
+      if (!field.isCoreField) {
+        if (field.editable && field.wasEdited && !_isEmptyDraftValue(value)) {
+          _setSnapshotPathValue(snapshot, field.path, value);
+        }
+        continue;
+      }
+
       if (!_shouldSaveField(field, value, existingProfile)) {
         final existing = _existingProfileValue(existingProfile, field.key);
         if (!_isEmptyDraftValue(existing) && !field.wasEdited) {
@@ -399,6 +520,49 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
         _intValue(snapshot['snapshot_schema_version']) ?? 1;
     snapshot['core'] = core;
     return snapshot;
+  }
+
+  void _setSnapshotPathValue(
+    Map<String, dynamic> snapshot,
+    List<Object> path,
+    dynamic value,
+  ) {
+    if (path.isEmpty) return;
+    dynamic cursor = snapshot;
+    for (var index = 0; index < path.length - 1; index += 1) {
+      final part = path[index];
+      final nextPart = path[index + 1];
+      if (part is int) {
+        if (cursor is! List || part < 0 || part >= cursor.length) return;
+        cursor = cursor[part];
+        continue;
+      }
+
+      if (cursor is! Map) return;
+      final key = part.toString();
+      var next = cursor[key];
+      if (next == null) {
+        next = nextPart is int ? <dynamic>[] : <String, dynamic>{};
+        cursor[key] = next;
+      }
+      if (nextPart is int && next is List) {
+        while (next.length <= nextPart) {
+          next.add(<String, dynamic>{});
+        }
+      }
+      cursor = next;
+    }
+
+    final last = path.last;
+    if (last is int) {
+      if (cursor is List && last >= 0 && last < cursor.length) {
+        cursor[last] = value;
+      }
+      return;
+    }
+    if (cursor is Map) {
+      cursor[last.toString()] = value;
+    }
   }
 
   Future<Map<String, dynamic>> _loadExistingProfileForOverwriteGuard() async {
@@ -467,6 +631,9 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   }
 
   Map<String, dynamic> _snapshotFromPreview(Map<String, dynamic>? preview) {
+    final review = _safeMap(preview?['review_snapshot']);
+    if (review != null && review.isNotEmpty) return review;
+
     final approval = _safeMap(preview?['approval_snapshot']);
     if (approval != null && approval.isNotEmpty) return approval;
 
@@ -482,6 +649,12 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   bool get _hasSaveableDraft =>
       _fields.any((field) => field.saveEnabled && field.key.isNotEmpty) ||
       _snapshotHasSaveableContent(_snapshot);
+
+  List<_DraftField> _draftFieldsFromPreview(Map<String, dynamic>? preview) {
+    final fields = _onboardingFieldsFromPreview(preview);
+    _addReviewSectionFields(fields, preview);
+    return fields;
+  }
 
   List<_DraftField> _onboardingFieldsFromPreview(
     Map<String, dynamic>? preview,
@@ -956,6 +1129,195 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     return fields;
   }
 
+  void _addReviewSectionFields(
+    List<_DraftField> fields,
+    Map<String, dynamic>? preview,
+  ) {
+    final sections = _safeMap(preview?['review_sections']);
+    if (sections == null || sections.isEmpty) return;
+
+    final existingPathKeys = fields.map((field) => field.pathKey).toSet();
+    for (final sectionKey in _reviewSectionOrder(preview, sections)) {
+      if (sectionKey == 'core') continue;
+      final section = _safeMap(sections[sectionKey]);
+      if (section == null) continue;
+      final data = section['data'];
+      if (!_snapshotHasSaveableContent(data)) continue;
+
+      final sectionLabel =
+          _stringValue(section['label']) ??
+          _sectionLabelFromKey(sectionKey) ??
+          sectionKey;
+      final snapshotKey = _snapshotKeyForReviewSection(sectionKey);
+      _appendReviewValueFields(
+        fields: fields,
+        section: sectionLabel,
+        value: data,
+        path: <Object>[snapshotKey],
+        existingPathKeys: existingPathKeys,
+      );
+    }
+  }
+
+  List<String> _reviewSectionOrder(
+    Map<String, dynamic>? preview,
+    Map<String, dynamic> sections,
+  ) {
+    final order = <String>[];
+    final editable = preview?['editable_form_sections'];
+    if (editable is List) {
+      for (final row in editable) {
+        final key = _stringValue(_safeMap(row)?['key']);
+        if (key == null) continue;
+        final mapped = _reviewSectionKeyForEditableKey(key);
+        if (sections.containsKey(mapped) && !order.contains(mapped)) {
+          order.add(mapped);
+        }
+      }
+    }
+    for (final key in sections.keys) {
+      if (!order.contains(key)) order.add(key);
+    }
+    return order;
+  }
+
+  String _reviewSectionKeyForEditableKey(String key) {
+    return switch (key) {
+      'basic-info' => 'core',
+      'education-career' => 'career',
+      'family-details' => 'core',
+      'alliance' => 'children',
+      'property' => 'property_summary',
+      'about-me' => 'narrative',
+      'about-preferences' => 'preferences',
+      _ => key,
+    };
+  }
+
+  String _snapshotKeyForReviewSection(String sectionKey) {
+    return switch (sectionKey) {
+      'education' => 'education_history',
+      'career' => 'career_history',
+      'narrative' => 'extended_narrative',
+      _ => sectionKey,
+    };
+  }
+
+  String? _sectionLabelFromKey(String key) {
+    return switch (key) {
+      'contacts' => _text('Contacts', 'संपर्क'),
+      'children' => _text('Children', 'मुले'),
+      'siblings' => _text('Siblings', 'भावंडे'),
+      'education' => _text('Education', 'शिक्षण'),
+      'career' => _text('Career', 'करिअर'),
+      'addresses' => _text('Addresses', 'पत्ते'),
+      'relatives' => _text('Relatives', 'नातेवाईक'),
+      'property_summary' => _text('Property summary', 'मालमत्ता सारांश'),
+      'property_assets' => _text('Property assets', 'मालमत्ता'),
+      'horoscope' => _text('Horoscope', 'पत्रिका'),
+      'preferences' => _text('Partner preferences', 'जोडीदार अपेक्षा'),
+      'narrative' => _text('About me', 'माझ्याबद्दल'),
+      _ => null,
+    };
+  }
+
+  void _appendReviewValueFields({
+    required List<_DraftField> fields,
+    required String section,
+    required dynamic value,
+    required List<Object> path,
+    required Set<String> existingPathKeys,
+    String? labelPrefix,
+    int depth = 0,
+  }) {
+    if (value is Map) {
+      final map = _safeMap(value);
+      if (map == null) return;
+      final keys = map.keys.where(_shouldShowReviewKey).toList()..sort();
+      for (final key in keys) {
+        final child = map[key];
+        if (!_snapshotHasSaveableContent(child)) continue;
+        final label = _joinLabels(labelPrefix, _fieldLabelFromKey(key) ?? key);
+        _appendReviewValueFields(
+          fields: fields,
+          section: section,
+          value: child,
+          path: <Object>[...path, key],
+          existingPathKeys: existingPathKeys,
+          labelPrefix: label,
+          depth: depth + 1,
+        );
+      }
+      return;
+    }
+
+    if (value is List) {
+      for (var index = 0; index < value.length; index += 1) {
+        final child = value[index];
+        if (!_snapshotHasSaveableContent(child)) continue;
+        final label = _joinLabels(
+          labelPrefix,
+          _text('Row ${index + 1}', 'नोंद ${index + 1}'),
+        );
+        _appendReviewValueFields(
+          fields: fields,
+          section: section,
+          value: child,
+          path: <Object>[...path, index],
+          existingPathKeys: existingPathKeys,
+          labelPrefix: label,
+          depth: depth + 1,
+        );
+      }
+      return;
+    }
+
+    final text = _reviewTextFromValue(value);
+    if (text == null) return;
+    final pathKey = _pathKey(path);
+    if (existingPathKeys.contains(pathKey)) return;
+    existingPathKeys.add(pathKey);
+    final label =
+        labelPrefix ?? _fieldLabelFromKey(path.last.toString()) ?? pathKey;
+    final editable = !_looksLikeSystemPath(path);
+    fields.add(
+      _DraftField(
+        section: section,
+        key: path.last.toString(),
+        label: label,
+        value: text,
+        path: path,
+        maxLines: text.length > 70 ? 2 : 1,
+        editable: editable,
+        saveEnabled: editable,
+      ),
+    );
+  }
+
+  bool _shouldShowReviewKey(String key) {
+    if (key == 'id' ||
+        key == 'user_id' ||
+        key == 'snapshot_schema_version' ||
+        key == 'confidence_map') {
+      return false;
+    }
+    return !key.endsWith('_id') && !key.endsWith('_ids');
+  }
+
+  bool _looksLikeSystemPath(List<Object> path) {
+    final key = path.isEmpty ? '' : path.last.toString();
+    return key == 'id' || key.endsWith('_id') || key.endsWith('_ids');
+  }
+
+  String _joinLabels(String? prefix, String label) {
+    final clean = label.trim();
+    if (prefix == null || prefix.trim().isEmpty) return clean;
+    if (clean.isEmpty) return prefix.trim();
+    return '${prefix.trim()} - $clean';
+  }
+
+  String _pathKey(List<Object> path) => path.map((part) => '$part').join('.');
+
   void _addLocationField(
     List<_DraftField> fields,
     String section,
@@ -1306,7 +1668,8 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
         .trim();
   }
 
-  Future<void> _deleteTemporaryPickedFile(String path) async {
+  Future<void> _deleteTemporaryPickedFile(String? path) async {
+    if (path == null || path.trim().isEmpty) return;
     final lowerPath = path.toLowerCase();
     final looksTemporary =
         lowerPath.contains('/cache/') ||
@@ -1356,13 +1719,33 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _introPanel(),
+          if (_pickedImagePath != null) ...[
+            const SizedBox(height: 12),
+            _selectedImagePanel(),
+          ],
           if (_errorMessage != null) ...[
             const SizedBox(height: 12),
             _messagePanel(_errorMessage!, isError: true),
           ],
+          if (_intakes.isNotEmpty || _loadingIntakes) ...[
+            const SizedBox(height: 16),
+            _intakeHistoryPanel(),
+          ],
           if (_fields.isNotEmpty) ...[
             const SizedBox(height: 16),
             _reviewForm(),
+          ],
+          if (_normalizedDraftAvailable) ...[
+            const SizedBox(height: 16),
+            _normalizedDraftPanel(),
+          ],
+          if (_parsedJsonSections.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _parsedJsonPanel(),
+          ],
+          if (_debugRows.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            _debugPanel(),
           ],
           if (_rawText != null && _rawText!.isNotEmpty) ...[
             const SizedBox(height: 16),
@@ -1453,6 +1836,121 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _selectedImagePanel() {
+    final path = _pickedImagePath;
+    if (path == null) return const SizedBox.shrink();
+    return _panel(
+      title: _text('Uploaded biodata photo', 'Upload केलेला बायोडाटा फोटो'),
+      icon: Icons.image_outlined,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.file(
+          File(path),
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) => _emptyPanelText(
+            _text(
+              'Photo preview is not available.',
+              'फोटो preview उपलब्ध नाही.',
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _intakeHistoryPanel() {
+    return _panel(
+      title: _text('Previous biodata intakes', 'आधीचे बायोडाटा इंटेक'),
+      icon: Icons.history_outlined,
+      trailing: _loadingIntakes
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : IconButton(
+              tooltip: _text('Refresh', 'Refresh'),
+              onPressed: _loadIntakes,
+              icon: const Icon(Icons.refresh),
+            ),
+      child: _intakes.isEmpty
+          ? _emptyPanelText(
+              _text(
+                'No biodata intake uploaded yet.',
+                'अजून कोणताही बायोडाटा इंटेक upload केलेला नाही.',
+              ),
+            )
+          : Column(
+              children: [for (final row in _intakes) _intakeHistoryRow(row)],
+            ),
+    );
+  }
+
+  Widget _intakeHistoryRow(Map<String, dynamic> row) {
+    final id = _intValue(row['id']);
+    final parseStatus = _stringValue(row['parse_status']) ?? '-';
+    final approved = _boolValue(row['approved_by_user']);
+    final source = _stringValue(row['source_label']) ?? 'Biodata';
+    final parsedAt = _stringValue(row['parsed_at']);
+    return InkWell(
+      onTap: approved || id == null ? null : () => _openExistingIntake(row),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 9),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: approved
+                    ? const Color(0xFF047857).withValues(alpha: 0.1)
+                    : _brand.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                approved ? Icons.check_circle_outline : Icons.description,
+                color: approved ? const Color(0xFF047857) : _brand,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    id == null ? source : '#$id · $source',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _ink,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    approved
+                        ? _text('Approved', 'Approved')
+                        : '$parseStatus${parsedAt == null ? '' : ' · $parsedAt'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (!approved && id != null)
+              const Icon(Icons.chevron_right, color: _muted),
+          ],
+        ),
       ),
     );
   }
@@ -1576,6 +2074,337 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
         ),
       ],
     );
+  }
+
+  bool get _normalizedDraftAvailable {
+    final normalized = _safeMap(_preview?['normalized_draft']);
+    return _boolValue(normalized?['available']);
+  }
+
+  List<Map<String, dynamic>> get _parsedJsonSections {
+    final sections = _safeMap(_preview?['parsed_json_sections']);
+    if (sections == null) return <Map<String, dynamic>>[];
+    return sections.entries
+        .map((entry) {
+          final section = _safeMap(entry.value);
+          if (section == null) return null;
+          final data = section['data'];
+          if (!_snapshotHasSaveableContent(data)) return null;
+          return <String, dynamic>{
+            'key': entry.key,
+            'label': _stringValue(section['label']) ?? entry.key,
+            'data': data,
+          };
+        })
+        .whereType<Map<String, dynamic>>()
+        .toList();
+  }
+
+  List<MapEntry<String, String>> get _debugRows {
+    final rows = <MapEntry<String, String>>[];
+    void addMap(String prefix, Map<String, dynamic>? map) {
+      if (map == null) return;
+      final keys = map.keys.toList()..sort();
+      for (final key in keys) {
+        final value = map[key];
+        if (!_snapshotHasSaveableContent(value)) continue;
+        rows.add(MapEntry('$prefix$key', _compactValue(value)));
+      }
+    }
+
+    addMap('', _safeMap(_preview?['debug']));
+    addMap('setting.', _intakeSettings);
+    return rows;
+  }
+
+  Widget _normalizedDraftPanel() {
+    final normalized = _safeMap(_preview?['normalized_draft']);
+    if (normalized == null) return const SizedBox.shrink();
+    final detected = _listOfMaps(normalized['detected_but_not_included']);
+    final sections = _safeMap(normalized['sections']) ?? <String, dynamic>{};
+    final reconciliation = _safeMap(normalized['draft_parsed_reconciliation']);
+    final rawDraftJson = _stringValue(normalized['raw_draft_json']);
+    final sectionEntries = sections.entries
+        .where((entry) => _listOfMaps(entry.value).isNotEmpty)
+        .toList();
+
+    return _panel(
+      title: _text('Normalized Biodata Draft', 'Normalized Biodata Draft'),
+      icon: Icons.fact_check_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (detected.isNotEmpty) ...[
+            _subsectionTitle(
+              _text(
+                'Detected but not included',
+                'ओळखले पण form मध्ये न घेतलेली माहिती',
+              ),
+            ),
+            for (final row in detected)
+              _keyValueRow(
+                _stringValue(row['label']) ?? '-',
+                _compactValue(row['value']),
+                helper: _stringValue(row['reason']),
+                flagged: true,
+              ),
+            const SizedBox(height: 10),
+          ],
+          for (final entry in sectionEntries)
+            _normalizedSection(entry.key, _listOfMaps(entry.value)),
+          if (_snapshotHasSaveableContent(reconciliation))
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(bottom: 8),
+              title: Text(
+                _text('Draft / parsed reconciliation', 'Draft / parsed तपासणी'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              children: [
+                for (final entry in reconciliation!.entries)
+                  if (_snapshotHasSaveableContent(entry.value))
+                    _keyValueRow(entry.key, _prettyJson(entry.value)),
+              ],
+            ),
+          if (rawDraftJson != null)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(bottom: 8),
+              title: Text(
+                _text('Raw normalized draft JSON', 'Raw normalized draft JSON'),
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SelectableText(
+                    rawDraftJson,
+                    style: const TextStyle(
+                      color: _ink,
+                      fontSize: 12,
+                      height: 1.35,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          if (sectionEntries.isEmpty && detected.isEmpty)
+            _emptyPanelText(
+              _text('No draft rows.', 'Draft rows उपलब्ध नाहीत.'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _normalizedSection(String key, List<Map<String, dynamic>> rows) {
+    final title = key == 'review_needed'
+        ? _text('Missing / review needed', 'Missing / review needed')
+        : _sectionLabelFromKey(key) ?? _fieldLabelFromKey(key) ?? key;
+    return ExpansionTile(
+      initiallyExpanded: key == 'review_needed',
+      tilePadding: EdgeInsets.zero,
+      childrenPadding: const EdgeInsets.only(bottom: 8),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
+      children: [
+        for (final row in rows)
+          _keyValueRow(
+            _stringValue(row['label']) ?? _stringValue(row['field']) ?? '-',
+            _compactValue(row['value']),
+            helper:
+                _stringValue(row['review_hint']) ??
+                _stringValue(row['review_reason']),
+            flagged: _boolValue(row['needs_review']) || key == 'review_needed',
+          ),
+      ],
+    );
+  }
+
+  Widget _parsedJsonPanel() {
+    return _panel(
+      title: _text('Parsed JSON', 'Parsed JSON'),
+      icon: Icons.data_object_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final section in _parsedJsonSections)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(bottom: 10),
+              title: Text(
+                _stringValue(section['label']) ?? '-',
+                style: const TextStyle(fontWeight: FontWeight.w900),
+              ),
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SelectableText(
+                    _prettyJson(section['data']),
+                    style: const TextStyle(
+                      color: _ink,
+                      fontSize: 12,
+                      height: 1.35,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _debugPanel() {
+    return _panel(
+      title: _text('OCR preprocessing diagnostics', 'OCR diagnostics'),
+      icon: Icons.bug_report_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final row in _debugRows) _keyValueRow(row.key, row.value),
+        ],
+      ),
+    );
+  }
+
+  Widget _panel({
+    required String title,
+    required IconData icon,
+    required Widget child,
+    Widget? trailing,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: _brand),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: _ink,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              if (trailing != null) trailing,
+            ],
+          ),
+          const SizedBox(height: 12),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _subsectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: _ink,
+          fontSize: 14,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  Widget _keyValueRow(
+    String label,
+    String value, {
+    String? helper,
+    bool flagged = false,
+  }) {
+    final color = flagged ? const Color(0xFFB45309) : _muted;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: flagged ? const Color(0xFFFFFBEB) : const Color(0xFFFAF7F4),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: flagged ? const Color(0xFFFBBF24) : _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: _ink,
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 3),
+          SelectableText(
+            value.isEmpty ? '-' : value,
+            style: TextStyle(
+              color: color,
+              fontSize: 13,
+              height: 1.3,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (helper != null && helper.trim().isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              helper,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                height: 1.25,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _emptyPanelText(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: _muted,
+        height: 1.35,
+        fontWeight: FontWeight.w600,
+      ),
+    );
+  }
+
+  String _prettyJson(dynamic value) {
+    try {
+      return const JsonEncoder.withIndent('  ').convert(value);
+    } catch (_) {
+      return _compactValue(value);
+    }
+  }
+
+  String _compactValue(dynamic value) {
+    if (value == null) return '';
+    if (value is String) return value.trim();
+    if (value is num || value is bool) return value.toString();
+    try {
+      return jsonEncode(value);
+    } catch (_) {
+      return value.toString();
+    }
   }
 
   Widget _processingView() {
@@ -1713,6 +2542,11 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     return null;
   }
 
+  List<Map<String, dynamic>> _listOfMaps(dynamic value) {
+    if (value is! List) return <Map<String, dynamic>>[];
+    return value.map(_safeMap).whereType<Map<String, dynamic>>().toList();
+  }
+
   int? _intValue(dynamic value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
@@ -1749,13 +2583,15 @@ class _DraftField {
     required this.key,
     required this.label,
     required this.value,
+    List<Object>? path,
+    this.saveEnabled = true,
+    this.editable = true,
     this.helperText,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
   }) : initialValue = value,
        saveValue = null,
-       editable = true,
-       saveEnabled = true;
+       path = path ?? (key.isEmpty ? const <Object>[] : <Object>['core', key]);
 
   _DraftField.readOnly({
     required this.section,
@@ -1763,9 +2599,11 @@ class _DraftField {
     required this.label,
     required this.value,
     required this.saveValue,
+    List<Object>? path,
   }) : initialValue = value,
        editable = false,
        saveEnabled = true,
+       path = path ?? (key.isEmpty ? const <Object>[] : <Object>['core', key]),
        helperText = null,
        keyboardType = TextInputType.text,
        maxLines = 1;
@@ -1780,6 +2618,7 @@ class _DraftField {
        saveValue = null,
        editable = false,
        saveEnabled = false,
+       path = const <Object>[],
        keyboardType = TextInputType.text,
        maxLines = 1;
 
@@ -1791,11 +2630,17 @@ class _DraftField {
   final dynamic saveValue;
   final bool editable;
   final bool saveEnabled;
+  final List<Object> path;
   final String? helperText;
   final TextInputType keyboardType;
   final int maxLines;
 
   bool get wasEdited => value.trim() != initialValue.trim();
+
+  bool get isCoreField =>
+      path.length == 2 && path.first == 'core' && path.last == key;
+
+  String get pathKey => path.map((part) => '$part').join('.');
 }
 
 class _OcrLine {

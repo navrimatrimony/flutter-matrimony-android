@@ -551,10 +551,10 @@ class AppStrings {
       _mr ? 'Link valid until' : 'Link valid until';
 
   static String get biodataIntakeTitle =>
-      _mr ? 'बायोडाटा स्कॅन' : 'Biodata Scan';
+      _mr ? 'बायोडाटा इंटेक' : 'Biodata Intake';
 
   static String get biodataIntakeMenu =>
-      _mr ? 'बायोडाटा स्कॅन' : 'Biodata Scan';
+      _mr ? 'बायोडाटा इंटेक' : 'Biodata Intake';
 
   static String get biodataIntakeSubtitle => _mr
       ? 'फोटोमधून माहिती वाचून profile draft तयार करा.'
@@ -589,7 +589,7 @@ class AppStrings {
       : 'Edit anything that looks wrong, then save.';
 
   static String get biodataIntakeExtractedText =>
-      _mr ? 'वाचलेला मजकूर' : 'Extracted text';
+      _mr ? 'Autofill साठी वापरलेला मजकूर' : 'Biodata text used for autofill';
 
   static String get biodataIntakeConfirmSave =>
       _mr ? 'Confirm & Save' : 'Confirm & Save';
