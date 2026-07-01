@@ -19,8 +19,8 @@ class PhotoGalleryScreen extends StatefulWidget {
 
 class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
   final ImagePicker _picker = ImagePicker();
-  static const int _pendingApprovalRefreshLimit = 2;
-  static const Duration _pendingApprovalRefreshDelay = Duration(seconds: 6);
+  static const int _postUploadRefreshLimit = 2;
+  static const Duration _postUploadRefreshDelay = Duration(seconds: 5);
 
   bool _isLoading = true;
   bool _isUploading = false;
@@ -29,8 +29,8 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
   Map<String, dynamic> _meta = <String, dynamic>{};
   int? _selectedPhotoId;
   final Set<int> _busyPhotoIds = <int>{};
-  Timer? _pendingApprovalRefreshTimer;
-  int _pendingApprovalRefreshAttempts = 0;
+  Timer? _postUploadRefreshTimer;
+  int _postUploadRefreshAttempts = 0;
 
   @override
   void initState() {
@@ -40,7 +40,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
 
   @override
   void dispose() {
-    _pendingApprovalRefreshTimer?.cancel();
+    _postUploadRefreshTimer?.cancel();
     super.dispose();
   }
 
@@ -160,7 +160,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
         _isUploading = false;
       });
       _showMessage(_responseMessage(response, 'Photo upload झाला.'));
-      _schedulePendingApprovalRefresh();
+      _schedulePostUploadRefresh();
       return;
     }
 
@@ -168,24 +168,23 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     _showMessage(_responseMessage(response, 'Photo upload fail झाला.'));
   }
 
-  void _schedulePendingApprovalRefresh() {
-    _pendingApprovalRefreshTimer?.cancel();
-    _pendingApprovalRefreshAttempts = 0;
-    if (!_hasPendingApprovalPhotos) return;
+  void _schedulePostUploadRefresh() {
+    _postUploadRefreshTimer?.cancel();
+    _postUploadRefreshAttempts = 0;
 
-    _pendingApprovalRefreshTimer = Timer(
-      _pendingApprovalRefreshDelay,
-      _refreshPendingApprovalPhotos,
+    _postUploadRefreshTimer = Timer(
+      _postUploadRefreshDelay,
+      _refreshPhotosAfterUpload,
     );
   }
 
-  Future<void> _refreshPendingApprovalPhotos() async {
-    if (!mounted || !_hasPendingApprovalPhotos) return;
-    if (_pendingApprovalRefreshAttempts >= _pendingApprovalRefreshLimit) {
+  Future<void> _refreshPhotosAfterUpload() async {
+    if (!mounted) return;
+    if (_postUploadRefreshAttempts >= _postUploadRefreshLimit) {
       return;
     }
 
-    _pendingApprovalRefreshAttempts++;
+    _postUploadRefreshAttempts++;
 
     try {
       final response = await ApiClient.getProfilePhotos();
@@ -199,13 +198,13 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
 
     if (!mounted) return;
     if (_hasPendingApprovalPhotos &&
-        _pendingApprovalRefreshAttempts < _pendingApprovalRefreshLimit) {
-      _pendingApprovalRefreshTimer = Timer(
-        _pendingApprovalRefreshDelay,
-        _refreshPendingApprovalPhotos,
+        _postUploadRefreshAttempts < _postUploadRefreshLimit) {
+      _postUploadRefreshTimer = Timer(
+        _postUploadRefreshDelay,
+        _refreshPhotosAfterUpload,
       );
     } else {
-      _pendingApprovalRefreshTimer = null;
+      _postUploadRefreshTimer = null;
     }
   }
 
