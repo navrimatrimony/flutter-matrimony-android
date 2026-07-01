@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
@@ -143,10 +144,134 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     try {
       final inputImage = InputImage.fromFilePath(path);
       final recognized = await recognizer.processImage(inputImage);
-      return recognized.text;
+      return _layoutAwareOcrText(recognized);
     } finally {
       await recognizer.close();
     }
+  }
+
+  String _layoutAwareOcrText(RecognizedText recognized) {
+    final ocrLines = <_OcrLine>[];
+    for (final block in recognized.blocks) {
+      for (final line in block.lines) {
+        final text = line.text.trim();
+        if (text.isEmpty) continue;
+        final box = line.boundingBox;
+        ocrLines.add(
+          _OcrLine(
+            text: text,
+            left: box.left,
+            top: box.top,
+            right: box.right,
+            bottom: box.bottom,
+          ),
+        );
+      }
+    }
+
+    if (ocrLines.length < 2) return recognized.text;
+
+    ocrLines.sort((a, b) {
+      final topCompare = a.top.compareTo(b.top);
+      if (topCompare != 0) return topCompare;
+      return a.left.compareTo(b.left);
+    });
+
+    final rows = <List<_OcrLine>>[];
+    for (final line in ocrLines) {
+      List<_OcrLine>? target;
+      for (final row in rows.reversed) {
+        if (_sameOcrRow(row, line)) {
+          target = row;
+          break;
+        }
+      }
+      if (target == null) {
+        rows.add(<_OcrLine>[line]);
+      } else {
+        target.add(line);
+      }
+    }
+
+    rows.sort((a, b) => _rowTop(a).compareTo(_rowTop(b)));
+
+    final rowTexts = <String>[];
+    for (final row in rows) {
+      row.sort((a, b) => a.left.compareTo(b.left));
+      final text = _joinOcrRow(row.map((line) => line.text).toList());
+      if (text.trim().isNotEmpty) rowTexts.add(text.trim());
+    }
+
+    return rowTexts.isEmpty ? recognized.text : rowTexts.join('\n');
+  }
+
+  bool _sameOcrRow(List<_OcrLine> row, _OcrLine line) {
+    final rowTop = _rowTop(row);
+    final rowBottom = _rowBottom(row);
+    final rowHeight = math.max(1.0, rowBottom - rowTop);
+    final lineHeight = math.max(1.0, line.height);
+    final overlap =
+        math.min(rowBottom, line.bottom) - math.max(rowTop, line.top);
+    final minHeight = math.min(rowHeight, lineHeight);
+    if (overlap >= minHeight * 0.34) return true;
+
+    final rowCenter = rowTop + (rowHeight / 2);
+    final tolerance = math.max(8.0, math.min(28.0, minHeight * 0.7));
+    return (rowCenter - line.centerY).abs() <= tolerance;
+  }
+
+  double _rowTop(List<_OcrLine> row) =>
+      row.map((line) => line.top).reduce(math.min);
+
+  double _rowBottom(List<_OcrLine> row) =>
+      row.map((line) => line.bottom).reduce(math.max);
+
+  String _joinOcrRow(List<String> segments) {
+    final cleaned = segments
+        .map((segment) => segment.trim())
+        .where((segment) => segment.isNotEmpty)
+        .toList();
+    if (cleaned.isEmpty) return '';
+    if (cleaned.length == 1) return cleaned.first;
+
+    final first = cleaned.first;
+    final rest = cleaned
+        .skip(1)
+        .where((segment) => !RegExp(r'^[\s:：\-–—|]+$').hasMatch(segment))
+        .toList();
+    if (rest.isEmpty) return first;
+
+    if (_looksLikeBiodataLabel(first)) {
+      return '${_stripTrailingSeparator(first)} : ${rest.join(' ')}';
+    }
+
+    return cleaned.join(' ');
+  }
+
+  bool _looksLikeBiodataLabel(String value) {
+    final text = _stripTrailingSeparator(value);
+    return RegExp(
+      r'^(?:'
+      r'मुलाचे\s+नां?व|मुलीचे\s+नां?व|वधूचे\s+नां?व|नां?व|'
+      r'जन्म\s*तारीख|जन्मतारीख|जन्म\s*वेळ|जन्मवेळ|जन्म\s*ठिकाण|जन्म\s*स्थळ|'
+      r'धर्म|जात|कास्ट|उपजात|उप\s*जात|कुलदैवत|देवक|गोत्र|रास|राशी|नक्षत्र|गण|नाडी|नाड|'
+      r'उंची|ऊंची|वजन|वर्ण|रंग|ब्लड\s*ग्रुप|रक्त\s*गट|'
+      r'शिक्षण|नोकरी|व्यवसाय|नोकरी\s*/\s*व्यवसाय|कंपनी|कामाचे\s*ठिकाण|उत्पन्न|'
+      r'वडील|वडिलांचे\s+नाव|पित्याचे\s+नाव|आई|आईचे\s+नाव|मातेचे\s+नाव|'
+      r'भाऊ|बहीण|बहिण|मामा|मावशी|आत्या|नातेवाईक|नातेसंबंध|नाते\s*संबंध|'
+      r'पत्ता|पता|सध्याचा\s+पत्ता|निवास|मूळ\s*गाव|मोबाईल|मोबाइल|फोन|संपर्क|अपेक्षा|'
+      r'name|full\s*name|date\s*of\s*birth|dob|birth\s*time|birth\s*place|religion|caste|education|occupation|company|address|mobile'
+      r')$',
+      caseSensitive: false,
+      unicode: true,
+    ).hasMatch(text);
+  }
+
+  String _stripTrailingSeparator(String value) {
+    return value
+        .replaceAll(RegExp(r'[\s:：\-–—|.]+$'), '')
+        .replaceAll(RegExp(r'^[\s:：\-–—|.]+'), '')
+        .trim();
   }
 
   void _startMessageRotation() {
@@ -248,6 +373,10 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   Map<String, dynamic> _editedSnapshot(Map<String, dynamic> existingProfile) {
     final snapshot = _deepCopyMap(_snapshot);
     final core = _safeMap(snapshot['core']) ?? <String, dynamic>{};
+    final fieldsByKey = <String, _DraftField>{
+      for (final field in _fields)
+        if (field.key.isNotEmpty) field.key: field,
+    };
     for (final field in _fields) {
       final value = _fieldSaveValue(field);
       if (!_shouldSaveField(field, value, existingProfile)) {
@@ -258,6 +387,12 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
         continue;
       }
       core[field.key] = value;
+    }
+    for (final key in core.keys.toList()) {
+      final field = fieldsByKey[key];
+      if (field != null && field.wasEdited) continue;
+      final existing = _existingProfileValue(existingProfile, key);
+      if (!_isEmptyDraftValue(existing)) core.remove(key);
     }
 
     snapshot['snapshot_schema_version'] =
@@ -483,7 +618,9 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     final basic = _text('Basic details', 'मूलभूत माहिती');
     final community = _text('Community', 'समुदाय');
     final residence = _text('Residence', 'राहण्याचे ठिकाण');
+    final physical = _text('Physical', 'शारीरिक माहिती');
     final career = _text('Education & career', 'शिक्षण आणि करिअर');
+    final family = _text('Family details', 'कौटुंबिक माहिती');
     final lifestyle = _text('Lifestyle', 'जीवनशैली');
 
     addText(
@@ -507,8 +644,20 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
       sourceKeys: const <String>['date_of_birth', 'dob', 'birth_date'],
       keyboardType: TextInputType.datetime,
     );
-    addParsedInteger(
+    addText(
       section: basic,
+      key: 'birth_time',
+      label: _text('Birth time', 'जन्म वेळ'),
+      sourceKeys: const <String>['birth_time', 'birth_time_text'],
+    );
+    addText(
+      section: basic,
+      key: 'birth_place_text',
+      label: _text('Birth place', 'जन्म ठिकाण'),
+      sourceKeys: const <String>['birth_place_text', 'birth_place'],
+    );
+    addParsedInteger(
+      section: physical,
       key: 'height_cm',
       label: _text('Height', 'उंची'),
       sourceKeys: const <String>['height_cm', 'height', 'height_text'],
@@ -584,6 +733,32 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     ]);
 
     addText(
+      section: physical,
+      key: 'weight_kg',
+      label: _text('Weight', 'वजन'),
+      sourceKeys: const <String>['weight_kg', 'weight'],
+      keyboardType: TextInputType.number,
+    );
+    addText(
+      section: physical,
+      key: 'complexion',
+      label: _text('Complexion', 'वर्ण'),
+      sourceKeys: const <String>['complexion', 'complexion_text'],
+    );
+    addText(
+      section: physical,
+      key: 'blood_group',
+      label: _text('Blood group', 'रक्त गट'),
+      sourceKeys: const <String>['blood_group'],
+    );
+    addText(
+      section: physical,
+      key: 'physical_condition',
+      label: _text('Physical condition', 'शारीरिक स्थिती'),
+      sourceKeys: const <String>['physical_condition'],
+    );
+
+    addText(
       section: career,
       key: 'highest_education',
       label: AppStrings.education,
@@ -653,6 +828,78 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
       sourceKeys: const <String>['income_value_type'],
     );
 
+    addText(
+      section: family,
+      key: 'father_name',
+      label: _text('Father name', 'वडिलांचे नाव'),
+      sourceKeys: const <String>['father_name'],
+      keyboardType: TextInputType.name,
+    );
+    addText(
+      section: family,
+      key: 'father_occupation',
+      label: _text('Father occupation', 'वडिलांचा व्यवसाय'),
+      sourceKeys: const <String>[
+        'father_occupation',
+        'father_occupation_title',
+      ],
+    );
+    addText(
+      section: family,
+      key: 'father_extra_info',
+      label: _text('Father details', 'वडिलांची माहिती'),
+      sourceKeys: const <String>['father_extra_info'],
+      maxLines: 2,
+    );
+    addText(
+      section: family,
+      key: 'mother_name',
+      label: _text('Mother name', 'आईचे नाव'),
+      sourceKeys: const <String>['mother_name'],
+      keyboardType: TextInputType.name,
+    );
+    addText(
+      section: family,
+      key: 'mother_occupation',
+      label: _text('Mother occupation', 'आईचा व्यवसाय'),
+      sourceKeys: const <String>[
+        'mother_occupation',
+        'mother_occupation_title',
+      ],
+    );
+    addText(
+      section: family,
+      key: 'mother_extra_info',
+      label: _text('Mother details', 'आईची माहिती'),
+      sourceKeys: const <String>['mother_extra_info'],
+      maxLines: 2,
+    );
+    addText(
+      section: family,
+      key: 'family_type',
+      label: _text('Family type', 'कुटुंब प्रकार'),
+      sourceKeys: const <String>['family_type'],
+    );
+    addText(
+      section: family,
+      key: 'family_status',
+      label: _text('Family status', 'कुटुंब स्थिती'),
+      sourceKeys: const <String>['family_status'],
+    );
+    addText(
+      section: family,
+      key: 'family_values',
+      label: _text('Family values', 'कुटुंब मूल्ये'),
+      sourceKeys: const <String>['family_values'],
+    );
+    addText(
+      section: family,
+      key: 'other_relatives_text',
+      label: _text('Relatives', 'नातेवाईक'),
+      sourceKeys: const <String>['other_relatives_text'],
+      maxLines: 2,
+    );
+
     addControlled(
       section: lifestyle,
       idKey: 'diet_id',
@@ -705,7 +952,6 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     );
 
     _addRemainingCoreFields(fields, core, usedCoreKeys);
-    _addNormalizedSectionNotes(fields, preview, usedCoreKeys);
 
     return fields;
   }
@@ -869,53 +1115,6 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     }
   }
 
-  void _addNormalizedSectionNotes(
-    List<_DraftField> fields,
-    Map<String, dynamic>? preview,
-    Set<String> usedCoreKeys,
-  ) {
-    final normalizedDraft = _safeMap(preview?['normalized_draft']);
-    final sections = _safeMap(normalizedDraft?['sections']);
-    if (sections == null || sections.isEmpty) return;
-
-    final seen = <String>{};
-    for (final entry in sections.entries) {
-      final rows = entry.value;
-      if (rows is! List) continue;
-
-      final sectionTitle = _sectionTitleFromKey(entry.key);
-      for (final row in rows) {
-        final map = _safeMap(row);
-        if (map == null) continue;
-
-        final field = _stringValue(map['field']);
-        if (field != null && usedCoreKeys.contains(field)) continue;
-
-        final label = _stringValue(map['label']) ?? _fieldLabelFromKey(field);
-        final value = _reviewTextFromValue(map['value']);
-        if (label == null || value == null) continue;
-
-        final duplicateKey = '$sectionTitle|$label|$value';
-        if (!seen.add(duplicateKey)) continue;
-
-        final helper =
-            _stringValue(map['review_hint']) ??
-            _stringValue(map['correction_hint']) ??
-            _stringValue(map['review_reason']);
-
-        fields.add(
-          _DraftField.note(
-            section: sectionTitle,
-            label: label,
-            value: value,
-            helperText: helper,
-            maxLines: value.length > 70 ? 2 : 1,
-          ),
-        );
-      }
-    }
-  }
-
   String? _reviewTextFromValue(dynamic value) {
     if (value == null) return null;
     if (value is List || value is Map) return null;
@@ -932,25 +1131,6 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
         .where((part) => part.isNotEmpty)
         .map((part) => part[0].toUpperCase() + part.substring(1))
         .join(' ');
-  }
-
-  String _sectionTitleFromKey(String key) {
-    const titles = <String, String>{
-      'review_needed': 'Needs review',
-      'basic-info': 'Basic details',
-      'physical': 'Physical',
-      'education-career': 'Education & career',
-      'family-details': 'Family details',
-      'siblings': 'Siblings',
-      'relatives': 'Relatives',
-      'alliance': 'Alliance',
-      'property': 'Property',
-      'horoscope': 'Horoscope',
-      'about-me': 'About me',
-      'about-preferences': 'Partner preference',
-      'photo': 'Photo',
-    };
-    return titles[key] ?? _fieldLabelFromKey(key) ?? key;
   }
 
   Map<String, dynamic>? _decodeJsonMap(dynamic value) {
@@ -1595,13 +1775,13 @@ class _DraftField {
     required this.label,
     required this.value,
     this.helperText,
-    this.maxLines = 1,
   }) : key = '',
        initialValue = value,
        saveValue = null,
        editable = false,
        saveEnabled = false,
-       keyboardType = TextInputType.text;
+       keyboardType = TextInputType.text,
+       maxLines = 1;
 
   final String section;
   final String key;
@@ -1616,4 +1796,23 @@ class _DraftField {
   final int maxLines;
 
   bool get wasEdited => value.trim() != initialValue.trim();
+}
+
+class _OcrLine {
+  const _OcrLine({
+    required this.text,
+    required this.left,
+    required this.top,
+    required this.right,
+    required this.bottom,
+  });
+
+  final String text;
+  final double left;
+  final double top;
+  final double right;
+  final double bottom;
+
+  double get height => bottom - top;
+  double get centerY => top + (height / 2);
 }
