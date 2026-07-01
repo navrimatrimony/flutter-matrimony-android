@@ -23,6 +23,7 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
   bool _isSharing = false;
   String? _errorMessage;
   Map<String, dynamic> _options = <String, dynamic>{};
+  Map<String, dynamic>? _lastExport;
   String _selectedFormat = 'pdf';
   String? _selectedTemplateKey;
 
@@ -134,6 +135,10 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
         return;
       }
 
+      setState(() {
+        _lastExport = Map<String, dynamic>.from(response);
+      });
+
       if (share) {
         await _shareUrl(downloadUrl);
       } else {
@@ -232,6 +237,10 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: [
           _buildStatusCard(),
+          if (_lastExport != null) ...[
+            const SizedBox(height: 14),
+            _buildGeneratedCard(_lastExport!),
+          ],
           const SizedBox(height: 14),
           _buildOptionsCard(),
           const SizedBox(height: 14),
@@ -426,6 +435,98 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
                         : const Icon(Icons.share),
                     label: Text(AppStrings.biodataExportShare),
                   ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGeneratedCard(Map<String, dynamic> export) {
+    final url = _stringValue(export['download_url'] ?? export['file_url']);
+    final template = _safeMap(export['template']) ?? <String, dynamic>{};
+    final templateLabel = _stringValue(
+      template['label'],
+      fallback: _stringValue(
+        template['key'],
+        fallback: _selectedTemplateKey ?? '',
+      ),
+    );
+    final format = _stringValue(
+      export['format'],
+      fallback: _selectedFormat,
+    ).toUpperCase();
+    final expiresAt = _formatExpiresAt(_stringValue(export['expires_at']));
+
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      shape: _cardShape(),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.task_alt, color: _brandColor),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    AppStrings.biodataGeneratedTitle,
+                    style: const TextStyle(
+                      color: _brandDark,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              AppStrings.biodataGeneratedSubtitle,
+              style: const TextStyle(
+                color: Color(0xFF7C6A64),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildTemplateTag(format),
+                if (templateLabel.isNotEmpty) _buildTemplateTag(templateLabel),
+                if (expiresAt.isNotEmpty)
+                  _buildTemplateTag(
+                    '${AppStrings.biodataExpiresAt} $expiresAt',
+                  ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: url.isEmpty ? null : () => _openUrl(url),
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: Text(AppStrings.biodataPreviewAction),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                IconButton.outlined(
+                  tooltip: AppStrings.biodataExportShare,
+                  onPressed: url.isEmpty ? null : () => _shareUrl(url),
+                  icon: const Icon(Icons.share),
+                ),
+                const SizedBox(width: 8),
+                IconButton.outlined(
+                  tooltip: AppStrings.biodataCopyLink,
+                  onPressed: url.isEmpty ? null : () => _copyUrl(url),
+                  icon: const Icon(Icons.copy),
                 ),
               ],
             ),
@@ -674,6 +775,24 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
+  }
+
+  Future<void> _copyUrl(String url) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    _showSnackBar(AppStrings.biodataLinkCopied);
+  }
+
+  static String _formatExpiresAt(String value) {
+    if (value.isEmpty) return '';
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return value;
+    final local = parsed.toLocal();
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '${local.year}-$month-$day $hour:$minute';
   }
 
   static bool _responseSuccess(Map<String, dynamic> response) {

@@ -532,6 +532,24 @@ class AppStrings {
       ? 'Share/download link थोड्या वेळासाठीच valid असते.'
       : 'Share/download links are valid for a short time.';
 
+  static String get biodataGeneratedTitle =>
+      _mr ? 'Generated biodata तयार आहे' : 'Generated biodata is ready';
+
+  static String get biodataGeneratedSubtitle => _mr
+      ? 'Preview, download किंवा share करण्यासाठी हा link वापरा.'
+      : 'Use this link to preview, download, or share the generated biodata.';
+
+  static String get biodataPreviewAction =>
+      _mr ? 'Preview उघडा' : 'Open preview';
+
+  static String get biodataCopyLink => _mr ? 'Link copy करा' : 'Copy link';
+
+  static String get biodataLinkCopied =>
+      _mr ? 'Biodata link clipboard मध्ये copy केली.' : 'Biodata link copied.';
+
+  static String get biodataExpiresAt =>
+      _mr ? 'Link valid until' : 'Link valid until';
+
   static String get notificationsTitle => _mr ? 'सूचना' : 'Notifications';
 
   static String get notificationsEmpty =>

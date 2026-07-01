@@ -14,7 +14,6 @@ class ApiRoutes {
   static const String internalLocationDistricts =
       '/internal/location/districts';
   static const String internalLocationTalukas = '/internal/location/talukas';
-  static const String internalLocationCities = '/internal/location/cities';
   static const String internalLocationChildren = '/internal/location/children';
   static const String educationDegreeSearch = '/education-degrees/search';
 

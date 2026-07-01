@@ -324,7 +324,7 @@ class ApiClient {
   }
 
   static int? locationIdFrom(Map<String, dynamic> location) {
-    for (final key in ['location_id', 'id', 'city_id']) {
+    for (final key in ['location_id', 'id']) {
       final id = _intValue(location[key]);
       if (id != null) return id;
     }
@@ -1490,17 +1490,6 @@ class ApiClient {
       await _getRootJson(
         ApiRoutes.internalLocationTalukas,
         query: {'parent_id': districtId},
-      ),
-    );
-  }
-
-  static Future<List<Map<String, dynamic>>> getInternalLocationCities({
-    required int talukaId,
-  }) async {
-    return _safeMapList(
-      await _getRootJson(
-        ApiRoutes.internalLocationCities,
-        query: {'parent_id': talukaId},
       ),
     );
   }

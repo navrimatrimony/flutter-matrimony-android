@@ -95,7 +95,11 @@ class _LoginScreenState extends State<LoginScreen> {
               duration: const Duration(seconds: 2),
             ),
           );
-          Navigator.pushReplacementNamed(context, '/smart-onboarding');
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/smart-onboarding',
+            (route) => false,
+          );
           return;
         }
 
@@ -105,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
           });
           final route = await _completedProfileRoute();
           if (!mounted) return;
-          Navigator.pushReplacementNamed(context, route);
+          Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
           return;
         }
 

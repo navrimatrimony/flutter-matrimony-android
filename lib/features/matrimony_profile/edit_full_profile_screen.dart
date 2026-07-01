@@ -990,7 +990,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _readText(row['address_type']) ??
           defaultTypeKey,
       addressLine: ApiClient.safeDisplayLabel(row['address_line']),
-      locationId: _readInt(row['location_id']) ?? _readInt(row['city_id']),
+      locationId: _readInt(row['location_id']),
       locationLabel: _addressLocationLabel(row),
     );
   }
