@@ -123,7 +123,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     final image = await _decodeImage(imageFile);
     try {
       if (!mounted) return null;
-      return showModalBottomSheet<File>(
+      return await showModalBottomSheet<File>(
         context: context,
         isScrollControlled: true,
         useSafeArea: true,
@@ -1440,7 +1440,13 @@ class _PhotoCropSheetState extends State<_PhotoCropSheet> {
       setState(() => _saving = false);
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(e.toString())));
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Photo crop करता आला नाही. कृपया पुन्हा try करा किंवा दुसरा photo निवडा.',
+            ),
+          ),
+        );
     }
   }
 
