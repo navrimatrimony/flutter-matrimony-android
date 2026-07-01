@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -193,8 +194,7 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
 
     try {
       final snapshot = await _editedSnapshotForSave();
-      final core = _safeMap(snapshot['core']) ?? <String, dynamic>{};
-      if (core.isEmpty) {
+      if (!_snapshotHasSaveableContent(snapshot)) {
         _showSnackBar(
           _text(
             'No safe new details to save. Existing profile information was kept.',
@@ -246,18 +246,24 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   }
 
   Map<String, dynamic> _editedSnapshot(Map<String, dynamic> existingProfile) {
-    final core = <String, dynamic>{};
+    final snapshot = _deepCopyMap(_snapshot);
+    final core = _safeMap(snapshot['core']) ?? <String, dynamic>{};
     for (final field in _fields) {
       final value = _fieldSaveValue(field);
-      if (!_shouldSaveField(field, value, existingProfile)) continue;
+      if (!_shouldSaveField(field, value, existingProfile)) {
+        final existing = _existingProfileValue(existingProfile, field.key);
+        if (!_isEmptyDraftValue(existing) && !field.wasEdited) {
+          core.remove(field.key);
+        }
+        continue;
+      }
       core[field.key] = value;
     }
 
-    return <String, dynamic>{
-      'snapshot_schema_version':
-          _intValue(_snapshot['snapshot_schema_version']) ?? 1,
-      'core': core,
-    };
+    snapshot['snapshot_schema_version'] =
+        _intValue(snapshot['snapshot_schema_version']) ?? 1;
+    snapshot['core'] = core;
+    return snapshot;
   }
 
   Future<Map<String, dynamic>> _loadExistingProfileForOverwriteGuard() async {
@@ -339,7 +345,8 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
   }
 
   bool get _hasSaveableDraft =>
-      _fields.any((field) => field.saveEnabled && field.key.isNotEmpty);
+      _fields.any((field) => field.saveEnabled && field.key.isNotEmpty) ||
+      _snapshotHasSaveableContent(_snapshot);
 
   List<_DraftField> _onboardingFieldsFromPreview(
     Map<String, dynamic>? preview,
@@ -349,6 +356,11 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     final core = _mergedCoreFromPreview(snapshot, rawDraft);
     final address = _firstCurrentAddress(snapshot, rawDraft);
     final fields = <_DraftField>[];
+    final usedCoreKeys = <String>{};
+
+    void markCoreKeys(Iterable<String> keys) {
+      usedCoreKeys.addAll(keys.where((key) => key.trim().isNotEmpty));
+    }
 
     void addText({
       required String section,
@@ -358,6 +370,7 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
       TextInputType keyboardType = TextInputType.text,
       int maxLines = 1,
     }) {
+      markCoreKeys(<String>[key, ...sourceKeys]);
       final value = _firstString(core, sourceKeys);
       if (value == null) return;
       fields.add(
@@ -385,6 +398,7 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
       required List<String> sourceKeys,
       required int? Function(String? value) parser,
     }) {
+      markCoreKeys(<String>[key, ...sourceKeys]);
       final rawValue = _firstString(core, sourceKeys);
       final parsedValue = parser(rawValue);
       if (parsedValue != null) {
@@ -424,6 +438,12 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
       required List<String> labelKeys,
       String? textFallbackKey,
     }) {
+      markCoreKeys(<String>[
+        idKey,
+        ...idKeys,
+        ...labelKeys,
+        if (textFallbackKey != null) textFallbackKey,
+      ]);
       final id = _firstInt(core, idKeys);
       final displayLabel = _firstDisplayLabel(core, labelKeys);
       if (id != null && id > 0) {
@@ -552,6 +572,16 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     );
 
     _addLocationField(fields, residence, core, address);
+    markCoreKeys(const <String>[
+      'location_id',
+      'city_id',
+      'location_label',
+      'location_option',
+      'location',
+      'city',
+      'city_name',
+      'address_line',
+    ]);
 
     addText(
       section: career,
@@ -674,6 +704,9 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
       sourceKeys: const <String>['spectacles_lens'],
     );
 
+    _addRemainingCoreFields(fields, core, usedCoreKeys);
+    _addNormalizedSectionNotes(fields, preview, usedCoreKeys);
+
     return fields;
   }
 
@@ -748,7 +781,8 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
 
   Map<String, dynamic>? _rawDraftFromPreview(Map<String, dynamic>? preview) {
     final normalizedDraft = _safeMap(preview?['normalized_draft']);
-    return _safeMap(normalizedDraft?['raw_draft_json']);
+    return _safeMap(normalizedDraft?['raw_draft']) ??
+        _decodeJsonMap(normalizedDraft?['raw_draft_json']);
   }
 
   Map<String, dynamic> _mergedCoreFromPreview(
@@ -802,6 +836,155 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
       if (hasResidenceValue(row)) return row;
     }
     return null;
+  }
+
+  void _addRemainingCoreFields(
+    List<_DraftField> fields,
+    Map<String, dynamic> core,
+    Set<String> usedCoreKeys,
+  ) {
+    final keys = core.keys.toList()..sort();
+    for (final key in keys) {
+      if (usedCoreKeys.contains(key) ||
+          key.endsWith('_id') ||
+          key.endsWith('_ids') ||
+          key == 'id' ||
+          key == 'user_id') {
+        continue;
+      }
+
+      final value = _reviewTextFromValue(core[key]);
+      if (value == null) continue;
+
+      fields.add(
+        _DraftField(
+          section: _text('Other details', 'इतर माहिती'),
+          key: key,
+          label: _fieldLabelFromKey(key) ?? key,
+          value: value,
+          maxLines: value.length > 70 ? 2 : 1,
+        ),
+      );
+      usedCoreKeys.add(key);
+    }
+  }
+
+  void _addNormalizedSectionNotes(
+    List<_DraftField> fields,
+    Map<String, dynamic>? preview,
+    Set<String> usedCoreKeys,
+  ) {
+    final normalizedDraft = _safeMap(preview?['normalized_draft']);
+    final sections = _safeMap(normalizedDraft?['sections']);
+    if (sections == null || sections.isEmpty) return;
+
+    final seen = <String>{};
+    for (final entry in sections.entries) {
+      final rows = entry.value;
+      if (rows is! List) continue;
+
+      final sectionTitle = _sectionTitleFromKey(entry.key);
+      for (final row in rows) {
+        final map = _safeMap(row);
+        if (map == null) continue;
+
+        final field = _stringValue(map['field']);
+        if (field != null && usedCoreKeys.contains(field)) continue;
+
+        final label = _stringValue(map['label']) ?? _fieldLabelFromKey(field);
+        final value = _reviewTextFromValue(map['value']);
+        if (label == null || value == null) continue;
+
+        final duplicateKey = '$sectionTitle|$label|$value';
+        if (!seen.add(duplicateKey)) continue;
+
+        final helper =
+            _stringValue(map['review_hint']) ??
+            _stringValue(map['correction_hint']) ??
+            _stringValue(map['review_reason']);
+
+        fields.add(
+          _DraftField.note(
+            section: sectionTitle,
+            label: label,
+            value: value,
+            helperText: helper,
+            maxLines: value.length > 70 ? 2 : 1,
+          ),
+        );
+      }
+    }
+  }
+
+  String? _reviewTextFromValue(dynamic value) {
+    if (value == null) return null;
+    if (value is List || value is Map) return null;
+    final text = value.toString().trim();
+    return text.isEmpty ? null : text;
+  }
+
+  String? _fieldLabelFromKey(String? key) {
+    final text = key?.trim();
+    if (text == null || text.isEmpty) return null;
+    return text
+        .replaceAll('_', ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .map((part) => part[0].toUpperCase() + part.substring(1))
+        .join(' ');
+  }
+
+  String _sectionTitleFromKey(String key) {
+    const titles = <String, String>{
+      'review_needed': 'Needs review',
+      'basic-info': 'Basic details',
+      'physical': 'Physical',
+      'education-career': 'Education & career',
+      'family-details': 'Family details',
+      'siblings': 'Siblings',
+      'relatives': 'Relatives',
+      'alliance': 'Alliance',
+      'property': 'Property',
+      'horoscope': 'Horoscope',
+      'about-me': 'About me',
+      'about-preferences': 'Partner preference',
+      'photo': 'Photo',
+    };
+    return titles[key] ?? _fieldLabelFromKey(key) ?? key;
+  }
+
+  Map<String, dynamic>? _decodeJsonMap(dynamic value) {
+    if (value is! String || value.trim().isEmpty) return null;
+    try {
+      final decoded = jsonDecode(value);
+      return _safeMap(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Map<String, dynamic> _deepCopyMap(Map<String, dynamic> value) {
+    try {
+      final decoded = jsonDecode(jsonEncode(value));
+      return _safeMap(decoded) ?? Map<String, dynamic>.from(value);
+    } catch (_) {
+      return Map<String, dynamic>.from(value);
+    }
+  }
+
+  bool _snapshotHasSaveableContent(dynamic value) {
+    if (value == null) return false;
+    if (value is String) return value.trim().isNotEmpty;
+    if (value is num || value is bool) return true;
+    if (value is List) return value.any(_snapshotHasSaveableContent);
+    if (value is Map) {
+      for (final entry in value.entries) {
+        final key = entry.key.toString();
+        if (key == 'snapshot_schema_version') continue;
+        if (_snapshotHasSaveableContent(entry.value)) return true;
+      }
+    }
+    return false;
   }
 
   String? _firstString(Map<String, dynamic>? values, List<String> keys) {
@@ -1412,13 +1595,13 @@ class _DraftField {
     required this.label,
     required this.value,
     this.helperText,
+    this.maxLines = 1,
   }) : key = '',
        initialValue = value,
        saveValue = null,
        editable = false,
        saveEnabled = false,
-       keyboardType = TextInputType.text,
-       maxLines = 1;
+       keyboardType = TextInputType.text;
 
   final String section;
   final String key;
