@@ -17,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
   String errorMessage = '';
   bool _obscurePassword = true;
-  bool _keepSignedIn = true;
 
   @override
   void initState() {
@@ -26,12 +25,10 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _loadSavedLoginPreference() async {
-    final keepSignedIn = await AppStorage.instance.readKeepSignedIn();
     final rememberedLogin = await AppStorage.instance
         .readRememberedLoginIdentifier();
     if (!mounted) return;
     setState(() {
-      _keepSignedIn = keepSignedIn ?? true;
       if (loginController.text.trim().isEmpty &&
           rememberedLogin != null &&
           rememberedLogin.trim().isNotEmpty) {
@@ -58,17 +55,11 @@ class _LoginScreenState extends State<LoginScreen> {
     final result = await ApiClient.login(
       login: loginValue,
       password: passwordValue,
-      persistSession: _keepSignedIn,
     );
 
     // Check if login was successful (token present)
     if (result.containsKey('token') && result['token'] != null) {
-      await AppStorage.instance.saveKeepSignedIn(_keepSignedIn);
-      if (_keepSignedIn) {
-        await AppStorage.instance.saveRememberedLoginIdentifier(loginValue);
-      } else {
-        await AppStorage.instance.clearRememberedLoginIdentifier();
-      }
+      await AppStorage.instance.saveRememberedLoginIdentifier(loginValue);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -284,49 +275,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFF7F5),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: const Color(0xFFF2C3BB),
-                              ),
-                            ),
-                            child: CheckboxListTile(
-                              value: _keepSignedIn,
-                              onChanged: isLoading
-                                  ? null
-                                  : (value) {
-                                      setState(() {
-                                        _keepSignedIn = value ?? true;
-                                      });
-                                    },
-                              controlAffinity: ListTileControlAffinity.leading,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 2,
-                              ),
-                              checkboxShape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              activeColor: const Color(0xFFE65A43),
-                              title: Text(
-                                AppStrings.loginKeepSignedIn,
-                                style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: const Color(0xFF111827),
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              subtitle: Text(
-                                AppStrings.loginKeepSignedInSubtitle,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: const Color(0xFF6B7280),
-                                  height: 1.25,
-                                ),
-                              ),
-                            ),
-                          ),
+                          const SizedBox(height: 6),
                           if (errorMessage.isNotEmpty) ...[
                             const SizedBox(height: 14),
                             Container(
