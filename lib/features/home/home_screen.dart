@@ -296,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
-  Future<void> _openEditProfile() async {
+  Future<void> _openEditProfile({bool openLocationDetails = false}) async {
     try {
       await ApiClient.getMyProfile();
       if (!mounted) return;
@@ -305,6 +305,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         MaterialPageRoute(
           builder: (_) => EditFullProfileScreen(
             initialProfile: ApiClient.currentUserProfile,
+            openLocationDetails: openLocationDetails,
           ),
         ),
       );
@@ -1483,7 +1484,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         subtitle: AppStrings.dashboardCompleteProfileSubtitle,
         icon: Icons.edit_note,
         color: _brand,
-        onTap: _openEditProfile,
+        onTap: () => _openEditProfile(),
       );
     }
 
@@ -1552,7 +1553,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       _ReadinessItem(
         title: AppStrings.dashboardBasicDetails,
         ready: _hasBasicDetails(profile),
-        onTap: _openEditProfile,
+        onTap: () => _openEditProfile(),
       ),
       _ReadinessItem(
         title: AppStrings.dashboardPhoto,
@@ -1561,15 +1562,15 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       ),
       _ReadinessItem(
         title: AppStrings.dashboardLocationDetails,
-        ready: _profileLocation(profile) != null,
-        onTap: _openEditProfile,
+        ready: _hasResidenceLocation(profile),
+        onTap: () => _openEditProfile(openLocationDetails: true),
       ),
       _ReadinessItem(
         title: AppStrings.dashboardEducationCareer,
         ready:
             _profileEducation(profile) != null ||
             _profileOccupation(profile) != null,
-        onTap: _openEditProfile,
+        onTap: () => _openEditProfile(),
       ),
     ];
 
@@ -1583,7 +1584,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         _ReadinessItem(
           title: AppStrings.dashboardPartnerPreference,
           ready: _hasPartnerPreference(profile),
-          onTap: _openEditProfile,
+          onTap: () => _openEditProfile(),
         ),
       );
     }
@@ -1761,13 +1762,36 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   String? _profileLocation(Map<String, dynamic>? profile) {
-    final display = _safeMap(profile?['display']);
-    final card = _safeMap(display?['card']);
-    return _stringValue(profile?['location']) ??
-        _stringValue(profile?['city']) ??
-        _stringValue(profile?['city_name']) ??
-        _stringValue(profile?['residence_city']) ??
-        _stringValue(card?['location']);
+    return ApiClient.profileLocationLabel(
+      profile,
+      allowIdFallback: false,
+      includeAddressLineFallback: false,
+    );
+  }
+
+  bool _hasResidenceLocation(Map<String, dynamic>? profile) {
+    if (profile == null) return false;
+    if (_profileLocation(profile) != null) return true;
+
+    final topLevelId = _intValue(profile['location_id']);
+    if (topLevelId != null && topLevelId > 0) return true;
+
+    final addresses = _safeMapList(profile['self_addresses']);
+    for (final row in addresses) {
+      final type = _stringValue(
+        row['address_type_key'] ?? row['address_type'],
+      )?.toLowerCase();
+      if (type != null && type != 'current') continue;
+
+      final rowLocationId = _intValue(row['location_id'] ?? row['city_id']);
+      if (rowLocationId != null && rowLocationId > 0) return true;
+
+      if (_stringValue(row['location_label'] ?? row['display']) != null) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   String? _profileEducation(Map<String, dynamic>? profile) {

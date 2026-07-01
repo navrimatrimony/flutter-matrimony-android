@@ -437,8 +437,29 @@ class ApiClient {
   static String? profileLocationLabel(
     Map<String, dynamic>? profile, {
     bool allowIdFallback = true,
+    bool includeAddressLineFallback = true,
   }) {
     if (profile == null) return null;
+
+    final display = profile['display'];
+    if (display is Map) {
+      final displayMap = Map<String, dynamic>.from(display);
+      for (final key in ['location_label', 'location']) {
+        final label = safeDisplayLabel(displayMap[key]);
+        if (label != null) return label;
+      }
+
+      for (final sectionKey in ['hero', 'card']) {
+        final section = displayMap[sectionKey];
+        if (section is Map) {
+          final sectionMap = Map<String, dynamic>.from(section);
+          for (final key in ['location_label', 'location']) {
+            final label = safeDisplayLabel(sectionMap[key]);
+            if (label != null) return label;
+          }
+        }
+      }
+    }
 
     for (final key in [
       'location',
@@ -448,10 +469,40 @@ class ApiClient {
       'city',
       'city_name',
       'residence_location',
-      'address_line',
     ]) {
       final label = safeDisplayLabel(profile[key]);
       if (label != null) return label;
+    }
+
+    final selfAddresses = profile['self_addresses'];
+    if (selfAddresses is List) {
+      Map<String, dynamic>? firstAddress;
+      Map<String, dynamic>? currentAddress;
+      for (final row in selfAddresses) {
+        if (row is! Map) continue;
+        final address = Map<String, dynamic>.from(row);
+        firstAddress ??= address;
+        final type = safeDisplayLabel(
+          address['address_type_key'] ?? address['address_type'],
+        )?.toLowerCase();
+        if (type == 'current') {
+          currentAddress = address;
+          break;
+        }
+      }
+
+      for (final address in [currentAddress, firstAddress]) {
+        if (address == null) continue;
+        for (final key in ['location_label', 'display', 'city_label']) {
+          final label = safeDisplayLabel(address[key]);
+          if (label != null) return label;
+        }
+      }
+    }
+
+    if (includeAddressLineFallback) {
+      final addressLine = safeDisplayLabel(profile['address_line']);
+      if (addressLine != null) return addressLine;
     }
 
     final id = _intValue(profile['location_id']);

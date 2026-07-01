@@ -10,8 +10,13 @@ import '../photo/photo_upload_screen.dart';
 
 class EditFullProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? initialProfile;
+  final bool openLocationDetails;
 
-  const EditFullProfileScreen({super.key, this.initialProfile});
+  const EditFullProfileScreen({
+    super.key,
+    this.initialProfile,
+    this.openLocationDetails = false,
+  });
 
   @override
   State<EditFullProfileScreen> createState() => _EditFullProfileScreenState();
@@ -32,6 +37,20 @@ enum _EditProfileSection {
 }
 
 enum _UnsavedSectionAction { save, discard, cancel }
+
+class _SectionStatusInfo {
+  const _SectionStatusInfo({
+    required this.label,
+    required this.color,
+    required this.filled,
+    required this.total,
+  });
+
+  final String label;
+  final Color color;
+  final int filled;
+  final int total;
+}
 
 class _MarriageEditRow {
   _MarriageEditRow({
@@ -418,6 +437,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     milliseconds: 400,
   );
   static const String _defaultPreferredStateName = 'Maharashtra';
+  static const Color _sectionReadyColor = Color(0xFF15803D);
+  static const Color _sectionPartialColor = Color(0xFFD97706);
+  static const Color _sectionMissingColor = Color(0xFFDC2626);
   static const List<Map<String, String>> _addressTypeOptions = [
     {'key': 'current', 'label': 'Current'},
     {'key': 'permanent', 'label': 'Permanent'},
@@ -508,6 +530,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   Map<String, dynamic>? _expandedSectionSnapshot;
   Map<String, dynamic>? _lastLoadedProfile;
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _selfAddressesSectionKey = GlobalKey();
   final Map<_EditProfileSection, GlobalKey> _sectionCardKeys = {
     _EditProfileSection.basic: GlobalKey(),
     _EditProfileSection.physical: GlobalKey(),
@@ -525,6 +548,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   _EditProfileSection? _savedFeedbackSection;
   bool _savedHighlightOn = false;
   bool _showSavedChip = false;
+  bool _initialLocationTargetApplied = false;
 
   String? _loadError;
   String? _optionsError;
@@ -1008,7 +1032,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           locationId: _readInt(profile['location_id']),
           locationLabel:
               ApiClient.safeDisplayLabel(profile['location_label']) ??
-              ApiClient.profileLocationLabel(profile, allowIdFallback: false),
+              ApiClient.profileLocationLabel(
+                profile,
+                allowIdFallback: false,
+                includeAddressLineFallback: false,
+              ),
         ),
       );
     } else {
@@ -1866,6 +1894,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedLocationLabel = ApiClient.profileLocationLabel(
       profile,
       allowIdFallback: false,
+      includeAddressLineFallback: false,
     );
     _locationController.text = _selectedLocationLabel ?? '';
     _addressLineController.text =
@@ -2244,9 +2273,19 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
 
     if (!mounted) return;
+    final shouldScrollToLocation =
+        widget.openLocationDetails && !_initialLocationTargetApplied;
     setState(() {
+      if (shouldScrollToLocation) {
+        _expandedSection = _EditProfileSection.basic;
+        _expandedSectionSnapshot = _sectionSnapshot(_EditProfileSection.basic);
+        _initialLocationTargetApplied = true;
+      }
       _loading = false;
     });
+    if (shouldScrollToLocation) {
+      _scrollToInitialLocationTargetAfterLayout();
+    }
   }
 
   Future<void> _loadGenders() async {
@@ -4681,6 +4720,215 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
   }
 
+  bool _hasControllerText(TextEditingController controller) {
+    return controller.text.trim().isNotEmpty;
+  }
+
+  bool _hasTextValue(String? value) {
+    return value != null && value.trim().isNotEmpty;
+  }
+
+  bool _hasPositiveId(int? value) {
+    return value != null && value > 0;
+  }
+
+  int _filledCount(List<bool> values) {
+    return values.where((value) => value).length;
+  }
+
+  bool _currentSelfAddressHasLocation() {
+    final row = _currentSelfAddressRow();
+    if (row == null) return false;
+    return _hasPositiveId(row.locationId) ||
+        _hasTextValue(row.selectedLocationLabel) ||
+        _hasControllerText(row.locationController);
+  }
+
+  bool _rowsHaveData<T>(Iterable<T> rows, bool Function(T row) hasData) {
+    return rows.any(hasData);
+  }
+
+  _SectionStatusInfo _statusFromCompletion(
+    int filled,
+    int total, {
+    int? readyAt,
+  }) {
+    final safeTotal = total <= 0 ? 1 : total;
+    final safeFilled = filled < 0
+        ? 0
+        : (filled > safeTotal ? safeTotal : filled);
+    final readyThreshold =
+        readyAt ?? (((safeTotal * 2) / 3).ceil().clamp(1, safeTotal));
+
+    if (safeFilled <= 0) {
+      return _SectionStatusInfo(
+        label: 'Missing',
+        color: _sectionMissingColor,
+        filled: safeFilled,
+        total: safeTotal,
+      );
+    }
+    if (safeFilled >= readyThreshold) {
+      return _SectionStatusInfo(
+        label: 'Ready',
+        color: _sectionReadyColor,
+        filled: safeFilled,
+        total: safeTotal,
+      );
+    }
+
+    return _SectionStatusInfo(
+      label: 'Needs details',
+      color: _sectionPartialColor,
+      filled: safeFilled,
+      total: safeTotal,
+    );
+  }
+
+  _SectionStatusInfo _sectionStatus(_EditProfileSection section) {
+    switch (section) {
+      case _EditProfileSection.basic:
+        return _statusFromCompletion(
+          _filledCount([
+            _hasControllerText(_fullNameController),
+            _hasControllerText(_dobController),
+            _hasPositiveId(_selectedGenderId),
+            _hasPositiveId(_selectedReligionId) ||
+                _hasTextValue(_selectedReligionLabel) ||
+                _hasControllerText(_religionController),
+            _hasPositiveId(_selectedCasteId) ||
+                _hasTextValue(_selectedCasteLabel) ||
+                _hasControllerText(_casteController),
+            _currentSelfAddressHasLocation(),
+          ]),
+          6,
+          readyAt: 5,
+        );
+      case _EditProfileSection.physical:
+        return _statusFromCompletion(
+          _filledCount([
+            _hasPositiveId(_selectedHeightCm),
+            _selectedWeightKg != null && _selectedWeightKg! > 0,
+            _hasPositiveId(_selectedComplexionId),
+            _hasPositiveId(_selectedDietId),
+          ]),
+          4,
+          readyAt: 3,
+        );
+      case _EditProfileSection.educationCareer:
+        return _statusFromCompletion(
+          _filledCount([
+            _hasControllerText(_educationController) ||
+                _hasPositiveId(_selectedEducationDegreeId),
+            _hasPositiveId(_selectedOccupationMasterId) ||
+                _hasTextValue(_selectedOccupationLabel),
+            _hasControllerText(_workLocationController) ||
+                _hasTextValue(_selectedWorkLocationLabel),
+            _nullableNumber(_incomeAmountController) != null ||
+                _nullableNumber(_incomeMinAmountController) != null ||
+                _nullableNumber(_incomeMaxAmountController) != null ||
+                _selectedIncomeValueType == 'undisclosed',
+          ]),
+          4,
+          readyAt: 2,
+        );
+      case _EditProfileSection.familyDetails:
+        return _statusFromCompletion(
+          _filledCount([
+            _hasControllerText(_fatherNameController),
+            _hasTextValue(_selectedFatherOccupationLabel) ||
+                _hasControllerText(_fatherOccupationController),
+            _hasControllerText(_motherNameController),
+            _hasTextValue(_selectedMotherOccupationLabel) ||
+                _hasControllerText(_motherOccupationController),
+            _rowsHaveData(_parentsAddressRows, (row) => row.hasData),
+            _hasPositiveId(_selectedFamilyTypeId),
+            _hasTextValue(_selectedFamilyStatus) ||
+                _hasTextValue(_selectedFamilyValues),
+          ]),
+          7,
+          readyAt: 3,
+        );
+      case _EditProfileSection.siblings:
+        if (_selectedHasSiblings == false) {
+          return _statusFromCompletion(1, 1);
+        }
+        return _statusFromCompletion(
+          _rowsHaveData(_siblingRows, (row) => row.hasData) ? 1 : 0,
+          1,
+        );
+      case _EditProfileSection.relatives:
+        return _statusFromCompletion(
+          _filledCount([
+            _rowsHaveData(_relativeRows, (row) => row.hasData),
+            _hasControllerText(_otherRelativesController),
+            _rowsHaveData(_allianceNetworkRows, (row) => row.hasData),
+          ]),
+          3,
+          readyAt: 1,
+        );
+      case _EditProfileSection.property:
+        return _statusFromCompletion(
+          _hasControllerText(_propertyDetailsController) ? 1 : 0,
+          1,
+        );
+      case _EditProfileSection.horoscope:
+        return _statusFromCompletion(
+          _filledCount([
+            _hasPositiveId(_selectedRashiId),
+            _hasPositiveId(_selectedNakshatraId),
+            _hasPositiveId(_selectedGanId),
+            _hasControllerText(_devakController),
+            _hasControllerText(_kulController),
+            _hasControllerText(_gotraController),
+          ]),
+          6,
+          readyAt: 2,
+        );
+      case _EditProfileSection.aboutMe:
+        final length = _aboutMeController.text.trim().length;
+        if (length >= 40) return _statusFromCompletion(1, 1);
+        if (length > 0) {
+          return _SectionStatusInfo(
+            label: 'Needs details',
+            color: _sectionPartialColor,
+            filled: 1,
+            total: 1,
+          );
+        }
+        return _statusFromCompletion(0, 1);
+      case _EditProfileSection.partnerPreferences:
+        return _statusFromCompletion(
+          _filledCount([
+            _selectedPreferredAgeMin != null ||
+                _selectedPreferredAgeMax != null,
+            _selectedPreferredHeightMinCm != null ||
+                _selectedPreferredHeightMaxCm != null,
+            _selectedPreferredIncomeMin != null ||
+                _selectedPreferredIncomeMax != null,
+            _hasPositiveId(_selectedMarriageTypePreferenceId),
+            _selectedPreferredReligionIds.isNotEmpty,
+            _selectedPreferredMotherTongueIds.isNotEmpty,
+            _selectedPreferredEducationDegreeIds.isNotEmpty,
+            _selectedPreferredDietIds.isNotEmpty,
+            _selectedPreferredLocationRows.isNotEmpty,
+          ]),
+          9,
+          readyAt: 3,
+        );
+      case _EditProfileSection.photo:
+        return _statusFromCompletion(
+          ApiClient.resolveProfilePhotoUrl(
+                    _lastLoadedProfile ?? ApiClient.currentUserProfile,
+                  ) !=
+                  null
+              ? 1
+              : 0,
+          1,
+        );
+    }
+  }
+
   Widget _buildBasicInformationSection() {
     return Column(
       children: [
@@ -5020,6 +5268,24 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     });
   }
 
+  void _scrollToInitialLocationTargetAfterLayout() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final targetContext =
+          _selfAddressesSectionKey.currentContext ??
+          _sectionCardKeys[_EditProfileSection.basic]?.currentContext;
+      if (targetContext == null) return;
+
+      Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 460),
+        curve: Curves.easeOutCubic,
+        alignment: 0.12,
+      );
+    });
+  }
+
   void _startSavedSectionFeedback(_EditProfileSection section) {
     _savedHighlightTimer?.cancel();
     setState(() {
@@ -5104,6 +5370,37 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     Navigator.of(context).pop();
   }
 
+  Widget _sectionStatusChip(_SectionStatusInfo status, ThemeData theme) {
+    final shortLabel = status.label == 'Needs details'
+        ? 'Partial'
+        : status.label;
+    final label = status.total > 1
+        ? '$shortLabel ${status.filled}/${status.total}'
+        : shortLabel;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 104),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: status.color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: status.color.withValues(alpha: 0.20)),
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: status.color,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildSectionManagerCard(_EditProfileSection section) {
     final theme = Theme.of(context);
     final isExpanded = _expandedSection == section;
@@ -5112,7 +5409,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         section == _EditProfileSection.siblings && isExpanded;
     final isSavedFeedback = _savedFeedbackSection == section;
     final showSavedPulse = isSavedFeedback && _savedHighlightOn;
-    const successColor = Color(0xFF15803D);
+    final sectionStatus = _sectionStatus(section);
+    final successColor = _sectionReadyColor;
     final borderColor = showSavedPulse
         ? successColor
         : isExpanded
@@ -5152,12 +5450,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                    color: sectionStatus.color.withValues(alpha: 0.10),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     _sectionIcon(section),
-                    color: theme.colorScheme.primary,
+                    color: sectionStatus.color,
                     size: 21,
                   ),
                 ),
@@ -5166,11 +5464,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _sectionTitle(section),
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _sectionTitle(section),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _sectionStatusChip(sectionStatus, theme),
+                        ],
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -6648,10 +6956,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           onSelect: _selectSubCaste,
         ),
         const SizedBox(height: 18),
-        _buildAddressRepeater(
-          title: 'Self addresses',
-          rows: _selfAddressRows,
-          defaultTypeKey: 'current',
+        KeyedSubtree(
+          key: _selfAddressesSectionKey,
+          child: _buildAddressRepeater(
+            title: 'Self addresses',
+            rows: _selfAddressRows,
+            defaultTypeKey: 'current',
+          ),
         ),
       ],
     );
