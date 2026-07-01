@@ -269,10 +269,7 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
   bool _needsSmartOnboarding(OnboardingStatus status) {
     if (!status.hasProfile) return true;
 
-    final nextStep = (status.nextStep ?? status.draft?.currentStep)
-        ?.trim()
-        .toLowerCase();
-    return nextStep != null && nextStep != 'activation';
+    return false;
   }
 
   @override
