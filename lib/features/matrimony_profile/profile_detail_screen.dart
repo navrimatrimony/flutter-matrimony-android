@@ -746,12 +746,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     ..._buildDisplaySectionsWithContact(
                       displaySections,
                       contact,
+                      gunamilan,
                     )
                   else ...[
                     if (contact != null) _buildContactCard(contact),
                     ..._buildFallbackProfileDetails(profile, age, location),
                   ],
-                  if (gunamilan != null) _buildGunamilanEntryCard(gunamilan),
                   if (comparison != null)
                     KeyedSubtree(
                       key: _comparisonKey,
@@ -1397,13 +1397,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   List<Widget> _buildDisplaySectionsWithContact(
     List<ProfileDisplaySectionData> sections,
     ProfileContactData? contact,
+    Map<String, dynamic>? gunamilan,
   ) {
     final widgets = <Widget>[];
     var contactInserted = false;
 
     for (var index = 0; index < sections.length; index++) {
       final section = sections[index];
-      widgets.add(ProfileDisplaySection(section: section));
+      widgets.add(_buildProfileDisplaySection(section, gunamilan));
 
       if (contact != null &&
           !contactInserted &&
@@ -1418,6 +1419,52 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
 
     return widgets;
+  }
+
+  Widget _buildProfileDisplaySection(
+    ProfileDisplaySectionData section,
+    Map<String, dynamic>? gunamilan,
+  ) {
+    final isAstro = _isAstroGunamilanSection(section);
+
+    return ProfileDisplaySection(
+      section: section,
+      titleOverride: isAstro ? 'Astro' : null,
+      headerTrailing: isAstro && gunamilan != null
+          ? OutlinedButton.icon(
+              onPressed: () => _openGunamilanDetails(gunamilan),
+              icon: const Icon(Icons.auto_awesome, size: 16),
+              label: const Text('Gunmilan'),
+              style: OutlinedButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 7,
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            )
+          : null,
+    );
+  }
+
+  bool _isAstroGunamilanSection(ProfileDisplaySectionData section) {
+    final key = section.key.trim().toLowerCase();
+    final title = section.title.trim().toLowerCase();
+
+    return key.contains('astro') ||
+        key.contains('horoscope') ||
+        key.contains('gunamilan') ||
+        key.contains('gunmilan') ||
+        title.contains('astro') ||
+        title.contains('horoscope') ||
+        title.contains('gunamilan') ||
+        title.contains('gunmilan') ||
+        title.contains('ज्योतिष') ||
+        title.contains('पत्रिका');
   }
 
   bool _shouldPlaceContactAfterSection(
@@ -1442,116 +1489,6 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       onWhatsAppResponse: _handleWhatsAppResponseAction,
       primaryActionLoading:
           _isContactRevealInFlight || _isContactRequestInFlight,
-    );
-  }
-
-  Widget _buildGunamilanEntryCard(Map<String, dynamic> gunamilan) {
-    final available = _displaySafeBool(gunamilan['available']) == true;
-    final summary =
-        _displayString(gunamilan['summary_label']) ??
-        _gunamilanScoreLabel(gunamilan);
-    final message =
-        _displayString(gunamilan['message']) ??
-        (available
-            ? AppStrings.gunamilanScore
-            : AppStrings.gunamilanIncomplete);
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFEDE2DE)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF9B1B46).withValues(alpha: 0.09),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFF9B1B46),
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppStrings.gunamilanTitle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: const Color(0xFF2E2220),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      message,
-                      style: const TextStyle(
-                        color: Color(0xFF6E625F),
-                        fontSize: 12.5,
-                        height: 1.35,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (summary != null)
-                Flexible(
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 8),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF7E6),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      summary,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Color(0xFF9A5B00),
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              onPressed: () => _openGunamilanDetails(gunamilan),
-              icon: const Icon(Icons.auto_awesome, size: 18),
-              label: Text(AppStrings.gunamilanViewDetails),
-            ),
-          ),
-        ],
-      ),
     );
   }
 

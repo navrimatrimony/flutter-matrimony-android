@@ -78,10 +78,14 @@ class ProfileDisplayItemData {
 
 class ProfileDisplaySection extends StatelessWidget {
   final ProfileDisplaySectionData section;
+  final String? titleOverride;
+  final Widget? headerTrailing;
 
   const ProfileDisplaySection({
     super.key,
     required this.section,
+    this.titleOverride,
+    this.headerTrailing,
   });
 
   @override
@@ -105,12 +109,23 @@ class ProfileDisplaySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            section.title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: const Color(0xFF2E2220),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Text(
+                  titleOverride ?? section.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: const Color(0xFF2E2220),
+                  ),
                 ),
+              ),
+              if (headerTrailing != null) ...[
+                const SizedBox(width: 12),
+                headerTrailing!,
+              ],
+            ],
           ),
           const SizedBox(height: 12),
           ...section.items.map(ProfileDisplayItem.new),
