@@ -84,22 +84,29 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     super.initState();
     _recommendationHintController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1150),
+      duration: const Duration(milliseconds: 3400),
     );
     _recommendationHintOffset =
         TweenSequence<double>([
-          TweenSequenceItem(tween: ConstantTween<double>(0), weight: 18),
+          TweenSequenceItem(tween: ConstantTween<double>(0), weight: 10),
           TweenSequenceItem(
-            tween: Tween<double>(begin: 0, end: 22),
+            tween: Tween<double>(begin: 0, end: -86),
             weight: 18,
           ),
+          TweenSequenceItem(tween: ConstantTween<double>(-86), weight: 12),
           TweenSequenceItem(
-            tween: Tween<double>(begin: 22, end: -18),
-            weight: 24,
+            tween: Tween<double>(begin: -86, end: 0),
+            weight: 16,
           ),
+          TweenSequenceItem(tween: ConstantTween<double>(0), weight: 8),
           TweenSequenceItem(
-            tween: Tween<double>(begin: -18, end: 0),
-            weight: 20,
+            tween: Tween<double>(begin: 0, end: 92),
+            weight: 18,
+          ),
+          TweenSequenceItem(tween: ConstantTween<double>(92), weight: 12),
+          TweenSequenceItem(
+            tween: Tween<double>(begin: 92, end: 0),
+            weight: 16,
           ),
         ]).animate(
           CurvedAnimation(
@@ -536,6 +543,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           ),
         ),
       ),
+      bottomNavigationBar: _buildRecommendationActionBar(),
     );
   }
 
@@ -658,6 +666,81 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
+  Widget _buildRecommendationActionBar() {
+    final disabled =
+        _recommendationActionBusy ||
+        _recommendationExiting ||
+        _recommendationComplete;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 18,
+            offset: const Offset(0, -6),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: disabled ? null : _skipRecommendationProfile,
+                  icon: const Icon(Icons.close_rounded, size: 20),
+                  label: const Text(
+                    'Skip',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    foregroundColor: _brandColor,
+                    side: const BorderSide(color: _brandColor, width: 1.4),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: disabled ? null : _sendRecommendationInterest,
+                  icon: _recommendationActionBusy
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.favorite_rounded, size: 20),
+                  label: const Text(
+                    'Interested',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    backgroundColor: _brandColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildRecommendationDeck(List<Map<String, dynamic>> profiles) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -758,11 +841,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                         final rotation = progress * 0.18;
                         final lift =
                             -8 * (animatedOffset.abs() / width).clamp(0, 1);
-                        final pivot = animatedOffset > 0
-                            ? Alignment.bottomRight
-                            : animatedOffset < 0
-                            ? Alignment.bottomLeft
-                            : Alignment.bottomCenter;
+                        final pivot = _recommendationRotationPivot(
+                          animatedOffset,
+                        );
 
                         return Transform.translate(
                           offset: Offset(animatedOffset, lift.toDouble()),
@@ -788,6 +869,12 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         );
       },
     );
+  }
+
+  Alignment _recommendationRotationPivot(double offset) {
+    if (offset > 0) return Alignment.bottomRight;
+    if (offset < 0) return Alignment.bottomLeft;
+    return Alignment.bottomCenter;
   }
 
   Widget _buildRecommendationCard(Map<String, dynamic> profile, double height) {
