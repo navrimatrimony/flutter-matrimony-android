@@ -1883,6 +1883,7 @@ class ApiClient {
     String? login,
     String? email,
     required String password,
+    bool persistSession = true,
   }) async {
     final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.login);
     final loginValue = (login ?? email ?? '').trim();
@@ -1906,7 +1907,11 @@ class ApiClient {
     final token = data['token']?.toString();
     if (token != null && token.isNotEmpty) {
       authToken = token;
-      await AppStorage.instance.saveAuthToken(token);
+      if (persistSession) {
+        await AppStorage.instance.saveAuthToken(token);
+      } else {
+        await AppStorage.instance.clearAuthToken();
+      }
       return data;
     }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'core/app_language.dart';
 import 'core/app_storage.dart';
 import 'core/api_client.dart';
+import 'core/app_strings.dart';
 import 'core/notification_permission_service.dart';
 import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
@@ -120,20 +121,58 @@ class _MyAppState extends State<MyApp> {
         '/landing': (context) => const LandingScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const LandingScreen(),
-        '/home': (context) => const HomeScreen(),
-        '/matches': (context) => const BrowseProfilesScreen(),
-        '/chats': (context) => const ChatScreen(),
-        '/contact-inbox': (context) => const ContactInboxScreen(),
-        '/plans': (context) => const PlansScreen(),
-        '/biodata-export': (context) => const BiodataExportScreen(),
-        '/notifications': (context) => const NotificationsScreen(),
-        '/settings': (context) => const SettingsScreen(),
-        '/profile-lists': (context) => const ProfileListsScreen(),
-        '/photo-gallery': (context) => const PhotoGalleryScreen(),
+        '/home': (context) => _authenticatedScreen(const HomeScreen()),
+        '/matches': (context) =>
+            _authenticatedScreen(const BrowseProfilesScreen()),
+        '/chats': (context) => _authenticatedScreen(const ChatScreen()),
+        '/contact-inbox': (context) =>
+            _authenticatedScreen(const ContactInboxScreen()),
+        '/plans': (context) => _authenticatedScreen(const PlansScreen()),
+        '/biodata-export': (context) =>
+            _authenticatedScreen(const BiodataExportScreen()),
+        '/notifications': (context) =>
+            _authenticatedScreen(const NotificationsScreen()),
+        '/settings': (context) => _authenticatedScreen(const SettingsScreen()),
+        '/profile-lists': (context) =>
+            _authenticatedScreen(const ProfileListsScreen()),
+        '/photo-gallery': (context) =>
+            _authenticatedScreen(const PhotoGalleryScreen()),
         '/create-profile': (context) => const SmartOnboardingScreen(),
-        '/view-profile': (context) => const ViewProfileScreen(),
+        '/view-profile': (context) =>
+            _authenticatedScreen(const ViewProfileScreen()),
         '/smart-onboarding': (context) => const SmartOnboardingScreen(),
       },
+    );
+  }
+}
+
+Widget _authenticatedScreen(Widget child) {
+  return _AuthenticatedBackGuard(child: child);
+}
+
+class _AuthenticatedBackGuard extends StatelessWidget {
+  const _AuthenticatedBackGuard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final route = ModalRoute.of(context);
+    final blockRootBack =
+        ApiClient.authToken != null && (route?.isFirst ?? false);
+
+    return PopScope<Object?>(
+      canPop: !blockRootBack,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || !blockRootBack) return;
+        ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.logoutToExit),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }

@@ -370,32 +370,7 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
                 AppStrings.biodataExportUnavailable,
               )
             else
-              DropdownButtonFormField<String>(
-                initialValue: _selectedTemplateKey,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.article_outlined),
-                  contentPadding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                ),
-                items: templates
-                    .map(
-                      (template) => DropdownMenuItem<String>(
-                        value: _stringValue(template['key']),
-                        enabled: template['available'] == true,
-                        child: Text(
-                          _templateLabel(template),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  if (value == null || value.isEmpty) return;
-                  setState(() => _selectedTemplateKey = value);
-                },
-              ),
+              ...templates.map(_buildTemplateOption),
             if (!_selectedTemplateAvailable && _selectedTemplate != null) ...[
               const SizedBox(height: 10),
               _buildInfoLine(
@@ -455,6 +430,138 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTemplateOption(Map<String, dynamic> template) {
+    final key = _stringValue(template['key']);
+    final selected = key.isNotEmpty && key == _selectedTemplateKey;
+    final available = template['available'] == true;
+    final premium = template['premium'] == true;
+    final withPhoto = template['with_photo'] == true;
+    final description = _stringValue(template['description']);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: available && key.isNotEmpty
+              ? () => setState(() => _selectedTemplateKey = key)
+              : null,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 160),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: selected ? const Color(0xFFFFF1F2) : Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: selected ? _brandColor : const Color(0xFFE8DDD7),
+                width: selected ? 1.6 : 1,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: available
+                        ? const Color(0xFFFFE4E6)
+                        : const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    available
+                        ? (withPhoto
+                              ? Icons.badge_outlined
+                              : Icons.article_outlined)
+                        : Icons.lock_outline,
+                    color: available ? _brandColor : const Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _stringValue(template['label'], fallback: key),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFF2D2323),
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      if (description.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF7C6A64),
+                            fontSize: 12.5,
+                            height: 1.25,
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          _buildTemplateTag(
+                            _stringValue(template['orientation']).isEmpty
+                                ? 'A4'
+                                : 'A4 ${_stringValue(template['orientation'])}',
+                          ),
+                          _buildTemplateTag(
+                            withPhoto ? 'With photo' : 'No photo',
+                          ),
+                          if (premium) _buildTemplateTag('Premium'),
+                          if (!available) _buildTemplateTag('Locked'),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  selected
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                  color: selected ? _brandColor : const Color(0xFFB7A9A3),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTemplateTag(String label) {
+    if (label.trim().isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F4EF),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFE8DDD7)),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF6B4F48),
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
         ),
       ),
     );
@@ -561,17 +668,6 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
       'jpg' => AppStrings.biodataExportJpg,
       _ => AppStrings.biodataExportPdf,
     };
-  }
-
-  String _templateLabel(Map<String, dynamic> template) {
-    final label = _stringValue(
-      template['label'],
-      fallback: _stringValue(template['key']),
-    );
-    final premium = template['premium'] == true ? ' / Premium' : '';
-    final locked = template['available'] == true ? '' : ' / Locked';
-
-    return '$label$premium$locked';
   }
 
   void _showSnackBar(String message) {

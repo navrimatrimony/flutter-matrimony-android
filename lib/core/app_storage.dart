@@ -18,6 +18,8 @@ class AppStorage {
       'notification_permission_prompted';
   static const String _dailyRecommendationShownDateKey =
       'daily_recommendation_shown_date';
+  static const String _keepSignedInKey = 'keep_signed_in';
+  static const String _rememberedLoginKey = 'remembered_login_identifier';
 
   final FlutterSecureStorage? _secureStorage;
   final Map<String, String>? _memory;
@@ -59,6 +61,28 @@ class AppStorage {
 
   Future<void> clearAuthToken() {
     return _delete(_authTokenKey);
+  }
+
+  Future<bool?> readKeepSignedIn() async {
+    final value = await _read(_keepSignedInKey);
+    if (value == null) return null;
+    return value == 'true';
+  }
+
+  Future<void> saveKeepSignedIn(bool value) {
+    return _write(_keepSignedInKey, value ? 'true' : 'false');
+  }
+
+  Future<String?> readRememberedLoginIdentifier() {
+    return _read(_rememberedLoginKey);
+  }
+
+  Future<void> saveRememberedLoginIdentifier(String value) {
+    return _write(_rememberedLoginKey, value);
+  }
+
+  Future<void> clearRememberedLoginIdentifier() {
+    return _delete(_rememberedLoginKey);
   }
 
   Future<AppLanguage?> readLanguage() async {

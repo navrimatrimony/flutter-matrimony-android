@@ -41,6 +41,55 @@ class AppStrings {
 
   static String get login => _mr ? 'लॉगिन करा' : 'Login';
 
+  static String get loginWelcomeTitle =>
+      _mr ? 'परत स्वागत आहे' : 'Welcome back';
+
+  static String get loginWelcomeSubtitle => _mr
+      ? 'तुमच्या स्थळांचा प्रवास सुरक्षितपणे पुढे सुरू करा.'
+      : 'Continue your matrimony journey securely.';
+
+  static String get loginIdentifierLabel =>
+      _mr ? 'मोबाइल / ईमेल / युजरनेम' : 'Mobile / Email / Username';
+
+  static String get loginPasswordLabel => _mr ? 'पासवर्ड' : 'Password';
+
+  static String get loginShowPassword =>
+      _mr ? 'पासवर्ड दाखवा' : 'Show password';
+
+  static String get loginHidePassword => _mr ? 'पासवर्ड लपवा' : 'Hide password';
+
+  static String get loginKeepSignedIn =>
+      _mr ? 'लॉगिन कायम ठेवा' : 'Keep me signed in';
+
+  static String get loginKeepSignedInSubtitle => _mr
+      ? 'पुढच्या वेळी password न टाकता app उघडेल.'
+      : 'Open the app next time without entering your password.';
+
+  static String get loginMissingFields =>
+      _mr ? 'Login आणि password दोन्ही भरा.' : 'Enter login and password.';
+
+  static String get loginSuccess =>
+      _mr ? 'Login यशस्वी. Welcome back.' : 'Login successful. Welcome back.';
+
+  static String get loginProfileMissing => _mr
+      ? 'प्रोफाइल सापडली नाही. प्रोफाइल तयार करा.'
+      : 'Profile not found. Create your profile.';
+
+  static String get loginProfileCheckFailed => _mr
+      ? 'Profile तपासता आली नाही. पुन्हा प्रयत्न करा.'
+      : 'Profile check failed. Please try again.';
+
+  static String get loginFailed => _mr
+      ? 'Login failed. Login किंवा password तपासा.'
+      : 'Login failed. Check login or password.';
+
+  static String get loginRegisterPrompt =>
+      _mr ? 'नवीन user? इथे register करा' : 'New user? Register here';
+
+  static String get logoutToExit => _mr
+      ? 'App मधून बाहेर पडण्यासाठी Logout वापरा.'
+      : 'Use Logout when you want to leave this account.';
+
   static String get dashboard => _mr ? 'माझे डॅशबोर्ड' : 'My Dashboard';
 
   static String get dashboardHeadline => _mr
@@ -428,6 +477,9 @@ class AppStrings {
 
   static String get biodataExportMenu =>
       _mr ? 'बायोडाटा एक्सपोर्ट' : 'Biodata Export';
+
+  static String get biodataPrintAction =>
+      _mr ? 'बायोडाटा / प्रिंट' : 'Biodata / Print';
 
   static String get biodataExportSubtitle => _mr
       ? 'तुमचा स्वतःचा बायोडाटा PDF म्हणून download किंवा share करा.'

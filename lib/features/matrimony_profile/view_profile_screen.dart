@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
+import 'edit_full_profile_screen.dart';
 import 'widgets/profile_display_section.dart';
 
 class ViewProfileScreen extends StatefulWidget {
@@ -73,7 +74,60 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           ),
         ],
       ),
+      bottomNavigationBar: _buildBottomActions(),
       body: _buildBody(),
+    );
+  }
+
+  Widget _buildBottomActions() {
+    final enabled = !_isLoading && _profile != null;
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, -6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: enabled ? _openEditProfile : null,
+                icon: const Icon(Icons.edit_outlined),
+                label: Text(AppStrings.editProfile),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: enabled
+                    ? () => Navigator.pushNamed(context, '/biodata-export')
+                    : null,
+                icon: const Icon(Icons.print_outlined),
+                label: Text(AppStrings.biodataPrintAction),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openEditProfile() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditFullProfileScreen(initialProfile: _profile),
+      ),
     );
   }
 
