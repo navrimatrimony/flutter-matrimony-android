@@ -192,9 +192,21 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     });
 
     try {
+      final snapshot = await _editedSnapshotForSave();
+      final core = _safeMap(snapshot['core']) ?? <String, dynamic>{};
+      if (core.isEmpty) {
+        _showSnackBar(
+          _text(
+            'No safe new details to save. Existing profile information was kept.',
+            'Save करण्यासाठी सुरक्षित नवीन माहिती नाही. आधीची profile माहिती तशीच ठेवली आहे.',
+          ),
+        );
+        return;
+      }
+
       final response = await ApiClient.approveBiodataIntake(
         intakeId: intakeId,
-        snapshot: _editedSnapshot(),
+        snapshot: snapshot,
       );
       if (!_responseOk(response)) {
         _showSnackBar(
@@ -228,17 +240,17 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     }
   }
 
-  Map<String, dynamic> _editedSnapshot() {
+  Future<Map<String, dynamic>> _editedSnapshotForSave() async {
+    final existingProfile = await _loadExistingProfileForOverwriteGuard();
+    return _editedSnapshot(existingProfile);
+  }
+
+  Map<String, dynamic> _editedSnapshot(Map<String, dynamic> existingProfile) {
     final core = <String, dynamic>{};
     for (final field in _fields) {
-      if (!field.saveEnabled) continue;
-
-      final value = field.editable
-          ? _coerceFieldValue(field.key, field.value.trim())
-          : field.saveValue;
-      if (!_isEmptyDraftValue(value)) {
-        core[field.key] = value;
-      }
+      final value = _fieldSaveValue(field);
+      if (!_shouldSaveField(field, value, existingProfile)) continue;
+      core[field.key] = value;
     }
 
     return <String, dynamic>{
@@ -246,6 +258,64 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
           _intValue(_snapshot['snapshot_schema_version']) ?? 1,
       'core': core,
     };
+  }
+
+  Future<Map<String, dynamic>> _loadExistingProfileForOverwriteGuard() async {
+    try {
+      final response = await ApiClient.getMyProfile();
+      return _safeMap(response['profile']) ??
+          _safeMap(_safeMap(response['data'])?['profile']) ??
+          Map<String, dynamic>.from(ApiClient.currentUserProfile ?? {});
+    } catch (_) {
+      return Map<String, dynamic>.from(ApiClient.currentUserProfile ?? {});
+    }
+  }
+
+  dynamic _fieldSaveValue(_DraftField field) {
+    return field.editable
+        ? _coerceFieldValue(field.key, field.value.trim())
+        : field.saveValue;
+  }
+
+  bool _shouldSaveField(
+    _DraftField field,
+    dynamic value,
+    Map<String, dynamic> existingProfile,
+  ) {
+    if (!field.saveEnabled || field.key.isEmpty || _isEmptyDraftValue(value)) {
+      return false;
+    }
+
+    final existing = _existingProfileValue(existingProfile, field.key);
+    if (_isEmptyDraftValue(existing)) return true;
+
+    if (_sameDraftValue(existing, value)) {
+      return false;
+    }
+
+    return field.editable && field.wasEdited;
+  }
+
+  dynamic _existingProfileValue(Map<String, dynamic> profile, String key) {
+    final direct = profile[key];
+    if (!_isEmptyDraftValue(direct)) return direct;
+
+    final display = _safeMap(profile['display']);
+    final displayValue = display?[key];
+    if (!_isEmptyDraftValue(displayValue)) return displayValue;
+
+    return null;
+  }
+
+  bool _sameDraftValue(dynamic a, dynamic b) {
+    final aInt = _intFromValue(a);
+    final bInt = _intFromValue(b);
+    if (aInt != null && bInt != null) return aInt == bInt;
+
+    final aText = _stringValue(a)?.toLowerCase();
+    final bText = _stringValue(b)?.toLowerCase();
+    if (aText == null || bText == null) return false;
+    return aText == bText;
   }
 
   dynamic _coerceFieldValue(String key, String value) {
@@ -296,6 +366,12 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
           key: key,
           label: label,
           value: value,
+          helperText: key == 'full_name' && _isSuspiciousFullName(value)
+              ? _text(
+                  'Enter the actual candidate name before saving',
+                  'Save करण्याआधी उमेदवाराचे खरे नाव भरा',
+                )
+              : null,
           keyboardType: keyboardType,
           maxLines: maxLines,
         ),
@@ -787,6 +863,32 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
     return text;
   }
 
+  String? _fullNameValidationMessage(String? value) {
+    if (!_isSuspiciousFullName(value)) return null;
+    return _text(
+      'Please replace this with the actual candidate name.',
+      'कृपया इथे उमेदवाराचे खरे नाव भरा.',
+    );
+  }
+
+  bool _isSuspiciousFullName(String? value) {
+    final text = value?.trim() ?? '';
+    if (text.isEmpty) return false;
+    final normalized = text.toLowerCase();
+    if (RegExp(r'^(?:मुलाचे|मुलीचे|वधूचे)?\s*नां?व\s*[:\-]?$').hasMatch(text)) {
+      return true;
+    }
+    if (RegExp(
+      r'(?:श्री\s*गणेश|गणेशाय|गजानन|प्रसन्न|देवी|माहिती|जन्म|उंची|शिक्षण|नोकरी|व्यवसाय|धर्म|जात|पत्ता|संपर्क)',
+    ).hasMatch(text)) {
+      return true;
+    }
+    return normalized == 'name' ||
+        normalized == 'full name' ||
+        normalized == 'male' ||
+        normalized == 'female';
+  }
+
   int? _cleanInteger(String? value) {
     if (value == null) return null;
     final normalized = value.replaceAll(',', '').trim();
@@ -1055,6 +1157,9 @@ class _BiodataIntakeLabScreenState extends State<BiodataIntakeLabScreen> {
                   onChanged: field.editable
                       ? (value) => field.value = value
                       : null,
+                  validator: (value) => field.key == 'full_name'
+                      ? _fullNameValidationMessage(value)
+                      : null,
                   onSaved: field.editable
                       ? (value) => field.value = value?.trim() ?? ''
                       : null,
@@ -1284,7 +1389,8 @@ class _DraftField {
     this.helperText,
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
-  }) : saveValue = null,
+  }) : initialValue = value,
+       saveValue = null,
        editable = true,
        saveEnabled = true;
 
@@ -1294,7 +1400,8 @@ class _DraftField {
     required this.label,
     required this.value,
     required this.saveValue,
-  }) : editable = false,
+  }) : initialValue = value,
+       editable = false,
        saveEnabled = true,
        helperText = null,
        keyboardType = TextInputType.text,
@@ -1306,6 +1413,7 @@ class _DraftField {
     required this.value,
     this.helperText,
   }) : key = '',
+       initialValue = value,
        saveValue = null,
        editable = false,
        saveEnabled = false,
@@ -1316,10 +1424,13 @@ class _DraftField {
   final String key;
   final String label;
   String value;
+  final String initialValue;
   final dynamic saveValue;
   final bool editable;
   final bool saveEnabled;
   final String? helperText;
   final TextInputType keyboardType;
   final int maxLines;
+
+  bool get wasEdited => value.trim() != initialValue.trim();
 }
