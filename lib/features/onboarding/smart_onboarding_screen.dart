@@ -89,13 +89,16 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   List<OnboardingOption> _motherTongues = const <OnboardingOption>[];
   List<OnboardingOption> _childLivingWithOptions = const <OnboardingOption>[];
   DateTime? _resendAvailableAt;
+  Timer? _otpAutoVerifyTimer;
   Timer? _resendTimer;
   Timer? _messageTimer;
+  String? _lastOtpAutoVerifyAttempt;
 
   bool _loading = false;
   bool _childLivingWithLoading = false;
   bool _profileForWhomChangedAfterMaritalSelection = false;
   bool _whatsappAlertsOptIn = true;
+  bool _otpAutoAdvancePending = false;
   bool _messageGapVisible = false;
   int _resendSecondsRemaining = 0;
   String? _error;
@@ -126,6 +129,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     _mobileController.dispose();
     _otpController.dispose();
     _emailController.dispose();
+    _otpAutoVerifyTimer?.cancel();
     _resendTimer?.cancel();
     _messageTimer?.cancel();
     super.dispose();
@@ -829,11 +833,14 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
     setState(() {
       _loading = true;
+      _otpAutoAdvancePending = false;
+      _lastOtpAutoVerifyAttempt = null;
       _error = null;
       _message = null;
       _motherTongueError = null;
       _fieldErrors = const <String, String>{};
     });
+    _otpAutoVerifyTimer?.cancel();
 
     final data = await ApiClient.sendMobileOtp(
       mobile: mobile,
@@ -865,6 +872,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     if (response.success && response.challengeId != null) {
       _startResendCooldown(response.resendAfter);
+      _scheduleOtpAutoVerify();
       await _saveLocalDraft();
     }
   }
@@ -896,7 +904,42 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     });
   }
 
-  Future<void> _verifyOtp() async {
+  void _handleOtpChanged(String value) {
+    final otp = value.trim();
+    if (otp.length != 6 || otp != _lastOtpAutoVerifyAttempt) {
+      _lastOtpAutoVerifyAttempt = null;
+    }
+    setState(() {
+      _error = null;
+      _message = null;
+      _otpAutoAdvancePending = false;
+    });
+    _scheduleOtpAutoVerify();
+  }
+
+  void _scheduleOtpAutoVerify() {
+    _otpAutoVerifyTimer?.cancel();
+    final otp = _otpController.text.trim();
+    if (_loading ||
+        _otpAutoAdvancePending ||
+        _otpChallenge?.challengeId == null ||
+        otp.length != 6 ||
+        _lastOtpAutoVerifyAttempt == otp) {
+      return;
+    }
+
+    _otpAutoVerifyTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (!mounted || _loading || _otpAutoAdvancePending) return;
+      final currentOtp = _otpController.text.trim();
+      if (currentOtp != otp || _otpChallenge?.challengeId == null) return;
+      _lastOtpAutoVerifyAttempt = otp;
+      unawaited(_verifyOtp(autoTriggered: true));
+    });
+  }
+
+  Future<void> _verifyOtp({bool autoTriggered = false}) async {
+    if (_loading || _otpAutoAdvancePending) return;
+    _otpAutoVerifyTimer?.cancel();
     final mobile = _normalizeMobile(_mobileController.text);
     final challengeId = _otpChallenge?.challengeId;
     final otp = _otpController.text.trim();
@@ -916,6 +959,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     setState(() {
       _loading = true;
+      _otpAutoAdvancePending = false;
       _error = null;
       _message = null;
     });
@@ -932,11 +976,20 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       if (!response.success) {
         setState(() {
           _loading = false;
+          _otpAutoAdvancePending = false;
           _error =
               response.message ??
               _t('OTP verification failed.', 'OTP पडताळणी अयशस्वी झाली.');
         });
         return;
+      }
+
+      if (autoTriggered) {
+        setState(() {
+          _otpAutoAdvancePending = true;
+        });
+        await Future<void>.delayed(const Duration(milliseconds: 900));
+        if (!mounted || _otpController.text.trim() != otp) return;
       }
 
       final nextAction = response.accountState?.nextAction;
@@ -946,6 +999,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
+        _otpAutoAdvancePending = false;
         _otpController.clear();
         _message = null;
       });
@@ -972,6 +1026,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       final message = error.toString();
       setState(() {
         _loading = false;
+        _otpAutoAdvancePending = false;
         _error = _isTechnicalOnboardingError(message)
             ? _t('OTP verification failed.', 'OTP पडताळणी अयशस्वी झाली.')
             : message;
@@ -2307,9 +2362,12 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   void _editMobileNumber() {
+    _otpAutoVerifyTimer?.cancel();
     setState(() {
       _otpChallenge = null;
       _otpController.clear();
+      _lastOtpAutoVerifyAttempt = null;
+      _otpAutoAdvancePending = false;
       _resendTimer?.cancel();
       _resendAvailableAt = null;
       _resendSecondsRemaining = 0;
@@ -3236,13 +3294,17 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           Row(
             children: [
               IconButton(
-                onPressed: _loading ? null : _editMobileNumber,
+                onPressed: (_loading || _otpAutoAdvancePending)
+                    ? null
+                    : _editMobileNumber,
                 icon: const Icon(Icons.arrow_back_rounded),
                 tooltip: MaterialLocalizations.of(context).backButtonTooltip,
               ),
               const Spacer(),
               TextButton.icon(
-                onPressed: _loading ? null : _editMobileNumber,
+                onPressed: (_loading || _otpAutoAdvancePending)
+                    ? null
+                    : _editMobileNumber,
                 icon: const Icon(Icons.edit_outlined, size: 18),
                 label: Text(_t('Edit', 'Edit')),
               ),
@@ -3334,15 +3396,23 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           SizedBox(
             height: 56,
             child: ElevatedButton.icon(
-              onPressed: _loading ? null : _verifyOtp,
-              icon: _loading
+              onPressed: (_loading || _otpAutoAdvancePending)
+                  ? null
+                  : _verifyOtp,
+              icon: (_loading || _otpAutoAdvancePending)
                   ? const SizedBox(
                       height: 18,
                       width: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.verified_rounded),
-              label: Text(_t('Verify and continue', 'पडताळून पुढे जा')),
+              label: Text(
+                _otpAutoAdvancePending
+                    ? _t('Continuing...', 'पुढे जात आहे...')
+                    : _loading
+                    ? _t('Verifying...', 'पडताळत आहे...')
+                    : _t('Verify and continue', 'पडताळून पुढे जा'),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -3416,7 +3486,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
               opacity: 0.01,
               child: TextField(
                 controller: _otpController,
-                enabled: !_loading,
+                enabled: !_loading && !_otpAutoAdvancePending,
                 keyboardType: TextInputType.number,
                 textAlign: TextAlign.center,
                 autofillHints: const [AutofillHints.oneTimeCode],
@@ -3433,7 +3503,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   focusedBorder: InputBorder.none,
                   counterText: '',
                 ),
-                onChanged: (_) => setState(() {}),
+                onChanged: _handleOtpChanged,
               ),
             ),
           ),
@@ -3460,7 +3530,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       children: [
         Text(_t('Didn’t get the code yet?', 'Code मिळाला नाही?')),
         TextButton(
-          onPressed: _loading ? null : _sendOtp,
+          onPressed: (_loading || _otpAutoAdvancePending) ? null : _sendOtp,
           child: Text(_t('Resend code', 'पुन्हा पाठवा')),
         ),
       ],
