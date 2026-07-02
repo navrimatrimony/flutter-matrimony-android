@@ -2432,11 +2432,23 @@ class ApiClient {
   static Future<Map<String, dynamic>> createBiodataIntakeFromFile({
     required File file,
     bool parseNow = true,
+    String? mlKitRawText,
+    List<Map<String, dynamic>>? mlKitLinesJson,
+    List<Map<String, dynamic>>? mlKitBlocksJson,
   }) async {
     final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.biodataIntakes);
     final request = http.MultipartRequest('POST', url);
     request.headers.addAll(_acceptHeaders(authenticated: true));
     request.fields['parse_now'] = parseNow ? '1' : '0';
+    if (mlKitRawText != null && mlKitRawText.trim().isNotEmpty) {
+      request.fields['ml_kit_raw_text'] = mlKitRawText.trim();
+    }
+    if (mlKitLinesJson != null && mlKitLinesJson.isNotEmpty) {
+      request.fields['ml_kit_lines_json'] = jsonEncode(mlKitLinesJson);
+    }
+    if (mlKitBlocksJson != null && mlKitBlocksJson.isNotEmpty) {
+      request.fields['ml_kit_blocks_json'] = jsonEncode(mlKitBlocksJson);
+    }
     request.files.add(await http.MultipartFile.fromPath('file', file.path));
 
     final streamedResponse = await request.send();

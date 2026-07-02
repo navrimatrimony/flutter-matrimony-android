@@ -149,9 +149,21 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       final Map<String, dynamic> response;
 
       if (usesLaravelPipeline) {
+        _OcrEvidence? mlKitEvidence;
+        try {
+          mlKitEvidence = await _extractOcrEvidence(picked.path);
+        } catch (_) {
+          mlKitEvidence = null;
+        }
+        final mlKitText = mlKitEvidence == null
+            ? null
+            : _cleanOcrText(mlKitEvidence.text);
         response = await ApiClient.createBiodataIntakeFromFile(
           file: File(picked.path),
           parseNow: true,
+          mlKitRawText: mlKitText,
+          mlKitLinesJson: mlKitEvidence?.lines,
+          mlKitBlocksJson: mlKitEvidence?.blocks,
         );
       } else {
         final text = await _extractText(picked.path);
@@ -281,14 +293,83 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   }
 
   Future<String> _extractText(String path) async {
+    final evidence = await _extractOcrEvidence(path);
+    return evidence.text;
+  }
+
+  Future<_OcrEvidence> _extractOcrEvidence(String path) async {
     final recognizer = TextRecognizer(script: TextRecognitionScript.devanagiri);
     try {
       final inputImage = InputImage.fromFilePath(path);
       final recognized = await recognizer.processImage(inputImage);
-      return _layoutAwareOcrText(recognized);
+      return _OcrEvidence(
+        text: _layoutAwareOcrText(recognized),
+        lines: _recognizedLineEvidence(recognized),
+        blocks: _recognizedBlockEvidence(recognized),
+      );
     } finally {
       await recognizer.close();
     }
+  }
+
+  List<Map<String, dynamic>> _recognizedLineEvidence(
+    RecognizedText recognized,
+  ) {
+    final rows = <Map<String, dynamic>>[];
+    for (
+      var blockIndex = 0;
+      blockIndex < recognized.blocks.length;
+      blockIndex++
+    ) {
+      final block = recognized.blocks[blockIndex];
+      for (var lineIndex = 0; lineIndex < block.lines.length; lineIndex++) {
+        final line = block.lines[lineIndex];
+        final text = line.text.trim();
+        if (text.isEmpty) continue;
+        rows.add({
+          'block_index': blockIndex,
+          'line_index': lineIndex,
+          'text': text,
+          'box': _boxEvidence(line.boundingBox),
+        });
+      }
+    }
+
+    return rows;
+  }
+
+  List<Map<String, dynamic>> _recognizedBlockEvidence(
+    RecognizedText recognized,
+  ) {
+    final rows = <Map<String, dynamic>>[];
+    for (
+      var blockIndex = 0;
+      blockIndex < recognized.blocks.length;
+      blockIndex++
+    ) {
+      final block = recognized.blocks[blockIndex];
+      final text = block.text.trim();
+      if (text.isEmpty) continue;
+      rows.add({
+        'block_index': blockIndex,
+        'text': text,
+        'box': _boxEvidence(block.boundingBox),
+        'line_count': block.lines.length,
+      });
+    }
+
+    return rows;
+  }
+
+  Map<String, double> _boxEvidence(Rect box) {
+    return {
+      'left': box.left,
+      'top': box.top,
+      'right': box.right,
+      'bottom': box.bottom,
+      'width': box.width,
+      'height': box.height,
+    };
   }
 
   String _layoutAwareOcrText(RecognizedText recognized) {
@@ -2866,4 +2947,16 @@ class _OcrLine {
 
   double get height => bottom - top;
   double get centerY => top + (height / 2);
+}
+
+class _OcrEvidence {
+  const _OcrEvidence({
+    required this.text,
+    required this.lines,
+    required this.blocks,
+  });
+
+  final String text;
+  final List<Map<String, dynamic>> lines;
+  final List<Map<String, dynamic>> blocks;
 }
