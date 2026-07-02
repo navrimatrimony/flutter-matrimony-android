@@ -62,6 +62,15 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   Map<String, dynamic> _snapshot = <String, dynamic>{};
   List<Map<String, dynamic>> _intakes = <Map<String, dynamic>>[];
   List<_DraftField> _fields = <_DraftField>[];
+  final Set<String> _collapsedPanels = <String>{
+    'uploaded_photo',
+    'previous_intakes',
+    'normalized_draft',
+    'parsed_json',
+    'debug',
+  };
+  final Set<String> _expandedReviewSections = <String>{};
+  final Set<String> _collapsedReviewSections = <String>{};
 
   @override
   void initState() {
@@ -179,6 +188,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
 
       if (!mounted) return;
       final rawText = _stringValue(preview?['raw_text']) ?? normalizedText;
+      final parseFailureMessage = _parseFailureMessage(intake);
       setState(() {
         _rawText = rawText;
         _intake = intake;
@@ -189,9 +199,9 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
             _intakeSettings;
         _snapshot = _snapshotFromPreview(preview);
         _fields = _draftFieldsFromPreview(preview);
-        _errorMessage = !_hasSaveableDraft
-            ? AppStrings.biodataIntakeFieldsEmpty
-            : null;
+        _errorMessage =
+            parseFailureMessage ??
+            (!_hasSaveableDraft ? AppStrings.biodataIntakeFieldsEmpty : null);
       });
     } catch (error) {
       _setProcessingError(
@@ -230,12 +240,14 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
         return;
       }
       final preview = _safeMap(response['preview']);
+      final responseIntake = _safeMap(response['intake']) ?? row;
       if (preview == null || response['ready'] == false) {
         _setProcessingError(
-          _text(
-            'This biodata is not ready for review yet.',
-            'हा बायोडाटा अजून review साठी तयार नाही.',
-          ),
+          _parseFailureMessage(responseIntake) ??
+              _text(
+                'This biodata is not ready for review yet.',
+                'हा बायोडाटा अजून review साठी तयार नाही.',
+              ),
         );
         return;
       }
@@ -247,7 +259,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       setState(() {
         _rawText = _stringValue(preview['raw_text']);
         _preview = preview;
-        _intake = _safeMap(response['intake']) ?? row;
+        _intake = responseIntake;
         _intakeSettings =
             _safeMap(response['intake_settings']) ??
             _safeMap(preview['intake_settings']) ??
@@ -1866,6 +1878,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     return _panel(
       title: _text('Uploaded biodata photo', 'Upload केलेला बायोडाटा फोटो'),
       icon: Icons.image_outlined,
+      collapseKey: 'uploaded_photo',
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: Image.file(
@@ -1886,6 +1899,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     return _panel(
       title: _text('Previous biodata intakes', 'आधीचे बायोडाटा इंटेक'),
       icon: Icons.history_outlined,
+      collapseKey: 'previous_intakes',
       trailing: _loadingIntakes
           ? const SizedBox(
               width: 18,
@@ -2012,62 +2026,145 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
               ),
             ),
             const SizedBox(height: 14),
-            for (final entry in grouped.entries) ...[
-              _sectionHeader(entry.key),
-              for (final field in entry.value) ...[
-                TextFormField(
-                  initialValue: field.value,
-                  readOnly: !field.editable,
-                  keyboardType: field.maxLines > 1
-                      ? TextInputType.multiline
-                      : field.keyboardType,
-                  maxLines: field.maxLines,
-                  textInputAction: field.maxLines > 1
-                      ? TextInputAction.newline
-                      : TextInputAction.next,
-                  decoration: InputDecoration(
-                    labelText: field.label,
-                    helperText: field.helperText,
-                    suffixIcon: field.saveEnabled
-                        ? field.editable
-                              ? null
-                              : const Icon(
-                                  Icons.check_circle_outline,
-                                  color: Color(0xFF047857),
-                                )
-                        : const Icon(Icons.info_outline, color: _muted),
-                  ),
-                  onChanged: field.editable
-                      ? (value) => field.value = value
-                      : null,
-                  validator: (value) => field.key == 'full_name'
-                      ? _fullNameValidationMessage(value)
-                      : null,
-                  onSaved: field.editable
-                      ? (value) => field.value = value?.trim() ?? ''
-                      : null,
-                ),
-                const SizedBox(height: 12),
-              ],
-            ],
+            for (final indexed in grouped.entries.toList().asMap().entries)
+              _reviewFieldSection(
+                indexed.value.key,
+                indexed.value.value,
+                initiallyCollapsed: indexed.key > 0,
+              ),
           ],
         ),
       ),
     );
   }
 
-  Widget _sectionHeader(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 9),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: _ink,
-          fontSize: 15,
-          fontWeight: FontWeight.w900,
-        ),
+  Widget _reviewFieldSection(
+    String title,
+    List<_DraftField> fields, {
+    required bool initiallyCollapsed,
+  }) {
+    final collapsed = _reviewSectionCollapsed(title, initiallyCollapsed);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF7F4),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => _toggleReviewSection(title, collapsed),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: _ink,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    fields.length.toString(),
+                    style: const TextStyle(
+                      color: _muted,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Icon(
+                    collapsed
+                        ? Icons.keyboard_arrow_down
+                        : Icons.keyboard_arrow_up,
+                    color: _muted,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!collapsed)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+              child: Column(
+                children: [
+                  for (final field in fields) ...[
+                    TextFormField(
+                      initialValue: field.value,
+                      readOnly: !field.editable,
+                      keyboardType: field.maxLines > 1
+                          ? TextInputType.multiline
+                          : field.keyboardType,
+                      maxLines: field.maxLines,
+                      textInputAction: field.maxLines > 1
+                          ? TextInputAction.newline
+                          : TextInputAction.next,
+                      decoration: InputDecoration(
+                        labelText: field.label,
+                        helperText: field.helperText,
+                        suffixIcon: field.saveEnabled
+                            ? field.editable
+                                  ? null
+                                  : const Icon(
+                                      Icons.check_circle_outline,
+                                      color: Color(0xFF047857),
+                                    )
+                            : const Icon(Icons.info_outline, color: _muted),
+                      ),
+                      onChanged: field.editable
+                          ? (value) => field.value = value
+                          : null,
+                      validator: (value) => field.key == 'full_name'
+                          ? _fullNameValidationMessage(value)
+                          : null,
+                      onSaved: field.editable
+                          ? (value) => field.value = value?.trim() ?? ''
+                          : null,
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  bool _reviewSectionCollapsed(String title, bool initiallyCollapsed) {
+    if (_expandedReviewSections.contains(title)) return false;
+    if (_collapsedReviewSections.contains(title)) return true;
+
+    return initiallyCollapsed;
+  }
+
+  void _toggleReviewSection(String title, bool currentlyCollapsed) {
+    setState(() {
+      if (currentlyCollapsed) {
+        _expandedReviewSections.add(title);
+        _collapsedReviewSections.remove(title);
+      } else {
+        _collapsedReviewSections.add(title);
+        _expandedReviewSections.remove(title);
+      }
+    });
+  }
+
+  String? _parseFailureMessage(Map<String, dynamic>? intake) {
+    if (_stringValue(intake?['parse_status']) != 'error') return null;
+    final detail = _stringValue(intake?['last_error']);
+    if (detail == null || detail.trim().isEmpty) {
+      return AppStrings.biodataIntakeProcessFailed;
+    }
+
+    return _text('Parsing failed: $detail', 'Parsing failed: $detail');
   }
 
   Widget _rawTextPanel() {
@@ -2153,6 +2250,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     return _panel(
       title: _text('Normalized Biodata Draft', 'Normalized Biodata Draft'),
       icon: Icons.fact_check_outlined,
+      collapseKey: 'normalized_draft',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -2247,6 +2345,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     return _panel(
       title: _text('Parsed JSON', 'Parsed JSON'),
       icon: Icons.data_object_outlined,
+      collapseKey: 'parsed_json',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -2282,6 +2381,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     return _panel(
       title: _text('OCR preprocessing diagnostics', 'OCR diagnostics'),
       icon: Icons.bug_report_outlined,
+      collapseKey: 'debug',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -2296,7 +2396,10 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     required IconData icon,
     required Widget child,
     Widget? trailing,
+    String? collapseKey,
   }) {
+    final collapsed =
+        collapseKey != null && _collapsedPanels.contains(collapseKey);
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
@@ -2322,10 +2425,30 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                 ),
               ),
               if (trailing != null) trailing,
+              if (collapseKey != null)
+                IconButton(
+                  tooltip: collapsed
+                      ? _text('Expand', 'उघडा')
+                      : _text('Minimize', 'मिनिमाइज'),
+                  onPressed: () {
+                    setState(() {
+                      if (collapsed) {
+                        _collapsedPanels.remove(collapseKey);
+                      } else {
+                        _collapsedPanels.add(collapseKey);
+                      }
+                    });
+                  },
+                  icon: Icon(
+                    collapsed
+                        ? Icons.keyboard_arrow_down
+                        : Icons.keyboard_arrow_up,
+                    color: _muted,
+                  ),
+                ),
             ],
           ),
-          const SizedBox(height: 12),
-          child,
+          if (!collapsed) ...[const SizedBox(height: 12), child],
         ],
       ),
     );
