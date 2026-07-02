@@ -2429,6 +2429,22 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  static Future<Map<String, dynamic>> createBiodataIntakeFromFile({
+    required File file,
+    bool parseNow = true,
+  }) async {
+    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.biodataIntakes);
+    final request = http.MultipartRequest('POST', url);
+    request.headers.addAll(_acceptHeaders(authenticated: true));
+    request.fields['parse_now'] = parseNow ? '1' : '0';
+    request.files.add(await http.MultipartFile.fromPath('file', file.path));
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    return _decodeResponse(response);
+  }
+
   static Future<Map<String, dynamic>> getBiodataIntakes() {
     return _getJson(ApiRoutes.biodataIntakes, authenticated: true);
   }

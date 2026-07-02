@@ -131,17 +131,32 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     _startMessageRotation();
 
     try {
-      final text = await _extractText(picked.path);
-      final normalizedText = _cleanOcrText(text);
-      if (normalizedText.length < 20) {
-        _setProcessingError(AppStrings.biodataIntakeNoReadableText);
-        return;
+      if (_intakeSettings == null && !_loadingIntakes) {
+        await _loadIntakes();
       }
 
-      final response = await ApiClient.createBiodataIntakeFromText(
-        rawText: normalizedText,
-        parseNow: true,
-      );
+      final usesLaravelPipeline = _usesLaravelBiodataPipeline;
+      String? normalizedText;
+      final Map<String, dynamic> response;
+
+      if (usesLaravelPipeline) {
+        response = await ApiClient.createBiodataIntakeFromFile(
+          file: File(picked.path),
+          parseNow: true,
+        );
+      } else {
+        final text = await _extractText(picked.path);
+        normalizedText = _cleanOcrText(text);
+        if (normalizedText.length < 20) {
+          _setProcessingError(AppStrings.biodataIntakeNoReadableText);
+          return;
+        }
+
+        response = await ApiClient.createBiodataIntakeFromText(
+          rawText: normalizedText,
+          parseNow: true,
+        );
+      }
       if (!_responseOk(response)) {
         _setProcessingError(
           _responseMessage(response, AppStrings.biodataIntakeProcessFailed),
@@ -163,8 +178,9 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       }
 
       if (!mounted) return;
+      final rawText = _stringValue(preview?['raw_text']) ?? normalizedText;
       setState(() {
-        _rawText = normalizedText;
+        _rawText = rawText;
         _intake = intake;
         _preview = preview;
         _intakeSettings =
@@ -649,6 +665,10 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   bool get _hasSaveableDraft =>
       _fields.any((field) => field.saveEnabled && field.key.isNotEmpty) ||
       _snapshotHasSaveableContent(_snapshot);
+
+  bool get _usesLaravelBiodataPipeline =>
+      _stringValue(_intakeSettings?['mobile_biodata_source_mode']) ==
+      'laravel_pipeline';
 
   List<_DraftField> _draftFieldsFromPreview(Map<String, dynamic>? preview) {
     final fields = _onboardingFieldsFromPreview(preview);
@@ -1998,7 +2018,9 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                 TextFormField(
                   initialValue: field.value,
                   readOnly: !field.editable,
-                  keyboardType: field.keyboardType,
+                  keyboardType: field.maxLines > 1
+                      ? TextInputType.multiline
+                      : field.keyboardType,
                   maxLines: field.maxLines,
                   textInputAction: field.maxLines > 1
                       ? TextInputAction.newline
