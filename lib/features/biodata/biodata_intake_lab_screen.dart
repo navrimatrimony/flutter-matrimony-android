@@ -1997,25 +1997,14 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
 
     return Form(
       key: _formKey,
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: _border),
-        ),
+      child: _panel(
+        title: AppStrings.biodataIntakeReviewTitle,
+        icon: Icons.assignment_turned_in_outlined,
+        collapseKey: 'review_details',
+        maintainChildState: true,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              AppStrings.biodataIntakeReviewTitle,
-              style: const TextStyle(
-                color: _ink,
-                fontSize: 20,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            const SizedBox(height: 6),
             Text(
               AppStrings.biodataIntakeReviewSubtitle,
               style: const TextStyle(
@@ -2030,7 +2019,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
               _reviewFieldSection(
                 indexed.value.key,
                 indexed.value.value,
-                initiallyCollapsed: indexed.key > 0,
+                initiallyCollapsed: false,
               ),
           ],
         ),
@@ -2274,6 +2263,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
             _normalizedSection(entry.key, _listOfMaps(entry.value)),
           if (_snapshotHasSaveableContent(reconciliation))
             ExpansionTile(
+              initiallyExpanded: true,
               tilePadding: EdgeInsets.zero,
               childrenPadding: const EdgeInsets.only(bottom: 8),
               title: Text(
@@ -2288,6 +2278,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
             ),
           if (rawDraftJson != null)
             ExpansionTile(
+              initiallyExpanded: true,
               tilePadding: EdgeInsets.zero,
               childrenPadding: const EdgeInsets.only(bottom: 8),
               title: Text(
@@ -2323,7 +2314,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
         ? _text('Missing / review needed', 'Missing / review needed')
         : _sectionLabelFromKey(key) ?? _fieldLabelFromKey(key) ?? key;
     return ExpansionTile(
-      initiallyExpanded: key == 'review_needed',
+      initiallyExpanded: true,
       tilePadding: EdgeInsets.zero,
       childrenPadding: const EdgeInsets.only(bottom: 8),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w900)),
@@ -2397,6 +2388,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     required Widget child,
     Widget? trailing,
     String? collapseKey,
+    bool maintainChildState = false,
   }) {
     final collapsed =
         collapseKey != null && _collapsedPanels.contains(collapseKey);
@@ -2434,6 +2426,10 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                     setState(() {
                       if (collapsed) {
                         _collapsedPanels.remove(collapseKey);
+                        if (collapseKey == 'review_details') {
+                          _collapsedReviewSections.clear();
+                          _expandedReviewSections.clear();
+                        }
                       } else {
                         _collapsedPanels.add(collapseKey);
                       }
@@ -2448,7 +2444,13 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                 ),
             ],
           ),
-          if (!collapsed) ...[const SizedBox(height: 12), child],
+          if (maintainChildState) ...[
+            if (!collapsed) const SizedBox(height: 12),
+            Offstage(offstage: collapsed, child: child),
+          ] else if (!collapsed) ...[
+            const SizedBox(height: 12),
+            child,
+          ],
         ],
       ),
     );
