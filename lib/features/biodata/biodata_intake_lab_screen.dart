@@ -447,11 +447,14 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     _formKey.currentState?.save();
 
-    final intakeId = _intValue(_intake?['id']);
+    var intakeId = _intValue(_intake?['id']);
     if (intakeId == null) {
       _showSnackBar(AppStrings.biodataIntakeProcessFailed);
       return;
     }
+    final createReplacementIntake =
+        _boolValue(_intake?['approved_by_user']) ||
+        _boolValue(_intake?['intake_locked']);
 
     setState(() {
       _saving = true;
@@ -468,6 +471,13 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
           ),
         );
         return;
+      }
+
+      if (createReplacementIntake) {
+        final replacementIntakeId =
+            await _createReplacementIntakeFromCurrentText();
+        if (replacementIntakeId == null) return;
+        intakeId = replacementIntakeId;
       }
 
       final response = await ApiClient.approveBiodataIntake(
@@ -504,6 +514,56 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
         });
       }
     }
+  }
+
+  Future<int?> _createReplacementIntakeFromCurrentText() async {
+    final sourceText = _rawText?.trim();
+    if (sourceText == null || sourceText.length < 20) {
+      _showSnackBar(
+        _text(
+          'Existing biodata text is not available. Upload the biodata again.',
+          'आधीचा biodata text उपलब्ध नाही. Biodata पुन्हा upload करा.',
+        ),
+      );
+      return null;
+    }
+
+    final response = await ApiClient.createBiodataIntakeFromText(
+      rawText: sourceText,
+      parseNow: true,
+    );
+    if (!_responseOk(response)) {
+      _showSnackBar(
+        _responseMessage(response, AppStrings.biodataIntakeProcessFailed),
+      );
+      return null;
+    }
+
+    final intake = _safeMap(response['intake']) ?? _safeMap(response['data']);
+    final intakeId = _intValue(intake?['id']);
+    if (intakeId == null) {
+      _showSnackBar(AppStrings.biodataIntakeProcessFailed);
+      return null;
+    }
+
+    final preview = _safeMap(response['preview']);
+    if (preview == null && _stringValue(intake?['parse_status']) != 'parsed') {
+      final previewResponse = await ApiClient.getBiodataIntakePreview(intakeId);
+      if (!_responseOk(previewResponse) || previewResponse['ready'] == false) {
+        _showSnackBar(
+          _responseMessage(
+            previewResponse,
+            _text(
+              'A fresh editable intake was created, but it is not ready yet.',
+              'नवीन editable intake तयार झाला, पण तो अजून ready नाही.',
+            ),
+          ),
+        );
+        return null;
+      }
+    }
+
+    return intakeId;
   }
 
   Future<Map<String, dynamic>> _editedSnapshotForSave() async {
@@ -1931,7 +1991,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     final source = _stringValue(row['source_label']) ?? 'Biodata';
     final parsedAt = _stringValue(row['parsed_at']);
     return InkWell(
-      onTap: approved || id == null ? null : () => _openExistingIntake(row),
+      onTap: id == null ? null : () => _openExistingIntake(row),
       borderRadius: BorderRadius.circular(8),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 9),
@@ -1981,8 +2041,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                 ],
               ),
             ),
-            if (!approved && id != null)
-              const Icon(Icons.chevron_right, color: _muted),
+            if (id != null) const Icon(Icons.chevron_right, color: _muted),
           ],
         ),
       ),
