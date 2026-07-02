@@ -134,6 +134,9 @@ class ApiRoutes {
   static String biodataIntakeApprove(int intakeId) =>
       '${biodataIntake(intakeId)}/approve';
 
+  static String biodataIntakeReviewSnapshot(int intakeId) =>
+      '${biodataIntake(intakeId)}/review-snapshot';
+
   static const String notifications = '/notifications';
   static const String notificationUnreadCount = '/notifications/unread-count';
   static const String notificationsReadAll = '/notifications/read-all';

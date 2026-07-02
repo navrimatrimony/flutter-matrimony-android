@@ -53,6 +53,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   bool _loadingIntakes = false;
   bool _processing = false;
   bool _saving = false;
+  bool _savingReviewSnapshot = false;
   String? _errorMessage;
   String? _rawText;
   String? _pickedImagePath;
@@ -110,7 +111,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   }
 
   Future<void> _pickAndProcess(ImageSource source) async {
-    if (_processing || _saving) return;
+    if (_processing || _saving || _savingReviewSnapshot) return;
 
     final picked = await _picker.pickImage(
       source: source,
@@ -226,7 +227,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   }
 
   Future<void> _openExistingIntake(Map<String, dynamic> row) async {
-    if (_processing || _saving) return;
+    if (_processing || _saving || _savingReviewSnapshot) return;
     final intakeId = _intValue(row['id']);
     if (intakeId == null) return;
 
@@ -524,7 +525,9 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   }
 
   Future<void> _approveSnapshot() async {
-    if (_processing || _saving || !_hasSaveableDraft) return;
+    if (_processing || _saving || _savingReviewSnapshot || !_hasSaveableDraft) {
+      return;
+    }
     if (!(_formKey.currentState?.validate() ?? false)) return;
     _formKey.currentState?.save();
 
@@ -597,6 +600,119 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     }
   }
 
+  Future<void> _saveReviewedSnapshot() async {
+    if (_processing || _saving || _savingReviewSnapshot || !_hasSaveableDraft) {
+      return;
+    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    _formKey.currentState?.save();
+
+    final intakeId = _intValue(_intake?['id']);
+    if (intakeId == null) {
+      _showSnackBar(AppStrings.biodataIntakeProcessFailed);
+      return;
+    }
+    if (_isApprovedOrLockedIntake(_intake)) {
+      _showSnackBar(AppStrings.biodataIntakeAlreadyApprovedLocked);
+      return;
+    }
+
+    setState(() {
+      _savingReviewSnapshot = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final snapshot = _reviewedSnapshotForSave();
+      if (!_snapshotHasSaveableContent(snapshot)) {
+        _showSnackBar(AppStrings.biodataIntakeFieldsEmpty);
+        return;
+      }
+
+      final response = await ApiClient.reviewBiodataIntakeSnapshot(
+        intakeId: intakeId,
+        reviewedSnapshot: snapshot,
+      );
+      if (!_responseOk(response)) {
+        final message = _responseMessage(
+          response,
+          AppStrings.biodataIntakeReviewSaveFailed,
+        );
+        _showSnackBar(
+          _looksLikeApprovedLockedResponse(response, message)
+              ? AppStrings.biodataIntakeAlreadyApprovedLocked
+              : message,
+        );
+        return;
+      }
+
+      await _refreshAfterReviewedSnapshotSave(intakeId, response);
+      if (!mounted) return;
+      _showSnackBar(AppStrings.biodataIntakeReviewSaveSuccess);
+    } catch (error) {
+      _showSnackBar(
+        '${AppStrings.biodataIntakeReviewSaveFailed} ${error.toString()}',
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _savingReviewSnapshot = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _refreshAfterReviewedSnapshotSave(
+    int intakeId,
+    Map<String, dynamic> saveResponse,
+  ) async {
+    Map<String, dynamic>? refreshedPreview;
+    Map<String, dynamic>? refreshedIntake = _safeMap(saveResponse['intake']);
+    Map<String, dynamic>? refreshedSettings = _safeMap(
+      saveResponse['intake_settings'],
+    );
+
+    try {
+      final previewResponse = await ApiClient.getBiodataIntakePreview(intakeId);
+      if (_responseOk(previewResponse)) {
+        refreshedPreview =
+            _safeMap(previewResponse['preview']) ?? refreshedPreview;
+        refreshedIntake =
+            _safeMap(previewResponse['intake']) ?? refreshedIntake;
+        refreshedSettings =
+            _safeMap(previewResponse['intake_settings']) ??
+            _safeMap(refreshedPreview?['intake_settings']) ??
+            refreshedSettings;
+      }
+    } catch (_) {
+      // Best-effort refresh; the save response still contains the snapshot.
+    }
+
+    if (!mounted) return;
+    final approvalSnapshot = _safeMap(saveResponse['approval_snapshot']);
+
+    setState(() {
+      if (refreshedIntake != null) _intake = refreshedIntake;
+      if (refreshedSettings != null) _intakeSettings = refreshedSettings;
+
+      if (refreshedPreview != null) {
+        _preview = refreshedPreview;
+        _snapshot = _snapshotFromPreview(refreshedPreview);
+        _fields = _draftFieldsFromPreview(refreshedPreview);
+      } else if (approvalSnapshot != null) {
+        _snapshot = approvalSnapshot;
+        final preview = _preview == null
+            ? <String, dynamic>{}
+            : Map<String, dynamic>.from(_preview!);
+        preview['review_snapshot'] = approvalSnapshot;
+        _preview = preview;
+        _fields = _draftFieldsFromPreview(preview);
+      }
+
+      _errorMessage = null;
+    });
+  }
+
   Future<int?> _createReplacementIntakeFromCurrentText() async {
     final sourceText = _rawText?.trim();
     if (sourceText == null || sourceText.length < 20) {
@@ -650,6 +766,21 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   Future<Map<String, dynamic>> _editedSnapshotForSave() async {
     final existingProfile = await _loadExistingProfileForOverwriteGuard();
     return _editedSnapshot(existingProfile);
+  }
+
+  Map<String, dynamic> _reviewedSnapshotForSave() {
+    final snapshot = _deepCopyMap(_snapshot);
+    for (final field in _fields) {
+      if (!field.saveEnabled || field.path.isEmpty) continue;
+      final value = _fieldSaveValue(field);
+      if (_isEmptyDraftValue(value)) continue;
+      _setSnapshotPathValue(snapshot, field.path, value);
+    }
+
+    snapshot['snapshot_schema_version'] =
+        _intValue(snapshot['snapshot_schema_version']) ?? 1;
+    snapshot['core'] = _safeMap(snapshot['core']) ?? <String, dynamic>{};
+    return snapshot;
   }
 
   Map<String, dynamic> _editedSnapshot(Map<String, dynamic> existingProfile) {
@@ -822,6 +953,23 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
   bool get _usesLaravelBiodataPipeline =>
       _stringValue(_intakeSettings?['mobile_biodata_source_mode']) ==
       'laravel_pipeline';
+
+  bool _isApprovedOrLockedIntake(Map<String, dynamic>? intake) {
+    return _boolValue(intake?['approved_by_user']) ||
+        _boolValue(intake?['intake_locked']);
+  }
+
+  bool _looksLikeApprovedLockedResponse(
+    Map<String, dynamic> response,
+    String message,
+  ) {
+    final code = _intValue(response['statusCode']);
+    final text = message.toLowerCase();
+    return code == 422 &&
+        (text.contains('approved') ||
+            text.contains('lock') ||
+            message.contains('मंजूर'));
+  }
 
   List<_DraftField> _draftFieldsFromPreview(Map<String, dynamic>? preview) {
     final fields = _onboardingFieldsFromPreview(preview);
@@ -2161,6 +2309,20 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                 indexed.value.value,
                 initiallyCollapsed: false,
               ),
+            const SizedBox(height: 4),
+            OutlinedButton.icon(
+              onPressed: (_saving || _savingReviewSnapshot)
+                  ? null
+                  : _saveReviewedSnapshot,
+              icon: _savingReviewSnapshot
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.save_outlined),
+              label: Text(AppStrings.biodataIntakeSaveReview),
+            ),
           ],
         ),
       ),
@@ -2226,6 +2388,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                 children: [
                   for (final field in fields) ...[
                     TextFormField(
+                      key: ValueKey<String>(field.pathKey),
                       initialValue: field.value,
                       readOnly: !field.editable,
                       keyboardType: field.maxLines > 1
@@ -2755,6 +2918,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
 
   Widget _bottomActionBar() {
     final hasDraft = _hasSaveableDraft;
+    final savingAny = _saving || _savingReviewSnapshot;
     return SafeArea(
       top: false,
       child: Container(
@@ -2767,7 +2931,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: _saving
+                onPressed: savingAny
                     ? null
                     : () => _pickAndProcess(
                         hasDraft ? ImageSource.gallery : ImageSource.camera,
@@ -2783,7 +2947,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: _saving
+                onPressed: savingAny
                     ? null
                     : hasDraft
                     ? _approveSnapshot

@@ -2479,6 +2479,17 @@ class ApiClient {
     );
   }
 
+  static Future<Map<String, dynamic>> reviewBiodataIntakeSnapshot({
+    required int intakeId,
+    required Map<String, dynamic> reviewedSnapshot,
+  }) {
+    return _patchJson(
+      ApiRoutes.biodataIntakeReviewSnapshot(intakeId),
+      <String, dynamic>{'reviewed_snapshot': reviewedSnapshot},
+      authenticated: true,
+    );
+  }
+
   static Future<Map<String, dynamic>> getNotifications() {
     return _getJson(ApiRoutes.notifications, authenticated: true);
   }

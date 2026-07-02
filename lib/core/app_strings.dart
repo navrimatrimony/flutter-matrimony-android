@@ -594,6 +594,9 @@ class AppStrings {
   static String get biodataIntakeConfirmSave =>
       _mr ? 'Confirm & Save' : 'Confirm & Save';
 
+  static String get biodataIntakeSaveReview =>
+      _mr ? 'Review save करा' : 'Save review';
+
   static String get biodataIntakeTryAnother =>
       _mr ? 'दुसरा फोटो' : 'Another photo';
 
@@ -615,6 +618,17 @@ class AppStrings {
 
   static String get biodataIntakeSaveFailed =>
       _mr ? 'माहिती save करता आली नाही.' : 'Details could not be saved.';
+
+  static String get biodataIntakeReviewSaveSuccess => _mr
+      ? 'Review save झाला. Approve वेगळे करावे लागेल.'
+      : 'Review saved. Approval is still separate.';
+
+  static String get biodataIntakeReviewSaveFailed =>
+      _mr ? 'Review save करता आला नाही.' : 'Review could not be saved.';
+
+  static String get biodataIntakeAlreadyApprovedLocked => _mr
+      ? 'ही बायोडाटा माहिती आधीच मंजूर झाली आहे. येथे बदल करता येणार नाहीत.'
+      : 'This biodata is already approved and cannot be edited here.';
 
   static String get biodataIntakeFieldsEmpty => _mr
       ? 'System ने structured fields ओळखले नाहीत. खालील text तपासा आणि clear photo वापरून पुन्हा प्रयत्न करा.'
