@@ -588,6 +588,21 @@ class AppStrings {
       ? 'चुकलेली माहिती edit करा आणि मग save करा.'
       : 'Edit anything that looks wrong, then save.';
 
+  static String get biodataIntakeQualitySignals =>
+      _mr ? 'गुणवत्ता संकेत' : 'Quality signals';
+
+  static String get biodataIntakeLowConfidence =>
+      _mr ? 'कमी विश्वास' : 'Low confidence';
+
+  static String get biodataIntakeCheckLowConfidenceFields =>
+      _mr ? 'कृपया ही माहिती नीट तपासा' : 'Please check these fields carefully';
+
+  static String get biodataIntakeFailureCodes =>
+      _mr ? 'त्रुटी संकेत' : 'Failure codes';
+
+  static String get biodataIntakeOverallQuality =>
+      _mr ? 'एकूण गुणवत्ता' : 'Overall quality';
+
   static String get biodataIntakeExtractedText =>
       _mr ? 'Autofill साठी वापरलेला मजकूर' : 'Biodata text used for autofill';
 

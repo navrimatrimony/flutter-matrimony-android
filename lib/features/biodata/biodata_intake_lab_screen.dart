@@ -2303,6 +2303,8 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
               ),
             ),
             const SizedBox(height: 14),
+            _qualitySignalsPanel(),
+            if (_hasQualitySignals) const SizedBox(height: 14),
             for (final indexed in grouped.entries.toList().asMap().entries)
               _reviewFieldSection(
                 indexed.value.key,
@@ -2324,6 +2326,177 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
               label: Text(AppStrings.biodataIntakeSaveReview),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  bool get _hasQualitySignals {
+    return _qualitySummary != null ||
+        _failureCodes.isNotEmpty ||
+        _fieldConfidence.isNotEmpty;
+  }
+
+  Map<String, dynamic>? get _qualitySummary =>
+      _safeMap(_preview?['quality_summary']) ??
+      _safeMap(_intake?['quality_summary']);
+
+  List<String> get _failureCodes {
+    final raw = _preview?['failure_codes'] ?? _intake?['failure_codes'];
+    if (raw is! List) return <String>[];
+    return raw
+        .map((code) => code.toString().trim())
+        .where((code) => code.isNotEmpty)
+        .toList();
+  }
+
+  Map<String, dynamic> get _fieldConfidence {
+    return _safeMap(_preview?['field_confidence']) ??
+        _safeMap(_intake?['field_confidence']) ??
+        <String, dynamic>{};
+  }
+
+  Widget _qualitySignalsPanel() {
+    if (!_hasQualitySignals) return const SizedBox.shrink();
+
+    final summary = _qualitySummary;
+    final score = _doubleValue(summary?['score']);
+    final isLow =
+        _boolValue(summary?['is_low']) || (score != null && score < 0.65);
+    final failureCodes = _failureCodes;
+    final lowFields = _lowConfidenceSignals().take(8).toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: const Color(0xFFF4C790)),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.fact_check_outlined, color: Color(0xFFC2410C)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.biodataIntakeQualitySignals,
+                      style: const TextStyle(
+                        color: _ink,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      AppStrings.biodataIntakeCheckLowConfidenceFields,
+                      style: const TextStyle(
+                        color: _muted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (score != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isLow
+                        ? const Color(0xFFFFEDD5)
+                        : const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: isLow
+                          ? const Color(0xFFF97316)
+                          : const Color(0xFF10B981),
+                    ),
+                  ),
+                  child: Text(
+                    '${(score * 100).round()}%',
+                    style: TextStyle(
+                      color: isLow
+                          ? const Color(0xFF9A3412)
+                          : const Color(0xFF047857),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (failureCodes.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              AppStrings.biodataIntakeFailureCodes,
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final code in failureCodes)
+                  _qualityChip(code, const Color(0xFFFEE2E2), _brand),
+              ],
+            ),
+          ],
+          if (lowFields.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              AppStrings.biodataIntakeLowConfidence,
+              style: const TextStyle(
+                color: _muted,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final signal in lowFields)
+                  _qualityChip(
+                    _confidenceSignalLabel(signal),
+                    Colors.white,
+                    const Color(0xFFC2410C),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _qualityChip(String label, Color background, Color foreground) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: foreground.withValues(alpha: 0.22)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: foreground,
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
         ),
       ),
     );
@@ -2387,39 +2560,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
               child: Column(
                 children: [
                   for (final field in fields) ...[
-                    TextFormField(
-                      key: ValueKey<String>(field.pathKey),
-                      initialValue: field.value,
-                      readOnly: !field.editable,
-                      keyboardType: field.maxLines > 1
-                          ? TextInputType.multiline
-                          : field.keyboardType,
-                      maxLines: field.maxLines,
-                      textInputAction: field.maxLines > 1
-                          ? TextInputAction.newline
-                          : TextInputAction.next,
-                      decoration: InputDecoration(
-                        labelText: field.label,
-                        helperText: field.helperText,
-                        suffixIcon: field.saveEnabled
-                            ? field.editable
-                                  ? null
-                                  : const Icon(
-                                      Icons.check_circle_outline,
-                                      color: Color(0xFF047857),
-                                    )
-                            : const Icon(Icons.info_outline, color: _muted),
-                      ),
-                      onChanged: field.editable
-                          ? (value) => field.value = value
-                          : null,
-                      validator: (value) => field.key == 'full_name'
-                          ? _fullNameValidationMessage(value)
-                          : null,
-                      onSaved: field.editable
-                          ? (value) => field.value = value?.trim() ?? ''
-                          : null,
-                    ),
+                    _reviewTextField(field),
                     const SizedBox(height: 12),
                   ],
                 ],
@@ -2428,6 +2569,168 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
         ],
       ),
     );
+  }
+
+  Widget _reviewTextField(_DraftField field) {
+    final confidence = _confidenceSignalForField(field);
+    final isLowConfidence = confidence != null && _isLowConfidence(confidence);
+    final score = _doubleValue(confidence?['score']);
+    final lowLabel = score == null
+        ? AppStrings.biodataIntakeLowConfidence
+        : '${AppStrings.biodataIntakeLowConfidence} ${(score * 100).round()}%';
+    final input = TextFormField(
+      key: ValueKey<String>(field.pathKey),
+      initialValue: field.value,
+      readOnly: !field.editable,
+      keyboardType: field.maxLines > 1
+          ? TextInputType.multiline
+          : field.keyboardType,
+      maxLines: field.maxLines,
+      textInputAction: field.maxLines > 1
+          ? TextInputAction.newline
+          : TextInputAction.next,
+      decoration: InputDecoration(
+        labelText: field.label,
+        helperText: field.helperText,
+        filled: isLowConfidence,
+        fillColor: isLowConfidence ? const Color(0xFFFFF7ED) : null,
+        enabledBorder: isLowConfidence
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFFF4C790)),
+              )
+            : null,
+        focusedBorder: isLowConfidence
+            ? OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                  color: Color(0xFFF97316),
+                  width: 1.4,
+                ),
+              )
+            : null,
+        suffixIcon: field.saveEnabled
+            ? field.editable
+                  ? null
+                  : const Icon(
+                      Icons.check_circle_outline,
+                      color: Color(0xFF047857),
+                    )
+            : const Icon(Icons.info_outline, color: _muted),
+      ),
+      onChanged: field.editable ? (value) => field.value = value : null,
+      validator: (value) =>
+          field.key == 'full_name' ? _fullNameValidationMessage(value) : null,
+      onSaved: field.editable
+          ? (value) => field.value = value?.trim() ?? ''
+          : null,
+    );
+
+    if (!isLowConfidence) return input;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: _qualityChip(
+            lowLabel,
+            const Color(0xFFFFEDD5),
+            const Color(0xFFC2410C),
+          ),
+        ),
+        const SizedBox(height: 6),
+        input,
+      ],
+    );
+  }
+
+  Iterable<Map<String, dynamic>> _lowConfidenceSignals() sync* {
+    for (final entry in _fieldConfidence.entries) {
+      final signal = _safeMap(entry.value);
+      if (signal == null || !_isLowConfidence(signal)) continue;
+      yield <String, dynamic>{'key': entry.key, ...signal};
+    }
+  }
+
+  Map<String, dynamic>? _confidenceSignalForField(_DraftField field) {
+    final pathKey = field.pathKey;
+    final leaf = field.path.isEmpty ? field.key : field.path.last.toString();
+    final nonIndexedPath = _nonIndexedPath(field.path);
+    final candidates = <String>{
+      pathKey,
+      nonIndexedPath,
+      field.key,
+      leaf,
+    }.where((value) => value.trim().isNotEmpty).toSet();
+
+    for (final entry in _fieldConfidence.entries) {
+      final signal = _safeMap(entry.value);
+      if (signal == null) continue;
+      final key = entry.key.toString();
+      final sourcePath = _stringValue(signal['source_path']);
+      final nonIndexedSourcePath = sourcePath == null
+          ? null
+          : _nonIndexedPathFromString(sourcePath);
+      if (candidates.contains(key) ||
+          (sourcePath != null && candidates.contains(sourcePath)) ||
+          (nonIndexedSourcePath != null &&
+              candidates.contains(nonIndexedSourcePath))) {
+        return <String, dynamic>{'key': key, ...signal};
+      }
+    }
+
+    return null;
+  }
+
+  bool _isLowConfidence(Map<String, dynamic>? signal) {
+    if (signal == null) return false;
+    final status = _stringValue(signal['status'])?.toLowerCase();
+    if (status != null &&
+        const <String>{'low', 'missing', 'failed'}.contains(status)) {
+      return true;
+    }
+    if (signal.containsKey('present') && !_boolValue(signal['present'])) {
+      return true;
+    }
+    final score = _doubleValue(signal['score']);
+    return score != null && score < 0.65;
+  }
+
+  String _confidenceSignalLabel(Map<String, dynamic> signal) {
+    final key = _stringValue(signal['key']);
+    final sourcePath = _stringValue(signal['source_path']);
+    final sourceLeaf = _lastNonIndexedPathPart(sourcePath);
+    final labelKey = key ?? sourceLeaf;
+    final score = _doubleValue(signal['score']);
+    final label = _fieldLabelFromKey(labelKey) ?? labelKey ?? 'Field';
+    return score == null ? label : '$label ${(score * 100).round()}%';
+  }
+
+  String _nonIndexedPath(List<Object> path) {
+    return path
+        .map((part) => part.toString().trim())
+        .where((part) => part.isNotEmpty && int.tryParse(part) == null)
+        .join('.');
+  }
+
+  String _nonIndexedPathFromString(String path) {
+    return path
+        .split('.')
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty && int.tryParse(part) == null)
+        .join('.');
+  }
+
+  String? _lastNonIndexedPathPart(String? path) {
+    if (path == null) return null;
+    String? last;
+    for (final part in path.split('.')) {
+      final normalized = part.trim();
+      if (normalized.isEmpty || int.tryParse(normalized) != null) continue;
+      last = normalized;
+    }
+    return last;
   }
 
   bool _reviewSectionCollapsed(String title, bool initiallyCollapsed) {
@@ -3002,6 +3305,12 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     if (value is int) return value;
     if (value is num) return value.toInt();
     if (value is String) return int.tryParse(value.trim());
+    return null;
+  }
+
+  double? _doubleValue(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value.trim());
     return null;
   }
 
