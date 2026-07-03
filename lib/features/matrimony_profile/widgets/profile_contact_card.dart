@@ -138,13 +138,7 @@ class ProfileContactCard extends StatelessWidget {
                 value: contact.phone!,
                 onCopy: () => onCopy('Mobile Number', contact.phone!),
               ),
-            if (lockedPhone != null)
-              _ContactValueRow(
-                icon: Icons.lock_outline,
-                label: 'Mobile Number',
-                value: lockedPhone,
-                locked: true,
-              ),
+            if (lockedPhone != null) _LockedContactNumber(value: lockedPhone),
             if (contact.email != null)
               _ContactValueRow(
                 icon: Icons.mail_outline,
@@ -244,14 +238,12 @@ class _ContactValueRow extends StatelessWidget {
   final String label;
   final String value;
   final VoidCallback? onCopy;
-  final bool locked;
 
   const _ContactValueRow({
     required this.icon,
     required this.label,
     required this.value,
     this.onCopy,
-    this.locked = false,
   });
 
   @override
@@ -295,22 +287,59 @@ class _ContactValueRow extends StatelessWidget {
               ],
             ),
           ),
-          if (locked)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Icon(
-                Icons.lock_outline,
-                size: 18,
-                color: Color(0xFF6E625F),
-              ),
-            )
-          else if (onCopy != null)
+          if (onCopy != null)
             IconButton(
               tooltip: 'Copy',
               onPressed: onCopy,
               icon: const Icon(Icons.copy, size: 18),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _LockedContactNumber extends StatelessWidget {
+  final String value;
+
+  const _LockedContactNumber({required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDF9F7),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFEDE2DE)),
+      ),
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              value,
+              maxLines: 1,
+              style: const TextStyle(
+                color: Color(0xFF171717),
+                fontSize: 34,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+                height: 1.05,
+              ),
+            ),
+            const SizedBox(width: 14),
+            const Text(
+              '🔒',
+              maxLines: 1,
+              style: TextStyle(fontSize: 29, height: 1),
+            ),
+          ],
+        ),
       ),
     );
   }
