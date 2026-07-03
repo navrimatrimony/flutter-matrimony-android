@@ -3507,41 +3507,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       'contact_request_available',
       'contact_request_pending',
       'contact_request_rejected',
+      'contact_request_unavailable',
+      'whatsapp_response_available',
+      'unavailable',
     };
     if (!lockedStates.contains(state)) return null;
 
-    const candidateKeys = <String>[
-      'masked_phone',
-      'phone_masked',
-      'masked_mobile',
-      'mobile_masked',
-      'masked_contact_phone',
-      'contact_phone_masked',
-      'phone_preview',
-      'mobile_preview',
-    ];
+    final masked = _displayString(contact['masked_phone']);
+    if (masked == null) return null;
 
-    for (final key in candidateKeys) {
-      final masked = _safeLockedPhoneMask(_displayString(contact[key]));
-      if (masked != null) return masked;
-    }
-
-    return 'XX****';
-  }
-
-  String? _safeLockedPhoneMask(String? value) {
-    if (value == null) return null;
-
-    final text = value.trim();
-    if (text.isEmpty) return null;
-
-    final hasMask = RegExp(r'[*Xx]').hasMatch(text);
-    if (hasMask) return text;
-
-    final digits = text.replaceAll(RegExp(r'\D+'), '');
-    if (digits.length < 2) return null;
-
-    return '${digits.substring(0, 2)}****';
+    return RegExp(r'^\d{4}XXXX$').hasMatch(masked) ? masked : null;
   }
 
   String _contactState(dynamic value) {
