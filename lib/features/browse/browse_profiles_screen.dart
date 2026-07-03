@@ -40,6 +40,12 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   ];
   static const int _navMatches = 1;
   static const int _navConnect = 2;
+  static const int _tabSearch = 0;
+  static const int _tabNew = 1;
+  static const int _tabDaily = 2;
+  static const int _tabMyMatches = 3;
+  static const int _tabNearMe = 4;
+  static const int _tabMore = 5;
   static const MethodChannel _nativeLocationChannel = MethodChannel(
     'navri_matrimony/native_location',
   );
@@ -54,7 +60,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   String? _errorMessage;
   String? _moreSectionsError;
   String? _nearbyLocationMessage;
-  int _selectedTabIndex = 0;
+  int _selectedTabIndex = _tabNew;
   int _activeMainNavIndex = _navMatches;
   int _selectedConnectTabIndex = 0;
   bool _routeArgumentsRead = false;
@@ -73,6 +79,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   final Set<int> _sendingInterestIds = <int>{};
   final Set<String> _failedPhotoUrls = <String>{};
   MatchesFilterState _filters = const MatchesFilterState();
+  MatchesFilterState _nearbyFilters = const MatchesFilterState();
   late final AnimationController _recommendationHintController;
   late final Animation<double> _recommendationHintOffset;
 
@@ -144,25 +151,25 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     });
 
     try {
-      final activeFilters = filters ?? _filters;
+      final activeFilters = filters;
       final response = await ApiClient.getProfileList(
-        ageFrom: activeFilters.ageFrom,
-        ageTo: activeFilters.ageTo,
-        heightFromCm: activeFilters.heightFromCm,
-        heightToCm: activeFilters.heightToCm,
-        religionId: activeFilters.religionId,
-        casteId: activeFilters.casteId,
-        caste: activeFilters.casteQuery,
-        countryId: activeFilters.countryId,
-        stateId: activeFilters.stateId,
-        districtId: activeFilters.districtId,
-        locationId: activeFilters.locationId,
-        photoAvailable: activeFilters.photoAvailable,
-        verifiedPhoto: activeFilters.verifiedPhoto,
-        recentlyActive: activeFilters.recentlyActive,
-        educationId: activeFilters.educationId,
-        occupationId: activeFilters.occupationId,
-        maritalStatusId: activeFilters.maritalStatusId,
+        ageFrom: activeFilters?.ageFrom,
+        ageTo: activeFilters?.ageTo,
+        heightFromCm: activeFilters?.heightFromCm,
+        heightToCm: activeFilters?.heightToCm,
+        religionId: activeFilters?.religionId,
+        casteId: activeFilters?.casteId,
+        caste: activeFilters?.casteQuery,
+        countryId: activeFilters?.countryId,
+        stateId: activeFilters?.stateId,
+        districtId: activeFilters?.districtId,
+        locationId: activeFilters?.locationId,
+        photoAvailable: activeFilters?.photoAvailable,
+        verifiedPhoto: activeFilters?.verifiedPhoto,
+        recentlyActive: activeFilters?.recentlyActive,
+        educationId: activeFilters?.educationId,
+        occupationId: activeFilters?.occupationId,
+        maritalStatusId: activeFilters?.maritalStatusId,
         feed: feed,
       );
       if (!mounted) return;
@@ -263,18 +270,61 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
   String? _feedForTab(int tabIndex) {
     return switch (tabIndex) {
-      0 => 'new',
-      1 => 'daily',
-      2 => 'my_matches',
-      3 => 'nearby',
+      _tabNew => 'new',
+      _tabDaily => 'daily',
+      _tabMyMatches => 'my_matches',
+      _tabNearMe => 'nearby',
       _ => null,
     };
   }
 
-  Future<void> _fetchProfileListForCurrentTab() {
+  Future<void> _fetchProfileListForCurrentTab() async {
+    if (_selectedTabIndex == _tabSearch && !_filters.hasActiveFilters) {
+      setState(() {
+        _profiles = <dynamic>[];
+        _isLoading = false;
+        _errorMessage = null;
+      });
+      return;
+    }
+
+    if (_selectedTabIndex == _tabNearMe &&
+        _nearbyLocationOnlyFilters()?.hasLocationFilter != true) {
+      setState(() {
+        _profiles = <dynamic>[];
+        _isLoading = false;
+        _errorMessage = null;
+      });
+      return;
+    }
+
     return _fetchProfileList(
-      filters: _filters,
+      filters: _filtersForCurrentTab(),
       feed: _feedForTab(_selectedTabIndex),
+    );
+  }
+
+  MatchesFilterState? _filtersForCurrentTab() {
+    return switch (_selectedTabIndex) {
+      _tabSearch => _filters,
+      _tabNearMe => _nearbyLocationOnlyFilters(),
+      _ => null,
+    };
+  }
+
+  MatchesFilterState? _nearbyLocationOnlyFilters() {
+    final source = _nearbyFilters.hasLocationFilter ? _nearbyFilters : _filters;
+    if (!source.hasLocationFilter) return null;
+
+    return MatchesFilterState(
+      countryId: source.countryId,
+      countryLabel: source.countryLabel,
+      stateId: source.stateId,
+      stateLabel: source.stateLabel,
+      districtId: source.districtId,
+      districtLabel: source.districtLabel,
+      locationId: source.locationId,
+      locationLabel: source.locationLabel,
     );
   }
 
@@ -349,9 +399,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     setState(() {
       _filters = result;
       _activeMainNavIndex = _navMatches;
-      if (!_filters.hasLocationFilter) {
-        _nearbyLocationMessage = null;
-      }
+      _selectedTabIndex = _tabSearch;
     });
     await _fetchProfileListForCurrentTab();
   }
@@ -411,8 +459,150 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           ),
         ],
       ),
-      child: Column(children: [_buildTopSubmenu()]),
+      child: Column(
+        children: [
+          _buildTopSubmenu(),
+          if (_activeSummaryVisible()) _buildActiveFilterSummary(),
+        ],
+      ),
     );
+  }
+
+  bool _activeSummaryVisible() {
+    if (_activeMainNavIndex != _navMatches) return false;
+    if (_selectedTabIndex == _tabSearch) return _filters.hasActiveFilters;
+    if (_selectedTabIndex == _tabNearMe) {
+      return _nearbyLocationOnlyFilters()?.hasLocationFilter == true;
+    }
+    return false;
+  }
+
+  Widget _buildActiveFilterSummary() {
+    final isNearby = _selectedTabIndex == _tabNearMe;
+    final summary = isNearby
+        ? _locationSummary(_nearbyLocationOnlyFilters())
+        : _searchSummary(_filters);
+    final title = isNearby
+        ? (AppStrings.isMarathi ? 'Nearby ठिकाण' : 'Nearby location')
+        : (AppStrings.isMarathi ? 'शोध फिल्टर' : 'Search filters');
+    final clearLabel = isNearby
+        ? (AppStrings.isMarathi ? 'Location काढा' : 'Clear location')
+        : (AppStrings.isMarathi ? 'Clear filter' : 'Clear filter');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF1F2),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _brandColor.withValues(alpha: 0.18)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 9, 10, 9),
+          child: Row(
+            children: [
+              Icon(
+                isNearby
+                    ? Icons.my_location_rounded
+                    : Icons.manage_search_rounded,
+                color: _brandColor,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF442328),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      summary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF6B4C51),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              TextButton(
+                onPressed: isNearby
+                    ? _clearNearbyLocation
+                    : _clearSearchFilters,
+                style: TextButton.styleFrom(
+                  foregroundColor: _brandColor,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+                child: Text(clearLabel),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _searchSummary(MatchesFilterState filters) {
+    final parts = <String>[
+      if (filters.religionLabel?.trim().isNotEmpty == true)
+        filters.religionLabel!.trim(),
+      if (filters.casteLabel?.trim().isNotEmpty == true)
+        filters.casteLabel!.trim(),
+      if (filters.ageFrom != null || filters.ageTo != null)
+        '${filters.ageFrom ?? 18}-${filters.ageTo ?? 70}',
+      if (filters.heightFromCm != null || filters.heightToCm != null)
+        '${filters.heightFromCm ?? 137}-${filters.heightToCm ?? 213} cm',
+      if (filters.educationLabel?.trim().isNotEmpty == true)
+        filters.educationLabel!.trim(),
+      if (filters.occupationLabel?.trim().isNotEmpty == true)
+        filters.occupationLabel!.trim(),
+      if (filters.maritalStatusLabel?.trim().isNotEmpty == true)
+        filters.maritalStatusLabel!.trim(),
+      if (filters.photoAvailable)
+        AppStrings.isMarathi ? 'फोटो उपलब्ध' : 'Photo available',
+      if (filters.verifiedPhoto) AppStrings.isMarathi ? 'Verified' : 'Verified',
+      if (filters.recentlyActive)
+        AppStrings.isMarathi ? 'Recently active' : 'Recently active',
+      if (filters.hasLocationFilter) _locationSummary(filters),
+    ];
+
+    if (parts.isEmpty) {
+      return AppStrings.isMarathi
+          ? 'शोध फिल्टर निवडा'
+          : 'Choose search filters';
+    }
+    return parts.take(4).join(' • ');
+  }
+
+  String _locationSummary(MatchesFilterState? filters) {
+    if (filters == null) return '';
+    final parts = <String>[
+      if (filters.locationLabel?.trim().isNotEmpty == true)
+        filters.locationLabel!.trim(),
+      if (filters.districtLabel?.trim().isNotEmpty == true)
+        filters.districtLabel!.trim(),
+      if (filters.stateLabel?.trim().isNotEmpty == true)
+        filters.stateLabel!.trim(),
+      if (filters.countryLabel?.trim().isNotEmpty == true)
+        filters.countryLabel!.trim(),
+    ];
+    return parts.isEmpty
+        ? (AppStrings.isMarathi ? 'Location निवडले आहे' : 'Location selected')
+        : parts.take(3).join(' • ');
   }
 
   Widget _buildMatchesBottomNav() {
@@ -1162,6 +1352,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
   Widget _buildTabs() {
     final tabs = [
+      AppStrings.matchesTabSearch,
       AppStrings.matchesTabNew,
       AppStrings.matchesTabDaily,
       AppStrings.matchesTabMyMatches,
@@ -1174,14 +1365,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-        itemCount: tabs.length + 1,
+        itemCount: tabs.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          if (index == 0) {
-            return _buildSubmenuFilterChip();
-          }
-
-          final tabIndex = index - 1;
+          final tabIndex = index;
           final selected = _selectedTabIndex == tabIndex;
           final label = tabs[tabIndex];
           return ChoiceChip(
@@ -1203,7 +1390,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 _selectedTabIndex = tabIndex;
                 _activeMainNavIndex = _navMatches;
               });
-              if (tabIndex == 4) {
+              if (tabIndex == _tabMore) {
                 _fetchMoreSections();
               } else {
                 _fetchProfileListForCurrentTab();
@@ -1213,61 +1400,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         },
       ),
     );
-  }
-
-  Widget _buildSubmenuFilterChip() {
-    final hasActiveFilters = _hasActiveFilters();
-    final foreground = hasActiveFilters ? _brandColor : const Color(0xFF594044);
-    final background = hasActiveFilters
-        ? const Color(0xFFFFE4E6)
-        : const Color(0xFFF7F0EC);
-
-    return Tooltip(
-      message: AppStrings.matchesFilter,
-      child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: _openFilterScreen,
-          child: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: background,
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: hasActiveFilters ? _brandColor : const Color(0xFFE6D8D3),
-                width: hasActiveFilters ? 1.4 : 1,
-              ),
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Icon(Icons.tune, color: foreground, size: 19),
-                if (hasActiveFilters)
-                  Positioned(
-                    right: 8,
-                    top: 8,
-                    child: Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: _brandColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  bool _hasActiveFilters() {
-    return _filters.hasActiveFilters;
   }
 
   Widget _buildProfileListBody() {
@@ -1299,7 +1431,16 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     }
 
     final profiles = _profileRows();
-    if (profiles.isEmpty && _selectedTabIndex != 4) {
+    if (_selectedTabIndex == _tabSearch && !_filters.hasActiveFilters) {
+      return _buildPromptList(_buildSearchPromptCard());
+    }
+
+    if (_selectedTabIndex == _tabNearMe &&
+        _nearbyLocationOnlyFilters()?.hasLocationFilter != true) {
+      return _buildPromptList(_buildNearMePromptCard());
+    }
+
+    if (profiles.isEmpty && _selectedTabIndex != _tabMore) {
       return Center(
         child: Text(
           _emptyProfilesMessage(),
@@ -1311,18 +1452,29 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
     return RefreshIndicator(
       onRefresh: _fetchProfileListForCurrentTab,
-      child: _selectedTabIndex == 4
+      child: _selectedTabIndex == _tabMore
           ? _buildMoreMatchesList(profiles)
           : _buildStandardMatchesList(profiles),
     );
   }
 
-  Widget _buildStandardMatchesList(List<Map<String, dynamic>> profiles) {
-    final showNearPrompt =
-        _selectedTabIndex == 3 && !_filters.hasLocationFilter;
-    final promptOffset = showNearPrompt ? 1 : 0;
-    final itemCount = profiles.length + promptOffset;
+  Widget _buildPromptList(Widget child) {
+    return RefreshIndicator(
+      onRefresh: _fetchProfileListForCurrentTab,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 112),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.52,
+            child: Center(child: child),
+          ),
+        ],
+      ),
+    );
+  }
 
+  Widget _buildStandardMatchesList(List<Map<String, dynamic>> profiles) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final pageHeight = constraints.maxHeight;
@@ -1332,16 +1484,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           physics: const PageScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
-          itemCount: itemCount,
+          itemCount: profiles.length,
           itemBuilder: (context, index) {
-            if (showNearPrompt && index == 0) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-                child: Center(child: _buildNearMePromptCard()),
-              );
-            }
-
-            final profile = profiles[index - promptOffset];
+            final profile = profiles[index];
             final cardHeight = (pageHeight - 34).clamp(360.0, 720.0);
 
             return Padding(
@@ -1355,6 +1500,91 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           },
         );
       },
+    );
+  }
+
+  Widget _buildSearchPromptCard() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _brandColor.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: const BoxDecoration(
+                  color: _BrowseProfilesScreenState._brandSoft,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.manage_search_rounded,
+                  color: _BrowseProfilesScreenState._brandColor,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.isMarathi
+                          ? 'शोध फिल्टर निवडा'
+                          : 'Choose search filters',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF443337),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      AppStrings.isMarathi
+                          ? 'वय, धर्म, जात, location आणि advanced filters वापरून शोधा.'
+                          : 'Search with age, community, location and advanced filters.',
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton.icon(
+            onPressed: _openFilterScreen,
+            icon: const Icon(Icons.tune_rounded),
+            label: Text(AppStrings.matchesFilter),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _brandColor,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 13),
+              textStyle: const TextStyle(fontWeight: FontWeight.w900),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1509,11 +1739,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       final locationId = ApiClient.locationIdFrom(location);
       final label = ApiClient.locationSuggestionLabel(location);
       setState(() {
-        _filters = _filters.copyWith(
+        _nearbyFilters = MatchesFilterState(
           locationId: locationId,
           locationLabel: label,
-          districtId: null,
-          districtLabel: null,
         );
         _nearbyLocationBusy = false;
         _nearbyLocationMessage = AppStrings.isMarathi
@@ -1536,6 +1764,41 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             : 'Could not use location.';
       });
     }
+  }
+
+  void _clearSearchFilters() {
+    setState(() {
+      _filters = const MatchesFilterState();
+      if (_selectedTabIndex == _tabSearch) {
+        _profiles = <dynamic>[];
+        _errorMessage = null;
+        _isLoading = false;
+      }
+    });
+  }
+
+  void _clearNearbyLocation() {
+    setState(() {
+      _nearbyFilters = const MatchesFilterState();
+      if (_filters.hasLocationFilter) {
+        _filters = _filters.copyWith(
+          countryId: null,
+          countryLabel: null,
+          stateId: null,
+          stateLabel: null,
+          districtId: null,
+          districtLabel: null,
+          locationId: null,
+          locationLabel: null,
+        );
+      }
+      _nearbyLocationMessage = null;
+      if (_selectedTabIndex == _tabNearMe && !_filters.hasLocationFilter) {
+        _profiles = <dynamic>[];
+        _errorMessage = null;
+        _isLoading = false;
+      }
+    });
   }
 
   Future<Map<String, dynamic>?> _findBestAppLocation(
@@ -3263,7 +3526,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         .map(_safeMap)
         .whereType<Map<String, dynamic>>()
         .toList();
-    if (!_filters.hasActiveFilters) return rows;
+    if (_selectedTabIndex != _tabSearch || !_filters.hasActiveFilters) {
+      return rows;
+    }
 
     return rows.where(_matchesVisibleFilters).toList();
   }

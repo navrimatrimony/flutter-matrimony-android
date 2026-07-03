@@ -258,6 +258,8 @@ class AppStrings {
       ? 'तुमच्यासाठी योग्य स्थळे शोधा'
       : 'Explore suitable matrimony profiles';
 
+  static String get matchesTabSearch => _mr ? 'शोध' : 'Search';
+
   static String get matchesTabNew => _mr ? 'नवीन' : 'New';
 
   static String get matchesTabDaily => _mr ? 'दैनिक' : 'Daily';
