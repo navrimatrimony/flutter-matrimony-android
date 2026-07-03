@@ -17,11 +17,13 @@ import 'widgets/profile_display_section.dart';
 class ProfileDetailScreen extends StatefulWidget {
   final int profileId;
   final List<int> profileIds;
+  final Map<String, dynamic>? initialProfile;
 
   const ProfileDetailScreen({
     super.key,
     required this.profileId,
     this.profileIds = const <int>[],
+    this.initialProfile,
   });
 
   @override
@@ -64,6 +66,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     _currentProfileIndex = _profileIds.indexOf(widget.profileId);
     if (_currentProfileIndex < 0) _currentProfileIndex = 0;
     _currentProfileId = _profileIds[_currentProfileIndex];
+    _seedInitialProfile(widget.initialProfile);
     _openedProfileIds.add(_currentProfileId);
     _scrollController.addListener(_handleHeroScroll);
     _fetchProfile();
@@ -106,6 +109,25 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       normalized.insert(0, initialProfileId);
     }
     return normalized;
+  }
+
+  void _seedInitialProfile(Map<String, dynamic>? initialProfile) {
+    final seed = _safeMap(initialProfile);
+    if (seed == null) return;
+
+    final seedId = _displayInt(seed['id']) ?? _displayInt(seed['profile_id']);
+    if (seedId != null && seedId != _currentProfileId) return;
+
+    final display = _safeMap(seed['display']);
+    final actions = _safeMap(display?['actions']);
+    _profile = Map<String, dynamic>.from(seed);
+    _display = display;
+    _isShortlisted = _displaySafeBool(actions?['is_shortlisted']) ?? false;
+    _isHidden = _displaySafeBool(actions?['is_hidden']) ?? false;
+    _isBlocked = _displaySafeBool(actions?['is_blocked']) ?? false;
+    _canShortlist = _displaySafeBool(actions?['can_shortlist']);
+    _canHide = _displaySafeBool(actions?['can_hide']);
+    _canBlock = _displaySafeBool(actions?['can_block']);
   }
 
   void _handleHorizontalProfileSwipe(DragEndDetails details) {
@@ -197,6 +219,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         });
         _fetchSuggestedProfiles();
       } else {
+        if (_profile != null) {
+          final message =
+              response['message'] ?? 'प्रोफाइल तपशील refresh होऊ शकले नाहीत.';
+          setState(() {
+            _isLoading = false;
+          });
+          _showSnackBar(message.toString(), Colors.orange);
+          return;
+        }
+
         setState(() {
           _errorMessage = response['message'] ?? 'प्रोफाइल लोड होऊ शकले नाही.';
           _isLoading = false;
@@ -204,6 +236,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      if (_profile != null) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showSnackBar('प्रोफाइल refresh करता आली नाही.', Colors.orange);
+        return;
+      }
+
       setState(() {
         _errorMessage = 'एक अनपेक्षित एरर आली: ${e.toString()}';
         _isLoading = false;
@@ -458,7 +498,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Widget _buildScrolledStatusStrip() {
     final statusHeight = MediaQuery.of(context).padding.top;
     final profile = _profile;
-    if (profile == null || _isLoading) {
+    if (profile == null) {
       return const SizedBox.shrink();
     }
     final headerHeight = statusHeight + 58;
@@ -504,7 +544,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   Widget _buildMovingHeroIdentity() {
     final profile = _profile;
-    if (profile == null || _isLoading) {
+    if (profile == null) {
       return const SizedBox.shrink();
     }
 
@@ -665,8 +705,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+    if (_isLoading && _profile == null) {
+      return _buildProfileLoadingSkeleton();
     }
 
     if (_errorMessage != null) {
@@ -774,7 +814,114 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           hero: hero,
           galleryPhotos: galleryPhotos,
         ),
+        if (_isLoading) _buildInlineRefreshIndicator(),
       ],
+    );
+  }
+
+  Widget _buildProfileLoadingSkeleton() {
+    final statusHeight = MediaQuery.of(context).padding.top;
+    final heroHeight = _heroHeight(false);
+
+    return Stack(
+      children: [
+        Positioned(
+          top: statusHeight,
+          left: 0,
+          right: 0,
+          height: heroHeight,
+          child: _buildHeroFallback(),
+        ),
+        ListView(
+          padding: EdgeInsets.zero,
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: statusHeight + heroHeight - 18),
+            Container(
+              decoration: const BoxDecoration(
+                color: Color(0xFFFAF7F5),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+              ),
+              padding: EdgeInsets.fromLTRB(16, 24, 16, _bottomContentPadding()),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSkeletonBlock(width: 220, height: 24),
+                  const SizedBox(height: 12),
+                  _buildSkeletonBlock(width: double.infinity, height: 14),
+                  const SizedBox(height: 8),
+                  _buildSkeletonBlock(width: 260, height: 14),
+                  const SizedBox(height: 22),
+                  _buildSkeletonCard(lines: 4),
+                  const SizedBox(height: 14),
+                  _buildSkeletonCard(lines: 5),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildInlineRefreshIndicator() {
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 14,
+      right: 16,
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.42),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: const Padding(
+            padding: EdgeInsets.all(9),
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonCard({required int lines}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFEDE2DE)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: List.generate(lines, (index) {
+          return Padding(
+            padding: EdgeInsets.only(top: index == 0 ? 0 : 12),
+            child: _buildSkeletonBlock(
+              width: index.isEven ? double.infinity : 230,
+              height: 14,
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonBlock({required double width, required double height}) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: const Color(0xFFEBDDD8),
+        borderRadius: BorderRadius.circular(999),
+      ),
     );
   }
 
@@ -3171,7 +3318,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   }
 
   Map<String, dynamic>? _displayHero() {
-    return _safeMap(_display?['hero']);
+    return _safeMap(_display?['hero']) ?? _safeMap(_display?['card']);
   }
 
   Map<String, dynamic>? _displayAbout() {

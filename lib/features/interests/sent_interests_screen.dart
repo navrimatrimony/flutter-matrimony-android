@@ -225,6 +225,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
                               MaterialPageRoute(
                                 builder: (_) => ProfileDetailScreen(
                                   profileId: receiverProfileId,
+                                  initialProfile: receiverProfile,
                                 ),
                               ),
                             );
@@ -255,6 +256,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
                                     MaterialPageRoute(
                                       builder: (_) => ProfileDetailScreen(
                                         profileId: receiverProfileId,
+                                        initialProfile: receiverProfile,
                                       ),
                                     ),
                                   );

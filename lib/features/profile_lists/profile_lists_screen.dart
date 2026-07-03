@@ -373,6 +373,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
         builder: (_) => ProfileDetailScreen(
           profileId: profileId,
           profileIds: _openableIds(visibleRows),
+          initialProfile: row,
         ),
       ),
     );

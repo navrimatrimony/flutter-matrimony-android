@@ -263,6 +263,7 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
                               MaterialPageRoute(
                                 builder: (_) => ProfileDetailScreen(
                                   profileId: senderProfileId,
+                                  initialProfile: senderProfile,
                                 ),
                               ),
                             );
@@ -293,6 +294,7 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
                                     MaterialPageRoute(
                                       builder: (_) => ProfileDetailScreen(
                                         profileId: senderProfileId,
+                                        initialProfile: senderProfile,
                                       ),
                                     ),
                                   );

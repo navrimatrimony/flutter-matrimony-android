@@ -3122,6 +3122,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         builder: (_) => ProfileDetailScreen(
           profileId: profileId,
           profileIds: _visibleProfileIds(),
+          initialProfile: profile,
         ),
       ),
     );
