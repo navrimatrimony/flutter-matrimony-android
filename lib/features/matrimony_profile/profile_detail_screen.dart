@@ -40,6 +40,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Map<String, dynamic>? _display;
   List<Map<String, dynamic>> _suggestedProfiles = <Map<String, dynamic>>[];
   bool _isLoading = true;
+  bool _usingInitialProfile = false;
   bool _suggestedProfilesLoading = false;
   String? _errorMessage;
   bool _isSendingInterest = false;
@@ -122,6 +123,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final actions = _safeMap(display?['actions']);
     _profile = Map<String, dynamic>.from(seed);
     _display = display;
+    _usingInitialProfile = true;
     _isShortlisted = _displaySafeBool(actions?['is_shortlisted']) ?? false;
     _isHidden = _displaySafeBool(actions?['is_hidden']) ?? false;
     _isBlocked = _displaySafeBool(actions?['is_blocked']) ?? false;
@@ -154,6 +156,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       _suggestedProfiles = <Map<String, dynamic>>[];
       _errorMessage = null;
       _isLoading = true;
+      _usingInitialProfile = false;
       _suggestedProfilesLoading = false;
       _isSendingInterest = false;
       _interestSent = false;
@@ -208,6 +211,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         setState(() {
           _profile = profile;
           _display = display;
+          _usingInitialProfile = false;
           _isShortlisted =
               _displaySafeBool(actions?['is_shortlisted']) ?? false;
           _isHidden = _displaySafeBool(actions?['is_hidden']) ?? false;
@@ -754,6 +758,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final aboutTitle =
         _displayString(about?['title']) ??
         'About ${_displayString(hero?['name']) ?? _nameText(profile)}';
+    final previewSections = _usingInitialProfile && displaySections.isEmpty
+        ? _initialProfilePreviewSections(profile, hero, age, location)
+        : const <ProfileDisplaySectionData>[];
 
     return Stack(
       children: [
@@ -792,6 +799,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       displaySections,
                       contact,
                       gunamilan,
+                    )
+                  else if (_usingInitialProfile || _isLoading)
+                    ..._buildInitialProfilePreview(
+                      profile: profile,
+                      hero: hero,
+                      location: location,
+                      previewSections: previewSections,
                     )
                   else ...[
                     if (contact != null) _buildContactCard(contact),
@@ -1595,6 +1609,111 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         ],
       ),
     );
+  }
+
+  List<Widget> _buildInitialProfilePreview({
+    required Map<String, dynamic> profile,
+    required Map<String, dynamic>? hero,
+    required String? location,
+    required List<ProfileDisplaySectionData> previewSections,
+  }) {
+    final widgets = <Widget>[];
+    final previewAbout = _initialAboutText(profile, hero, location);
+
+    if (previewAbout != null) {
+      widgets.add(
+        _buildAboutCard(
+          'About ${_displayString(hero?['name']) ?? _nameText(profile)}',
+          previewAbout,
+        ),
+      );
+    }
+
+    for (final section in previewSections) {
+      widgets.add(_buildProfileDisplaySection(section, null));
+    }
+
+    if (widgets.isEmpty) {
+      widgets.add(_buildSkeletonCard(lines: 4));
+    }
+
+    widgets.add(_buildSkeletonCard(lines: 3));
+    return widgets;
+  }
+
+  List<ProfileDisplaySectionData> _initialProfilePreviewSections(
+    Map<String, dynamic> profile,
+    Map<String, dynamic>? hero,
+    int? age,
+    String? location,
+  ) {
+    final items = <ProfileDisplayItemData>[];
+
+    void addItem(String label, String? value, String icon) {
+      final clean = _displayString(value);
+      if (clean == null) return;
+
+      items.add(ProfileDisplayItemData(label: label, value: clean, icon: icon));
+    }
+
+    addItem(AppStrings.age, _ageText(age), 'calendar');
+    addItem(
+      'Height',
+      _displayString(hero?['height_label']) ??
+          ApiClient.profileHeightLabel(profile),
+      'height',
+    );
+    addItem(
+      'समुदाय',
+      _displayString(hero?['community_label']) ?? _communityText(profile),
+      'community',
+    );
+    addItem(
+      AppStrings.education,
+      _displayString(hero?['education_label']) ??
+          ApiClient.profileEducationLabel(profile),
+      'education',
+    );
+    addItem(
+      'Occupation',
+      _displayString(hero?['occupation_label']) ??
+          ApiClient.profileOccupationLabel(profile),
+      'work',
+    );
+    addItem(AppStrings.location, location, 'location');
+
+    if (items.isEmpty) return const <ProfileDisplaySectionData>[];
+
+    return [
+      ProfileDisplaySectionData(
+        key: 'initial_profile_preview',
+        title: 'प्रोफाइल झलक',
+        items: items.take(5).toList(growable: false),
+      ),
+    ];
+  }
+
+  String? _initialAboutText(
+    Map<String, dynamic> profile,
+    Map<String, dynamic>? hero,
+    String? location,
+  ) {
+    final name = _displayString(hero?['name']) ?? _nameText(profile);
+    final education =
+        _displayString(hero?['education_label']) ??
+        ApiClient.profileEducationLabel(profile);
+    final occupation =
+        _displayString(hero?['occupation_label']) ??
+        ApiClient.profileOccupationLabel(profile);
+    final parts = <String>[
+      if (education != null) education,
+      if (occupation != null) 'working as $occupation',
+      if (location != null) 'based in $location',
+    ];
+
+    if (parts.isEmpty) return null;
+
+    return '$name is ${parts.join(', ')}.';
   }
 
   List<Widget> _buildFallbackProfileDetails(
