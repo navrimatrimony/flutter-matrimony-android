@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_photo_view.dart';
 
@@ -315,7 +316,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildConversationList() {
     if (_loadingList) {
-      return const Center(child: CircularProgressIndicator());
+      return AppLoadingState.list(
+        title: AppStrings.isMarathi ? 'Chats लोड होत आहेत' : 'Loading chats',
+        icon: Icons.chat_bubble_outline,
+      );
     }
 
     if (_listError != null) {
@@ -483,7 +487,13 @@ class _ChatScreenState extends State<ChatScreen> {
       children: [
         Expanded(
           child: _loadingThread && _messages.isEmpty
-              ? const Center(child: CircularProgressIndicator())
+              ? AppLoadingState.list(
+                  title: AppStrings.isMarathi
+                      ? 'Conversation लोड होत आहे'
+                      : 'Loading conversation',
+                  icon: Icons.chat_outlined,
+                  skeletonRows: 3,
+                )
               : _threadError != null
               ? _buildMessageState(
                   icon: Icons.error_outline,

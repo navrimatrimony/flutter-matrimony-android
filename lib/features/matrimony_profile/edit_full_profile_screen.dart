@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_language.dart';
 import '../../core/app_strings.dart';
 import '../photo/photo_upload_screen.dart';
@@ -9003,7 +9004,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         appBar: AppBar(title: const Text('Edit All Profile')),
         body: SafeArea(
           child: _loading
-              ? const Center(child: CircularProgressIndicator())
+              ? AppLoadingState.profile()
               : SingleChildScrollView(
                   controller: _scrollController,
                   keyboardDismissBehavior:

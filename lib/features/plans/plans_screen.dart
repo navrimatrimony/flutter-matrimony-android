@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 
 class PlansScreen extends StatefulWidget {
@@ -139,7 +140,12 @@ class _PlansScreenState extends State<PlansScreen> {
       backgroundColor: const Color(0xFFF8F4EF),
       appBar: AppBar(title: Text(AppStrings.plansTitle)),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? AppLoadingState.list(
+              title: AppStrings.isMarathi
+                  ? 'Plans लोड होत आहेत'
+                  : 'Loading plans',
+              icon: Icons.workspace_premium_outlined,
+            )
           : RefreshIndicator(
               onRefresh: () => _loadPlans(silent: true),
               child: ListView(

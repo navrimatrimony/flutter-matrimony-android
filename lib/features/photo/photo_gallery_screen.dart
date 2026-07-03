@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 
 class PhotoGalleryScreen extends StatefulWidget {
@@ -366,7 +367,10 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return AppLoadingState.list(
+        title: AppStrings.isMarathi ? 'Photos लोड होत आहेत' : 'Loading photos',
+        icon: Icons.photo_camera_outlined,
+      );
     }
 
     if (_errorMessage != null) {

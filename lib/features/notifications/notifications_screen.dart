@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
@@ -215,7 +216,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return const Center(child: CircularProgressIndicator());
+      return AppLoadingState.list(
+        title: AppStrings.isMarathi
+            ? 'Notifications लोड होत आहेत'
+            : 'Loading notifications',
+        icon: Icons.notifications_none,
+      );
     }
 
     if (_errorMessage != null) {

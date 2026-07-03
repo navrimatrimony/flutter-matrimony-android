@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -157,7 +158,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return AppLoadingState.list(
+        title: AppStrings.isMarathi
+            ? 'Settings लोड होत आहेत'
+            : 'Loading settings',
+        icon: Icons.settings_outlined,
+      );
     }
 
     if (_errorMessage != null) {

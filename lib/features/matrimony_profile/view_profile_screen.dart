@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import 'edit_full_profile_screen.dart';
@@ -20,7 +21,16 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
   @override
   void initState() {
     super.initState();
+    _seedCachedProfile();
     _fetchProfile();
+  }
+
+  void _seedCachedProfile() {
+    final cachedProfile = ApiClient.currentUserProfile;
+    if (cachedProfile == null || cachedProfile.isEmpty) return;
+
+    _profile = Map<String, dynamic>.from(cachedProfile);
+    _isLoading = false;
   }
 
   Future<void> _fetchProfile() async {
@@ -66,8 +76,6 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
               setState(() {
                 _isLoading = true;
                 _errorMessage = null;
-                _profile = null;
-                _display = null;
               });
               _fetchProfile();
             },
@@ -133,11 +141,11 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
 
   // स्क्रीनचा मुख्य भाग तयार करणारा विजेट
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+    if (_isLoading && _profile == null) {
+      return AppLoadingState.profile();
     }
 
-    if (_errorMessage != null) {
+    if (_errorMessage != null && _profile == null) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -164,6 +172,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
+        if (_isLoading) const LinearProgressIndicator(minHeight: 3),
         _buildProfileHero(photoUrl, _profile!['full_name'], location),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),

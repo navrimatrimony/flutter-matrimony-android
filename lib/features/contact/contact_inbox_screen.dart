@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_photo_view.dart';
 
@@ -82,7 +83,12 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return AppLoadingState.list(
+        title: AppStrings.isMarathi
+            ? 'Contact requests लोड होत आहेत'
+            : 'Loading contact requests',
+        icon: Icons.contact_mail_outlined,
+      );
     }
 
     if (_errorMessage != null) {

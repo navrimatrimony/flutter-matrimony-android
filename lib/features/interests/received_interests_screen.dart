@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
+import '../../core/app_strings.dart';
 import '../../core/profile_photo_view.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
@@ -193,7 +195,12 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return AppLoadingState.list(
+        title: AppStrings.isMarathi
+            ? 'आलेले interests लोड होत आहेत'
+            : 'Loading received interests',
+        icon: Icons.inbox_outlined,
+      );
     }
 
     if (_errorMessage != null) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
@@ -99,7 +100,12 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return AppLoadingState.list(
+        title: AppStrings.isMarathi
+            ? 'प्रोफाइल यादी लोड होत आहे'
+            : 'Loading profile lists',
+        icon: Icons.bookmarks_outlined,
+      );
     }
 
     if (_errorMessage != null) {

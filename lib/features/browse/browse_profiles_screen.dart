@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../../core/app_storage.dart';
@@ -1404,7 +1405,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
   Widget _buildProfileListBody() {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return AppLoadingState.matches();
     }
 
     if (_errorMessage != null) {
