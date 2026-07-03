@@ -2174,8 +2174,21 @@ class ApiClient {
   static Future<Map<String, dynamic>> getProfileList({
     int? ageFrom,
     int? ageTo,
+    int? heightFromCm,
+    int? heightToCm,
+    int? religionId,
+    int? casteId,
     String? caste,
+    int? countryId,
+    int? stateId,
+    int? districtId,
     int? locationId,
+    bool? photoAvailable,
+    bool? verifiedPhoto,
+    bool? recentlyActive,
+    int? educationId,
+    int? occupationId,
+    int? maritalStatusId,
     String? feed,
   }) async {
     if (authToken == null) {
@@ -2189,11 +2202,50 @@ class ApiClient {
     if (ageTo != null) {
       queryParams['age_to'] = ageTo.toString();
     }
+    if (heightFromCm != null) {
+      queryParams['height_from_cm'] = heightFromCm.toString();
+    }
+    if (heightToCm != null) {
+      queryParams['height_to_cm'] = heightToCm.toString();
+    }
+    if (religionId != null) {
+      queryParams['religion_id'] = religionId.toString();
+    }
+    if (casteId != null) {
+      queryParams['caste_id'] = casteId.toString();
+    }
     if (caste != null && caste.isNotEmpty) {
       queryParams['caste'] = caste;
     }
+    if (countryId != null) {
+      queryParams['country_id'] = countryId.toString();
+    }
+    if (stateId != null) {
+      queryParams['state_id'] = stateId.toString();
+    }
+    if (districtId != null) {
+      queryParams['district_id'] = districtId.toString();
+    }
     if (locationId != null) {
       queryParams['location_id'] = locationId.toString();
+    }
+    if (photoAvailable == true) {
+      queryParams['photo_available'] = '1';
+    }
+    if (verifiedPhoto == true) {
+      queryParams['verified_photo'] = '1';
+    }
+    if (recentlyActive == true) {
+      queryParams['recently_active'] = '1';
+    }
+    if (educationId != null) {
+      queryParams['education_id'] = educationId.toString();
+    }
+    if (occupationId != null) {
+      queryParams['occupation_id'] = occupationId.toString();
+    }
+    if (maritalStatusId != null) {
+      queryParams['marital_status_id'] = maritalStatusId.toString();
     }
     if (feed != null && feed.isNotEmpty) {
       queryParams['feed'] = feed;

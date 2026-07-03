@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../../core/app_storage.dart';
@@ -9,6 +10,7 @@ import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../contact/contact_inbox_screen.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
+import 'matches_filter_screen.dart';
 
 /// ===============================
 /// MATCHES / BROWSE PROFILES SCREEN
@@ -38,6 +40,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   ];
   static const int _navMatches = 1;
   static const int _navConnect = 2;
+  static const MethodChannel _nativeLocationChannel = MethodChannel(
+    'navri_matrimony/native_location',
+  );
 
   List<dynamic> _profiles = [];
   List<Map<String, dynamic>> _moreSections = <Map<String, dynamic>>[];
@@ -45,13 +50,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   bool _isLoading = true;
   bool _moreSectionsLoading = false;
   bool _moreSectionsLoaded = false;
-  bool _filtersExpanded = false;
+  bool _nearbyLocationBusy = false;
   String? _errorMessage;
   String? _moreSectionsError;
-  bool _locationSearching = false;
-  int? _selectedLocationId;
-  String? _selectedLocationLabel;
-  int _locationSearchRequest = 0;
+  String? _nearbyLocationMessage;
   int _selectedTabIndex = 0;
   int _activeMainNavIndex = _navMatches;
   int _selectedConnectTabIndex = 0;
@@ -70,14 +72,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   Timer? _recommendationCompletionTimer;
   final Set<int> _sendingInterestIds = <int>{};
   final Set<String> _failedPhotoUrls = <String>{};
-  List<Map<String, dynamic>> _locationSuggestions = <Map<String, dynamic>>[];
+  MatchesFilterState _filters = const MatchesFilterState();
   late final AnimationController _recommendationHintController;
   late final Animation<double> _recommendationHintOffset;
-
-  final TextEditingController _ageFromController = TextEditingController();
-  final TextEditingController _ageToController = TextEditingController();
-  final TextEditingController _casteController = TextEditingController();
-  final TextEditingController _locationController = TextEditingController();
 
   @override
   void initState() {
@@ -134,18 +131,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   void dispose() {
     _recommendationCompletionTimer?.cancel();
     _recommendationHintController.dispose();
-    _ageFromController.dispose();
-    _ageToController.dispose();
-    _casteController.dispose();
-    _locationController.dispose();
     super.dispose();
   }
 
   Future<void> _fetchProfileList({
-    int? ageFrom,
-    int? ageTo,
-    String? caste,
-    int? locationId,
+    MatchesFilterState? filters,
     String? feed,
   }) async {
     setState(() {
@@ -154,11 +144,25 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     });
 
     try {
+      final activeFilters = filters ?? _filters;
       final response = await ApiClient.getProfileList(
-        ageFrom: ageFrom,
-        ageTo: ageTo,
-        caste: caste,
-        locationId: locationId,
+        ageFrom: activeFilters.ageFrom,
+        ageTo: activeFilters.ageTo,
+        heightFromCm: activeFilters.heightFromCm,
+        heightToCm: activeFilters.heightToCm,
+        religionId: activeFilters.religionId,
+        casteId: activeFilters.casteId,
+        caste: activeFilters.casteQuery,
+        countryId: activeFilters.countryId,
+        stateId: activeFilters.stateId,
+        districtId: activeFilters.districtId,
+        locationId: activeFilters.locationId,
+        photoAvailable: activeFilters.photoAvailable,
+        verifiedPhoto: activeFilters.verifiedPhoto,
+        recentlyActive: activeFilters.recentlyActive,
+        educationId: activeFilters.educationId,
+        occupationId: activeFilters.occupationId,
+        maritalStatusId: activeFilters.maritalStatusId,
         feed: feed,
       );
       if (!mounted) return;
@@ -268,15 +272,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   Future<void> _fetchProfileListForCurrentTab() {
-    final ageFromText = _ageFromController.text.trim();
-    final ageToText = _ageToController.text.trim();
-    final casteText = _casteController.text.trim();
-
     return _fetchProfileList(
-      ageFrom: ageFromText.isNotEmpty ? int.tryParse(ageFromText) : null,
-      ageTo: ageToText.isNotEmpty ? int.tryParse(ageToText) : null,
-      caste: casteText.isNotEmpty ? casteText : null,
-      locationId: _selectedLocationId,
+      filters: _filters,
       feed: _feedForTab(_selectedTabIndex),
     );
   }
@@ -340,50 +337,23 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     }
   }
 
-  Future<void> _searchLocations(String query) async {
-    final requestId = ++_locationSearchRequest;
-    final trimmedQuery = query.trim();
-
-    if (_selectedLocationLabel == null ||
-        trimmedQuery != _selectedLocationLabel) {
-      _selectedLocationId = null;
-      _selectedLocationLabel = null;
-    }
-
-    if (trimmedQuery.length < 2) {
-      setState(() {
-        _locationSearching = false;
-        _locationSuggestions = <Map<String, dynamic>>[];
-      });
-      return;
-    }
+  Future<void> _openFilterScreen() async {
+    final result = await Navigator.push<MatchesFilterState>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MatchesFilterScreen(initialFilters: _filters),
+      ),
+    );
+    if (!mounted || result == null || result == _filters) return;
 
     setState(() {
-      _locationSearching = true;
+      _filters = result;
+      _activeMainNavIndex = _navMatches;
+      if (!_filters.hasLocationFilter) {
+        _nearbyLocationMessage = null;
+      }
     });
-
-    final results = await ApiClient.searchLocations(trimmedQuery);
-    if (!mounted || requestId != _locationSearchRequest) return;
-
-    setState(() {
-      _locationSuggestions = results;
-      _locationSearching = false;
-    });
-  }
-
-  void _selectLocation(Map<String, dynamic> location) {
-    final locationId = ApiClient.locationIdFrom(location);
-    if (locationId == null) return;
-
-    final label = ApiClient.locationSuggestionLabel(location);
-    setState(() {
-      _selectedLocationId = locationId;
-      _selectedLocationLabel = label;
-      _locationController.text = label;
-      _locationSuggestions = <Map<String, dynamic>>[];
-      _locationSearching = false;
-    });
-    FocusScope.of(context).unfocus();
+    await _fetchProfileListForCurrentTab();
   }
 
   @override
@@ -411,7 +381,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           IconButton(
             tooltip: AppStrings.matchesFilter,
             icon: const Icon(Icons.filter_alt),
-            onPressed: _toggleFilterPanel,
+            onPressed: _openFilterScreen,
           ),
         ],
       ),
@@ -441,19 +411,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           ),
         ],
       ),
-      child: Column(
-        children: [
-          _buildTopSubmenu(),
-          AnimatedCrossFade(
-            firstChild: const SizedBox.shrink(),
-            secondChild: _buildSearchFilterUI(),
-            crossFadeState: _filtersExpanded
-                ? CrossFadeState.showSecond
-                : CrossFadeState.showFirst,
-            duration: const Duration(milliseconds: 180),
-          ),
-        ],
-      ),
+      child: Column(children: [_buildTopSubmenu()]),
     );
   }
 
@@ -519,7 +477,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildRecommendationHeader(profiles.length),
+                _buildRecommendationHeader(),
                 Expanded(child: _buildRecommendationCompleteState()),
               ],
             ),
@@ -536,7 +494,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildRecommendationHeader(profiles.length),
+              _buildRecommendationHeader(),
               const SizedBox(height: 14),
               Expanded(child: _buildRecommendationDeck(profiles)),
             ],
@@ -547,7 +505,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildRecommendationHeader(int total) {
+  Widget _buildRecommendationHeader() {
     return SizedBox(
       height: 44,
       child: Stack(
@@ -560,9 +518,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 alignment: Alignment.center,
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  _recommendationComplete
-                      ? 'Recommendation'
-                      : 'Recommendation ${_recommendationIndex + 1}/$total',
+                  'Recommendation',
                   maxLines: 1,
                   style: const TextStyle(
                     color: Color(0xFF111827),
@@ -1055,16 +1011,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   void _activateConnectNav() {
     setState(() {
       _activeMainNavIndex = _navConnect;
-      _filtersExpanded = false;
-    });
-  }
-
-  void _toggleFilterPanel() {
-    setState(() {
-      _filtersExpanded = !_filtersExpanded;
-      if (_filtersExpanded) {
-        _activeMainNavIndex = _navMatches;
-      }
     });
   }
 
@@ -1237,9 +1183,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
           final tabIndex = index - 1;
           final selected = _selectedTabIndex == tabIndex;
-          final label = selected && _profiles.isNotEmpty
-              ? '${tabs[tabIndex]} (${_profiles.length})'
-              : tabs[tabIndex];
+          final label = tabs[tabIndex];
           return ChoiceChip(
             label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
             selected: selected,
@@ -1273,13 +1217,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
   Widget _buildSubmenuFilterChip() {
     final hasActiveFilters = _hasActiveFilters();
-    final selected = _filtersExpanded;
-    final foreground = selected || hasActiveFilters
-        ? _brandColor
-        : const Color(0xFF594044);
-    final background = selected
-        ? _brandSoft
-        : hasActiveFilters
+    final foreground = hasActiveFilters ? _brandColor : const Color(0xFF594044);
+    final background = hasActiveFilters
         ? const Color(0xFFFFE4E6)
         : const Color(0xFFF7F0EC);
 
@@ -1290,7 +1229,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
-          onTap: _toggleFilterPanel,
+          onTap: _openFilterScreen,
           child: Container(
             width: 38,
             height: 38,
@@ -1298,16 +1237,28 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               color: background,
               shape: BoxShape.circle,
               border: Border.all(
-                color: selected || hasActiveFilters
-                    ? _brandColor
-                    : const Color(0xFFE6D8D3),
-                width: selected || hasActiveFilters ? 1.4 : 1,
+                color: hasActiveFilters ? _brandColor : const Color(0xFFE6D8D3),
+                width: hasActiveFilters ? 1.4 : 1,
               ),
             ),
-            child: Icon(
-              selected ? Icons.close : Icons.tune,
-              color: foreground,
-              size: 19,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Icon(Icons.tune, color: foreground, size: 19),
+                if (hasActiveFilters)
+                  Positioned(
+                    right: 8,
+                    top: 8,
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: _brandColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ),
@@ -1316,178 +1267,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   bool _hasActiveFilters() {
-    return _ageFromController.text.trim().isNotEmpty ||
-        _ageToController.text.trim().isNotEmpty ||
-        _casteController.text.trim().isNotEmpty ||
-        _selectedLocationId != null;
-  }
-
-  Widget _buildSearchFilterUI() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Color(0xFFF0E5E1))),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _ageFromController,
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setState(() {}),
-                  decoration: _filterDecoration('Age From'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: _ageToController,
-                  keyboardType: TextInputType.number,
-                  onChanged: (_) => setState(() {}),
-                  decoration: _filterDecoration('Age To'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _casteController,
-            onChanged: (_) => setState(() {}),
-            decoration: _filterDecoration('Caste'),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _locationController,
-            decoration: _filterDecoration('Location'),
-            onChanged: _searchLocations,
-          ),
-          _buildLocationSuggestions(),
-          const SizedBox(height: 14),
-          ElevatedButton.icon(
-            onPressed: _handleSearch,
-            icon: const Icon(Icons.search),
-            label: const Text('Search'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _brandColor,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              textStyle: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  InputDecoration _filterDecoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      filled: true,
-      fillColor: const Color(0xFFFCFBFA),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFE4D8D2)),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(
-          color: _BrowseProfilesScreenState._brandColor,
-          width: 1.4,
-        ),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-    );
-  }
-
-  Widget _buildLocationSuggestions() {
-    if (_locationSearching) {
-      return const Padding(
-        padding: EdgeInsets.only(top: 8),
-        child: LinearProgressIndicator(minHeight: 2),
-      );
-    }
-
-    if (_locationSuggestions.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(top: 8),
-      constraints: const BoxConstraints(maxHeight: 190),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE4D8D2)),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ListView.separated(
-        shrinkWrap: true,
-        itemCount: _locationSuggestions.length,
-        separatorBuilder: (_, _) => const Divider(height: 1),
-        itemBuilder: (context, index) {
-          final location = _locationSuggestions[index];
-          final label = ApiClient.locationSuggestionLabel(location);
-          final hierarchy = location['hierarchy']?.toString().trim();
-
-          return ListTile(
-            dense: true,
-            leading: const Icon(
-              Icons.place_outlined,
-              color: _BrowseProfilesScreenState._brandColor,
-            ),
-            title: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-            subtitle:
-                hierarchy != null && hierarchy.isNotEmpty && hierarchy != label
-                ? Text(hierarchy, maxLines: 1, overflow: TextOverflow.ellipsis)
-                : null,
-            onTap: () => _selectLocation(location),
-          );
-        },
-      ),
-    );
-  }
-
-  void _handleSearch() {
-    final ageFromText = _ageFromController.text.trim();
-    final ageToText = _ageToController.text.trim();
-    final casteText = _casteController.text.trim();
-    final locationText = _locationController.text.trim();
-
-    final ageFrom = ageFromText.isNotEmpty ? int.tryParse(ageFromText) : null;
-    final ageTo = ageToText.isNotEmpty ? int.tryParse(ageToText) : null;
-    final caste = casteText.isNotEmpty ? casteText : null;
-
-    if (locationText.isNotEmpty && _selectedLocationId == null) {
-      _showSnackBar('कृपया suggestions मधून location निवडा.');
-      return;
-    }
-
-    FocusScope.of(context).unfocus();
-    setState(() {
-      _filtersExpanded = false;
-    });
-
-    _fetchProfileList(
-      ageFrom: ageFrom,
-      ageTo: ageTo,
-      caste: caste,
-      locationId: _selectedLocationId,
-      feed: _feedForTab(_selectedTabIndex),
-    );
+    return _filters.hasActiveFilters;
   }
 
   Widget _buildProfileListBody() {
@@ -1539,7 +1319,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
   Widget _buildStandardMatchesList(List<Map<String, dynamic>> profiles) {
     final showNearPrompt =
-        _selectedTabIndex == 3 && _selectedLocationId == null;
+        _selectedTabIndex == 3 && !_filters.hasLocationFilter;
     final promptOffset = showNearPrompt ? 1 : 0;
     final itemCount = profiles.length + promptOffset;
 
@@ -1579,60 +1359,253 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   Widget _buildNearMePromptCard() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: () {
-        setState(() {
-          _filtersExpanded = true;
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: _brandColor.withValues(alpha: 0.18)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 42,
-              height: 42,
-              decoration: const BoxDecoration(
-                color: _BrowseProfilesScreenState._brandSoft,
-                shape: BoxShape.circle,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _brandColor.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: const BoxDecoration(
+                  color: _BrowseProfilesScreenState._brandSoft,
+                  shape: BoxShape.circle,
+                ),
+                child: _nearbyLocationBusy
+                    ? const Padding(
+                        padding: EdgeInsets.all(12),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(
+                        Icons.my_location_rounded,
+                        color: _BrowseProfilesScreenState._brandColor,
+                      ),
               ),
-              child: const Icon(
-                Icons.place_outlined,
-                color: _BrowseProfilesScreenState._brandColor,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                AppStrings.chooseLocationForNearMe,
-                style: const TextStyle(
-                  color: Color(0xFF443337),
-                  fontWeight: FontWeight.w800,
-                  height: 1.25,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppStrings.isMarathi
+                          ? 'Nearby साठी location वापरा'
+                          : 'Use location for Nearby',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF443337),
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _nearbyLocationMessage ??
+                          (AppStrings.isMarathi
+                              ? 'मोबाईल permission घेऊन जवळचे शहर/location apply करू.'
+                              : 'Allow location to apply the closest app location.'),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w700,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            const Icon(
-              Icons.keyboard_arrow_down,
-              color: _BrowseProfilesScreenState._brandColor,
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _nearbyLocationBusy
+                      ? null
+                      : _useCurrentLocationForNearby,
+                  icon: const Icon(Icons.near_me_outlined),
+                  label: Text(
+                    AppStrings.isMarathi ? 'Location वापरा' : 'Use location',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _brandColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _openFilterScreen,
+                  icon: const Icon(Icons.tune_rounded),
+                  label: Text(AppStrings.matchesFilter),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _brandColor,
+                    side: const BorderSide(color: _brandColor),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _useCurrentLocationForNearby() async {
+    setState(() {
+      _nearbyLocationBusy = true;
+      _nearbyLocationMessage = AppStrings.isMarathi
+          ? 'Location घेत आहे...'
+          : 'Getting location...';
+    });
+
+    try {
+      final payload = await _nativeLocationChannel
+          .invokeMapMethod<String, dynamic>('getApproximateLocation', {
+            'locale': AppStrings.isMarathi ? 'mr' : 'en',
+          });
+      if (!mounted) return;
+
+      final location = await _findBestAppLocation(payload ?? const {});
+      if (!mounted) return;
+
+      if (location == null) {
+        setState(() {
+          _nearbyLocationBusy = false;
+          _nearbyLocationMessage = AppStrings.isMarathi
+              ? 'Location मिळाले, पण app list मध्ये जवळचे ठिकाण match झाले नाही.'
+              : 'Location found, but no matching app location was found.';
+        });
+        _showSnackBar(
+          AppStrings.isMarathi
+              ? 'Filters मधून city/district निवडा.'
+              : 'Choose city/district from filters.',
+        );
+        return;
+      }
+
+      final locationId = ApiClient.locationIdFrom(location);
+      final label = ApiClient.locationSuggestionLabel(location);
+      setState(() {
+        _filters = _filters.copyWith(
+          locationId: locationId,
+          locationLabel: label,
+          districtId: null,
+          districtLabel: null,
+        );
+        _nearbyLocationBusy = false;
+        _nearbyLocationMessage = AppStrings.isMarathi
+            ? '$label apply केले.'
+            : '$label applied.';
+      });
+      await _fetchProfileListForCurrentTab();
+    } on PlatformException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _nearbyLocationBusy = false;
+        _nearbyLocationMessage = _nearbyLocationErrorMessage(error);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _nearbyLocationBusy = false;
+        _nearbyLocationMessage = AppStrings.isMarathi
+            ? 'Location वापरता आले नाही.'
+            : 'Could not use location.';
+      });
+    }
+  }
+
+  Future<Map<String, dynamic>?> _findBestAppLocation(
+    Map<String, dynamic> payload,
+  ) async {
+    final seen = <String>{};
+    for (final term in _nearbySearchTerms(payload)) {
+      final key = term.toLowerCase();
+      if (!seen.add(key)) continue;
+
+      final results = await ApiClient.searchLocations(
+        term,
+        limit: 6,
+        locale: AppStrings.isMarathi ? 'mr' : 'en',
+      );
+      if (results.isNotEmpty) return results.first;
+    }
+    return null;
+  }
+
+  Iterable<String> _nearbySearchTerms(Map<String, dynamic> payload) sync* {
+    const keys = [
+      'locality',
+      'locality_en',
+      'sub_locality',
+      'sub_locality_en',
+      'district',
+      'district_en',
+      'state',
+      'state_en',
+    ];
+
+    for (final key in keys) {
+      final value = _displayString(payload[key]);
+      if (value != null && value.length >= 2) yield value;
+    }
+
+    for (final key in ['address_line', 'address_line_en']) {
+      final address = _displayString(payload[key]);
+      if (address == null) continue;
+      for (final part in address.split(',')) {
+        final term = part.trim();
+        if (term.length >= 2) yield term;
+      }
+    }
+  }
+
+  String _nearbyLocationErrorMessage(PlatformException error) {
+    return switch (error.code) {
+      'PERMISSION_DENIED' =>
+        AppStrings.isMarathi
+            ? 'Nearby साठी location permission लागेल.'
+            : 'Location permission is needed for Nearby.',
+      'LOCATION_DISABLED' =>
+        AppStrings.isMarathi
+            ? 'Mobile location बंद आहे. Settings मधून location सुरू करा.'
+            : 'Device location is off. Turn on location from settings.',
+      'LOCATION_TIMEOUT' =>
+        AppStrings.isMarathi
+            ? 'Location मिळायला जास्त वेळ लागला. पुन्हा प्रयत्न करा.'
+            : 'Location took too long. Try again.',
+      'LOCATION_PENDING' =>
+        AppStrings.isMarathi
+            ? 'Location request आधीच चालू आहे.'
+            : 'A location request is already running.',
+      _ =>
+        AppStrings.isMarathi
+            ? 'Location वापरता आले नाही.'
+            : 'Could not use location.',
+    };
   }
 
   ListView _buildMoreMatchesList(List<Map<String, dynamic>> profiles) {
@@ -3286,11 +3259,132 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   List<Map<String, dynamic>> _profileRows() {
-    return _profiles.map(_safeMap).whereType<Map<String, dynamic>>().toList();
+    final rows = _profiles
+        .map(_safeMap)
+        .whereType<Map<String, dynamic>>()
+        .toList();
+    if (!_filters.hasActiveFilters) return rows;
+
+    return rows.where(_matchesVisibleFilters).toList();
   }
 
   List<Map<String, dynamic>> _recommendationProfiles() {
     return _profileRows().where(_hasRecommendationPhoto).take(13).toList();
+  }
+
+  bool _matchesVisibleFilters(Map<String, dynamic> profile) {
+    final data = _cardData(profile);
+
+    if (_filters.heightFromCm != null || _filters.heightToCm != null) {
+      final heightCm = _heightCmFromProfile(profile, data.heightLabel);
+      if (heightCm != null) {
+        if (_filters.heightFromCm != null &&
+            heightCm < _filters.heightFromCm!) {
+          return false;
+        }
+        if (_filters.heightToCm != null && heightCm > _filters.heightToCm!) {
+          return false;
+        }
+      }
+    }
+
+    if (_filters.photoAvailable &&
+        data.photoUrl == null &&
+        data.photoCount <= 0) {
+      return false;
+    }
+
+    if (_filters.verifiedPhoto && !data.verified) {
+      return false;
+    }
+
+    if (!_labelMatches(data.educationLabel, _filters.educationLabel)) {
+      return false;
+    }
+
+    if (!_labelMatches(data.occupationLabel, _filters.occupationLabel)) {
+      return false;
+    }
+
+    if (!_labelMatches(
+      _profileMaritalStatusLabel(profile),
+      _filters.maritalStatusLabel,
+    )) {
+      return false;
+    }
+
+    if (_filters.recentlyActive && !_profileLooksRecentlyActive(profile)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _labelMatches(String? source, String? selected) {
+    final selectedText = selected?.trim().toLowerCase();
+    if (selectedText == null || selectedText.isEmpty) return true;
+
+    final sourceText = source?.trim().toLowerCase();
+    if (sourceText == null || sourceText.isEmpty) return true;
+    return sourceText.contains(selectedText) ||
+        selectedText.contains(sourceText);
+  }
+
+  int? _heightCmFromProfile(Map<String, dynamic> profile, String? label) {
+    for (final key in ['height_cm', 'height_in_cm']) {
+      final value = _displayInt(profile[key]);
+      if (value != null && value > 0) return value;
+    }
+
+    final text = label ?? _displayString(profile['height']);
+    if (text == null) return null;
+
+    final cmMatch = RegExp(
+      r'(\d{2,3})\s*cm',
+      caseSensitive: false,
+    ).firstMatch(text);
+    if (cmMatch != null) return int.tryParse(cmMatch.group(1)!);
+
+    final feetMatch = RegExp(r"(\d)\s*'\s*(\d{1,2})").firstMatch(text);
+    if (feetMatch != null) {
+      final feet = int.tryParse(feetMatch.group(1)!);
+      final inches = int.tryParse(feetMatch.group(2)!);
+      if (feet != null && inches != null) {
+        return ((feet * 12 + inches) * 2.54).round();
+      }
+    }
+
+    return null;
+  }
+
+  String? _profileMaritalStatusLabel(Map<String, dynamic> profile) {
+    return ApiClient.safeDisplayLabel(profile['marital_status_label']) ??
+        ApiClient.safeDisplayLabel(profile['marital_status']) ??
+        ApiClient.safeDisplayLabel(profile['marital_status_key']);
+  }
+
+  bool _profileLooksRecentlyActive(Map<String, dynamic> profile) {
+    final display = _safeMap(profile['display']);
+    final card = _safeMap(display?['card']) ?? _safeMap(display?['hero']);
+    final explicit =
+        _displayBool(card?['recently_active']) ??
+        _displayBool(profile['recently_active']) ??
+        _displayBool(profile['is_recently_active']);
+    if (explicit != null) return explicit;
+
+    final activityLabel =
+        _displayString(card?['activity_label']) ??
+        _displayString(profile['activity_label']) ??
+        _displayString(profile['last_active_label']);
+    if (activityLabel == null) return true;
+
+    final normalized = activityLabel.toLowerCase();
+    return normalized.contains('today') ||
+        normalized.contains('yesterday') ||
+        normalized.contains('recent') ||
+        normalized.contains('आज') ||
+        normalized.contains('काल') ||
+        normalized.contains('active');
   }
 
   bool _hasRecommendationPhoto(Map<String, dynamic> profile) {
