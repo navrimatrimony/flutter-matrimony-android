@@ -741,11 +741,24 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startInitialLoad();
+    });
+  }
+
+  void _startInitialLoad() {
+    if (!mounted) return;
     final initialProfile =
         widget.initialProfile ?? ApiClient.currentUserProfile;
     if (initialProfile != null) {
-      _prefillProfile(initialProfile);
+      setState(() {
+        _prefillProfile(initialProfile);
+        _loading = false;
+      });
+      _loadScreenData(showInitialLoader: false);
+      return;
     }
+
     _loadScreenData();
   }
 
@@ -2246,17 +2259,27 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _applySmartPartnerPreferenceDefaults();
   }
 
-  Future<void> _loadScreenData() async {
-    setState(() {
-      _loading = true;
-      _loadError = null;
-    });
+  Future<void> _loadScreenData({bool showInitialLoader = true}) async {
+    if (showInitialLoader) {
+      setState(() {
+        _loading = true;
+        _loadError = null;
+      });
+    } else {
+      setState(() {
+        _loadError = null;
+      });
+    }
 
     try {
       final profileResponse = await ApiClient.getMyProfile();
       final profile = profileResponse['profile'];
       if (profile is Map) {
-        _prefillProfile(Map<String, dynamic>.from(profile));
+        if (!mounted) return;
+        setState(() {
+          _prefillProfile(Map<String, dynamic>.from(profile));
+          _loading = false;
+        });
       }
       await Future.wait([
         _loadGenders(),
@@ -2270,6 +2293,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     } catch (_) {
       if (!mounted) return;
       _loadError = 'Profile load करता आली नाही.';
+      setState(() {
+        _loading = false;
+      });
     }
 
     if (!mounted) return;

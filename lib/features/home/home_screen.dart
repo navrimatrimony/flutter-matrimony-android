@@ -298,13 +298,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   Future<void> _openEditProfile({bool openLocationDetails = false}) async {
     try {
-      await ApiClient.getMyProfile();
-      if (!mounted) return;
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => EditFullProfileScreen(
-            initialProfile: ApiClient.currentUserProfile,
+            initialProfile: _effectiveProfile ?? ApiClient.currentUserProfile,
             openLocationDetails: openLocationDetails,
           ),
         ),
