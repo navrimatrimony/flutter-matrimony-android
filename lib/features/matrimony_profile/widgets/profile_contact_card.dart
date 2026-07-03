@@ -5,6 +5,7 @@ class ProfileContactData {
   final String state;
   final String? message;
   final String? phone;
+  final String? maskedPhone;
   final String? email;
   final ProfileContactCtaData? primaryCta;
   final ProfileContactRequestOptionsData requestOptions;
@@ -15,6 +16,7 @@ class ProfileContactData {
     required this.state,
     required this.message,
     required this.phone,
+    this.maskedPhone,
     required this.email,
     required this.primaryCta,
     this.requestOptions = const ProfileContactRequestOptionsData(),
@@ -91,6 +93,8 @@ class ProfileContactCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lockedPhone = contact.phone == null ? contact.maskedPhone : null;
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(bottom: 14),
@@ -123,7 +127,9 @@ class ProfileContactCard extends StatelessWidget {
               ),
             ),
           ],
-          if (contact.phone != null || contact.email != null) ...[
+          if (contact.phone != null ||
+              lockedPhone != null ||
+              contact.email != null) ...[
             const SizedBox(height: 14),
             if (contact.phone != null)
               _ContactValueRow(
@@ -131,6 +137,13 @@ class ProfileContactCard extends StatelessWidget {
                 label: 'Mobile Number',
                 value: contact.phone!,
                 onCopy: () => onCopy('Mobile Number', contact.phone!),
+              ),
+            if (lockedPhone != null)
+              _ContactValueRow(
+                icon: Icons.lock_outline,
+                label: 'Mobile Number',
+                value: lockedPhone,
+                locked: true,
               ),
             if (contact.email != null)
               _ContactValueRow(
@@ -230,13 +243,15 @@ class _ContactValueRow extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
-  final VoidCallback onCopy;
+  final VoidCallback? onCopy;
+  final bool locked;
 
   const _ContactValueRow({
     required this.icon,
     required this.label,
     required this.value,
-    required this.onCopy,
+    this.onCopy,
+    this.locked = false,
   });
 
   @override
@@ -280,11 +295,21 @@ class _ContactValueRow extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            tooltip: 'Copy',
-            onPressed: onCopy,
-            icon: const Icon(Icons.copy, size: 18),
-          ),
+          if (locked)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: Icon(
+                Icons.lock_outline,
+                size: 18,
+                color: Color(0xFF6E625F),
+              ),
+            )
+          else if (onCopy != null)
+            IconButton(
+              tooltip: 'Copy',
+              onPressed: onCopy,
+              icon: const Icon(Icons.copy, size: 18),
+            ),
         ],
       ),
     );

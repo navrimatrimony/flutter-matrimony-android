@@ -3470,12 +3470,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final whatsapp = _contactWhatsAppResponse(contact['whatsapp_response']);
     final requestOptions = _contactRequestOptions(contact['request_options']);
     final phone = _displayString(contact['phone']);
+    final maskedPhone = phone == null
+        ? _lockedContactPhoneMask(contact, state)
+        : null;
     final email = _displayString(contact['email']);
     final message =
         _displayString(contact['message']) ?? _fallbackContactMessage(state);
 
     final hasVisibleData =
         phone != null ||
+        maskedPhone != null ||
         email != null ||
         message != null ||
         primaryCta != null ||
@@ -3487,11 +3491,57 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       state: state,
       message: message,
       phone: phone,
+      maskedPhone: maskedPhone,
       email: email,
       primaryCta: primaryCta,
       requestOptions: requestOptions,
       whatsAppResponse: whatsapp,
     );
+  }
+
+  String? _lockedContactPhoneMask(Map<String, dynamic> contact, String state) {
+    const lockedStates = <String>{
+      'locked',
+      'unlock_available',
+      'upgrade_required',
+      'contact_request_available',
+      'contact_request_pending',
+      'contact_request_rejected',
+    };
+    if (!lockedStates.contains(state)) return null;
+
+    const candidateKeys = <String>[
+      'masked_phone',
+      'phone_masked',
+      'masked_mobile',
+      'mobile_masked',
+      'masked_contact_phone',
+      'contact_phone_masked',
+      'phone_preview',
+      'mobile_preview',
+    ];
+
+    for (final key in candidateKeys) {
+      final masked = _safeLockedPhoneMask(_displayString(contact[key]));
+      if (masked != null) return masked;
+    }
+
+    return 'XX****';
+  }
+
+  String? _safeLockedPhoneMask(String? value) {
+    if (value == null) return null;
+
+    final text = value.trim();
+    if (text.isEmpty) return null;
+
+    final hasMask = RegExp(r'[*Xx]').hasMatch(text);
+    if (hasMask) return text;
+
+    final digits = text.replaceAll(RegExp(r'\D+'), '');
+    if (digits.length < 2) return null;
+
+    return '${digits.substring(0, 2)}****';
   }
 
   String _contactState(dynamic value) {
