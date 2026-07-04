@@ -370,6 +370,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final isBusy = _busyIds.contains(id);
     final primaryAction = _primaryAction(notification);
     final secondaryAction = _secondaryAction(notification);
+    final isLockedTeaser = layout == 'locked_teaser' && teaser != null;
+
+    if (isLockedTeaser) {
+      return _buildLockedTeaserNotificationCard(
+        notification: notification,
+        title: title,
+        message: message,
+        teaser: teaser,
+        createdAt: createdAt,
+        isUnread: isUnread,
+        isBusy: isBusy,
+        primaryAction: primaryAction,
+      );
+    }
 
     return Material(
       color: Colors.transparent,
@@ -432,6 +446,352 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ],
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedTeaserNotificationCard({
+    required Map<String, dynamic> notification,
+    required String title,
+    required String message,
+    required Map<String, dynamic> teaser,
+    required String createdAt,
+    required bool isUnread,
+    required bool isBusy,
+    required Map<String, dynamic>? primaryAction,
+  }) {
+    final action = primaryAction;
+    final radius = BorderRadius.circular(12);
+
+    return Material(
+      color: Colors.transparent,
+      borderRadius: radius,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: isBusy ? null : () => _handleNotificationTap(notification),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: radius,
+            border: Border.all(
+              color: isUnread ? _brandColor.withValues(alpha: 0.62) : _line,
+              width: isUnread ? 1.35 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF6F1D2D).withValues(alpha: 0.08),
+                blurRadius: 18,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 164),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildLockedTeaserPhotoPanel(teaser: teaser),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(13, 12, 12, 12),
+                      child: _buildLockedTeaserContent(
+                        title: title,
+                        message: message,
+                        teaser: teaser,
+                        createdAt: createdAt,
+                        isUnread: isUnread,
+                        isBusy: isBusy,
+                        action: action,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedTeaserPhotoPanel({required Map<String, dynamic> teaser}) {
+    return SizedBox(
+      width: 118,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          _buildTeaserPhoto(teaser),
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0x11000000),
+                  Color(0x22000000),
+                  Color(0xAA000000),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: 9,
+            right: 9,
+            child: Container(
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.50),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+              ),
+              child: const Icon(
+                Icons.lock_outline,
+                color: Colors.white,
+                size: 17,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLockedTeaserContent({
+    required String title,
+    required String message,
+    required Map<String, dynamic> teaser,
+    required String createdAt,
+    required bool isUnread,
+    required bool isBusy,
+    required Map<String, dynamic>? action,
+  }) {
+    final headline = _lockedTeaserHeadline(
+      teaser: teaser,
+      fallbackMessage: message,
+    );
+    final lines = _lockedTeaserDetailLines(teaser);
+    final viewedSummary = _stringValue(teaser['viewed_summary']);
+    final accentLine = _stringValue(teaser['accent_line']);
+    final matchLine = _stringValue(teaser['match_line']);
+    final highlightLine = _joinNonEmpty([accentLine, matchLine]);
+    final curiosityLine = _lockedCuriosityLine(teaser);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _brandDark,
+                  fontSize: 11.6,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0,
+                ),
+              ),
+            ),
+            if (isBusy) ...[
+              const SizedBox(width: 8),
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ] else
+              _buildUnreadDot(isUnread),
+          ],
+        ),
+        const SizedBox(height: 7),
+        Text(
+          headline,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: _textDark,
+            fontSize: 15.4,
+            fontWeight: FontWeight.w900,
+            height: 1.16,
+            letterSpacing: 0,
+          ),
+        ),
+        if (highlightLine.isNotEmpty) ...[
+          const SizedBox(height: 7),
+          _buildLockedHighlightChip(highlightLine),
+        ],
+        const SizedBox(height: 7),
+        Text(
+          curiosityLine,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: Color(0xFF5A4541),
+            fontSize: 12.7,
+            fontWeight: FontWeight.w700,
+            height: 1.25,
+          ),
+        ),
+        if (lines.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [for (final line in lines) _buildLockedDetailChip(line)],
+          ),
+        ],
+        const Spacer(),
+        const SizedBox(height: 9),
+        _buildLockedTeaserFooter(
+          action: action,
+          teaser: teaser,
+          viewedSummary: viewedSummary,
+          createdAt: createdAt,
+          isUnread: isUnread,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUnreadDot(bool isUnread) {
+    return Container(
+      width: 8,
+      height: 8,
+      margin: const EdgeInsets.only(top: 4),
+      decoration: BoxDecoration(
+        color: isUnread ? _brandColor : const Color(0xFFCBD5E1),
+        shape: BoxShape.circle,
+      ),
+    );
+  }
+
+  Widget _buildLockedHighlightChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEAF7F1),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: const Color(0xFFC7EBDC)),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: _trustGreen,
+          fontSize: 11.8,
+          fontWeight: FontWeight.w900,
+          height: 1.1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedDetailChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(7),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Color(0xFF45515E),
+          fontSize: 11.4,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLockedTeaserFooter({
+    required Map<String, dynamic>? action,
+    required Map<String, dynamic> teaser,
+    required String viewedSummary,
+    required String createdAt,
+    required bool isUnread,
+  }) {
+    final timeText = viewedSummary.isNotEmpty ? viewedSummary : createdAt;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (timeText.isNotEmpty) ...[
+          Text(
+            timeText,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: _mutedText,
+              fontSize: 11.4,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (action != null)
+          ElevatedButton.icon(
+            onPressed: () => _openAction(action),
+            icon: const Icon(Icons.lock_open_outlined, size: 16),
+            label: Text(
+              _lockedUnlockLabel(teaser, action),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _brandColor,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              minimumSize: const Size(0, 40),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(
+                fontSize: 12.8,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 0,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          )
+        else
+          _buildLockedReadState(isUnread),
+      ],
+    );
+  }
+
+  Widget _buildLockedReadState(bool isUnread) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: isUnread
+              ? _brandColor.withValues(alpha: 0.10)
+              : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          isUnread
+              ? AppStrings.notificationsUnread
+              : AppStrings.notificationsRead,
+          style: TextStyle(
+            color: isUnread ? _brandColor : _mutedText,
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
           ),
         ),
       ),
@@ -773,15 +1133,160 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  String _lockedTeaserHeadline({
+    required Map<String, dynamic> teaser,
+    required String fallbackMessage,
+  }) {
+    final raw = _stringValue(
+      teaser['headline'],
+      fallback: fallbackMessage.isEmpty
+          ? (AppStrings.isMarathi ? 'Profile पाहिले गेले' : 'Profile viewed')
+          : fallbackMessage,
+    );
+    final cleaned = _sanitizeLockedHeadline(raw);
+    if (cleaned.isEmpty) {
+      return AppStrings.isMarathi
+          ? 'तुमचे profile पाहिले गेले.'
+          : 'Your profile was viewed.';
+    }
+
+    if (_mentionsProfileView(cleaned)) {
+      return cleaned;
+    }
+
+    return AppStrings.isMarathi
+        ? '$cleaned यांनी तुमचे profile पाहिले.'
+        : '$cleaned viewed your profile.';
+  }
+
+  String _sanitizeLockedHeadline(String value) {
+    var text = value.trim();
+    if (text.isEmpty) return '';
+
+    final lower = text.toLowerCase();
+    if (lower.contains('someone') || text.contains('कोणीतरी')) {
+      return '';
+    }
+
+    text = text.replaceAll(RegExp(r',$'), '').trim();
+    if (AppStrings.isMarathi) {
+      text = text
+          .replaceFirst('एक मुलगी', 'वधू')
+          .replaceFirst('एक स्त्री', 'वधू')
+          .replaceFirst('एक मुलगा', 'वर')
+          .replaceFirst('एक पुरुष', 'वर');
+      return text;
+    }
+
+    return text
+        .replaceFirst(RegExp(r'\bA girl\b', caseSensitive: false), 'A bride')
+        .replaceFirst(RegExp(r'\bA woman\b', caseSensitive: false), 'A bride')
+        .replaceFirst(RegExp(r'\bA boy\b', caseSensitive: false), 'A groom')
+        .replaceFirst(RegExp(r'\bA man\b', caseSensitive: false), 'A groom');
+  }
+
+  bool _mentionsProfileView(String text) {
+    final lower = text.toLowerCase();
+    return lower.contains('viewed your profile') ||
+        lower.contains('profile पाहिले') ||
+        lower.contains('प्रोफाइल पाहिले');
+  }
+
+  List<String> _lockedTeaserDetailLines(Map<String, dynamic> teaser) {
+    return _stringList(teaser['lines'])
+        .where((line) {
+          final lower = line.toLowerCase();
+          return !lower.contains('someone') && !line.contains('कोणीतरी');
+        })
+        .take(3)
+        .toList();
+  }
+
+  String _lockedCuriosityLine(Map<String, dynamic> teaser) {
+    final gender = _lockedTeaserGender(teaser);
+    if (AppStrings.isMarathi) {
+      return switch (gender) {
+        _LockedTeaserGender.female => 'तुमच्या profile कडे तिचे लक्ष गेले.',
+        _LockedTeaserGender.male => 'तुमच्या profile कडे त्याचे लक्ष गेले.',
+        _ => 'या profile viewer ने तुमचे profile पाहिले.',
+      };
+    }
+
+    return switch (gender) {
+      _LockedTeaserGender.female => 'Your profile caught her attention.',
+      _LockedTeaserGender.male => 'Your profile caught his attention.',
+      _ => 'This profile viewer opened your profile.',
+    };
+  }
+
+  String _lockedUnlockLabel(
+    Map<String, dynamic> teaser,
+    Map<String, dynamic> action,
+  ) {
+    final routeHint = _stringValue(action['route_hint']);
+    if (routeHint != 'plans') {
+      return _actionLabel(action);
+    }
+
+    final gender = _lockedTeaserGender(teaser);
+    if (AppStrings.isMarathi) {
+      return switch (gender) {
+        _LockedTeaserGender.female => 'तिचे profile पाहण्यासाठी Unlock करा',
+        _LockedTeaserGender.male => 'त्याचे profile पाहण्यासाठी Unlock करा',
+        _ => 'Profile पाहण्यासाठी Unlock करा',
+      };
+    }
+
+    return switch (gender) {
+      _LockedTeaserGender.female => 'Unlock to see her profile',
+      _LockedTeaserGender.male => 'Unlock to see his profile',
+      _ => 'Unlock to view profile',
+    };
+  }
+
+  _LockedTeaserGender _lockedTeaserGender(Map<String, dynamic> teaser) {
+    final text = [
+      _stringValue(teaser['headline']),
+      _stringValue(teaser['interest_hint']),
+      ..._stringList(teaser['lines']),
+    ].join(' ').toLowerCase();
+
+    if (text.contains('bride') ||
+        text.contains('girl') ||
+        text.contains('woman') ||
+        text.contains('वधू') ||
+        text.contains('मुलगी') ||
+        text.contains('महिला') ||
+        text.contains('स्त्री')) {
+      return _LockedTeaserGender.female;
+    }
+
+    if (text.contains('groom') ||
+        text.contains('boy') ||
+        text.contains('man') ||
+        text.contains('वर') ||
+        text.contains('मुलगा') ||
+        text.contains('पुरुष')) {
+      return _LockedTeaserGender.male;
+    }
+
+    return _LockedTeaserGender.unknown;
+  }
+
   Widget _buildTeaserPhoto(Map<String, dynamic> teaser) {
     final avatarStyle = _stringValue(teaser['avatar_style']).toLowerCase();
     final photoUrl = _stringValue(teaser['photo_url']);
 
-    if (avatarStyle == 'blur' && photoUrl.isNotEmpty) {
+    if (avatarStyle == 'blur' &&
+        photoUrl.isNotEmpty &&
+        !_isPlaceholderPhotoUrl(photoUrl)) {
       return Transform.scale(
-        scale: 1.08,
+        scale: _teaserPhotoScale(teaser),
         child: ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          imageFilter: ImageFilter.blur(
+            sigmaX: _teaserBlurSigma(teaser),
+            sigmaY: _teaserBlurSigma(teaser),
+          ),
           child: Image.network(
             Uri.encodeFull(photoUrl),
             fit: BoxFit.cover,
@@ -793,6 +1298,32 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     return _buildTeaserPlaceholder();
+  }
+
+  bool _isPlaceholderPhotoUrl(String photoUrl) {
+    final lower = photoUrl.toLowerCase();
+    return lower.contains('/images/placeholders/') ||
+        lower.contains('default-profile.svg') ||
+        lower.contains('male-profile.svg') ||
+        lower.contains('female-profile.svg');
+  }
+
+  double _teaserBlurSigma(Map<String, dynamic> teaser) {
+    final blurClass = _stringValue(teaser['blur_photo_class']).toLowerCase();
+    if (blurClass.contains('blur-sm')) return 4;
+    if (blurClass.contains('blur-[3px]')) return 3;
+    if (blurClass.contains('blur-[6px]')) return 6;
+    if (blurClass.contains('blur-2xl')) return 18;
+    if (blurClass.contains('blur-md')) return 10;
+    return 10;
+  }
+
+  double _teaserPhotoScale(Map<String, dynamic> teaser) {
+    final blurClass = _stringValue(teaser['blur_photo_class']).toLowerCase();
+    if (blurClass.contains('scale-125')) return 1.25;
+    if (blurClass.contains('scale-110')) return 1.10;
+    if (blurClass.contains('scale-105')) return 1.05;
+    return 1.08;
   }
 
   Widget _buildTeaserPlaceholder() {
@@ -976,3 +1507,5 @@ class _NotificationVisual {
   final IconData icon;
   final Color color;
 }
+
+enum _LockedTeaserGender { female, male, unknown }
