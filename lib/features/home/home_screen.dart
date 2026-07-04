@@ -38,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _refreshing = false;
   bool _profileMissing = false;
   bool _showCompletedReadiness = false;
-  bool _showOptionalReadiness = false;
   int _loadSerial = 0;
 
   Map<String, dynamic>? _profile;
@@ -299,7 +298,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
   }
 
-  Future<void> _openEditProfile({bool openLocationDetails = false}) async {
+  Future<void> _openEditProfile({
+    bool openLocationDetails = false,
+    EditProfileTargetSection? targetSection,
+  }) async {
     try {
       Navigator.push(
         context,
@@ -307,6 +309,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           builder: (_) => EditFullProfileScreen(
             initialProfile: _effectiveProfile ?? ApiClient.currentUserProfile,
             openLocationDetails: openLocationDetails,
+            targetSection: targetSection,
           ),
         ),
       );
@@ -1040,25 +1043,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
 
     final completed = items.where((item) => item.ready).toList();
-    final primaryMissing = items
-        .where((item) => item.primary && !item.ready)
+    final missing = items
+        .where((item) => !item.ready && item.filled <= 0)
         .toList();
-    final optionalMissing = items
-        .where((item) => !item.primary && !item.ready)
+    final partial = items
+        .where((item) => !item.ready && item.filled > 0)
         .toList();
-    final defaultItems = primaryMissing.isNotEmpty
-        ? primaryMissing
-        : optionalMissing.take(3).toList();
     final progress = items.isEmpty ? 0.0 : completed.length / items.length;
-    final summaryText = primaryMissing.isNotEmpty
+    final summaryText = missing.isNotEmpty
         ? _readinessCopy(
-            '${primaryMissing.length} primary items need attention',
-            '${primaryMissing.length} महत्त्वाच्या गोष्टी बाकी आहेत',
+            '${missing.length} sections are missing',
+            '${missing.length} sections बाकी आहेत',
           )
-        : optionalMissing.isNotEmpty
+        : partial.isNotEmpty
         ? _readinessCopy(
-            '${optionalMissing.length} profile improvements left',
-            '${optionalMissing.length} profile सुधारणा बाकी आहेत',
+            '${partial.length} sections need details',
+            '${partial.length} sections अर्धवट आहेत',
           )
         : _readinessCopy(
             'All key profile sections are ready',
@@ -1097,46 +1097,26 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               value: progress.clamp(0.0, 1.0).toDouble(),
               backgroundColor: _cardBorder,
               valueColor: AlwaysStoppedAnimation<Color>(
-                primaryMissing.isNotEmpty
-                    ? _warning
-                    : optionalMissing.isNotEmpty
+                missing.isNotEmpty
+                    ? _danger
+                    : partial.isNotEmpty
                     ? _gold
                     : _success,
               ),
             ),
           ),
-          const SizedBox(height: 6),
-          Text(
-            _readinessCopy(
-              'Showing only what needs action. Completed sections are folded.',
-              'फक्त बाकी असलेले दाखवले आहे. पूर्ण sections fold मध्ये आहेत.',
-            ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: _muted, fontSize: 12, height: 1.25),
-          ),
-          if (defaultItems.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            _readinessGroupLabel(
-              primaryMissing.isNotEmpty
-                  ? _readinessCopy('Primary missing', 'महत्त्वाचे बाकी')
-                  : _readinessCopy('Improve profile', 'Profile सुधारणा'),
-            ),
+          if (missing.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _readinessGroupLabel(_readinessCopy('Missing', 'बाकी')),
             const SizedBox(height: 8),
-            for (final item in defaultItems) _readinessRow(item),
+            for (final item in missing) _readinessRow(item),
           ],
-          if (primaryMissing.isNotEmpty && optionalMissing.isNotEmpty)
-            _readinessFold(
-              title: _readinessCopy(
-                '${optionalMissing.length} improve later',
-                '${optionalMissing.length} नंतर सुधारता येतील',
-              ),
-              expanded: _showOptionalReadiness,
-              onTap: () => setState(
-                () => _showOptionalReadiness = !_showOptionalReadiness,
-              ),
-              children: optionalMissing,
-            ),
+          if (partial.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            _readinessGroupLabel(_readinessCopy('Partial', 'अर्धवट')),
+            const SizedBox(height: 8),
+            for (final item in partial) _readinessRow(item),
+          ],
           if (completed.isNotEmpty)
             _readinessFold(
               title: _readinessCopy(
@@ -1165,7 +1145,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           borderRadius: BorderRadius.circular(8),
           onTap: item.onTap,
           child: Ink(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
             decoration: BoxDecoration(
               color: item.ready
                   ? _success.withValues(alpha: 0.035)
@@ -1206,27 +1186,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                           const SizedBox(width: 8),
                           _readinessCountChip(status, color),
                         ],
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        item.subtitle,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: _muted,
-                          fontSize: 12,
-                          height: 1.22,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(999),
-                        child: LinearProgressIndicator(
-                          minHeight: 4,
-                          value: item.progress,
-                          backgroundColor: _cardBorder,
-                          valueColor: AlwaysStoppedAnimation<Color>(color),
-                        ),
                       ),
                     ],
                   ),
@@ -1330,7 +1289,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   _ReadinessItem _readinessItem({
     required String title,
-    required String subtitle,
     required IconData icon,
     required int filled,
     required int total,
@@ -1345,7 +1303,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     return _ReadinessItem(
       title: title,
-      subtitle: subtitle,
       icon: icon,
       filled: safeFilled,
       total: safeTotal,
@@ -1963,10 +1920,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     return [
       _readinessItem(
         title: _readinessCopy('Basic Information', 'Basic Information'),
-        subtitle: _readinessCopy(
-          'Name, birth details, caste and location.',
-          'नाव, जन्म माहिती, जात आणि location.',
-        ),
         icon: Icons.badge_outlined,
         filled: _filledCount([
           _profileName(profile) != AppStrings.profile,
@@ -1991,28 +1944,20 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         total: 6,
         readyAt: 5,
         primary: true,
-        onTap: () => _openEditProfile(),
+        onTap: () =>
+            _openEditProfile(targetSection: EditProfileTargetSection.basic),
       ),
       _readinessItem(
         title: AppStrings.dashboardPhoto,
-        subtitle: _hasPhoto(profile)
-            ? _photoStatusLabel(profile)
-            : _readinessCopy(
-                'Upload one clear profile photo.',
-                'एक clear profile photo upload करा.',
-              ),
         icon: Icons.photo_camera_outlined,
         filled: _hasPhoto(profile) ? 1 : 0,
         total: 1,
         primary: true,
-        onTap: () => _safePushNamed('/photo-gallery'),
+        onTap: () =>
+            _openEditProfile(targetSection: EditProfileTargetSection.photo),
       ),
       _readinessItem(
         title: _readinessCopy('Physical', 'Physical'),
-        subtitle: _readinessCopy(
-          'Height, weight, complexion and lifestyle.',
-          'Height, weight, complexion आणि lifestyle.',
-        ),
         icon: Icons.accessibility_new_outlined,
         filled: _filledCount([
           _hasAnyProfileValue(profile, const ['height_cm', 'height']),
@@ -2027,14 +1972,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         total: 4,
         readyAt: 3,
         primary: false,
-        onTap: () => _openEditProfile(),
+        onTap: () =>
+            _openEditProfile(targetSection: EditProfileTargetSection.physical),
       ),
       _readinessItem(
         title: AppStrings.dashboardEducationCareer,
-        subtitle: _readinessCopy(
-          'Education, occupation, work place and income.',
-          'Education, occupation, work place आणि income.',
-        ),
         icon: Icons.school_outlined,
         filled: _filledCount([
           _profileEducation(profile) != null,
@@ -2055,14 +1997,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         total: 4,
         readyAt: 2,
         primary: true,
-        onTap: () => _openEditProfile(),
+        onTap: () => _openEditProfile(
+          targetSection: EditProfileTargetSection.educationCareer,
+        ),
       ),
       _readinessItem(
         title: _readinessCopy('Family Details', 'Family Details'),
-        subtitle: _readinessCopy(
-          'Parents, family type, address and values.',
-          'Parents, family type, address आणि values.',
-        ),
         icon: Icons.family_restroom_outlined,
         filled: _filledCount([
           _hasAnyProfileValue(profile, const ['father_name']),
@@ -2094,26 +2034,21 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         total: 7,
         readyAt: 3,
         primary: true,
-        onTap: () => _openEditProfile(),
+        onTap: () => _openEditProfile(
+          targetSection: EditProfileTargetSection.familyDetails,
+        ),
       ),
       _readinessItem(
         title: _readinessCopy('Siblings', 'Siblings'),
-        subtitle: _readinessCopy(
-          'Brother/sister details or mark no siblings.',
-          'भाऊ/बहिण माहिती किंवा siblings नाही असे mark करा.',
-        ),
         icon: Icons.groups_2_outlined,
         filled: _hasSiblingDecision(profile) ? 1 : 0,
         total: 1,
         primary: false,
-        onTap: () => _openEditProfile(),
+        onTap: () =>
+            _openEditProfile(targetSection: EditProfileTargetSection.siblings),
       ),
       _readinessItem(
         title: _readinessCopy('Relatives', 'Relatives'),
-        subtitle: _readinessCopy(
-          'Close relatives and alliance network notes.',
-          'जवळचे नातेवाईक आणि alliance network.',
-        ),
         icon: Icons.handshake_outlined,
         filled: _filledCount([
           _hasAnyListData(profile, const ['relatives']),
@@ -2123,14 +2058,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         total: 3,
         readyAt: 1,
         primary: false,
-        onTap: () => _openEditProfile(),
+        onTap: () =>
+            _openEditProfile(targetSection: EditProfileTargetSection.relatives),
       ),
       _readinessItem(
         title: _readinessCopy('Property', 'Property'),
-        subtitle: _readinessCopy(
-          'Property or assets summary if applicable.',
-          'Property किंवा assets summary असल्यास add करा.',
-        ),
         icon: Icons.home_work_outlined,
         filled:
             _hasAnyProfileValue(profile, const [
@@ -2141,14 +2073,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             : 0,
         total: 1,
         primary: false,
-        onTap: () => _openEditProfile(),
+        onTap: () =>
+            _openEditProfile(targetSection: EditProfileTargetSection.property),
       ),
       _readinessItem(
         title: _readinessCopy('Horoscope', 'Horoscope'),
-        subtitle: _readinessCopy(
-          'Rashi, nakshatra, gan, devak, kul and gotra.',
-          'Rashi, nakshatra, gan, devak, kul आणि gotra.',
-        ),
         icon: Icons.auto_awesome_outlined,
         filled: _filledCount([
           _hasAnyProfileValue(profile, const ['rashi_id', 'rashi']),
@@ -2161,32 +2090,28 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         total: 6,
         readyAt: 2,
         primary: false,
-        onTap: () => _openEditProfile(),
+        onTap: () =>
+            _openEditProfile(targetSection: EditProfileTargetSection.horoscope),
       ),
       _readinessItem(
         title: _readinessCopy('About Me', 'About Me'),
-        subtitle: _readinessCopy(
-          'Write a short intro, ideally 40+ characters.',
-          'स्वतःबद्दल थोडक्यात 40+ characters लिहा.',
-        ),
         icon: Icons.notes_outlined,
         filled: _aboutMeReady(profile) ? 1 : 0,
         total: 1,
         primary: true,
-        onTap: () => _openEditProfile(),
+        onTap: () =>
+            _openEditProfile(targetSection: EditProfileTargetSection.aboutMe),
       ),
       _readinessItem(
         title: AppStrings.dashboardPartnerPreference,
-        subtitle: _readinessCopy(
-          'Age, height, education, location and lifestyle preferences.',
-          'Age, height, education, location आणि lifestyle preference.',
-        ),
         icon: Icons.favorite_border,
         filled: _partnerPreferenceFilledCount(profile),
         total: 9,
         readyAt: 3,
         primary: false,
-        onTap: () => _openEditProfile(),
+        onTap: () => _openEditProfile(
+          targetSection: EditProfileTargetSection.partnerPreferences,
+        ),
       ),
     ];
   }
@@ -2463,7 +2388,6 @@ class _DashboardAction {
 class _ReadinessItem {
   const _ReadinessItem({
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.filled,
     required this.total,
@@ -2473,7 +2397,6 @@ class _ReadinessItem {
   });
 
   final String title;
-  final String subtitle;
   final IconData icon;
   final int filled;
   final int total;
@@ -2482,8 +2405,6 @@ class _ReadinessItem {
   final VoidCallback onTap;
 
   bool get ready => filled >= readyAt;
-
-  double get progress => total <= 0 ? 0 : (filled / total).clamp(0.0, 1.0);
 }
 
 class _ToolAction {

@@ -12,15 +12,31 @@ import '../photo/photo_upload_screen.dart';
 class EditFullProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? initialProfile;
   final bool openLocationDetails;
+  final EditProfileTargetSection? targetSection;
 
   const EditFullProfileScreen({
     super.key,
     this.initialProfile,
     this.openLocationDetails = false,
+    this.targetSection,
   });
 
   @override
   State<EditFullProfileScreen> createState() => _EditFullProfileScreenState();
+}
+
+enum EditProfileTargetSection {
+  basic,
+  physical,
+  educationCareer,
+  familyDetails,
+  siblings,
+  relatives,
+  property,
+  horoscope,
+  aboutMe,
+  partnerPreferences,
+  photo,
 }
 
 enum _EditProfileSection {
@@ -540,7 +556,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   _EditProfileSection? _savedFeedbackSection;
   bool _savedHighlightOn = false;
   bool _showSavedChip = false;
-  bool _initialLocationTargetApplied = false;
+  bool _initialTargetApplied = false;
 
   String? _loadError;
   String? _optionsError;
@@ -2292,18 +2308,52 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
 
     if (!mounted) return;
-    final shouldScrollToLocation =
-        widget.openLocationDetails && !_initialLocationTargetApplied;
+    final initialSection =
+        _sectionForTarget(widget.targetSection) ??
+        (widget.openLocationDetails ? _EditProfileSection.basic : null);
+    final shouldApplyInitialTarget =
+        initialSection != null && !_initialTargetApplied;
     setState(() {
-      if (shouldScrollToLocation) {
-        _expandedSection = _EditProfileSection.basic;
-        _expandedSectionSnapshot = _sectionSnapshot(_EditProfileSection.basic);
-        _initialLocationTargetApplied = true;
+      if (shouldApplyInitialTarget) {
+        _expandedSection = initialSection;
+        _expandedSectionSnapshot = _sectionSnapshot(initialSection);
+        _initialTargetApplied = true;
       }
       _loading = false;
     });
-    if (shouldScrollToLocation) {
+    if (shouldApplyInitialTarget && widget.openLocationDetails) {
       _scrollToInitialLocationTargetAfterLayout();
+    } else if (shouldApplyInitialTarget) {
+      _scrollToSectionAfterLayout(initialSection);
+    }
+  }
+
+  _EditProfileSection? _sectionForTarget(EditProfileTargetSection? target) {
+    if (target == null) return null;
+
+    switch (target) {
+      case EditProfileTargetSection.basic:
+        return _EditProfileSection.basic;
+      case EditProfileTargetSection.physical:
+        return _EditProfileSection.physical;
+      case EditProfileTargetSection.educationCareer:
+        return _EditProfileSection.educationCareer;
+      case EditProfileTargetSection.familyDetails:
+        return _EditProfileSection.familyDetails;
+      case EditProfileTargetSection.siblings:
+        return _EditProfileSection.siblings;
+      case EditProfileTargetSection.relatives:
+        return _EditProfileSection.relatives;
+      case EditProfileTargetSection.property:
+        return _EditProfileSection.property;
+      case EditProfileTargetSection.horoscope:
+        return _EditProfileSection.horoscope;
+      case EditProfileTargetSection.aboutMe:
+        return _EditProfileSection.aboutMe;
+      case EditProfileTargetSection.partnerPreferences:
+        return _EditProfileSection.partnerPreferences;
+      case EditProfileTargetSection.photo:
+        return _EditProfileSection.photo;
     }
   }
 
