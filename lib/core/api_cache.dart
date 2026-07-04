@@ -1,6 +1,7 @@
 typedef ApiCacheLoader<T> = Future<T> Function();
 typedef ApiCacheCopier<T> = T Function(T value);
 typedef ApiCacheShouldStore<T> = bool Function(T value);
+typedef ApiCacheMetadataProvider<T> = Map<String, String> Function(T value);
 
 class ApiCacheEntry {
   const ApiCacheEntry({
@@ -8,12 +9,14 @@ class ApiCacheEntry {
     required this.storedAt,
     required this.ttl,
     required this.tags,
+    this.metadata = const <String, String>{},
   });
 
   final Object? value;
   final DateTime storedAt;
   final Duration ttl;
   final Set<String> tags;
+  final Map<String, String> metadata;
 
   bool isFresh(DateTime now) => now.difference(storedAt) < ttl;
 }
@@ -32,6 +35,7 @@ class ApiCache {
     required ApiCacheLoader<T> fetch,
     ApiCacheCopier<T>? copy,
     ApiCacheShouldStore<T>? shouldStore,
+    ApiCacheMetadataProvider<T>? metadata,
     Set<String> tags = const <String>{},
     bool forceRefresh = false,
     bool serveStaleOnError = true,
@@ -55,6 +59,7 @@ class ApiCache {
           storedAt: DateTime.now(),
           ttl: ttl,
           tags: Set<String>.from(tags),
+          metadata: metadata?.call(value) ?? const <String, String>{},
         );
       }
       return value;
@@ -85,6 +90,20 @@ class ApiCache {
 
   void invalidateKey(String key) {
     _entries.remove(key);
+  }
+
+  Map<String, String> metadataForKey(String key) {
+    final metadata = _entries[key]?.metadata;
+    if (metadata == null || metadata.isEmpty) return const <String, String>{};
+
+    return Map<String, String>.from(metadata);
+  }
+
+  T? valueForKey<T>(String key, {ApiCacheCopier<T>? copy}) {
+    final entry = _entries[key];
+    if (entry == null) return null;
+
+    return _copyValue<T>(entry.value, copy);
   }
 
   void clear() {

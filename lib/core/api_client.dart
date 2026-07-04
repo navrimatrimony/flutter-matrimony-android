@@ -8,6 +8,13 @@ import 'app_storage.dart';
 import 'api_cache.dart';
 import 'api_routes.dart';
 
+class _CachedJsonFetch {
+  const _CachedJsonFetch({required this.data, required this.metadata});
+
+  final Map<String, dynamic> data;
+  final Map<String, String> metadata;
+}
+
 class ApiClient {
   static String? authToken;
   static Map<String, dynamic>? currentUserProfile;
@@ -96,14 +103,31 @@ class ApiClient {
     required Set<String> tags,
     bool forceRefresh = false,
   }) {
+    final cacheKey = _cacheKey(
+      route,
+      authenticated: authenticated,
+      query: query,
+    );
+    var cacheMetadata = const <String, String>{};
+
     return ApiCache.instance.remember<Map<String, dynamic>>(
-      key: _cacheKey(route, authenticated: authenticated, query: query),
+      key: cacheKey,
       ttl: ttl,
       tags: tags,
       forceRefresh: forceRefresh,
-      fetch: () => _getJson(route, authenticated: authenticated, query: query),
+      fetch: () async {
+        final result = await _getJsonWithCacheValidators(
+          route,
+          cacheKey: cacheKey,
+          authenticated: authenticated,
+          query: query,
+        );
+        cacheMetadata = result.metadata;
+        return result.data;
+      },
       copy: _cloneJsonMap,
       shouldStore: _shouldCacheJsonResponse,
+      metadata: (_) => cacheMetadata,
     );
   }
 
@@ -176,6 +200,27 @@ class ApiClient {
     }
     data['statusCode'] = response.statusCode;
     return data;
+  }
+
+  static Map<String, String> _cacheMetadataFromResponse(
+    http.Response response,
+  ) {
+    final metadata = <String, String>{};
+    for (final key in const <String>[
+      'etag',
+      'cache-control',
+      'x-mobile-cache-policy',
+      'x-mobile-cache-ttl',
+      'x-mobile-cache-stale-while-revalidate',
+      'x-mobile-cache-tags',
+    ]) {
+      final value = response.headers[key];
+      if (value != null && value.trim().isNotEmpty) {
+        metadata[key] = value.trim();
+      }
+    }
+
+    return metadata;
   }
 
   static String _requireAuthToken() {
@@ -263,6 +308,46 @@ class ApiClient {
     );
 
     return _decodeResponse(response);
+  }
+
+  static Future<_CachedJsonFetch> _getJsonWithCacheValidators(
+    String route, {
+    required String cacheKey,
+    bool authenticated = false,
+    Map<String, dynamic>? query,
+  }) async {
+    final headers = _acceptHeaders(authenticated: authenticated);
+    final cachedMetadata = ApiCache.instance.metadataForKey(cacheKey);
+    final etag = cachedMetadata['etag'];
+    if (etag != null && etag.isNotEmpty) {
+      headers['If-None-Match'] = etag;
+    }
+
+    final response = await http.get(
+      _apiUri(route, query: query),
+      headers: headers,
+    );
+
+    final responseMetadata = _cacheMetadataFromResponse(response);
+    if (response.statusCode == 304) {
+      final cached = ApiCache.instance.valueForKey<Map<String, dynamic>>(
+        cacheKey,
+        copy: _cloneJsonMap,
+      );
+      if (cached != null) {
+        return _CachedJsonFetch(
+          data: cached,
+          metadata: responseMetadata.isNotEmpty
+              ? responseMetadata
+              : cachedMetadata,
+        );
+      }
+    }
+
+    return _CachedJsonFetch(
+      data: _decodeResponse(response),
+      metadata: responseMetadata,
+    );
   }
 
   static Future<Map<String, dynamic>> _getRootJson(
@@ -2091,28 +2176,12 @@ class ApiClient {
       throw Exception('Auth token missing');
     }
 
-    final data = await ApiCache.instance.remember<Map<String, dynamic>>(
-      key: _cacheKey(ApiRoutes.matrimonyProfile, authenticated: true),
+    final data = await _getJsonCached(
+      ApiRoutes.matrimonyProfile,
+      authenticated: true,
       ttl: _profileCacheTtl,
       tags: const <String>{_cacheTagProfile, _cacheTagAuth},
       forceRefresh: forceRefresh,
-      fetch: () async {
-        final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile);
-
-        final response = await http.get(
-          url,
-          headers: {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer $authToken',
-          },
-        );
-
-        final responseData = _decodeResponse(response);
-        _applyMyProfileResponse(responseData);
-        return responseData;
-      },
-      copy: _cloneJsonMap,
-      shouldStore: _shouldCacheJsonResponse,
     );
 
     _applyMyProfileResponse(data);

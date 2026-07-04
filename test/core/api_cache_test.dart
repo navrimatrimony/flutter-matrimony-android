@@ -90,4 +90,44 @@ void main() {
 
     expect(value, 'stale fallback');
   });
+
+  test('stores metadata with cached entries', () async {
+    await ApiCache.instance.remember<Map<String, dynamic>>(
+      key: 'lookup',
+      ttl: const Duration(minutes: 1),
+      tags: const <String>{'lookups'},
+      fetch: () async => <String, dynamic>{'success': true},
+      metadata: (_) => const <String, String>{
+        'etag': 'W/"mobile-api-cache-v1-test"',
+      },
+    );
+
+    expect(
+      ApiCache.instance.metadataForKey('lookup')['etag'],
+      'W/"mobile-api-cache-v1-test"',
+    );
+  });
+
+  test('returns cached value copy for conditional revalidation', () async {
+    await ApiCache.instance.remember<Map<String, dynamic>>(
+      key: 'profile',
+      ttl: const Duration(minutes: 1),
+      tags: const <String>{'profile'},
+      fetch: () async => <String, dynamic>{'name': 'Original'},
+      copy: (value) => Map<String, dynamic>.from(value),
+    );
+
+    final cached = ApiCache.instance.valueForKey<Map<String, dynamic>>(
+      'profile',
+      copy: (value) => Map<String, dynamic>.from(value),
+    );
+    cached?['name'] = 'Changed';
+
+    final cachedAgain = ApiCache.instance.valueForKey<Map<String, dynamic>>(
+      'profile',
+      copy: (value) => Map<String, dynamic>.from(value),
+    );
+
+    expect(cachedAgain?['name'], 'Original');
+  });
 }
