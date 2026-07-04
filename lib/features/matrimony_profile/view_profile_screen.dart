@@ -861,15 +861,10 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
           _relativeRelationLabel(
             ApiClient.safeDisplayLabel(row['relation_type']),
           );
-      final name = ApiClient.safeDisplayLabel(row['name']);
-      final occupation =
-          ApiClient.safeDisplayLabel(row['occupation']) ??
-          ApiClient.safeDisplayLabel(row['occupation_master_label']) ??
-          ApiClient.safeDisplayLabel(row['occupation_custom_label']);
-      final location =
-          ApiClient.safeDisplayLabel(row['address_line']) ??
-          ApiClient.safeDisplayLabel(row['city_label']);
-      final item = [relation, name, occupation, location]
+      final details =
+          ApiClient.safeDisplayLabel(row['relative_details']) ??
+          _legacyRelativeDetails(row);
+      final item = [relation, details]
           .whereType<String>()
           .where((value) => value.trim().isNotEmpty)
           .join(' - ');
@@ -880,6 +875,21 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     if (remaining > 0) parts.add('+$remaining more');
 
     return parts.isEmpty ? null : parts.join('; ');
+  }
+
+  String? _legacyRelativeDetails(Map<dynamic, dynamic> row) {
+    final parts = <String>[
+      ?ApiClient.safeDisplayLabel(row['name']),
+      ?ApiClient.safeDisplayLabel(row['occupation']),
+      ?ApiClient.safeDisplayLabel(row['occupation_master_label']),
+      ?ApiClient.safeDisplayLabel(row['occupation_custom_label']),
+      ?ApiClient.safeDisplayLabel(row['address_line']),
+      ?ApiClient.safeDisplayLabel(row['city_label']),
+      ?ApiClient.safeDisplayLabel(row['notes']),
+    ].where((value) => value.trim().isNotEmpty).toList();
+
+    if (parts.isEmpty) return null;
+    return parts.toSet().join(' - ');
   }
 
   String? _fallbackAllianceNetworksLabel(Map<String, dynamic> profile) {

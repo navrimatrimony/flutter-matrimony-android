@@ -322,47 +322,38 @@ class _RelativeEditRow {
   _RelativeEditRow({
     this.id,
     this.relationType,
+    String? relativeDetails,
     String? name,
     String? occupation,
     String? addressLine,
     String? notes,
-  }) : nameController = TextEditingController(text: name ?? ''),
-       occupationController = TextEditingController(text: occupation ?? ''),
-       addressLineController = TextEditingController(text: addressLine ?? ''),
-       notesController = TextEditingController(text: notes ?? '');
+  }) : detailsController = TextEditingController(
+         text:
+             relativeDetails ??
+             [name, occupation, addressLine, notes]
+                 .whereType<String>()
+                 .where((value) => value.trim().isNotEmpty)
+                 .join('\n'),
+       );
 
   int? id;
   String? relationType;
-  final TextEditingController nameController;
-  final TextEditingController occupationController;
-  final TextEditingController addressLineController;
-  final TextEditingController notesController;
+  final TextEditingController detailsController;
 
   bool get hasData {
-    return relationType != null ||
-        nameController.text.trim().isNotEmpty ||
-        occupationController.text.trim().isNotEmpty ||
-        addressLineController.text.trim().isNotEmpty ||
-        notesController.text.trim().isNotEmpty;
+    return relationType != null || detailsController.text.trim().isNotEmpty;
   }
 
   Map<String, dynamic> toPayload() {
-    final addressOnly = relationType == 'maternal_address_ajol';
     return <String, dynamic>{
       if (id != null) 'id': id,
       'relation_type': relationType,
-      'name': addressOnly ? null : _textOrNull(nameController),
-      'occupation': addressOnly ? null : _textOrNull(occupationController),
-      'address_line': _textOrNull(addressLineController),
-      'notes': addressOnly ? null : _textOrNull(notesController),
+      'relative_details': _textOrNull(detailsController),
     };
   }
 
   void dispose() {
-    nameController.dispose();
-    occupationController.dispose();
-    addressLineController.dispose();
-    notesController.dispose();
+    detailsController.dispose();
   }
 
   static String? _textOrNull(TextEditingController controller) {
@@ -1123,6 +1114,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _RelativeEditRow(
           id: _readInt(row['id']),
           relationType: _readRelativeRelationType(row['relation_type']),
+          relativeDetails: ApiClient.safeDisplayLabel(row['relative_details']),
           name: ApiClient.safeDisplayLabel(row['name']),
           occupation:
               ApiClient.safeDisplayLabel(row['occupation']) ??
@@ -8176,7 +8168,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildRelativeRowEditor(int index, _RelativeEditRow row) {
     final theme = Theme.of(context);
-    final addressOnly = row.relationType == 'maternal_address_ajol';
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -8214,47 +8205,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             loading: false,
             onChanged: (value) => setState(() => row.relationType = value),
           ),
-          if (!addressOnly) ...[
-            const SizedBox(height: 12),
-            TextField(
-              controller: row.nameController,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Name (Optional)',
-                prefixIcon: Icon(Icons.person_outline),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: row.occupationController,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Occupation (Optional)',
-                prefixIcon: Icon(Icons.work_outline),
-              ),
-            ),
-          ],
           const SizedBox(height: 12),
           TextField(
-            controller: row.addressLineController,
-            textInputAction: TextInputAction.next,
+            controller: row.detailsController,
+            minLines: 3,
+            maxLines: 5,
+            textInputAction: TextInputAction.newline,
             decoration: const InputDecoration(
-              labelText: 'Address / City (Optional)',
-              prefixIcon: Icon(Icons.location_on_outlined),
+              labelText: 'Relative details (Optional)',
+              hintText: 'Name, occupation, address and other details',
+              prefixIcon: Icon(Icons.notes_outlined),
             ),
           ),
-          if (!addressOnly) ...[
-            const SizedBox(height: 12),
-            TextField(
-              controller: row.notesController,
-              maxLines: 2,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Notes (Optional)',
-                prefixIcon: Icon(Icons.notes_outlined),
-              ),
-            ),
-          ],
         ],
       ),
     );
