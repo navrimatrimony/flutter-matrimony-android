@@ -559,24 +559,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       width: 58,
       height: 58,
       child: Stack(
-        clipBehavior: Clip.none,
+        fit: StackFit.expand,
+        clipBehavior: Clip.antiAlias,
         children: [
-          ClipOval(child: _buildTeaserPhoto(teaser)),
-          Positioned(
-            right: -2,
-            bottom: -2,
+          ClipOval(child: SizedBox.expand(child: _buildTeaserPhoto(teaser))),
+          Center(
             child: Container(
-              width: 22,
-              height: 22,
+              width: 24,
+              height: 24,
               decoration: BoxDecoration(
-                color: _brandDark,
+                color: _brandDark.withValues(alpha: 0.9),
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(
+                  color: Colors.white.withValues(alpha: 0.92),
+                  width: 1.5,
+                ),
               ),
               child: const Icon(
                 Icons.lock_outline,
                 color: Colors.white,
-                size: 12,
+                size: 13,
               ),
             ),
           ),
