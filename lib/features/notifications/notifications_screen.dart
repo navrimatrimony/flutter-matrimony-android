@@ -375,7 +375,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (isLockedTeaser) {
       return _buildLockedTeaserNotificationCard(
         notification: notification,
-        title: title,
         message: message,
         teaser: teaser,
         createdAt: createdAt,
@@ -454,7 +453,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _buildLockedTeaserNotificationCard({
     required Map<String, dynamic> notification,
-    required String title,
     required String message,
     required Map<String, dynamic> teaser,
     required String createdAt,
@@ -462,55 +460,93 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     required bool isBusy,
     required Map<String, dynamic>? primaryAction,
   }) {
-    final action = primaryAction;
-    final radius = BorderRadius.circular(12);
+    final headline = _lockedTeaserHeadline(
+      teaser: teaser,
+      fallbackMessage: message,
+    );
+    final timeText = _lockedTeaserMetaText(
+      teaser: teaser,
+      createdAt: createdAt,
+    );
+    final radius = BorderRadius.circular(10);
 
     return Material(
       color: Colors.transparent,
-      borderRadius: radius,
-      clipBehavior: Clip.antiAlias,
       child: InkWell(
         borderRadius: radius,
         onTap: isBusy ? null : () => _handleNotificationTap(notification),
         child: Ink(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: isUnread ? _surface : Colors.white,
             borderRadius: radius,
             border: Border.all(
-              color: isUnread ? _brandColor.withValues(alpha: 0.62) : _line,
-              width: isUnread ? 1.35 : 1,
+              color: isUnread ? _brandColor.withValues(alpha: 0.55) : _line,
+              width: isUnread ? 1.25 : 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF6F1D2D).withValues(alpha: 0.08),
-                blurRadius: 18,
-                offset: const Offset(0, 10),
+                color: Colors.black.withValues(alpha: 0.035),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
             ],
           ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 164),
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildLockedTeaserPhotoPanel(teaser: teaser),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(13, 12, 12, 12),
-                      child: _buildLockedTeaserContent(
-                        title: title,
-                        message: message,
-                        teaser: teaser,
-                        createdAt: createdAt,
-                        isUnread: isUnread,
-                        isBusy: isBusy,
-                        action: action,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _buildLockedTeaserAvatar(teaser),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        headline,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: _textDark,
+                          fontSize: 14.4,
+                          fontWeight: isUnread
+                              ? FontWeight.w900
+                              : FontWeight.w800,
+                          height: 1.22,
+                          letterSpacing: 0,
+                        ),
                       ),
-                    ),
+                      if (timeText.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          timeText,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: _mutedText,
+                            fontSize: 11.8,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                      if (isBusy) ...[
+                        const SizedBox(height: 7),
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: 10),
+                _buildLockedTeaserUnlockAction(
+                  action: primaryAction,
+                  disabled: isBusy,
+                ),
+              ],
             ),
           ),
         ),
@@ -518,41 +554,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildLockedTeaserPhotoPanel({required Map<String, dynamic> teaser}) {
+  Widget _buildLockedTeaserAvatar(Map<String, dynamic> teaser) {
     return SizedBox(
-      width: 118,
+      width: 58,
+      height: 58,
       child: Stack(
-        fit: StackFit.expand,
+        clipBehavior: Clip.none,
         children: [
-          _buildTeaserPhoto(teaser),
-          const DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Color(0x11000000),
-                  Color(0x22000000),
-                  Color(0xAA000000),
-                ],
-              ),
-            ),
-          ),
+          ClipOval(child: _buildTeaserPhoto(teaser)),
           Positioned(
-            top: 9,
-            right: 9,
+            right: -2,
+            bottom: -2,
             child: Container(
-              width: 30,
-              height: 30,
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.50),
+                color: _brandDark,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
+                border: Border.all(color: Colors.white, width: 2),
               ),
               child: const Icon(
                 Icons.lock_outline,
                 color: Colors.white,
-                size: 17,
+                size: 12,
               ),
             ),
           ),
@@ -561,241 +585,54 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildLockedTeaserContent({
-    required String title,
-    required String message,
-    required Map<String, dynamic> teaser,
-    required String createdAt,
-    required bool isUnread,
-    required bool isBusy,
+  Widget _buildLockedTeaserUnlockAction({
     required Map<String, dynamic>? action,
+    required bool disabled,
   }) {
-    final headline = _lockedTeaserHeadline(
-      teaser: teaser,
-      fallbackMessage: message,
-    );
-    final lines = _lockedTeaserDetailLines(teaser);
-    final viewedSummary = _stringValue(teaser['viewed_summary']);
-    final accentLine = _stringValue(teaser['accent_line']);
-    final matchLine = _stringValue(teaser['match_line']);
-    final highlightLine = _joinNonEmpty([accentLine, matchLine]);
-    final curiosityLine = _lockedCuriosityLine(teaser);
+    if (action == null) {
+      return const SizedBox.shrink();
+    }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: _brandDark,
-                  fontSize: 11.6,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0,
-                ),
-              ),
-            ),
-            if (isBusy) ...[
-              const SizedBox(width: 8),
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ] else
-              _buildUnreadDot(isUnread),
-          ],
-        ),
-        const SizedBox(height: 7),
-        Text(
-          headline,
-          maxLines: 3,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: _textDark,
-            fontSize: 15.4,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 76, maxWidth: 92),
+      child: ElevatedButton(
+        onPressed: disabled ? null : () => _openAction(action),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _brandColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+          minimumSize: const Size(0, 36),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          textStyle: const TextStyle(
+            fontSize: 12.5,
             fontWeight: FontWeight.w900,
-            height: 1.16,
             letterSpacing: 0,
           ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        if (highlightLine.isNotEmpty) ...[
-          const SizedBox(height: 7),
-          _buildLockedHighlightChip(highlightLine),
-        ],
-        const SizedBox(height: 7),
-        Text(
-          curiosityLine,
-          maxLines: 2,
+        child: const Text(
+          'Unlock',
+          maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Color(0xFF5A4541),
-            fontSize: 12.7,
-            fontWeight: FontWeight.w700,
-            height: 1.25,
-          ),
-        ),
-        if (lines.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [for (final line in lines) _buildLockedDetailChip(line)],
-          ),
-        ],
-        const Spacer(),
-        const SizedBox(height: 9),
-        _buildLockedTeaserFooter(
-          action: action,
-          teaser: teaser,
-          viewedSummary: viewedSummary,
-          createdAt: createdAt,
-          isUnread: isUnread,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUnreadDot(bool isUnread) {
-    return Container(
-      width: 8,
-      height: 8,
-      margin: const EdgeInsets.only(top: 4),
-      decoration: BoxDecoration(
-        color: isUnread ? _brandColor : const Color(0xFFCBD5E1),
-        shape: BoxShape.circle,
-      ),
-    );
-  }
-
-  Widget _buildLockedHighlightChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF7F1),
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: const Color(0xFFC7EBDC)),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: _trustGreen,
-          fontSize: 11.8,
-          fontWeight: FontWeight.w900,
-          height: 1.1,
         ),
       ),
     );
   }
 
-  Widget _buildLockedDetailChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(7),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(
-          color: Color(0xFF45515E),
-          fontSize: 11.4,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLockedTeaserFooter({
-    required Map<String, dynamic>? action,
+  String _lockedTeaserMetaText({
     required Map<String, dynamic> teaser,
-    required String viewedSummary,
     required String createdAt,
-    required bool isUnread,
   }) {
-    final timeText = viewedSummary.isNotEmpty ? viewedSummary : createdAt;
+    if (createdAt.isNotEmpty) {
+      return createdAt;
+    }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        if (timeText.isNotEmpty) ...[
-          Text(
-            timeText,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: _mutedText,
-              fontSize: 11.4,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-        ],
-        if (action != null)
-          ElevatedButton.icon(
-            onPressed: () => _openAction(action),
-            icon: const Icon(Icons.lock_open_outlined, size: 16),
-            label: Text(
-              _lockedUnlockLabel(teaser, action),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _brandColor,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              minimumSize: const Size(0, 40),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              textStyle: const TextStyle(
-                fontSize: 12.8,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          )
-        else
-          _buildLockedReadState(isUnread),
-      ],
-    );
-  }
+    if (_lockedRepeatCount(teaser) != null) {
+      return '';
+    }
 
-  Widget _buildLockedReadState(bool isUnread) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: isUnread
-              ? _brandColor.withValues(alpha: 0.10)
-              : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          isUnread
-              ? AppStrings.notificationsUnread
-              : AppStrings.notificationsRead,
-          style: TextStyle(
-            color: isUnread ? _brandColor : _mutedText,
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
+    return _stringValue(teaser['viewed_summary']);
   }
 
   Widget _buildNotificationVisual({
@@ -1150,13 +987,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           : 'Your profile was viewed.';
     }
 
-    if (_mentionsProfileView(cleaned)) {
-      return cleaned;
-    }
+    final headline = _mentionsProfileView(cleaned)
+        ? cleaned
+        : (AppStrings.isMarathi
+              ? '${_marathiViewerSubject(cleaned)} तुमचे profile पाहिले.'
+              : '$cleaned viewed your profile.');
 
-    return AppStrings.isMarathi
-        ? '$cleaned यांनी तुमचे profile पाहिले.'
-        : '$cleaned viewed your profile.';
+    return _lockedHeadlineWithRepeat(headline, teaser);
   }
 
   String _sanitizeLockedHeadline(String value) {
@@ -1168,14 +1005,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return '';
     }
 
-    text = text.replaceAll(RegExp(r',$'), '').trim();
+    text = _stripLocationTypeLabels(text.replaceAll(RegExp(r',$'), '').trim());
+
     if (AppStrings.isMarathi) {
-      text = text
+      return text
           .replaceFirst('एक मुलगी', 'वधू')
           .replaceFirst('एक स्त्री', 'वधू')
           .replaceFirst('एक मुलगा', 'वर')
-          .replaceFirst('एक पुरुष', 'वर');
-      return text;
+          .replaceFirst('एक पुरुष', 'वर')
+          .replaceAll(' हून ', ' मधील ');
     }
 
     return text
@@ -1185,92 +1023,114 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         .replaceFirst(RegExp(r'\bA man\b', caseSensitive: false), 'A groom');
   }
 
+  String _stripLocationTypeLabels(String value) {
+    return value
+        .replaceAll(RegExp(r'\s+district\b', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\s+taluka\b', caseSensitive: false), '')
+        .replaceAll(' जिल्ह्यातील', ' मधील')
+        .replaceAll(' तालुक्यातील', ' मधील')
+        .replaceAll(' जिल्हा', '')
+        .replaceAll(' तालुका', '');
+  }
+
+  String _marathiViewerSubject(String subject) {
+    final cleaned = subject.trim();
+    if (cleaned.endsWith('वधू')) {
+      return '$cleanedने';
+    }
+    if (cleaned.endsWith('वर')) {
+      return '$cleanedाने';
+    }
+    if (cleaned.endsWith('मुलगी') || cleaned.endsWith('महिला')) {
+      return '$cleanedने';
+    }
+    if (cleaned.endsWith('मुलगा') || cleaned.endsWith('पुरुष')) {
+      return '$cleanedाने';
+    }
+
+    return '$cleaned यांनी';
+  }
+
+  String _lockedHeadlineWithRepeat(
+    String headline,
+    Map<String, dynamic> teaser,
+  ) {
+    final count = _lockedRepeatCount(teaser);
+    if (count == null) {
+      return _withSentencePeriod(headline);
+    }
+
+    final base = headline.replaceAll(RegExp(r'[.।]\s*$'), '');
+    if (RegExp(r'\b\d+\s+times\b', caseSensitive: false).hasMatch(base) ||
+        base.contains(' वेळा')) {
+      return _withSentencePeriod(base);
+    }
+
+    final window = _lockedRepeatWindow(teaser);
+    if (AppStrings.isMarathi) {
+      final profilePhrase = base.contains('तुमचे प्रोफाइल पाहिले')
+          ? 'तुमचे प्रोफाइल पाहिले'
+          : 'तुमचे profile पाहिले';
+      final replacement = window.isEmpty
+          ? 'तुमचे profile $count वेळा पाहिले'
+          : '$window तुमचे profile $count वेळा पाहिले';
+
+      return _withSentencePeriod(base.replaceFirst(profilePhrase, replacement));
+    }
+
+    final suffix = window.isEmpty ? '$count times' : '$count times $window';
+    return _withSentencePeriod(
+      base.replaceFirst(
+        RegExp(r'viewed your profile', caseSensitive: false),
+        'viewed your profile $suffix',
+      ),
+    );
+  }
+
+  int? _lockedRepeatCount(Map<String, dynamic> teaser) {
+    final accentLine = _stringValue(teaser['accent_line']);
+    final match = RegExp(r'(\d+)').firstMatch(accentLine);
+    if (match == null) {
+      return null;
+    }
+
+    final count = int.tryParse(match.group(1) ?? '');
+    if (count == null || count <= 1) {
+      return null;
+    }
+
+    return count;
+  }
+
+  String _lockedRepeatWindow(Map<String, dynamic> teaser) {
+    final summary = _stringValue(teaser['viewed_summary']).toLowerCase();
+    if (summary.contains('today') || summary.contains('आज')) {
+      return AppStrings.isMarathi ? 'आज' : 'today';
+    }
+    if (summary.contains('this week') || summary.contains('या आठवड')) {
+      return AppStrings.isMarathi ? 'या आठवड्यात' : 'this week';
+    }
+    if (summary.contains('this month') || summary.contains('या महिन')) {
+      return AppStrings.isMarathi ? 'या महिन्यात' : 'this month';
+    }
+
+    return '';
+  }
+
+  String _withSentencePeriod(String value) {
+    final text = value.trim();
+    if (text.endsWith('.') || text.endsWith('।')) {
+      return text;
+    }
+
+    return '$text.';
+  }
+
   bool _mentionsProfileView(String text) {
     final lower = text.toLowerCase();
     return lower.contains('viewed your profile') ||
         lower.contains('profile पाहिले') ||
         lower.contains('प्रोफाइल पाहिले');
-  }
-
-  List<String> _lockedTeaserDetailLines(Map<String, dynamic> teaser) {
-    return _stringList(teaser['lines'])
-        .where((line) {
-          final lower = line.toLowerCase();
-          return !lower.contains('someone') && !line.contains('कोणीतरी');
-        })
-        .take(3)
-        .toList();
-  }
-
-  String _lockedCuriosityLine(Map<String, dynamic> teaser) {
-    final gender = _lockedTeaserGender(teaser);
-    if (AppStrings.isMarathi) {
-      return switch (gender) {
-        _LockedTeaserGender.female => 'तुमच्या profile कडे तिचे लक्ष गेले.',
-        _LockedTeaserGender.male => 'तुमच्या profile कडे त्याचे लक्ष गेले.',
-        _ => 'या profile viewer ने तुमचे profile पाहिले.',
-      };
-    }
-
-    return switch (gender) {
-      _LockedTeaserGender.female => 'Your profile caught her attention.',
-      _LockedTeaserGender.male => 'Your profile caught his attention.',
-      _ => 'This profile viewer opened your profile.',
-    };
-  }
-
-  String _lockedUnlockLabel(
-    Map<String, dynamic> teaser,
-    Map<String, dynamic> action,
-  ) {
-    final routeHint = _stringValue(action['route_hint']);
-    if (routeHint != 'plans') {
-      return _actionLabel(action);
-    }
-
-    final gender = _lockedTeaserGender(teaser);
-    if (AppStrings.isMarathi) {
-      return switch (gender) {
-        _LockedTeaserGender.female => 'तिचे profile पाहण्यासाठी Unlock करा',
-        _LockedTeaserGender.male => 'त्याचे profile पाहण्यासाठी Unlock करा',
-        _ => 'Profile पाहण्यासाठी Unlock करा',
-      };
-    }
-
-    return switch (gender) {
-      _LockedTeaserGender.female => 'Unlock to see her profile',
-      _LockedTeaserGender.male => 'Unlock to see his profile',
-      _ => 'Unlock to view profile',
-    };
-  }
-
-  _LockedTeaserGender _lockedTeaserGender(Map<String, dynamic> teaser) {
-    final text = [
-      _stringValue(teaser['headline']),
-      _stringValue(teaser['interest_hint']),
-      ..._stringList(teaser['lines']),
-    ].join(' ').toLowerCase();
-
-    if (text.contains('bride') ||
-        text.contains('girl') ||
-        text.contains('woman') ||
-        text.contains('वधू') ||
-        text.contains('मुलगी') ||
-        text.contains('महिला') ||
-        text.contains('स्त्री')) {
-      return _LockedTeaserGender.female;
-    }
-
-    if (text.contains('groom') ||
-        text.contains('boy') ||
-        text.contains('man') ||
-        text.contains('वर') ||
-        text.contains('मुलगा') ||
-        text.contains('पुरुष')) {
-      return _LockedTeaserGender.male;
-    }
-
-    return _LockedTeaserGender.unknown;
   }
 
   Widget _buildTeaserPhoto(Map<String, dynamic> teaser) {
@@ -1507,5 +1367,3 @@ class _NotificationVisual {
   final IconData icon;
   final Color color;
 }
-
-enum _LockedTeaserGender { female, male, unknown }
