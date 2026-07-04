@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   static const Color _cardBorder = Color(0xFFE8DDD7);
   static const Color _success = Color(0xFF12805C);
   static const Color _warning = Color(0xFFC78318);
+  static const Color _danger = Color(0xFFDC2626);
 
   bool _profileLoading = true;
   bool _planLoading = true;
@@ -36,6 +37,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _listsLoading = true;
   bool _refreshing = false;
   bool _profileMissing = false;
+  bool _showCompletedReadiness = false;
+  bool _showOptionalReadiness = false;
   int _loadSerial = 0;
 
   Map<String, dynamic>? _profile;
@@ -1036,77 +1039,487 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       return _skeletonCard(height: 180);
     }
 
+    final completed = items.where((item) => item.ready).toList();
+    final primaryMissing = items
+        .where((item) => item.primary && !item.ready)
+        .toList();
+    final optionalMissing = items
+        .where((item) => !item.primary && !item.ready)
+        .toList();
+    final defaultItems = primaryMissing.isNotEmpty
+        ? primaryMissing
+        : optionalMissing.take(3).toList();
+    final progress = items.isEmpty ? 0.0 : completed.length / items.length;
+    final summaryText = primaryMissing.isNotEmpty
+        ? _readinessCopy(
+            '${primaryMissing.length} primary items need attention',
+            '${primaryMissing.length} महत्त्वाच्या गोष्टी बाकी आहेत',
+          )
+        : optionalMissing.isNotEmpty
+        ? _readinessCopy(
+            '${optionalMissing.length} profile improvements left',
+            '${optionalMissing.length} profile सुधारणा बाकी आहेत',
+          )
+        : _readinessCopy(
+            'All key profile sections are ready',
+            'Profile चे महत्त्वाचे sections तयार आहेत',
+          );
+
     return _sectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle(AppStrings.dashboardReadiness),
-          const SizedBox(height: 4),
-          Text(
-            AppStrings.dashboardReadinessSubtitle,
-            style: const TextStyle(color: _muted, fontSize: 13),
+          Row(
+            children: [
+              Expanded(child: _sectionTitle(AppStrings.dashboardReadiness)),
+              _readinessCountChip(
+                '${completed.length}/${items.length}',
+                _success,
+              ),
+            ],
           ),
-          const SizedBox(height: 14),
-          for (final item in items) _readinessRow(item),
+          const SizedBox(height: 8),
+          Text(
+            summaryText,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: _ink,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              minHeight: 7,
+              value: progress.clamp(0.0, 1.0).toDouble(),
+              backgroundColor: _cardBorder,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                primaryMissing.isNotEmpty
+                    ? _warning
+                    : optionalMissing.isNotEmpty
+                    ? _gold
+                    : _success,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _readinessCopy(
+              'Showing only what needs action. Completed sections are folded.',
+              'फक्त बाकी असलेले दाखवले आहे. पूर्ण sections fold मध्ये आहेत.',
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(color: _muted, fontSize: 12, height: 1.25),
+          ),
+          if (defaultItems.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            _readinessGroupLabel(
+              primaryMissing.isNotEmpty
+                  ? _readinessCopy('Primary missing', 'महत्त्वाचे बाकी')
+                  : _readinessCopy('Improve profile', 'Profile सुधारणा'),
+            ),
+            const SizedBox(height: 8),
+            for (final item in defaultItems) _readinessRow(item),
+          ],
+          if (primaryMissing.isNotEmpty && optionalMissing.isNotEmpty)
+            _readinessFold(
+              title: _readinessCopy(
+                '${optionalMissing.length} improve later',
+                '${optionalMissing.length} नंतर सुधारता येतील',
+              ),
+              expanded: _showOptionalReadiness,
+              onTap: () => setState(
+                () => _showOptionalReadiness = !_showOptionalReadiness,
+              ),
+              children: optionalMissing,
+            ),
+          if (completed.isNotEmpty)
+            _readinessFold(
+              title: _readinessCopy(
+                '${completed.length} completed sections',
+                '${completed.length} पूर्ण sections',
+              ),
+              expanded: _showCompletedReadiness,
+              onTap: () => setState(
+                () => _showCompletedReadiness = !_showCompletedReadiness,
+              ),
+              children: completed,
+            ),
         ],
       ),
     );
   }
 
   Widget _readinessRow(_ReadinessItem item) {
-    final color = item.ready ? _success : _warning;
+    final color = _readinessColor(item);
+    final status = _readinessStatusLabel(item);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 30,
-            height: 30,
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: item.onTap,
+          child: Ink(
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.11),
+              color: item.ready
+                  ? _success.withValues(alpha: 0.035)
+                  : color.withValues(alpha: 0.045),
               borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: color.withValues(alpha: 0.18)),
             ),
-            child: Icon(
-              item.ready ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: color,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _ink,
-                    fontWeight: FontWeight.w800,
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.11),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(item.icon, color: color, size: 19),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: _ink,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _readinessCountChip(status, color),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        item.subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: _muted,
+                          fontSize: 12,
+                          height: 1.22,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: LinearProgressIndicator(
+                          minHeight: 4,
+                          value: item.progress,
+                          backgroundColor: _cardBorder,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  item.ready
-                      ? AppStrings.dashboardReady
-                      : AppStrings.dashboardNeedsAttention,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: _muted, fontSize: 12),
+                const SizedBox(width: 8),
+                Icon(
+                  item.ready ? Icons.check_circle : Icons.chevron_right,
+                  color: color,
+                  size: item.ready ? 19 : 22,
                 ),
               ],
             ),
           ),
-          if (!item.ready)
-            TextButton(
-              onPressed: item.onTap,
-              child: Text(AppStrings.dashboardAddNow),
-            ),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _readinessFold({
+    required String title,
+    required bool expanded,
+    required VoidCallback onTap,
+    required List<_ReadinessItem> children,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          borderRadius: BorderRadius.circular(8),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 7),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _ink,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                Icon(
+                  expanded ? Icons.expand_less : Icons.expand_more,
+                  color: _muted,
+                ),
+              ],
+            ),
+          ),
+        ),
+        AnimatedCrossFade(
+          firstChild: const SizedBox.shrink(),
+          secondChild: Column(
+            children: [for (final item in children) _readinessRow(item)],
+          ),
+          crossFadeState: expanded
+              ? CrossFadeState.showSecond
+              : CrossFadeState.showFirst,
+          duration: const Duration(milliseconds: 180),
+        ),
+      ],
+    );
+  }
+
+  Widget _readinessGroupLabel(String label) {
+    return Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(
+        color: _muted,
+        fontSize: 12,
+        fontWeight: FontWeight.w900,
+        letterSpacing: 0,
+      ),
+    );
+  }
+
+  Widget _readinessCountChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.18)),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+
+  _ReadinessItem _readinessItem({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required int filled,
+    required int total,
+    required bool primary,
+    required VoidCallback onTap,
+    int? readyAt,
+  }) {
+    final safeTotal = total <= 0 ? 1 : total;
+    final safeFilled = filled < 0
+        ? 0
+        : (filled > safeTotal ? safeTotal : filled);
+
+    return _ReadinessItem(
+      title: title,
+      subtitle: subtitle,
+      icon: icon,
+      filled: safeFilled,
+      total: safeTotal,
+      readyAt: readyAt ?? (((safeTotal * 2) / 3).ceil().clamp(1, safeTotal)),
+      primary: primary,
+      onTap: onTap,
+    );
+  }
+
+  Color _readinessColor(_ReadinessItem item) {
+    if (item.ready) return _success;
+    if (item.filled <= 0) return item.primary ? _danger : _warning;
+    return _warning;
+  }
+
+  String _readinessStatusLabel(_ReadinessItem item) {
+    if (item.ready) {
+      return item.total > 1
+          ? _readinessCopy(
+              'Ready ${item.filled}/${item.total}',
+              'पूर्ण ${item.filled}/${item.total}',
+            )
+          : AppStrings.dashboardReady;
+    }
+    if (item.filled <= 0) {
+      return _readinessCopy('Missing', 'बाकी');
+    }
+
+    return '${_readinessCopy('Partial', 'अर्धवट')} ${item.filled}/${item.total}';
+  }
+
+  String _readinessCopy(String english, String marathi) {
+    return isMarathiApp ? marathi : english;
+  }
+
+  int _filledCount(List<bool> values) {
+    return values.where((value) => value).length;
+  }
+
+  bool _hasAnyProfileValue(Map<String, dynamic>? profile, List<String> keys) {
+    if (profile == null) return false;
+    return keys.any((key) => _hasUsableValue(profile[key]));
+  }
+
+  bool _hasAnyListData(Map<String, dynamic>? profile, List<String> keys) {
+    if (profile == null) return false;
+    return keys.any((key) => _hasListLikeData(profile[key]));
+  }
+
+  bool _hasSiblingDecision(Map<String, dynamic>? profile) {
+    if (profile == null) return false;
+    if (_hasListLikeData(profile['siblings'])) return true;
+    return profile.containsKey('has_siblings') &&
+        profile['has_siblings'] != null;
+  }
+
+  bool _aboutMeReady(Map<String, dynamic>? profile) {
+    final text =
+        _stringValue(profile?['narrative_about_me']) ??
+        _stringValue(profile?['about_me']) ??
+        _stringValue(profile?['profile_summary']);
+    return text != null && text.length >= 40;
+  }
+
+  int _partnerPreferenceFilledCount(Map<String, dynamic>? profile) {
+    final prefs = _partnerPreferenceMap(profile);
+
+    return _filledCount([
+      _hasAnyPreferenceValue(profile, prefs, const [
+        'preferred_age_min',
+        'preferred_age_max',
+        'age_min',
+        'age_max',
+      ]),
+      _hasAnyPreferenceValue(profile, prefs, const [
+        'preferred_height_min_cm',
+        'preferred_height_max_cm',
+        'height_min_cm',
+        'height_max_cm',
+      ]),
+      _hasAnyPreferenceValue(profile, prefs, const [
+        'preferred_income_min',
+        'preferred_income_max',
+        'income_min',
+        'income_max',
+      ]),
+      _hasAnyPreferenceValue(profile, prefs, const [
+        'marriage_type_preference_id',
+        'preferred_marriage_type_id',
+        'marriage_type',
+      ]),
+      _hasAnyPreferenceList(profile, prefs, const [
+        'preferred_religion_ids',
+        'preferred_religions',
+      ]),
+      _hasAnyPreferenceList(profile, prefs, const [
+        'preferred_mother_tongue_ids',
+        'preferred_mother_tongues',
+      ]),
+      _hasAnyPreferenceList(profile, prefs, const [
+        'preferred_education_degree_ids',
+        'preferred_education_ids',
+        'preferred_educations',
+      ]),
+      _hasAnyPreferenceList(profile, prefs, const [
+        'preferred_diet_ids',
+        'preferred_diets',
+      ]),
+      _hasAnyPreferenceList(profile, prefs, const [
+        'preferred_locations',
+        'preferred_location_ids',
+        'preferred_city_ids',
+      ]),
+    ]);
+  }
+
+  Map<String, dynamic>? _partnerPreferenceMap(Map<String, dynamic>? profile) {
+    if (profile == null) return null;
+    for (final key in const [
+      'partner_preferences',
+      'partner_preference',
+      'partnerPreference',
+      'preferences',
+    ]) {
+      final map = _safeMap(profile[key]);
+      if (map != null && map.isNotEmpty) return map;
+    }
+    return null;
+  }
+
+  bool _hasAnyPreferenceValue(
+    Map<String, dynamic>? profile,
+    Map<String, dynamic>? prefs,
+    List<String> keys,
+  ) {
+    return keys.any(
+      (key) => _hasUsableValue(prefs?[key]) || _hasUsableValue(profile?[key]),
+    );
+  }
+
+  bool _hasAnyPreferenceList(
+    Map<String, dynamic>? profile,
+    Map<String, dynamic>? prefs,
+    List<String> keys,
+  ) {
+    return keys.any(
+      (key) => _hasListLikeData(prefs?[key]) || _hasListLikeData(profile?[key]),
+    );
+  }
+
+  bool _hasUsableValue(dynamic value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+    if (value is num) return value > 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized.isNotEmpty &&
+          normalized != '0' &&
+          normalized != 'null' &&
+          normalized != 'n/a';
+    }
+    if (value is List) return value.isNotEmpty;
+    if (value is Map) return value.isNotEmpty;
+    return true;
+  }
+
+  bool _hasListLikeData(dynamic value) {
+    if (value is List) return value.isNotEmpty;
+    if (value is Map) {
+      final nested = value['data'] ?? value['items'] ?? value['results'];
+      if (nested is List) return nested.isNotEmpty;
+      return value.isNotEmpty;
+    }
+    return false;
   }
 
   Widget _buildActivitySection() {
@@ -1547,57 +1960,235 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   List<_ReadinessItem> get _readinessItems {
     final profile = _effectiveProfile;
-    final items = <_ReadinessItem>[
-      _ReadinessItem(
-        title: AppStrings.dashboardBasicDetails,
-        ready: _hasBasicDetails(profile),
+    return [
+      _readinessItem(
+        title: _readinessCopy('Basic Information', 'Basic Information'),
+        subtitle: _readinessCopy(
+          'Name, birth details, caste and location.',
+          'नाव, जन्म माहिती, जात आणि location.',
+        ),
+        icon: Icons.badge_outlined,
+        filled: _filledCount([
+          _profileName(profile) != AppStrings.profile,
+          _hasAnyProfileValue(profile, const ['date_of_birth', 'dob', 'age']),
+          _hasAnyProfileValue(profile, const [
+            'gender_id',
+            'gender',
+            'gender_label',
+          ]),
+          _hasAnyProfileValue(profile, const [
+            'religion_id',
+            'religion',
+            'religion_label',
+          ]),
+          _hasAnyProfileValue(profile, const [
+            'caste_id',
+            'caste',
+            'caste_label',
+          ]),
+          _hasResidenceLocation(profile),
+        ]),
+        total: 6,
+        readyAt: 5,
+        primary: true,
         onTap: () => _openEditProfile(),
       ),
-      _ReadinessItem(
+      _readinessItem(
         title: AppStrings.dashboardPhoto,
-        ready: _hasPhoto(profile),
+        subtitle: _hasPhoto(profile)
+            ? _photoStatusLabel(profile)
+            : _readinessCopy(
+                'Upload one clear profile photo.',
+                'एक clear profile photo upload करा.',
+              ),
+        icon: Icons.photo_camera_outlined,
+        filled: _hasPhoto(profile) ? 1 : 0,
+        total: 1,
+        primary: true,
         onTap: () => _safePushNamed('/photo-gallery'),
       ),
-      _ReadinessItem(
-        title: AppStrings.dashboardLocationDetails,
-        ready: _hasResidenceLocation(profile),
-        onTap: () => _openEditProfile(openLocationDetails: true),
+      _readinessItem(
+        title: _readinessCopy('Physical', 'Physical'),
+        subtitle: _readinessCopy(
+          'Height, weight, complexion and lifestyle.',
+          'Height, weight, complexion आणि lifestyle.',
+        ),
+        icon: Icons.accessibility_new_outlined,
+        filled: _filledCount([
+          _hasAnyProfileValue(profile, const ['height_cm', 'height']),
+          _hasAnyProfileValue(profile, const ['weight_kg', 'weight']),
+          _hasAnyProfileValue(profile, const [
+            'complexion_id',
+            'complexion',
+            'complexion_label',
+          ]),
+          _hasAnyProfileValue(profile, const ['diet_id', 'diet', 'diet_label']),
+        ]),
+        total: 4,
+        readyAt: 3,
+        primary: false,
+        onTap: () => _openEditProfile(),
       ),
-      _ReadinessItem(
+      _readinessItem(
         title: AppStrings.dashboardEducationCareer,
-        ready:
-            _profileEducation(profile) != null ||
-            _profileOccupation(profile) != null,
+        subtitle: _readinessCopy(
+          'Education, occupation, work place and income.',
+          'Education, occupation, work place आणि income.',
+        ),
+        icon: Icons.school_outlined,
+        filled: _filledCount([
+          _profileEducation(profile) != null,
+          _profileOccupation(profile) != null,
+          _hasAnyProfileValue(profile, const [
+            'work_location',
+            'work_location_label',
+            'work_city_id',
+            'work_city',
+          ]),
+          _hasAnyProfileValue(profile, const [
+            'annual_income',
+            'income',
+            'income_amount',
+            'income_range',
+          ]),
+        ]),
+        total: 4,
+        readyAt: 2,
+        primary: true,
+        onTap: () => _openEditProfile(),
+      ),
+      _readinessItem(
+        title: _readinessCopy('Family Details', 'Family Details'),
+        subtitle: _readinessCopy(
+          'Parents, family type, address and values.',
+          'Parents, family type, address आणि values.',
+        ),
+        icon: Icons.family_restroom_outlined,
+        filled: _filledCount([
+          _hasAnyProfileValue(profile, const ['father_name']),
+          _hasAnyProfileValue(profile, const [
+            'father_occupation',
+            'father_occupation_label',
+          ]),
+          _hasAnyProfileValue(profile, const ['mother_name']),
+          _hasAnyProfileValue(profile, const [
+            'mother_occupation',
+            'mother_occupation_label',
+          ]),
+          _hasAnyListData(profile, const [
+            'parents_addresses',
+            'family_addresses',
+          ]),
+          _hasAnyProfileValue(profile, const [
+            'family_type_id',
+            'family_type',
+            'family_type_label',
+          ]),
+          _hasAnyProfileValue(profile, const [
+            'family_status',
+            'family_status_label',
+            'family_values',
+            'family_values_label',
+          ]),
+        ]),
+        total: 7,
+        readyAt: 3,
+        primary: true,
+        onTap: () => _openEditProfile(),
+      ),
+      _readinessItem(
+        title: _readinessCopy('Siblings', 'Siblings'),
+        subtitle: _readinessCopy(
+          'Brother/sister details or mark no siblings.',
+          'भाऊ/बहिण माहिती किंवा siblings नाही असे mark करा.',
+        ),
+        icon: Icons.groups_2_outlined,
+        filled: _hasSiblingDecision(profile) ? 1 : 0,
+        total: 1,
+        primary: false,
+        onTap: () => _openEditProfile(),
+      ),
+      _readinessItem(
+        title: _readinessCopy('Relatives', 'Relatives'),
+        subtitle: _readinessCopy(
+          'Close relatives and alliance network notes.',
+          'जवळचे नातेवाईक आणि alliance network.',
+        ),
+        icon: Icons.handshake_outlined,
+        filled: _filledCount([
+          _hasAnyListData(profile, const ['relatives']),
+          _hasAnyProfileValue(profile, const ['other_relatives_text']),
+          _hasAnyListData(profile, const ['alliance_networks']),
+        ]),
+        total: 3,
+        readyAt: 1,
+        primary: false,
+        onTap: () => _openEditProfile(),
+      ),
+      _readinessItem(
+        title: _readinessCopy('Property', 'Property'),
+        subtitle: _readinessCopy(
+          'Property or assets summary if applicable.',
+          'Property किंवा assets summary असल्यास add करा.',
+        ),
+        icon: Icons.home_work_outlined,
+        filled:
+            _hasAnyProfileValue(profile, const [
+              'property_details',
+              'property_summary',
+            ])
+            ? 1
+            : 0,
+        total: 1,
+        primary: false,
+        onTap: () => _openEditProfile(),
+      ),
+      _readinessItem(
+        title: _readinessCopy('Horoscope', 'Horoscope'),
+        subtitle: _readinessCopy(
+          'Rashi, nakshatra, gan, devak, kul and gotra.',
+          'Rashi, nakshatra, gan, devak, kul आणि gotra.',
+        ),
+        icon: Icons.auto_awesome_outlined,
+        filled: _filledCount([
+          _hasAnyProfileValue(profile, const ['rashi_id', 'rashi']),
+          _hasAnyProfileValue(profile, const ['nakshatra_id', 'nakshatra']),
+          _hasAnyProfileValue(profile, const ['gan_id', 'gan']),
+          _hasAnyProfileValue(profile, const ['devak']),
+          _hasAnyProfileValue(profile, const ['kul']),
+          _hasAnyProfileValue(profile, const ['gotra']),
+        ]),
+        total: 6,
+        readyAt: 2,
+        primary: false,
+        onTap: () => _openEditProfile(),
+      ),
+      _readinessItem(
+        title: _readinessCopy('About Me', 'About Me'),
+        subtitle: _readinessCopy(
+          'Write a short intro, ideally 40+ characters.',
+          'स्वतःबद्दल थोडक्यात 40+ characters लिहा.',
+        ),
+        icon: Icons.notes_outlined,
+        filled: _aboutMeReady(profile) ? 1 : 0,
+        total: 1,
+        primary: true,
+        onTap: () => _openEditProfile(),
+      ),
+      _readinessItem(
+        title: AppStrings.dashboardPartnerPreference,
+        subtitle: _readinessCopy(
+          'Age, height, education, location and lifestyle preferences.',
+          'Age, height, education, location आणि lifestyle preference.',
+        ),
+        icon: Icons.favorite_border,
+        filled: _partnerPreferenceFilledCount(profile),
+        total: 9,
+        readyAt: 3,
+        primary: false,
         onTap: () => _openEditProfile(),
       ),
     ];
-
-    if (_profileHasAnyKnownKey(profile, const [
-      'partner_preferences',
-      'partner_preference',
-      'partnerPreference',
-      'preferences',
-    ])) {
-      items.add(
-        _ReadinessItem(
-          title: AppStrings.dashboardPartnerPreference,
-          ready: _hasPartnerPreference(profile),
-          onTap: () => _openEditProfile(),
-        ),
-      );
-    }
-
-    if (!_planLoading && _currentPlanResponse != null) {
-      items.add(
-        _ReadinessItem(
-          title: AppStrings.dashboardPlanContact,
-          ready: _hasActiveSubscription,
-          onTap: () => _safePushNamed('/plans'),
-        ),
-      );
-    }
-
-    return items;
   }
 
   _InterestStats _interestStats(Map<String, dynamic> response, String key) {
@@ -1703,29 +2294,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       return AppStrings.dashboardPhotoApproved;
     }
     return AppStrings.dashboardProfileActive;
-  }
-
-  bool _hasPartnerPreference(Map<String, dynamic>? profile) {
-    if (profile == null) return false;
-    for (final key in const [
-      'partner_preferences',
-      'partner_preference',
-      'partnerPreference',
-      'preferences',
-    ]) {
-      final value = profile[key];
-      if (value is Map && value.isNotEmpty) return true;
-      if (value is List && value.isNotEmpty) return true;
-    }
-    return false;
-  }
-
-  bool _profileHasAnyKnownKey(
-    Map<String, dynamic>? profile,
-    List<String> keys,
-  ) {
-    if (profile == null) return false;
-    return keys.any(profile.containsKey);
   }
 
   String _profileName(Map<String, dynamic>? profile) {
@@ -1895,13 +2463,27 @@ class _DashboardAction {
 class _ReadinessItem {
   const _ReadinessItem({
     required this.title,
-    required this.ready,
+    required this.subtitle,
+    required this.icon,
+    required this.filled,
+    required this.total,
+    required this.readyAt,
+    required this.primary,
     required this.onTap,
   });
 
   final String title;
-  final bool ready;
+  final String subtitle;
+  final IconData icon;
+  final int filled;
+  final int total;
+  final int readyAt;
+  final bool primary;
   final VoidCallback onTap;
+
+  bool get ready => filled >= readyAt;
+
+  double get progress => total <= 0 ? 0 : (filled / total).clamp(0.0, 1.0);
 }
 
 class _ToolAction {
