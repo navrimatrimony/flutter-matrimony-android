@@ -1,8 +1,12 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/profile_photo_view.dart';
+import '../interests/received_interests_screen.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -16,6 +20,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   static const Color _brandColor = Color(0xFFDC2626);
   static const Color _brandDark = Color(0xFF9F1239);
   static const Color _surface = Color(0xFFFFFBF7);
+  static const Color _textDark = Color(0xFF2E2220);
+  static const Color _mutedText = Color(0xFF746966);
+  static const Color _line = Color(0xFFE8DDD7);
+  static const Color _trustGreen = Color(0xFF157F5B);
+  static const Color _inkBlue = Color(0xFF235789);
 
   bool _loading = true;
   bool _markingAll = false;
@@ -153,13 +162,18 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _openNotificationAction(Map<String, dynamic> notification) {
-    final action = _safeMap(notification['action']);
-    final routeHint = _stringValue(
-      action?['route_hint'] ?? notification['route_hint'],
-    );
-    final profileId = _asInt(
-      action?['profile_id'] ?? notification['profile_id'],
-    );
+    final action = _primaryAction(notification);
+    if (action == null) {
+      _showSnackBar(AppStrings.notificationsOpenFailed);
+      return;
+    }
+
+    _openAction(action);
+  }
+
+  void _openAction(Map<String, dynamic> action) {
+    final routeHint = _stringValue(action['route_hint']);
+    final profileId = _asInt(action['profile_id']);
 
     if (profileId != null && routeHint == 'profile') {
       Navigator.push(
@@ -176,6 +190,32 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return;
     }
 
+    if (routeHint == 'mediation_inbox') {
+      _showSnackBar(
+        AppStrings.isMarathi
+            ? 'WhatsApp Response सुविधा mobile मध्ये लवकरच उपलब्ध होईल.'
+            : 'WhatsApp Response inbox will be available in the mobile app soon.',
+      );
+      return;
+    }
+
+    if (routeHint == 'received_interests') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ReceivedInterestsScreen()),
+      );
+      return;
+    }
+
+    if (routeHint == 'who_viewed') {
+      Navigator.pushNamed(
+        context,
+        '/matches',
+        arguments: const <String, dynamic>{'initialTab': 'more'},
+      );
+      return;
+    }
+
     if (routeHint == 'plans') {
       Navigator.pushNamed(context, '/plans');
       return;
@@ -187,6 +227,30 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
 
     _showSnackBar(AppStrings.notificationsOpenFailed);
+  }
+
+  Map<String, dynamic>? _primaryAction(Map<String, dynamic> notification) {
+    final display = _safeMap(notification['display']);
+    final cta = _safeMap(display?['cta']);
+    if (cta != null) return cta;
+
+    final action = _safeMap(notification['action']);
+    if (action != null) return action;
+
+    final routeHint = _stringValue(notification['route_hint']);
+    if (routeHint.isEmpty) return null;
+
+    return <String, dynamic>{
+      'route_hint': routeHint,
+      'profile_id': notification['profile_id'],
+      'request_id': notification['request_id'],
+      'action_type': notification['action_type'],
+    };
+  }
+
+  Map<String, dynamic>? _secondaryAction(Map<String, dynamic> notification) {
+    final display = _safeMap(notification['display']);
+    return _safeMap(display?['secondary_cta']);
   }
 
   @override
@@ -292,6 +356,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Widget _buildNotificationCard(Map<String, dynamic> notification) {
     final id = _stringValue(notification['id']);
+    final display = _safeMap(notification['display']);
+    final actor = _safeMap(display?['actor']);
+    final teaser = _safeMap(display?['teaser']);
+    final layout = _stringValue(display?['layout'], fallback: 'system');
     final title = _stringValue(
       notification['title'],
       fallback: AppStrings.notificationsTitle,
@@ -300,109 +368,502 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final createdAt = _displayDate(notification['created_at']);
     final isUnread = notification['is_unread'] == true;
     final isBusy = _busyIds.contains(id);
+    final primaryAction = _primaryAction(notification);
+    final secondaryAction = _secondaryAction(notification);
 
-    return Card(
-      elevation: 0,
-      color: isUnread ? _surface : Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: isUnread ? _brandColor : const Color(0xFFE8DDD7),
-          width: isUnread ? 1.2 : 1,
-        ),
-      ),
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
         onTap: isBusy ? null : () => _handleNotificationTap(notification),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: isUnread ? _brandColor : const Color(0xFFF1E7E2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isUnread ? Icons.notifications : Icons.notifications_none,
-                  color: isUnread ? Colors.white : const Color(0xFF6B4B4B),
-                  size: 20,
-                ),
+        child: Ink(
+          decoration: BoxDecoration(
+            color: isUnread ? _surface : Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: isUnread ? _brandColor.withValues(alpha: 0.55) : _line,
+              width: isUnread ? 1.25 : 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.035),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: isUnread
-                                  ? FontWeight.w900
-                                  : FontWeight.w800,
-                              color: const Color(0xFF35191D),
-                            ),
-                          ),
-                        ),
-                        if (isBusy)
-                          const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
-                      ],
+                    _buildNotificationVisual(
+                      layout: layout,
+                      actor: actor,
+                      teaser: teaser,
+                      isUnread: isUnread,
                     ),
-                    if (message.isNotEmpty) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        message,
-                        style: const TextStyle(
-                          color: Color(0xFF594044),
-                          height: 1.25,
-                        ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildNotificationBody(
+                        layout: layout,
+                        title: title,
+                        message: message,
+                        teaser: teaser,
+                        createdAt: createdAt,
+                        isUnread: isUnread,
+                        isBusy: isBusy,
                       ),
-                    ],
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Text(
-                          createdAt,
-                          style: const TextStyle(
-                            color: Color(0xFF8A7770),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const Spacer(),
-                        Text(
-                          isUnread
-                              ? AppStrings.notificationsUnread
-                              : AppStrings.notificationsRead,
-                          style: TextStyle(
-                            color: isUnread
-                                ? _brandColor
-                                : const Color(0xFF8A7770),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
+                ),
+                if (primaryAction != null || secondaryAction != null) ...[
+                  const SizedBox(height: 10),
+                  Divider(height: 1, color: _line.withValues(alpha: 0.85)),
+                  const SizedBox(height: 10),
+                  _buildActionRow(
+                    primaryAction: primaryAction,
+                    secondaryAction: secondaryAction,
+                    disabled: isBusy,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotificationVisual({
+    required String layout,
+    required Map<String, dynamic>? actor,
+    required Map<String, dynamic>? teaser,
+    required bool isUnread,
+  }) {
+    if (layout == 'locked_teaser' && teaser != null) {
+      return SizedBox(
+        width: 82,
+        height: 108,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _buildTeaserPhoto(teaser),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Colors.transparent, Color(0xAA000000)],
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 7,
+                top: 7,
+                child: Container(
+                  width: 27,
+                  height: 27,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.48),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.lock_outline,
+                    color: Colors.white,
+                    size: 16,
+                  ),
                 ),
               ),
             ],
           ),
         ),
+      );
+    }
+
+    if (actor != null) {
+      return ProfilePhotoView(
+        photoUrl: ApiClient.normalizeProfilePhotoUrl(actor['photo_url']),
+        width: 54,
+        height: 54,
+        circle: true,
+        backgroundColor: const Color(0xFFF1E7E3),
+        placeholderColor: _brandDark,
+        placeholderIcon: Icons.person_outline,
+      );
+    }
+
+    final visual = _visualForLayout(layout);
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: (isUnread ? visual.color : const Color(0xFFF1E7E2)).withValues(
+          alpha: isUnread ? 1 : 0.72,
+        ),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(
+        visual.icon,
+        color: isUnread ? Colors.white : visual.color,
+        size: 24,
       ),
     );
+  }
+
+  Widget _buildNotificationBody({
+    required String layout,
+    required String title,
+    required String message,
+    required Map<String, dynamic>? teaser,
+    required String createdAt,
+    required bool isUnread,
+    required bool isBusy,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: isUnread ? FontWeight.w900 : FontWeight.w800,
+                  color: _textDark,
+                  height: 1.16,
+                ),
+              ),
+            ),
+            if (isBusy) ...[
+              const SizedBox(width: 8),
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        if (layout == 'locked_teaser' && teaser != null)
+          _buildLockedTeaserBody(teaser: teaser, fallbackMessage: message)
+        else if (message.isNotEmpty)
+          Text(
+            message,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF594044),
+              height: 1.28,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        const SizedBox(height: 9),
+        _buildMetaRow(createdAt: createdAt, isUnread: isUnread),
+      ],
+    );
+  }
+
+  Widget _buildLockedTeaserBody({
+    required Map<String, dynamic> teaser,
+    required String fallbackMessage,
+  }) {
+    final headline = _stringValue(
+      teaser['headline'],
+      fallback: fallbackMessage.isEmpty
+          ? (AppStrings.isMarathi ? 'लॉक केलेली माहिती' : 'Locked profile')
+          : fallbackMessage,
+    );
+    final lines = _stringList(teaser['lines']).take(3).toList();
+    final viewedSummary = _stringValue(teaser['viewed_summary']);
+    final accentLine = _stringValue(teaser['accent_line']);
+    final matchLine = _stringValue(teaser['match_line']);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          headline,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+            color: _textDark,
+            fontSize: 14.2,
+            fontWeight: FontWeight.w900,
+            height: 1.20,
+          ),
+        ),
+        if (accentLine.isNotEmpty || matchLine.isNotEmpty) ...[
+          const SizedBox(height: 5),
+          Text(
+            _joinNonEmpty([accentLine, matchLine]),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: _trustGreen,
+              fontSize: 12.4,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+        if (lines.isNotEmpty) ...[
+          const SizedBox(height: 5),
+          Wrap(
+            spacing: 5,
+            runSpacing: 5,
+            children: [
+              for (final line in lines)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(7),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Text(
+                    line,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Color(0xFF45515E),
+                      fontSize: 11.8,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+        if (viewedSummary.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            viewedSummary,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: _mutedText,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMetaRow({required String createdAt, required bool isUnread}) {
+    return Row(
+      children: [
+        if (createdAt.isNotEmpty)
+          Expanded(
+            child: Text(
+              createdAt,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: _mutedText,
+                fontSize: 11.8,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          )
+        else
+          const Spacer(),
+        const SizedBox(width: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: isUnread
+                ? _brandColor.withValues(alpha: 0.10)
+                : const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            isUnread
+                ? AppStrings.notificationsUnread
+                : AppStrings.notificationsRead,
+            style: TextStyle(
+              color: isUnread ? _brandColor : _mutedText,
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildActionRow({
+    required Map<String, dynamic>? primaryAction,
+    required Map<String, dynamic>? secondaryAction,
+    required bool disabled,
+  }) {
+    final actions = <Widget>[];
+
+    if (primaryAction != null) {
+      actions.add(
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: disabled ? null : () => _openAction(primaryAction),
+            icon: Icon(_actionIcon(primaryAction), size: 17),
+            label: Text(
+              _actionLabel(primaryAction),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              minimumSize: const Size(0, 40),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (secondaryAction != null) {
+      actions.add(
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: disabled ? null : () => _openAction(secondaryAction),
+            icon: Icon(_actionIcon(secondaryAction), size: 17),
+            label: Text(
+              _actionLabel(secondaryAction),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+              minimumSize: const Size(0, 40),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        for (var i = 0; i < actions.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          actions[i],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildTeaserPhoto(Map<String, dynamic> teaser) {
+    final avatarStyle = _stringValue(teaser['avatar_style']).toLowerCase();
+    final photoUrl = _stringValue(teaser['photo_url']);
+
+    if (avatarStyle == 'blur' && photoUrl.isNotEmpty) {
+      return Transform.scale(
+        scale: 1.08,
+        child: ImageFiltered(
+          imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Image.network(
+            Uri.encodeFull(photoUrl),
+            fit: BoxFit.cover,
+            alignment: Alignment.topCenter,
+            errorBuilder: (_, _, _) => _buildTeaserPlaceholder(),
+          ),
+        ),
+      );
+    }
+
+    return _buildTeaserPlaceholder();
+  }
+
+  Widget _buildTeaserPlaceholder() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF8D9D3), Color(0xFFEAF3F8)],
+        ),
+      ),
+      child: const Icon(Icons.person_outline, color: _brandDark, size: 42),
+    );
+  }
+
+  _NotificationVisual _visualForLayout(String layout) {
+    return switch (layout) {
+      'contact_request' => const _NotificationVisual(
+        icon: Icons.contact_mail_outlined,
+        color: _trustGreen,
+      ),
+      'mediation' => const _NotificationVisual(
+        icon: Icons.support_agent_outlined,
+        color: _inkBlue,
+      ),
+      'locked_action' => const _NotificationVisual(
+        icon: Icons.lock_outline,
+        color: _brandDark,
+      ),
+      'profile' => const _NotificationVisual(
+        icon: Icons.person_outline,
+        color: _brandColor,
+      ),
+      _ => const _NotificationVisual(
+        icon: Icons.notifications_none,
+        color: _brandColor,
+      ),
+    };
+  }
+
+  IconData _actionIcon(Map<String, dynamic> action) {
+    final routeHint = _stringValue(action['route_hint']);
+    return switch (routeHint) {
+      'profile' => Icons.person_search_outlined,
+      'contact_inbox' => Icons.contact_mail_outlined,
+      'mediation_inbox' => Icons.support_agent_outlined,
+      'plans' => Icons.lock_open_outlined,
+      'matches' => Icons.favorite_border,
+      'received_interests' => Icons.inbox_outlined,
+      'who_viewed' => Icons.visibility_outlined,
+      _ => Icons.open_in_new,
+    };
+  }
+
+  String _actionLabel(Map<String, dynamic> action) {
+    final label = _stringValue(action['label']);
+    if (label.isNotEmpty) return label;
+
+    final routeHint = _stringValue(action['route_hint']);
+    return switch (routeHint) {
+      'profile' => AppStrings.isMarathi ? 'प्रोफाइल पहा' : 'View profile',
+      'contact_inbox' =>
+        AppStrings.isMarathi ? 'कॉन्टॅक्ट इनबॉक्स' : 'Contact inbox',
+      'mediation_inbox' => 'WhatsApp Response',
+      'plans' => AppStrings.isMarathi ? 'Unlock करा' : 'Unlock',
+      'matches' => AppStrings.isMarathi ? 'जुळण्या पहा' : 'View matches',
+      'received_interests' =>
+        AppStrings.isMarathi ? 'आलेल्या इच्छा' : 'Received interests',
+      'who_viewed' => AppStrings.isMarathi ? 'कोणी पाहिले' : 'Who viewed',
+      _ => AppStrings.isMarathi ? 'उघडा' : 'Open',
+    };
   }
 
   Widget _buildMessageState({
@@ -470,6 +931,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return null;
   }
 
+  static List<String> _stringList(dynamic value) {
+    if (value is! List) return <String>[];
+
+    return value
+        .map((item) => item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  static String _joinNonEmpty(List<String> values) {
+    return values.where((value) => value.trim().isNotEmpty).join(' • ');
+  }
+
   static int? _asInt(dynamic value) {
     if (value is int) return value;
     if (value is num) return value.toInt();
@@ -494,4 +968,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final minute = local.minute.toString().padLeft(2, '0');
     return '$day/$month/${local.year} $hour:$minute';
   }
+}
+
+class _NotificationVisual {
+  const _NotificationVisual({required this.icon, required this.color});
+
+  final IconData icon;
+  final Color color;
 }

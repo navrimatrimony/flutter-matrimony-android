@@ -129,9 +129,18 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     if (_routeArgumentsRead) return;
     _routeArgumentsRead = true;
     final arguments = ModalRoute.of(context)?.settings.arguments;
-    if (arguments is Map && arguments['showRecommendationDeck'] == true) {
-      _forceRecommendationDeck = true;
-      _scheduleRecommendationDeckCheck();
+    if (arguments is Map) {
+      if (arguments['initialTab'] == 'more') {
+        setState(() {
+          _selectedTabIndex = _tabMore;
+          _activeMainNavIndex = _navMatches;
+        });
+        _fetchMoreSections();
+      }
+      if (arguments['showRecommendationDeck'] == true) {
+        _forceRecommendationDeck = true;
+        _scheduleRecommendationDeckCheck();
+      }
     }
   }
 
