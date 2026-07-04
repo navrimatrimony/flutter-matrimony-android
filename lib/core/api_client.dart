@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 
 import 'app_language.dart';
 import 'app_storage.dart';
+import 'api_cache.dart';
 import 'api_routes.dart';
 
 class ApiClient {
@@ -19,6 +20,145 @@ class ApiClient {
   static const String _siteBaseUrl = 'https://navrimilenavryala.com';
   static const String _profilePhotoStoragePath = 'storage/matrimony_photos';
   static const Duration _locationSearchCacheTtl = Duration(minutes: 2);
+  static const Duration _profileCacheTtl = Duration(seconds: 45);
+  static const Duration _lookupCacheTtl = Duration(hours: 12);
+  static const Duration _lookupSearchCacheTtl = Duration(minutes: 10);
+  static const String _cacheTagProfile = 'profile';
+  static const String _cacheTagProfilePhotos = 'profile_photos';
+  static const String _cacheTagLookups = 'lookups';
+  static const String _cacheTagAuth = 'auth';
+
+  static String _cacheKey(
+    String namespace, {
+    bool authenticated = false,
+    Map<String, dynamic>? query,
+  }) {
+    final parts = <String>[
+      namespace,
+      authenticated ? _authCacheScope() : 'public',
+    ];
+    final queryPart = _stableQueryPart(query);
+    if (queryPart.isNotEmpty) parts.add(queryPart);
+    return parts.join('|');
+  }
+
+  static String _authCacheScope() {
+    final token = authToken;
+    if (token == null || token.isEmpty) return 'auth:none';
+    return 'auth:${token.hashCode}';
+  }
+
+  static String _stableQueryPart(Map<String, dynamic>? query) {
+    final queryParameters = _queryParameters(query);
+    if (queryParameters.isEmpty) return '';
+
+    final keys = queryParameters.keys.toList()..sort();
+    return keys.map((key) => '$key=${queryParameters[key]}').join('&');
+  }
+
+  static Map<String, dynamic> _cloneJsonMap(Map<String, dynamic> value) {
+    final decoded = jsonDecode(jsonEncode(value));
+    return decoded is Map
+        ? Map<String, dynamic>.from(decoded)
+        : <String, dynamic>{};
+  }
+
+  static List<Map<String, dynamic>> _cloneMapList(
+    List<Map<String, dynamic>> rows,
+  ) {
+    return rows.map((row) => _cloneJsonMap(row)).toList();
+  }
+
+  static Map<String, List<Map<String, dynamic>>> _cloneOptionListMap(
+    Map<String, List<Map<String, dynamic>>> value,
+  ) {
+    return value.map((key, rows) => MapEntry(key, _cloneMapList(rows)));
+  }
+
+  static bool _shouldCacheJsonResponse(Map<String, dynamic> data) {
+    final statusCode = _intValue(data['statusCode']);
+    if (statusCode != null && (statusCode < 200 || statusCode >= 300)) {
+      return false;
+    }
+
+    return data['success'] != false;
+  }
+
+  static bool _isSuccessfulResponse(Map<String, dynamic> data) {
+    return _shouldCacheJsonResponse(data);
+  }
+
+  static Future<Map<String, dynamic>> _getJsonCached(
+    String route, {
+    bool authenticated = false,
+    Map<String, dynamic>? query,
+    required Duration ttl,
+    required Set<String> tags,
+    bool forceRefresh = false,
+  }) {
+    return ApiCache.instance.remember<Map<String, dynamic>>(
+      key: _cacheKey(route, authenticated: authenticated, query: query),
+      ttl: ttl,
+      tags: tags,
+      forceRefresh: forceRefresh,
+      fetch: () => _getJson(route, authenticated: authenticated, query: query),
+      copy: _cloneJsonMap,
+      shouldStore: _shouldCacheJsonResponse,
+    );
+  }
+
+  static Future<List<Map<String, dynamic>>> _rememberMapList(
+    String cacheKey, {
+    required Future<List<Map<String, dynamic>>> Function() fetch,
+    Duration ttl = _lookupCacheTtl,
+    Set<String> tags = const <String>{_cacheTagLookups},
+  }) {
+    return ApiCache.instance.remember<List<Map<String, dynamic>>>(
+      key: cacheKey,
+      ttl: ttl,
+      tags: tags,
+      fetch: fetch,
+      copy: _cloneMapList,
+      shouldStore: (rows) => rows.isNotEmpty,
+    );
+  }
+
+  static Future<Map<String, List<Map<String, dynamic>>>> _rememberOptionListMap(
+    String cacheKey, {
+    required Future<Map<String, List<Map<String, dynamic>>>> Function() fetch,
+  }) {
+    return ApiCache.instance.remember<Map<String, List<Map<String, dynamic>>>>(
+      key: cacheKey,
+      ttl: _lookupCacheTtl,
+      tags: const <String>{_cacheTagLookups, _cacheTagAuth},
+      fetch: fetch,
+      copy: _cloneOptionListMap,
+      shouldStore: (options) => options.isNotEmpty,
+    );
+  }
+
+  static Future<Map<String, dynamic>> _rememberJsonMap(
+    String cacheKey, {
+    required Future<Map<String, dynamic>> Function() fetch,
+    Duration ttl = _lookupCacheTtl,
+    Set<String> tags = const <String>{_cacheTagLookups, _cacheTagAuth},
+  }) {
+    return ApiCache.instance.remember<Map<String, dynamic>>(
+      key: cacheKey,
+      ttl: ttl,
+      tags: tags,
+      fetch: fetch,
+      copy: _cloneJsonMap,
+      shouldStore: (value) => value.isNotEmpty,
+    );
+  }
+
+  static void _invalidateProfileCache() {
+    ApiCache.instance.invalidateTags(const <String>{
+      _cacheTagProfile,
+      _cacheTagProfilePhotos,
+    });
+  }
 
   static Map<String, dynamic> _decodeResponse(http.Response response) {
     Map<String, dynamic> data;
@@ -833,517 +973,562 @@ class ApiClient {
     }
   }
 
-  static Future<List<Map<String, dynamic>>> getReligions() async {
-    if (authToken == null) {
-      throw Exception('Auth token missing');
-    }
+  static Future<List<Map<String, dynamic>>> getReligions() {
+    return _rememberMapList(
+      _cacheKey(ApiRoutes.religions, authenticated: true),
+      tags: const <String>{_cacheTagLookups, _cacheTagAuth},
+      fetch: () async {
+        if (authToken == null) {
+          throw Exception('Auth token missing');
+        }
 
-    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.religions);
+        final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.religions);
 
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
+        final response = await http.get(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        try {
+          final decoded = jsonDecode(response.body);
+          return _safeMapList(decoded);
+        } catch (_) {
+          return <Map<String, dynamic>>[];
+        }
       },
     );
-
-    try {
-      final decoded = jsonDecode(response.body);
-      return _safeMapList(decoded);
-    } catch (_) {
-      return <Map<String, dynamic>>[];
-    }
   }
 
-  static Future<List<Map<String, dynamic>>> getGenders() async {
-    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.genders);
-    final headers = <String, String>{'Accept': 'application/json'};
-    final token = authToken;
-    if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $token';
-    }
+  static Future<List<Map<String, dynamic>>> getGenders() {
+    return _rememberMapList(
+      _cacheKey(ApiRoutes.genders),
+      fetch: () async {
+        final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.genders);
+        final headers = <String, String>{'Accept': 'application/json'};
+        final token = authToken;
+        if (token != null && token.isNotEmpty) {
+          headers['Authorization'] = 'Bearer $token';
+        }
 
-    final response = await http.get(url, headers: headers);
+        final response = await http.get(url, headers: headers);
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        'Gender options load failed: HTTP ${response.statusCode}',
-      );
-    }
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw Exception(
+            'Gender options load failed: HTTP ${response.statusCode}',
+          );
+        }
 
-    try {
-      final decoded = jsonDecode(response.body);
-      final rows = _safeMapList(decoded);
-      final options = rows
-          .map((row) {
-            final id = _intValue(row['id']);
-            final key = row['key']?.toString().trim();
-            final label = _firstNonEmptyValue(row, const [
-              'label',
-              'label_en',
-              'name',
-            ]);
-            final labelMr = row['label_mr']?.toString().trim();
+        try {
+          final decoded = jsonDecode(response.body);
+          final rows = _safeMapList(decoded);
+          final options = rows
+              .map((row) {
+                final id = _intValue(row['id']);
+                final key = row['key']?.toString().trim();
+                final label = _firstNonEmptyValue(row, const [
+                  'label',
+                  'label_en',
+                  'name',
+                ]);
+                final labelMr = row['label_mr']?.toString().trim();
 
-            if (id == null || key == null || key.isEmpty) {
-              return null;
+                if (id == null || key == null || key.isEmpty) {
+                  return null;
+                }
+
+                return <String, dynamic>{
+                  'id': id,
+                  'key': key,
+                  'label': label ?? key,
+                  'label_mr': labelMr?.isNotEmpty == true ? labelMr : null,
+                };
+              })
+              .whereType<Map<String, dynamic>>()
+              .toList();
+
+          if (options.isEmpty) {
+            throw Exception('Gender options are empty.');
+          }
+
+          return options;
+        } on FormatException {
+          throw Exception('Gender options response could not be read.');
+        } catch (error) {
+          if (error is Exception) rethrow;
+          throw Exception('Gender options response could not be read.');
+        }
+      },
+    );
+  }
+
+  static Future<Map<String, List<Map<String, dynamic>>>>
+  getProfileBasicPhysicalOptions() {
+    return _rememberOptionListMap(
+      _cacheKey(ApiRoutes.profileBasicPhysicalOptions, authenticated: true),
+      fetch: () async {
+        if (authToken == null) {
+          throw Exception('Auth token missing');
+        }
+
+        final url = Uri.parse(
+          ApiRoutes.baseUrl + ApiRoutes.profileBasicPhysicalOptions,
+        );
+
+        final response = await http.get(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw Exception(
+            'Profile options load failed: HTTP ${response.statusCode}',
+          );
+        }
+
+        final decoded = jsonDecode(response.body);
+        final payload = decoded is Map
+            ? decoded['data'] ?? decoded['options'] ?? decoded
+            : null;
+        final source = payload is Map
+            ? Map<String, dynamic>.from(payload)
+            : <String, dynamic>{};
+        final options = <String, List<Map<String, dynamic>>>{};
+
+        void addOptions(String key, List<String> aliases) {
+          for (final alias in aliases) {
+            final rows = _safeOptionList(source[alias]);
+            if (rows.isNotEmpty) {
+              options[key] = rows;
+              return;
             }
+          }
+          options[key] = <Map<String, dynamic>>[];
+        }
 
-            return <String, dynamic>{
-              'id': id,
-              'key': key,
-              'label': label ?? key,
-              'label_mr': labelMr?.isNotEmpty == true ? labelMr : null,
-            };
-          })
-          .whereType<Map<String, dynamic>>()
-          .toList();
+        addOptions('mother_tongues', const [
+          'mother_tongues',
+          'motherTongues',
+          'mother_tongue',
+        ]);
+        addOptions('complexions', const ['complexions', 'complexion']);
+        addOptions('blood_groups', const [
+          'blood_groups',
+          'bloodGroups',
+          'blood_group',
+        ]);
+        addOptions('physical_builds', const [
+          'physical_builds',
+          'physicalBuilds',
+          'physical_build',
+        ]);
+        addOptions('spectacles_lens', const [
+          'spectacles_lens',
+          'spectaclesLens',
+          'spectacles_options',
+          'spectacles',
+        ]);
+        addOptions('physical_conditions', const [
+          'physical_conditions',
+          'physicalConditions',
+          'physical_condition',
+        ]);
 
-      if (options.isEmpty) {
-        throw Exception('Gender options are empty.');
-      }
-
-      return options;
-    } on FormatException {
-      throw Exception('Gender options response could not be read.');
-    } catch (error) {
-      if (error is Exception) rethrow;
-      throw Exception('Gender options response could not be read.');
-    }
+        return options;
+      },
+    );
   }
 
   static Future<Map<String, List<Map<String, dynamic>>>>
-  getProfileBasicPhysicalOptions() async {
-    if (authToken == null) {
-      throw Exception('Auth token missing');
-    }
+  getProfileEducationCareerOptions() {
+    return _rememberOptionListMap(
+      _cacheKey(ApiRoutes.profileEducationCareerOptions, authenticated: true),
+      fetch: () async {
+        if (authToken == null) {
+          throw Exception('Auth token missing');
+        }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.profileBasicPhysicalOptions,
-    );
+        final url = Uri.parse(
+          ApiRoutes.baseUrl + ApiRoutes.profileEducationCareerOptions,
+        );
 
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
+        final response = await http.get(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw Exception(
+            'Education career options load failed: HTTP ${response.statusCode}',
+          );
+        }
+
+        final decoded = jsonDecode(response.body);
+        final payload = decoded is Map
+            ? decoded['data'] ?? decoded['options'] ?? decoded
+            : null;
+        final source = payload is Map
+            ? Map<String, dynamic>.from(payload)
+            : <String, dynamic>{};
+        final options = <String, List<Map<String, dynamic>>>{};
+
+        void addOptions(String key, List<String> aliases) {
+          for (final alias in aliases) {
+            final rows = _safeOptionList(source[alias]);
+            if (rows.isNotEmpty) {
+              options[key] = rows;
+              return;
+            }
+          }
+          options[key] = <Map<String, dynamic>>[];
+        }
+
+        addOptions('education_degrees', const [
+          'education_degrees',
+          'educationDegrees',
+          'education',
+          'degrees',
+        ]);
+        addOptions('occupation_categories', const [
+          'occupation_categories',
+          'occupationCategories',
+        ]);
+        addOptions('occupations', const [
+          'occupations',
+          'occupation_masters',
+          'occupationMasters',
+        ]);
+        addOptions('custom_occupations', const [
+          'custom_occupations',
+          'customOccupations',
+          'occupation_custom',
+        ]);
+        addOptions('currencies', const [
+          'currencies',
+          'income_currencies',
+          'incomeCurrencies',
+        ]);
+
+        return options;
       },
     );
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        'Profile options load failed: HTTP ${response.statusCode}',
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    final payload = decoded is Map
-        ? decoded['data'] ?? decoded['options'] ?? decoded
-        : null;
-    final source = payload is Map
-        ? Map<String, dynamic>.from(payload)
-        : <String, dynamic>{};
-    final options = <String, List<Map<String, dynamic>>>{};
-
-    void addOptions(String key, List<String> aliases) {
-      for (final alias in aliases) {
-        final rows = _safeOptionList(source[alias]);
-        if (rows.isNotEmpty) {
-          options[key] = rows;
-          return;
-        }
-      }
-      options[key] = <Map<String, dynamic>>[];
-    }
-
-    addOptions('mother_tongues', const [
-      'mother_tongues',
-      'motherTongues',
-      'mother_tongue',
-    ]);
-    addOptions('complexions', const ['complexions', 'complexion']);
-    addOptions('blood_groups', const [
-      'blood_groups',
-      'bloodGroups',
-      'blood_group',
-    ]);
-    addOptions('physical_builds', const [
-      'physical_builds',
-      'physicalBuilds',
-      'physical_build',
-    ]);
-    addOptions('spectacles_lens', const [
-      'spectacles_lens',
-      'spectaclesLens',
-      'spectacles_options',
-      'spectacles',
-    ]);
-    addOptions('physical_conditions', const [
-      'physical_conditions',
-      'physicalConditions',
-      'physical_condition',
-    ]);
-
-    return options;
   }
 
   static Future<Map<String, List<Map<String, dynamic>>>>
-  getProfileEducationCareerOptions() async {
-    if (authToken == null) {
-      throw Exception('Auth token missing');
-    }
+  getProfileMaritalLifestyleOptions() {
+    return _rememberOptionListMap(
+      _cacheKey(ApiRoutes.profileMaritalLifestyleOptions, authenticated: true),
+      fetch: () async {
+        if (authToken == null) {
+          throw Exception('Auth token missing');
+        }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.profileEducationCareerOptions,
-    );
+        final url = Uri.parse(
+          ApiRoutes.baseUrl + ApiRoutes.profileMaritalLifestyleOptions,
+        );
 
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
+        final response = await http.get(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw Exception(
+            'Marital lifestyle options load failed: HTTP ${response.statusCode}',
+          );
+        }
+
+        final decoded = jsonDecode(response.body);
+        final payload = decoded is Map
+            ? decoded['data'] ?? decoded['options'] ?? decoded
+            : null;
+        final source = payload is Map
+            ? Map<String, dynamic>.from(payload)
+            : <String, dynamic>{};
+        final options = <String, List<Map<String, dynamic>>>{};
+
+        void addOptions(String key, List<String> aliases) {
+          for (final alias in aliases) {
+            final rows = _safeOptionList(source[alias]);
+            if (rows.isNotEmpty) {
+              options[key] = rows;
+              return;
+            }
+          }
+          options[key] = <Map<String, dynamic>>[];
+        }
+
+        addOptions('marital_statuses', const [
+          'marital_statuses',
+          'maritalStatuses',
+          'marital_status',
+        ]);
+        addOptions('child_living_with', const [
+          'child_living_with',
+          'childLivingWith',
+          'child_living_with_options',
+        ]);
+        addOptions('diets', const ['diets', 'diet']);
+        addOptions('smoking_statuses', const [
+          'smoking_statuses',
+          'smokingStatuses',
+          'smoking_status',
+        ]);
+        addOptions('drinking_statuses', const [
+          'drinking_statuses',
+          'drinkingStatuses',
+          'drinking_status',
+        ]);
+
+        return options;
       },
     );
+  }
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        'Education career options load failed: HTTP ${response.statusCode}',
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    final payload = decoded is Map
-        ? decoded['data'] ?? decoded['options'] ?? decoded
-        : null;
-    final source = payload is Map
-        ? Map<String, dynamic>.from(payload)
-        : <String, dynamic>{};
-    final options = <String, List<Map<String, dynamic>>>{};
-
-    void addOptions(String key, List<String> aliases) {
-      for (final alias in aliases) {
-        final rows = _safeOptionList(source[alias]);
-        if (rows.isNotEmpty) {
-          options[key] = rows;
-          return;
+  static Future<Map<String, dynamic>> getProfileRemainingProfileOptions() {
+    return _rememberJsonMap(
+      _cacheKey(ApiRoutes.profileRemainingProfileOptions, authenticated: true),
+      fetch: () async {
+        if (authToken == null) {
+          throw Exception('Auth token missing');
         }
-      }
-      options[key] = <Map<String, dynamic>>[];
-    }
 
-    addOptions('education_degrees', const [
-      'education_degrees',
-      'educationDegrees',
-      'education',
-      'degrees',
-    ]);
-    addOptions('occupation_categories', const [
-      'occupation_categories',
-      'occupationCategories',
-    ]);
-    addOptions('occupations', const [
-      'occupations',
-      'occupation_masters',
-      'occupationMasters',
-    ]);
-    addOptions('custom_occupations', const [
-      'custom_occupations',
-      'customOccupations',
-      'occupation_custom',
-    ]);
-    addOptions('currencies', const [
-      'currencies',
-      'income_currencies',
-      'incomeCurrencies',
-    ]);
+        final url = Uri.parse(
+          ApiRoutes.baseUrl + ApiRoutes.profileRemainingProfileOptions,
+        );
 
-    return options;
+        final response = await http.get(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw Exception(
+            'Remaining profile options load failed: HTTP ${response.statusCode}',
+          );
+        }
+
+        final decoded = jsonDecode(response.body);
+        final payload = decoded is Map
+            ? decoded['data'] ?? decoded['options'] ?? decoded
+            : null;
+        final source = payload is Map
+            ? Map<String, dynamic>.from(payload)
+            : <String, dynamic>{};
+        final options = <String, dynamic>{};
+
+        void addOptions(String key, List<String> aliases) {
+          for (final alias in aliases) {
+            final rows = _safeOptionList(source[alias]);
+            if (rows.isNotEmpty) {
+              options[key] = rows;
+              return;
+            }
+          }
+          options[key] = <Map<String, dynamic>>[];
+        }
+
+        addOptions('family_types', const ['family_types', 'familyTypes']);
+        addOptions('family_statuses', const [
+          'family_statuses',
+          'familyStatuses',
+          'family_status',
+        ]);
+        addOptions('family_values', const [
+          'family_values',
+          'familyValues',
+          'family_value',
+        ]);
+        addOptions('occupation_categories', const [
+          'occupation_categories',
+          'occupationCategories',
+        ]);
+        addOptions('occupations', const [
+          'occupations',
+          'occupation_masters',
+          'occupationMasters',
+        ]);
+        addOptions('custom_occupations', const [
+          'custom_occupations',
+          'customOccupations',
+          'occupation_custom',
+        ]);
+        addOptions('currencies', const [
+          'currencies',
+          'income_currencies',
+          'incomeCurrencies',
+        ]);
+        addOptions('rashis', const ['rashis', 'rashi']);
+        addOptions('nakshatras', const ['nakshatras', 'nakshatra']);
+        addOptions('gans', const ['gans', 'gan']);
+        addOptions('nadis', const ['nadis', 'nadi']);
+        addOptions('yonis', const ['yonis', 'yoni']);
+        addOptions('varnas', const ['varnas', 'varna']);
+        addOptions('vashyas', const ['vashyas', 'vashya']);
+        addOptions('rashi_lords', const ['rashi_lords', 'rashiLords']);
+        addOptions('mangal_dosh_types', const [
+          'mangal_dosh_types',
+          'mangalDoshTypes',
+          'mangal_dosh',
+        ]);
+        addOptions('birth_weekdays', const [
+          'birth_weekdays',
+          'birthWeekdays',
+          'weekdays',
+        ]);
+        options['horoscope_rules'] = source['horoscope_rules'] is Map
+            ? Map<String, dynamic>.from(source['horoscope_rules'])
+            : <String, dynamic>{};
+        options['rashi_ashtakoota'] = source['rashi_ashtakoota'] is Map
+            ? Map<String, dynamic>.from(source['rashi_ashtakoota'])
+            : <String, dynamic>{};
+
+        return options;
+      },
+    );
   }
 
   static Future<Map<String, List<Map<String, dynamic>>>>
-  getProfileMaritalLifestyleOptions() async {
-    if (authToken == null) {
-      throw Exception('Auth token missing');
-    }
+  getProfilePartnerPreferenceOptions() {
+    return _rememberOptionListMap(
+      _cacheKey(ApiRoutes.profilePartnerPreferenceOptions, authenticated: true),
+      fetch: () async {
+        if (authToken == null) {
+          throw Exception('Auth token missing');
+        }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.profileMaritalLifestyleOptions,
-    );
+        final url = Uri.parse(
+          ApiRoutes.baseUrl + ApiRoutes.profilePartnerPreferenceOptions,
+        );
 
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
+        final response = await http.get(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          throw Exception(
+            'Partner preference options load failed: HTTP ${response.statusCode}',
+          );
+        }
+
+        final decoded = jsonDecode(response.body);
+        final payload = decoded is Map
+            ? decoded['data'] ?? decoded['options'] ?? decoded
+            : null;
+        final source = payload is Map
+            ? Map<String, dynamic>.from(payload)
+            : <String, dynamic>{};
+        final options = <String, List<Map<String, dynamic>>>{};
+
+        void addOptions(String key, List<String> aliases) {
+          for (final alias in aliases) {
+            final rows = _safeOptionList(source[alias]);
+            if (rows.isNotEmpty) {
+              options[key] = rows;
+              return;
+            }
+          }
+          options[key] = <Map<String, dynamic>>[];
+        }
+
+        addOptions('marriage_type_preferences', const [
+          'marriage_type_preferences',
+          'marriageTypePreferences',
+          'marriage_type_preference',
+        ]);
+        addOptions('marital_statuses', const [
+          'marital_statuses',
+          'maritalStatuses',
+          'marital_status',
+        ]);
+        addOptions('partner_profile_with_children', const [
+          'partner_profile_with_children',
+          'partnerProfileWithChildren',
+          'partner_profile_children',
+        ]);
+        addOptions('preferred_profile_managed_by', const [
+          'preferred_profile_managed_by',
+          'preferredProfileManagedBy',
+          'profile_managed_by',
+        ]);
+        addOptions('diets', const ['diets', 'diet']);
+        addOptions('mother_tongues', const [
+          'mother_tongues',
+          'motherTongues',
+          'mother_tongue',
+        ]);
+        addOptions('religions', const ['religions', 'religion']);
+        addOptions('castes', const ['castes', 'caste']);
+        addOptions('education_degrees', const [
+          'education_degrees',
+          'educationDegrees',
+          'educations',
+          'education',
+        ]);
+        addOptions('occupation_categories', const [
+          'occupation_categories',
+          'occupationCategories',
+        ]);
+        addOptions('occupations', const ['occupations', 'occupation']);
+
+        return options;
       },
     );
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        'Marital lifestyle options load failed: HTTP ${response.statusCode}',
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    final payload = decoded is Map
-        ? decoded['data'] ?? decoded['options'] ?? decoded
-        : null;
-    final source = payload is Map
-        ? Map<String, dynamic>.from(payload)
-        : <String, dynamic>{};
-    final options = <String, List<Map<String, dynamic>>>{};
-
-    void addOptions(String key, List<String> aliases) {
-      for (final alias in aliases) {
-        final rows = _safeOptionList(source[alias]);
-        if (rows.isNotEmpty) {
-          options[key] = rows;
-          return;
-        }
-      }
-      options[key] = <Map<String, dynamic>>[];
-    }
-
-    addOptions('marital_statuses', const [
-      'marital_statuses',
-      'maritalStatuses',
-      'marital_status',
-    ]);
-    addOptions('child_living_with', const [
-      'child_living_with',
-      'childLivingWith',
-      'child_living_with_options',
-    ]);
-    addOptions('diets', const ['diets', 'diet']);
-    addOptions('smoking_statuses', const [
-      'smoking_statuses',
-      'smokingStatuses',
-      'smoking_status',
-    ]);
-    addOptions('drinking_statuses', const [
-      'drinking_statuses',
-      'drinkingStatuses',
-      'drinking_status',
-    ]);
-
-    return options;
-  }
-
-  static Future<Map<String, dynamic>>
-  getProfileRemainingProfileOptions() async {
-    if (authToken == null) {
-      throw Exception('Auth token missing');
-    }
-
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.profileRemainingProfileOptions,
-    );
-
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
-      },
-    );
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        'Remaining profile options load failed: HTTP ${response.statusCode}',
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    final payload = decoded is Map
-        ? decoded['data'] ?? decoded['options'] ?? decoded
-        : null;
-    final source = payload is Map
-        ? Map<String, dynamic>.from(payload)
-        : <String, dynamic>{};
-    final options = <String, dynamic>{};
-
-    void addOptions(String key, List<String> aliases) {
-      for (final alias in aliases) {
-        final rows = _safeOptionList(source[alias]);
-        if (rows.isNotEmpty) {
-          options[key] = rows;
-          return;
-        }
-      }
-      options[key] = <Map<String, dynamic>>[];
-    }
-
-    addOptions('family_types', const ['family_types', 'familyTypes']);
-    addOptions('family_statuses', const [
-      'family_statuses',
-      'familyStatuses',
-      'family_status',
-    ]);
-    addOptions('family_values', const [
-      'family_values',
-      'familyValues',
-      'family_value',
-    ]);
-    addOptions('occupation_categories', const [
-      'occupation_categories',
-      'occupationCategories',
-    ]);
-    addOptions('occupations', const [
-      'occupations',
-      'occupation_masters',
-      'occupationMasters',
-    ]);
-    addOptions('custom_occupations', const [
-      'custom_occupations',
-      'customOccupations',
-      'occupation_custom',
-    ]);
-    addOptions('currencies', const [
-      'currencies',
-      'income_currencies',
-      'incomeCurrencies',
-    ]);
-    addOptions('rashis', const ['rashis', 'rashi']);
-    addOptions('nakshatras', const ['nakshatras', 'nakshatra']);
-    addOptions('gans', const ['gans', 'gan']);
-    addOptions('nadis', const ['nadis', 'nadi']);
-    addOptions('yonis', const ['yonis', 'yoni']);
-    addOptions('varnas', const ['varnas', 'varna']);
-    addOptions('vashyas', const ['vashyas', 'vashya']);
-    addOptions('rashi_lords', const ['rashi_lords', 'rashiLords']);
-    addOptions('mangal_dosh_types', const [
-      'mangal_dosh_types',
-      'mangalDoshTypes',
-      'mangal_dosh',
-    ]);
-    addOptions('birth_weekdays', const [
-      'birth_weekdays',
-      'birthWeekdays',
-      'weekdays',
-    ]);
-    options['horoscope_rules'] = source['horoscope_rules'] is Map
-        ? Map<String, dynamic>.from(source['horoscope_rules'])
-        : <String, dynamic>{};
-    options['rashi_ashtakoota'] = source['rashi_ashtakoota'] is Map
-        ? Map<String, dynamic>.from(source['rashi_ashtakoota'])
-        : <String, dynamic>{};
-
-    return options;
-  }
-
-  static Future<Map<String, List<Map<String, dynamic>>>>
-  getProfilePartnerPreferenceOptions() async {
-    if (authToken == null) {
-      throw Exception('Auth token missing');
-    }
-
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.profilePartnerPreferenceOptions,
-    );
-
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
-      },
-    );
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw Exception(
-        'Partner preference options load failed: HTTP ${response.statusCode}',
-      );
-    }
-
-    final decoded = jsonDecode(response.body);
-    final payload = decoded is Map
-        ? decoded['data'] ?? decoded['options'] ?? decoded
-        : null;
-    final source = payload is Map
-        ? Map<String, dynamic>.from(payload)
-        : <String, dynamic>{};
-    final options = <String, List<Map<String, dynamic>>>{};
-
-    void addOptions(String key, List<String> aliases) {
-      for (final alias in aliases) {
-        final rows = _safeOptionList(source[alias]);
-        if (rows.isNotEmpty) {
-          options[key] = rows;
-          return;
-        }
-      }
-      options[key] = <Map<String, dynamic>>[];
-    }
-
-    addOptions('marriage_type_preferences', const [
-      'marriage_type_preferences',
-      'marriageTypePreferences',
-      'marriage_type_preference',
-    ]);
-    addOptions('marital_statuses', const [
-      'marital_statuses',
-      'maritalStatuses',
-      'marital_status',
-    ]);
-    addOptions('partner_profile_with_children', const [
-      'partner_profile_with_children',
-      'partnerProfileWithChildren',
-      'partner_profile_children',
-    ]);
-    addOptions('preferred_profile_managed_by', const [
-      'preferred_profile_managed_by',
-      'preferredProfileManagedBy',
-      'profile_managed_by',
-    ]);
-    addOptions('diets', const ['diets', 'diet']);
-    addOptions('mother_tongues', const [
-      'mother_tongues',
-      'motherTongues',
-      'mother_tongue',
-    ]);
-    addOptions('religions', const ['religions', 'religion']);
-    addOptions('castes', const ['castes', 'caste']);
-    addOptions('education_degrees', const [
-      'education_degrees',
-      'educationDegrees',
-      'educations',
-      'education',
-    ]);
-    addOptions('occupation_categories', const [
-      'occupation_categories',
-      'occupationCategories',
-    ]);
-    addOptions('occupations', const ['occupations', 'occupation']);
-
-    return options;
   }
 
   static Future<List<Map<String, dynamic>>> getCastes({
     required int religionId,
-  }) async {
-    if (authToken == null) {
-      throw Exception('Auth token missing');
-    }
+  }) {
+    return _rememberMapList(
+      _cacheKey(
+        ApiRoutes.castes,
+        authenticated: true,
+        query: {'religion_id': religionId},
+      ),
+      tags: const <String>{_cacheTagLookups, _cacheTagAuth},
+      fetch: () async {
+        if (authToken == null) {
+          throw Exception('Auth token missing');
+        }
 
-    final url = Uri.parse(
-      ApiRoutes.baseUrl + ApiRoutes.castes,
-    ).replace(queryParameters: {'religion_id': religionId.toString()});
+        final url = Uri.parse(
+          ApiRoutes.baseUrl + ApiRoutes.castes,
+        ).replace(queryParameters: {'religion_id': religionId.toString()});
 
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
+        final response = await http.get(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        try {
+          final decoded = jsonDecode(response.body);
+          return _safeMapList(decoded);
+        } catch (_) {
+          return <Map<String, dynamic>>[];
+        }
       },
     );
-
-    try {
-      final decoded = jsonDecode(response.body);
-      return _safeMapList(decoded);
-    } catch (_) {
-      return <Map<String, dynamic>>[];
-    }
   }
 
   static Future<List<Map<String, dynamic>>> searchSubCastes({
@@ -1454,6 +1639,9 @@ class ApiClient {
         data['token']?.toString() ??
         ((data['data'] is Map) ? data['data']['token']?.toString() : null);
     if (data['statusCode'] == 200 && token != null && token.isNotEmpty) {
+      ApiCache.instance.clear();
+      currentUserProfile = null;
+      sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
     }
@@ -1594,11 +1782,15 @@ class ApiClient {
   static Future<Map<String, dynamic>> saveOnboardingProfileStep({
     required String step,
     required Map<String, dynamic> data,
-  }) {
-    return _postJson(ApiRoutes.onboardingProfileSaveStep, {
+  }) async {
+    final response = await _postJson(ApiRoutes.onboardingProfileSaveStep, {
       'step': step,
       'data': data,
     }, authenticated: true);
+    if (_isSuccessfulResponse(response)) {
+      _invalidateProfileCache();
+    }
+    return response;
   }
 
   static Future<Map<String, dynamic>> getActivationChecklist({String? locale}) {
@@ -1610,10 +1802,12 @@ class ApiClient {
   }
 
   static Future<Map<String, dynamic>> getOnboardingBootstrap({String? locale}) {
-    return _getJson(
+    return _getJsonCached(
       ApiRoutes.onboardingLookupsBootstrap,
       authenticated: false,
       query: {'locale': locale},
+      ttl: _lookupCacheTtl,
+      tags: const <String>{_cacheTagLookups},
     );
   }
 
@@ -1671,16 +1865,21 @@ class ApiClient {
     String? locale,
     Map<String, dynamic>? filters,
   }) {
-    return _getJson(
-      _onboardingLookupRoute(lookup),
+    final route = _onboardingLookupRoute(lookup);
+    final queryParams = <String, dynamic>{
+      'q': query,
+      'page': page,
+      'limit': limit,
+      'locale': locale,
+      ...?filters,
+    };
+    final isSearch = (query?.trim().isNotEmpty ?? false) || page > 1;
+    return _getJsonCached(
+      route,
       authenticated: true,
-      query: <String, dynamic>{
-        'q': query,
-        'page': page,
-        'limit': limit,
-        'locale': locale,
-        ...?filters,
-      },
+      query: queryParams,
+      ttl: isSearch ? _lookupSearchCacheTtl : _lookupCacheTtl,
+      tags: const <String>{_cacheTagLookups, _cacheTagAuth},
     );
   }
 
@@ -1832,10 +2031,12 @@ class ApiClient {
   }
 
   static Future<Map<String, dynamic>> getIncomeOptions({String? locale}) {
-    return _getJson(
+    return _getJsonCached(
       ApiRoutes.onboardingLookupsIncomeOptions,
       authenticated: true,
       query: {'locale': locale},
+      ttl: _lookupCacheTtl,
+      tags: const <String>{_cacheTagLookups, _cacheTagAuth},
     );
   }
 
@@ -1883,24 +2084,43 @@ class ApiClient {
     );
   }
 
-  static Future<Map<String, dynamic>> getMyProfile() async {
+  static Future<Map<String, dynamic>> getMyProfile({
+    bool forceRefresh = false,
+  }) async {
     if (authToken == null) {
       throw Exception('Auth token missing');
     }
 
-    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile);
+    final data = await ApiCache.instance.remember<Map<String, dynamic>>(
+      key: _cacheKey(ApiRoutes.matrimonyProfile, authenticated: true),
+      ttl: _profileCacheTtl,
+      tags: const <String>{_cacheTagProfile, _cacheTagAuth},
+      forceRefresh: forceRefresh,
+      fetch: () async {
+        final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.matrimonyProfile);
 
-    final response = await http.get(
-      url,
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer $authToken',
+        final response = await http.get(
+          url,
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer $authToken',
+          },
+        );
+
+        final responseData = _decodeResponse(response);
+        _applyMyProfileResponse(responseData);
+        return responseData;
       },
+      copy: _cloneJsonMap,
+      shouldStore: _shouldCacheJsonResponse,
     );
 
-    final data = _decodeResponse(response);
+    _applyMyProfileResponse(data);
+    return data;
+  }
 
-    if (response.statusCode == 200 && data['success'] == true) {
+  static void _applyMyProfileResponse(Map<String, dynamic> data) {
+    if (data['statusCode'] == 200 && data['success'] == true) {
       final profile = data['profile'];
       if (profile is Map) {
         final normalizedProfile = Map<String, dynamic>.from(profile);
@@ -1915,8 +2135,6 @@ class ApiClient {
         currentUserProfile = normalizedProfile;
       }
     }
-
-    return data;
   }
 
   static Future<Map<String, dynamic>> login({
@@ -1945,6 +2163,9 @@ class ApiClient {
 
     final token = data['token']?.toString();
     if (token != null && token.isNotEmpty) {
+      ApiCache.instance.clear();
+      currentUserProfile = null;
+      sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
       return data;
@@ -1985,6 +2206,9 @@ class ApiClient {
 
     final token = data['token']?.toString();
     if (token != null && token.isNotEmpty) {
+      ApiCache.instance.clear();
+      currentUserProfile = null;
+      sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
       return data;
@@ -2016,6 +2240,7 @@ class ApiClient {
     final data = _decodeResponse(response);
 
     if (data['success'] == true) {
+      _invalidateProfileCache();
       currentUserProfile = data['profile'] as Map<String, dynamic>?;
     }
 
@@ -2044,6 +2269,7 @@ class ApiClient {
     final data = _decodeResponse(response);
 
     if (data['success'] == true) {
+      _invalidateProfileCache();
       currentUserProfile = data['profile'] as Map<String, dynamic>?;
     }
 
@@ -2078,6 +2304,7 @@ class ApiClient {
         if (photoUrl != null) {
           profile['profile_photo_url'] = photoUrl;
         }
+        _invalidateProfileCache();
       }
     }
 
@@ -2118,6 +2345,7 @@ class ApiClient {
 
     if (response.statusCode >= 200 && response.statusCode < 300) {
       _mergeProfilePhotoSummary(data);
+      _invalidateProfileCache();
     }
 
     return data;
@@ -2132,6 +2360,9 @@ class ApiClient {
       authenticated: true,
     );
     _mergeProfilePhotoSummary(data);
+    if (_isSuccessfulResponse(data)) {
+      _invalidateProfileCache();
+    }
     return data;
   }
 
@@ -2140,6 +2371,9 @@ class ApiClient {
       ApiRoutes.profilePhotoDelete(photoId),
     );
     _mergeProfilePhotoSummary(data);
+    if (_isSuccessfulResponse(data)) {
+      _invalidateProfileCache();
+    }
     return data;
   }
 
@@ -2152,6 +2386,9 @@ class ApiClient {
       authenticated: true,
     );
     _mergeProfilePhotoSummary(data);
+    if (_isSuccessfulResponse(data)) {
+      _invalidateProfileCache();
+    }
     return data;
   }
 
@@ -2319,12 +2556,14 @@ class ApiClient {
 
   static Future<void> restoreSessionFromStorage() async {
     final token = await AppStorage.instance.readAuthToken();
+    ApiCache.instance.clear();
     authToken = token != null && token.isNotEmpty ? token : null;
     currentUserProfile = null;
     sentInterestProfileIds.clear();
   }
 
   static Future<void> logout() async {
+    ApiCache.instance.clear();
     authToken = null;
     currentUserProfile = null;
     sentInterestProfileIds.clear();
@@ -2523,12 +2762,16 @@ class ApiClient {
   static Future<Map<String, dynamic>> approveBiodataIntake({
     required int intakeId,
     required Map<String, dynamic> snapshot,
-  }) {
-    return _postJson(
+  }) async {
+    final response = await _postJson(
       ApiRoutes.biodataIntakeApprove(intakeId),
       <String, dynamic>{'snapshot': snapshot},
       authenticated: true,
     );
+    if (_isSuccessfulResponse(response)) {
+      _invalidateProfileCache();
+    }
+    return response;
   }
 
   static Future<Map<String, dynamic>> reviewBiodataIntakeSnapshot({

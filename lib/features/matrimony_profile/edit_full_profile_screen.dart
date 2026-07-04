@@ -4279,7 +4279,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     if (response['success'] == true) {
       try {
-        final refreshed = await ApiClient.getMyProfile();
+        final refreshed = await ApiClient.getMyProfile(forceRefresh: true);
         final profile = refreshed['profile'];
         if (profile is Map && mounted) {
           setState(() {
@@ -5366,7 +5366,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (!mounted) return;
 
     try {
-      final refreshed = await ApiClient.getMyProfile();
+      final refreshed = await ApiClient.getMyProfile(forceRefresh: true);
       final profile = refreshed['profile'];
       if (profile is Map && mounted) {
         setState(() {

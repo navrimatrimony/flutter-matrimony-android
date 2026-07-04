@@ -119,7 +119,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }
 
     try {
-      final response = await ApiClient.getMyProfile();
+      final response = await ApiClient.getMyProfile(forceRefresh: silent);
       if (!mounted || serial != _loadSerial) return;
 
       final statusCode = _intValue(response['statusCode']);

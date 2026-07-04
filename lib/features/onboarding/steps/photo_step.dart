@@ -445,7 +445,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     }
 
     try {
-      final response = await ApiClient.getMyProfile();
+      final response = await ApiClient.getMyProfile(forceRefresh: true);
       if (!mounted) return;
       if (response['success'] == true) {
         _applyProfileSnapshot(_profileSnapshot());

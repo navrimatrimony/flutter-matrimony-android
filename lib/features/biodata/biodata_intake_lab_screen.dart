@@ -575,7 +575,9 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
         return;
       }
 
-      await ApiClient.getMyProfile().catchError((_) => <String, dynamic>{});
+      await ApiClient.getMyProfile(
+        forceRefresh: true,
+      ).catchError((_) => <String, dynamic>{});
       if (!mounted) return;
 
       final awaitingAdmin =
@@ -867,7 +869,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
 
   Future<Map<String, dynamic>> _loadExistingProfileForOverwriteGuard() async {
     try {
-      final response = await ApiClient.getMyProfile();
+      final response = await ApiClient.getMyProfile(forceRefresh: true);
       return _safeMap(response['profile']) ??
           _safeMap(_safeMap(response['data'])?['profile']) ??
           Map<String, dynamic>.from(ApiClient.currentUserProfile ?? {});

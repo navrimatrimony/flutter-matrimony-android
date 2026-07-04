@@ -199,7 +199,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
     });
 
     try {
-      final profileCheck = await ApiClient.getMyProfile();
+      final profileCheck = await ApiClient.getMyProfile(forceRefresh: true);
       if (!mounted) return false;
 
       final profileStatusCode = profileCheck['statusCode'];
@@ -236,7 +236,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
     }
 
     try {
-      final response = await ApiClient.getMyProfile();
+      final response = await ApiClient.getMyProfile(forceRefresh: true);
       if (!mounted) return;
       if (response['success'] == true) {
         _applyProfileSnapshot(ApiClient.currentUserProfile);

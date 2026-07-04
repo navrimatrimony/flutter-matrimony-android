@@ -33,10 +33,10 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
     _isLoading = false;
   }
 
-  Future<void> _fetchProfile() async {
+  Future<void> _fetchProfile({bool forceRefresh = false}) async {
     // स्क्रीन सुरू झाल्यावर, सर्व्हरवरून प्रोफाइलची ताजी माहिती मागवा
     try {
-      final response = await ApiClient.getMyProfile();
+      final response = await ApiClient.getMyProfile(forceRefresh: forceRefresh);
       if (!mounted) return;
 
       if (response['success'] == true && response['profile'] != null) {
@@ -77,7 +77,7 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
                 _isLoading = true;
                 _errorMessage = null;
               });
-              _fetchProfile();
+              _fetchProfile(forceRefresh: true);
             },
           ),
         ],
