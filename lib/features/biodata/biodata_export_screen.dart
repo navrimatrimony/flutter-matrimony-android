@@ -402,48 +402,7 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
               style: const TextStyle(color: Color(0xFF7C6A64), fontSize: 13),
             ),
             const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _canExport || _isDownloading
-                        ? (_isDownloading || _isSharing
-                              ? null
-                              : () => _requestExport(share: false))
-                        : null,
-                    icon: _isDownloading
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.open_in_new),
-                    label: Text(AppStrings.biodataExportDownload),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _canExport || _isSharing
-                        ? (_isDownloading || _isSharing
-                              ? null
-                              : () => _requestExport(share: true))
-                        : null,
-                    icon: _isSharing
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.share),
-                    label: Text(AppStrings.biodataExportShare),
-                  ),
-                ),
-              ],
-            ),
+            _buildExportActionButtons(),
           ],
         ),
       ),
@@ -513,32 +472,123 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
               ],
             ),
             const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: url.isEmpty ? null : () => _openUrl(url),
-                    icon: const Icon(Icons.visibility_outlined),
-                    label: Text(AppStrings.biodataPreviewAction),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                IconButton.outlined(
-                  tooltip: AppStrings.biodataExportShare,
-                  onPressed: url.isEmpty ? null : () => _shareUrl(url),
-                  icon: const Icon(Icons.share),
-                ),
-                const SizedBox(width: 8),
-                IconButton.outlined(
-                  tooltip: AppStrings.biodataCopyLink,
-                  onPressed: url.isEmpty ? null : () => _copyUrl(url),
-                  icon: const Icon(Icons.copy),
-                ),
-              ],
-            ),
+            _buildGeneratedActions(url),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildExportActionButtons() {
+    final download = ElevatedButton.icon(
+      onPressed: _canExport || _isDownloading
+          ? (_isDownloading || _isSharing
+                ? null
+                : () => _requestExport(share: false))
+          : null,
+      icon: _isDownloading
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Icon(Icons.open_in_new),
+      label: Text(
+        AppStrings.biodataExportDownload,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+    final share = OutlinedButton.icon(
+      onPressed: _canExport || _isSharing
+          ? (_isDownloading || _isSharing
+                ? null
+                : () => _requestExport(share: true))
+          : null,
+      icon: _isSharing
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.share),
+      label: Text(
+        AppStrings.biodataExportShare,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 330) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [download, const SizedBox(height: 8), share],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: download),
+            const SizedBox(width: 10),
+            Expanded(child: share),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildGeneratedActions(String url) {
+    final preview = ElevatedButton.icon(
+      onPressed: url.isEmpty ? null : () => _openUrl(url),
+      icon: const Icon(Icons.visibility_outlined),
+      label: Text(
+        AppStrings.biodataPreviewAction,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+    final share = IconButton.outlined(
+      tooltip: AppStrings.biodataExportShare,
+      onPressed: url.isEmpty ? null : () => _shareUrl(url),
+      icon: const Icon(Icons.share),
+    );
+    final copy = IconButton.outlined(
+      tooltip: AppStrings.biodataCopyLink,
+      onPressed: url.isEmpty ? null : () => _copyUrl(url),
+      icon: const Icon(Icons.copy),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 330) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              preview,
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [share, const SizedBox(width: 8), copy],
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: preview),
+            const SizedBox(width: 10),
+            share,
+            const SizedBox(width: 8),
+            copy,
+          ],
+        );
+      },
     );
   }
 
@@ -586,70 +636,42 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
                     ]
                   : null,
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildTemplatePreview(template, selected, available),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Color(0xFF2D2323),
-                          fontWeight: FontWeight.w900,
-                          height: 1.14,
-                        ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 310;
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildTemplatePreview(
+                      template,
+                      selected,
+                      available,
+                      compact: compact,
+                    ),
+                    SizedBox(width: compact ? 9 : 12),
+                    Expanded(
+                      child: _buildTemplateTextContent(
+                        label: label,
+                        description: description,
+                        orientation: orientation,
+                        withPhoto: withPhoto,
+                        premium: premium,
+                        available: available,
+                        compact: compact,
                       ),
-                      if (description.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF7C6A64),
-                            fontSize: 12.5,
-                            height: 1.25,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 6,
-                        children: [
-                          _buildTemplateTag(
-                            AppStrings.biodataTemplateOrientation(orientation),
-                          ),
-                          _buildTemplateTag(
-                            withPhoto
-                                ? AppStrings.biodataTemplateWithPhoto
-                                : AppStrings.biodataTemplateNoPhoto,
-                          ),
-                          if (premium)
-                            _buildTemplateTag(
-                              AppStrings.biodataTemplatePremium,
-                            ),
-                          if (!available)
-                            _buildTemplateTag(AppStrings.biodataTemplateLocked),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  selected
-                      ? Icons.radio_button_checked
-                      : Icons.radio_button_unchecked,
-                  color: selected ? _brandColor : const Color(0xFFB7A9A3),
-                ),
-              ],
+                    ),
+                    SizedBox(width: compact ? 4 : 8),
+                    Icon(
+                      selected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_unchecked,
+                      size: compact ? 20 : 24,
+                      color: selected ? _brandColor : const Color(0xFFB7A9A3),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ),
@@ -657,11 +679,69 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
     );
   }
 
+  Widget _buildTemplateTextContent({
+    required String label,
+    required String description,
+    required String orientation,
+    required bool withPhoto,
+    required bool premium,
+    required bool available,
+    required bool compact,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            color: const Color(0xFF2D2323),
+            fontSize: compact ? 13.5 : 14,
+            fontWeight: FontWeight.w900,
+            height: 1.14,
+          ),
+        ),
+        if (description.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            description,
+            maxLines: compact ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: const Color(0xFF7C6A64),
+              fontSize: compact ? 11.8 : 12.5,
+              height: 1.25,
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            _buildTemplateTag(
+              AppStrings.biodataTemplateOrientation(orientation),
+            ),
+            _buildTemplateTag(
+              withPhoto
+                  ? AppStrings.biodataTemplateWithPhoto
+                  : AppStrings.biodataTemplateNoPhoto,
+            ),
+            if (premium) _buildTemplateTag(AppStrings.biodataTemplatePremium),
+            if (!available) _buildTemplateTag(AppStrings.biodataTemplateLocked),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildTemplatePreview(
     Map<String, dynamic> template,
     bool selected,
-    bool available,
-  ) {
+    bool available, {
+    bool compact = false,
+  }) {
     final key = _stringValue(template['key']);
     final orientation = _stringValue(template['orientation']).toLowerCase();
     final landscape = orientation == 'landscape';
@@ -671,16 +751,20 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
     return Semantics(
       label: AppStrings.biodataTemplateDesignPreview,
       child: SizedBox(
-        width: 88,
-        height: 116,
+        width: compact ? 62 : 88,
+        height: compact ? 88 : 116,
         child: Center(
           child: Stack(
             alignment: Alignment.center,
             children: [
               Container(
-                width: landscape ? 86 : 64,
-                height: landscape ? 66 : 102,
-                padding: EdgeInsets.all(landscape ? 5 : 6),
+                width: compact ? (landscape ? 60 : 48) : (landscape ? 86 : 64),
+                height: compact
+                    ? (landscape ? 46 : 78)
+                    : (landscape ? 66 : 102),
+                padding: EdgeInsets.all(
+                  compact ? (landscape ? 4 : 5) : (landscape ? 5 : 6),
+                ),
                 decoration: BoxDecoration(
                   color: available ? style.paper : const Color(0xFFF3F4F6),
                   borderRadius: BorderRadius.circular(6),
