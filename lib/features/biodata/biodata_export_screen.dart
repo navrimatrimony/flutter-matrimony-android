@@ -548,7 +548,14 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
     final available = template['available'] == true;
     final premium = template['premium'] == true;
     final withPhoto = template['with_photo'] == true;
-    final description = _stringValue(template['description']);
+    final rawLabel = _stringValue(template['label'], fallback: key);
+    final rawDescription = _stringValue(template['description']);
+    final label = AppStrings.biodataTemplateLabel(key, rawLabel);
+    final description = AppStrings.biodataTemplateDescription(
+      key,
+      rawDescription,
+    );
+    final orientation = _stringValue(template['orientation']);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -563,46 +570,39 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
             duration: const Duration(milliseconds: 160),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: selected ? const Color(0xFFFFF1F2) : Colors.white,
+              color: selected ? const Color(0xFFFFF7F3) : Colors.white,
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: selected ? _brandColor : const Color(0xFFE8DDD7),
-                width: selected ? 1.6 : 1,
+                width: selected ? 1.7 : 1,
               ),
+              boxShadow: selected
+                  ? const [
+                      BoxShadow(
+                        color: Color(0x14000000),
+                        blurRadius: 14,
+                        offset: Offset(0, 8),
+                      ),
+                    ]
+                  : null,
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: available
-                        ? const Color(0xFFFFE4E6)
-                        : const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    available
-                        ? (withPhoto
-                              ? Icons.badge_outlined
-                              : Icons.article_outlined)
-                        : Icons.lock_outline,
-                    color: available ? _brandColor : const Color(0xFF6B7280),
-                  ),
-                ),
+                _buildTemplatePreview(template, selected, available),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _stringValue(template['label'], fallback: key),
-                        maxLines: 1,
+                        label,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           color: Color(0xFF2D2323),
                           fontWeight: FontWeight.w900,
+                          height: 1.14,
                         ),
                       ),
                       if (description.isNotEmpty) ...[
@@ -624,15 +624,19 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
                         runSpacing: 6,
                         children: [
                           _buildTemplateTag(
-                            _stringValue(template['orientation']).isEmpty
-                                ? 'A4'
-                                : 'A4 ${_stringValue(template['orientation'])}',
+                            AppStrings.biodataTemplateOrientation(orientation),
                           ),
                           _buildTemplateTag(
-                            withPhoto ? 'With photo' : 'No photo',
+                            withPhoto
+                                ? AppStrings.biodataTemplateWithPhoto
+                                : AppStrings.biodataTemplateNoPhoto,
                           ),
-                          if (premium) _buildTemplateTag('Premium'),
-                          if (!available) _buildTemplateTag('Locked'),
+                          if (premium)
+                            _buildTemplateTag(
+                              AppStrings.biodataTemplatePremium,
+                            ),
+                          if (!available)
+                            _buildTemplateTag(AppStrings.biodataTemplateLocked),
                         ],
                       ),
                     ],
@@ -651,6 +655,255 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildTemplatePreview(
+    Map<String, dynamic> template,
+    bool selected,
+    bool available,
+  ) {
+    final key = _stringValue(template['key']);
+    final orientation = _stringValue(template['orientation']).toLowerCase();
+    final landscape = orientation == 'landscape';
+    final withPhoto = template['with_photo'] == true;
+    final style = _templateStyleFor(key);
+
+    return Semantics(
+      label: AppStrings.biodataTemplateDesignPreview,
+      child: SizedBox(
+        width: 88,
+        height: 116,
+        child: Center(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: landscape ? 86 : 64,
+                height: landscape ? 66 : 102,
+                padding: EdgeInsets.all(landscape ? 5 : 6),
+                decoration: BoxDecoration(
+                  color: available ? style.paper : const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: available
+                        ? (selected ? _brandColor : style.border)
+                        : const Color(0xFFD1D5DB),
+                    width: selected ? 1.6 : 1,
+                  ),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x12000000),
+                      blurRadius: 9,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Opacity(
+                  opacity: available ? 1 : 0.54,
+                  child: key == 'photo_side_biodata'
+                      ? _buildPhotoSidePreview(style)
+                      : _buildClassicPreview(style, withPhoto, landscape),
+                ),
+              ),
+              if (!available)
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFD1D5DB)),
+                  ),
+                  child: const Icon(
+                    Icons.lock_outline,
+                    size: 16,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildClassicPreview(
+    _TemplateVisualStyle style,
+    bool withPhoto,
+    bool landscape,
+  ) {
+    final lineCount = landscape ? 4 : 7;
+
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: style.accent, width: 1.2),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 6,
+          right: 6,
+          top: 5,
+          child: Container(
+            height: 5,
+            decoration: BoxDecoration(
+              color: style.accent,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+        ),
+        if (withPhoto)
+          Positioned(
+            right: 6,
+            top: landscape ? 18 : 22,
+            child: Container(
+              width: landscape ? 18 : 22,
+              height: landscape ? 24 : 28,
+              decoration: BoxDecoration(
+                color: style.photo,
+                borderRadius: BorderRadius.circular(style.roundPhoto ? 999 : 3),
+                border: Border.all(color: style.border),
+              ),
+            ),
+          ),
+        Positioned(
+          left: 8,
+          right: withPhoto ? (landscape ? 31 : 34) : 8,
+          top: landscape ? 18 : 20,
+          bottom: 8,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: List.generate(lineCount, (index) {
+              final wide = index.isEven ? 1.0 : 0.72;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: FractionallySizedBox(
+                  widthFactor: wide,
+                  alignment: Alignment.centerLeft,
+                  child: _buildPreviewLine(style),
+                ),
+              );
+            }),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhotoSidePreview(_TemplateVisualStyle style) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 4,
+          child: Container(
+            decoration: BoxDecoration(
+              color: style.photo,
+              borderRadius: const BorderRadius.horizontal(
+                left: Radius.circular(3),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Expanded(
+          flex: 5,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                height: 5,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: style.accent,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 7),
+              for (var index = 0; index < 5; index++) ...[
+                _buildPreviewLine(style),
+                const SizedBox(height: 4),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPreviewLine(_TemplateVisualStyle style) {
+    return Container(
+      height: 3.4,
+      decoration: BoxDecoration(
+        color: style.ink.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(999),
+      ),
+    );
+  }
+
+  _TemplateVisualStyle _templateStyleFor(String key) {
+    return switch (key) {
+      'parichay_patra_photo' => const _TemplateVisualStyle(
+        paper: Color(0xFFFFF7ED),
+        accent: Color(0xFFEA580C),
+        border: Color(0xFFF59E0B),
+        ink: Color(0xFF7C2D12),
+        photo: Color(0xFFFBCFE8),
+        roundPhoto: false,
+      ),
+      'photo_side_biodata' => const _TemplateVisualStyle(
+        paper: Color(0xFFFEFCE8),
+        accent: Color(0xFF6D28D9),
+        border: Color(0xFF7C3AED),
+        ink: Color(0xFF4C1D95),
+        photo: Color(0xFFC7D2FE),
+        roundPhoto: false,
+      ),
+      'simple_landscape_no_photo' => const _TemplateVisualStyle(
+        paper: Color(0xFFF8FAFC),
+        accent: Color(0xFF334155),
+        border: Color(0xFF94A3B8),
+        ink: Color(0xFF0F172A),
+        photo: Color(0xFFE2E8F0),
+        roundPhoto: false,
+      ),
+      'double_portrait_photo' => const _TemplateVisualStyle(
+        paper: Color(0xFFFFFBEB),
+        accent: Color(0xFFB45309),
+        border: Color(0xFFD97706),
+        ink: Color(0xFF78350F),
+        photo: Color(0xFFFDE68A),
+        roundPhoto: false,
+      ),
+      'royal_landscape_photo' => const _TemplateVisualStyle(
+        paper: Color(0xFFEEF2FF),
+        accent: Color(0xFF4338CA),
+        border: Color(0xFFB45309),
+        ink: Color(0xFF312E81),
+        photo: Color(0xFFDDD6FE),
+        roundPhoto: true,
+      ),
+      'classic_portrait_no_photo' => const _TemplateVisualStyle(
+        paper: Color(0xFFFFFBF7),
+        accent: Color(0xFFBE123C),
+        border: Color(0xFFFDA4AF),
+        ink: Color(0xFF881337),
+        photo: Color(0xFFFFE4E6),
+        roundPhoto: false,
+      ),
+      _ => const _TemplateVisualStyle(
+        paper: Color(0xFFFFFBF7),
+        accent: Color(0xFFDC2626),
+        border: Color(0xFFFCA5A5),
+        ink: Color(0xFF7F1D1D),
+        photo: Color(0xFFFFE4E6),
+        roundPhoto: false,
+      ),
+    };
   }
 
   Widget _buildTemplateTag(String label) {
@@ -852,4 +1105,22 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
     final text = value?.toString().trim() ?? '';
     return text.isEmpty ? fallback : text;
   }
+}
+
+class _TemplateVisualStyle {
+  const _TemplateVisualStyle({
+    required this.paper,
+    required this.accent,
+    required this.border,
+    required this.ink,
+    required this.photo,
+    required this.roundPhoto,
+  });
+
+  final Color paper;
+  final Color accent;
+  final Color border;
+  final Color ink;
+  final Color photo;
+  final bool roundPhoto;
 }

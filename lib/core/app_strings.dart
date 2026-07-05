@@ -490,6 +490,62 @@ class AppStrings {
   static String get biodataExportTemplate =>
       _mr ? 'Template निवडा' : 'Choose template';
 
+  static String get biodataTemplateDesignPreview =>
+      _mr ? 'डिझाइन preview' : 'Design preview';
+
+  static String get biodataTemplateWithPhoto => _mr ? 'फोटोसह' : 'With photo';
+
+  static String get biodataTemplateNoPhoto => _mr ? 'फोटोशिवाय' : 'No photo';
+
+  static String get biodataTemplatePremium => _mr ? 'प्रिमियम' : 'Premium';
+
+  static String get biodataTemplateLocked => _mr ? 'लॉक' : 'Locked';
+
+  static String biodataTemplateOrientation(String orientation) {
+    final normalized = orientation.trim().toLowerCase();
+    if (normalized == 'landscape') {
+      return _mr ? 'A4 आडवा' : 'A4 Landscape';
+    }
+
+    return _mr ? 'A4 उभा' : 'A4 Portrait';
+  }
+
+  static String biodataTemplateLabel(String key, String fallback) {
+    if (!_mr) return fallback;
+
+    return switch (key) {
+      'classic_portrait_photo' => 'क्लासिक फोटो',
+      'classic_portrait_no_photo' => 'क्लासिक फोटोशिवाय',
+      'parichay_patra_photo' => 'पारंपरिक परिचय पत्र',
+      'photo_side_biodata' => 'फोटो साइड बायोडाटा',
+      'simple_landscape_no_photo' => 'साधा Landscape',
+      'double_portrait_photo' => 'Double Border उभा',
+      'royal_landscape_photo' => 'Royal आडवा',
+      _ => fallback,
+    };
+  }
+
+  static String biodataTemplateDescription(String key, String fallback) {
+    if (!_mr) return fallback;
+
+    return switch (key) {
+      'classic_portrait_photo' =>
+        'स्वच्छ border, उजवीकडे फोटो आणि A4 portrait layout.',
+      'classic_portrait_no_photo' =>
+        'फोटोशिवाय साधा, वाचायला सोपा A4 बायोडाटा.',
+      'parichay_patra_photo' =>
+        'पारंपरिक रंग, decorative border आणि फोटोसह परिचय पत्र.',
+      'photo_side_biodata' =>
+        'Landscape layout मध्ये मोठा फोटो आणि compact माहिती.',
+      'simple_landscape_no_photo' =>
+        'फोटोशिवाय professional landscape biodata.',
+      'double_portrait_photo' =>
+        'Premium double border, फोटो आणि elegant A4 portrait.',
+      'royal_landscape_photo' => 'Premium royal style, landscape फोटोसह.',
+      _ => fallback,
+    };
+  }
+
   static String get biodataExportFormat =>
       _mr ? 'Format निवडा' : 'Choose format';
 

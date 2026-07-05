@@ -2765,18 +2765,27 @@ class ApiClient {
     }, authenticated: true);
   }
 
-  static Future<Map<String, dynamic>> getBiodataExportOptions() {
-    return _getJson(ApiRoutes.biodataExportOptions, authenticated: true);
+  static Future<Map<String, dynamic>> getBiodataExportOptions({
+    String? locale,
+  }) {
+    return _getJson(
+      ApiRoutes.biodataExportOptions,
+      authenticated: true,
+      query: {'locale': locale ?? appLanguageCode(currentAppLanguage)},
+    );
   }
 
   static Future<Map<String, dynamic>> exportBiodata({
     required String format,
     String? template,
+    String? locale,
   }) {
-    return _postJson(ApiRoutes.biodataExport, <String, dynamic>{
-      'format': format,
-      'template': template,
-    }, authenticated: true);
+    return _postJson(
+      ApiRoutes.biodataExport,
+      <String, dynamic>{'format': format, 'template': template},
+      authenticated: true,
+      query: {'locale': locale ?? appLanguageCode(currentAppLanguage)},
+    );
   }
 
   static Future<Map<String, dynamic>> createBiodataIntakeFromText({
