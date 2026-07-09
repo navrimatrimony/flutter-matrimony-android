@@ -158,6 +158,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _failedPhotoUrls.clear();
     });
 
     try {
@@ -294,6 +295,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         _profiles = <dynamic>[];
         _isLoading = false;
         _errorMessage = null;
+        _failedPhotoUrls.clear();
       });
       return;
     }
@@ -304,6 +306,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         _profiles = <dynamic>[];
         _isLoading = false;
         _errorMessage = null;
+        _failedPhotoUrls.clear();
       });
       return;
     }
@@ -345,6 +348,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     setState(() {
       _moreSectionsLoading = true;
       _moreSectionsError = null;
+      _failedPhotoUrls.clear();
     });
 
     try {
@@ -410,6 +414,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       _filters = result;
       _activeMainNavIndex = _navMatches;
       _selectedTabIndex = _tabSearch;
+      _failedPhotoUrls.clear();
     });
     await _fetchProfileListForCurrentTab();
   }
@@ -1399,6 +1404,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               setState(() {
                 _selectedTabIndex = tabIndex;
                 _activeMainNavIndex = _navMatches;
+                _failedPhotoUrls.clear();
               });
               if (tabIndex == _tabMore) {
                 _fetchMoreSections();
@@ -1461,7 +1467,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     }
 
     return RefreshIndicator(
-      onRefresh: _fetchProfileListForCurrentTab,
+      onRefresh: _selectedTabIndex == _tabMore
+          ? () => _fetchMoreSections(force: true)
+          : _fetchProfileListForCurrentTab,
       child: _selectedTabIndex == _tabMore
           ? _buildMoreMatchesList(profiles)
           : _buildStandardMatchesList(profiles),
@@ -2980,28 +2988,15 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         ),
       ),
       child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 92,
-              height: 92,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.20),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white54, width: 1.4),
-              ),
-              child: const Icon(Icons.person, color: Colors.white, size: 52),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              AppStrings.photoUnavailable,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
+        child: Container(
+          width: 92,
+          height: 92,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.20),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white54, width: 1.4),
+          ),
+          child: const Icon(Icons.person, color: Colors.white, size: 52),
         ),
       ),
     );
