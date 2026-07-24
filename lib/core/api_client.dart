@@ -1053,7 +1053,10 @@ class ApiClient {
 
     final response = await http.get(
       url,
-      headers: {'Accept': 'application/json'},
+      headers: {
+        'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
+      },
     );
 
     try {
@@ -1104,7 +1107,10 @@ class ApiClient {
       _cacheKey(ApiRoutes.genders),
       fetch: () async {
         final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.genders);
-        final headers = <String, String>{'Accept': 'application/json'};
+        final headers = <String, String>{
+      'Accept': 'application/json',
+      'Accept-Language': appLanguageCode(currentAppLanguage),
+    };
         final token = authToken;
         if (token != null && token.isNotEmpty) {
           headers['Authorization'] = 'Bearer $token';
@@ -1693,7 +1699,10 @@ class ApiClient {
 
     final response = await http.get(
       url,
-      headers: {'Accept': 'application/json'},
+      headers: {
+        'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
+      },
     );
 
     try {
