@@ -3133,4 +3133,173 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get zoom => 'मोठे करा';
+
+  @override
+  String get back => 'मागे';
+
+  @override
+  String get viewPlans => 'प्लॅन पाहा';
+
+  @override
+  String get profileActions => 'प्रोफाइल क्रिया';
+
+  @override
+  String get shareProfile => 'प्रोफाइल शेअर करा';
+
+  @override
+  String get addToShortlist => 'शॉर्टलिस्टमध्ये जोडा';
+
+  @override
+  String get hideThisProfile => 'ही प्रोफाइल लपवा';
+
+  @override
+  String get blockThisProfile => 'ही प्रोफाइल ब्लॉक करा';
+
+  @override
+  String get reportThisProfile => 'ही प्रोफाइल रिपोर्ट करा';
+
+  @override
+  String get gunmilan => 'गुणमिलन';
+
+  @override
+  String get requestContact => 'संपर्क विनंती करा';
+
+  @override
+  String get close => 'बंद करा';
+
+  @override
+  String get sendRequest => 'विनंती पाठवा';
+
+  @override
+  String get hide => 'लपवा';
+
+  @override
+  String get block => 'ब्लॉक करा';
+
+  @override
+  String get whatsappResponse => 'व्हॉट्सॲप प्रतिसाद';
+
+  @override
+  String get viewContact => 'संपर्क पाहा';
+
+  @override
+  String get upgradeToViewContact => 'संपर्क पाहण्यासाठी अपग्रेड करा';
+
+  @override
+  String get statusOnline => 'ऑनलाइन';
+
+  @override
+  String get comparisonYouAndHer => 'तुम्ही आणि ती';
+
+  @override
+  String get comparisonYouAndHim => 'तुम्ही आणि तो';
+
+  @override
+  String get comparisonYouAndProfile => 'तुम्ही आणि प्रोफाइल';
+
+  @override
+  String get contactInformationTitle => 'संपर्क माहिती';
+
+  @override
+  String get contactInformationAvailable => 'संपर्क माहिती उपलब्ध आहे.';
+
+  @override
+  String get upgradeToViewAllPhotos => 'सर्व फोटो पाहण्यासाठी अपग्रेड करा.';
+
+  @override
+  String get uploadPhotoToUnlockProfiles =>
+      'अधिक प्रोफाइल अनलॉक करण्यासाठी तुमचा फोटो अपलोड करा.';
+
+  @override
+  String get photoAccessLockedForPlan =>
+      'तुमच्या सध्याच्या प्लॅनसाठी फोटो ॲक्सेस लॉक आहे.';
+
+  @override
+  String get contactDetailsUnlocked => 'संपर्क माहिती अनलॉक झाली.';
+
+  @override
+  String get contactRequestSent => 'संपर्काची विनंती पाठवली.';
+
+  @override
+  String get profileHidden => 'प्रोफाइल लपवली.';
+
+  @override
+  String get profileBlocked => 'प्रोफाइल ब्लॉक केली.';
+
+  @override
+  String get profileLinkReadyToShare =>
+      'प्रोफाइल लिंक शेअर करण्यासाठी तयार आहे.';
+
+  @override
+  String get profileLinkCopied => 'प्रोफाइल लिंक कॉपी केली.';
+
+  @override
+  String get reportSubmitted => 'तक्रार सबमिट केली.';
+
+  @override
+  String get comparisonTitle => 'तुलना';
+
+  @override
+  String get comparisonViewerYou => 'तुम्ही';
+
+  @override
+  String get heightLabel => 'उंची';
+
+  @override
+  String get astro => 'ज्योतिष';
+
+  @override
+  String get moreProfilesYouMayLike2 => 'तुम्हाला आवडतील अशी आणखी प्रोफाइल';
+
+  @override
+  String get contactMethods => 'संपर्क पद्धती';
+
+  @override
+  String get reason => 'कारण';
+
+  @override
+  String get otherReason => 'इतर कारण';
+
+  @override
+  String get reportProfileTitle => 'प्रोफाइलची तक्रार करा';
+
+  @override
+  String get hideProfileConfirmTitle => 'प्रोफाइल लपवायची?';
+
+  @override
+  String get hideProfileConfirmMessage =>
+      'ही प्रोफाइल तुमच्या ब्राउझ/शोध यादीतून लपवली जाईल.';
+
+  @override
+  String get blockProfileConfirmTitle => 'प्रोफाइल ब्लॉक करायची?';
+
+  @override
+  String get blockProfileConfirmMessage =>
+      'ब्लॉक केल्याने दोन्ही प्रोफाइलमधील स्वारस्य/शॉर्टलिस्ट काढून टाकले जातील आणि ही प्रोफाइल तुमच्यापासून लपवली जाईल.';
+
+  @override
+  String get viewProfileColon => 'प्रोफाइल पाहा:';
+
+  @override
+  String get photoActions => 'फोटो क्रिया';
+
+  @override
+  String aboutName(String name) {
+    return '$name बद्दल';
+  }
+
+  @override
+  String photosCounter(int current, int total) {
+    return 'फोटो $current/$total';
+  }
+
+  @override
+  String contactValueCopied(String label) {
+    return '$label कॉपी केले.';
+  }
+
+  @override
+  String profileIdLabel(String id) {
+    return 'प्रोफाइल ID: $id';
+  }
 }

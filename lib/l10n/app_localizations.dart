@@ -5905,6 +5905,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Zoom'**
   String get zoom;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// No description provided for @viewPlans.
+  ///
+  /// In en, this message translates to:
+  /// **'View Plans'**
+  String get viewPlans;
+
+  /// No description provided for @profileActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile actions'**
+  String get profileActions;
+
+  /// No description provided for @shareProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Share profile'**
+  String get shareProfile;
+
+  /// No description provided for @addToShortlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Add to Shortlist'**
+  String get addToShortlist;
+
+  /// No description provided for @hideThisProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide this Profile'**
+  String get hideThisProfile;
+
+  /// No description provided for @blockThisProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Block this Profile'**
+  String get blockThisProfile;
+
+  /// No description provided for @reportThisProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Report this Profile'**
+  String get reportThisProfile;
+
+  /// No description provided for @gunmilan.
+  ///
+  /// In en, this message translates to:
+  /// **'Gunmilan'**
+  String get gunmilan;
+
+  /// No description provided for @requestContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Contact'**
+  String get requestContact;
+
+  /// No description provided for @close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get close;
+
+  /// No description provided for @sendRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Request'**
+  String get sendRequest;
+
+  /// No description provided for @hide.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide'**
+  String get hide;
+
+  /// No description provided for @block.
+  ///
+  /// In en, this message translates to:
+  /// **'Block'**
+  String get block;
+
+  /// No description provided for @whatsappResponse.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp Response'**
+  String get whatsappResponse;
+
+  /// No description provided for @viewContact.
+  ///
+  /// In en, this message translates to:
+  /// **'View Contact'**
+  String get viewContact;
+
+  /// No description provided for @upgradeToViewContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to View Contact'**
+  String get upgradeToViewContact;
+
+  /// No description provided for @statusOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Online'**
+  String get statusOnline;
+
+  /// No description provided for @comparisonYouAndHer.
+  ///
+  /// In en, this message translates to:
+  /// **'You & Her'**
+  String get comparisonYouAndHer;
+
+  /// No description provided for @comparisonYouAndHim.
+  ///
+  /// In en, this message translates to:
+  /// **'You & Him'**
+  String get comparisonYouAndHim;
+
+  /// No description provided for @comparisonYouAndProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'You & Profile'**
+  String get comparisonYouAndProfile;
+
+  /// No description provided for @contactInformationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Information'**
+  String get contactInformationTitle;
+
+  /// No description provided for @contactInformationAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact information is available.'**
+  String get contactInformationAvailable;
+
+  /// No description provided for @upgradeToViewAllPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to view all photos.'**
+  String get upgradeToViewAllPhotos;
+
+  /// No description provided for @uploadPhotoToUnlockProfiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload your photo to unlock more profiles.'**
+  String get uploadPhotoToUnlockProfiles;
+
+  /// No description provided for @photoAccessLockedForPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo access is locked for your current plan.'**
+  String get photoAccessLockedForPlan;
+
+  /// No description provided for @contactDetailsUnlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact details unlocked.'**
+  String get contactDetailsUnlocked;
+
+  /// No description provided for @contactRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact request sent.'**
+  String get contactRequestSent;
+
+  /// No description provided for @profileHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile hidden.'**
+  String get profileHidden;
+
+  /// No description provided for @profileBlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile blocked.'**
+  String get profileBlocked;
+
+  /// No description provided for @profileLinkReadyToShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile link ready to share.'**
+  String get profileLinkReadyToShare;
+
+  /// No description provided for @profileLinkCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile link copied.'**
+  String get profileLinkCopied;
+
+  /// No description provided for @reportSubmitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Report submitted.'**
+  String get reportSubmitted;
+
+  /// No description provided for @comparisonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Comparison'**
+  String get comparisonTitle;
+
+  /// No description provided for @comparisonViewerYou.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get comparisonViewerYou;
+
+  /// No description provided for @heightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get heightLabel;
+
+  /// No description provided for @astro.
+  ///
+  /// In en, this message translates to:
+  /// **'Astro'**
+  String get astro;
+
+  /// No description provided for @moreProfilesYouMayLike2.
+  ///
+  /// In en, this message translates to:
+  /// **'More profiles you may like'**
+  String get moreProfilesYouMayLike2;
+
+  /// No description provided for @contactMethods.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact methods'**
+  String get contactMethods;
+
+  /// No description provided for @reason.
+  ///
+  /// In en, this message translates to:
+  /// **'Reason'**
+  String get reason;
+
+  /// No description provided for @otherReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Other reason'**
+  String get otherReason;
+
+  /// No description provided for @reportProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report profile'**
+  String get reportProfileTitle;
+
+  /// No description provided for @hideProfileConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hide profile?'**
+  String get hideProfileConfirmTitle;
+
+  /// No description provided for @hideProfileConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This profile will be hidden from your browse/search list.'**
+  String get hideProfileConfirmMessage;
+
+  /// No description provided for @blockProfileConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Block profile?'**
+  String get blockProfileConfirmTitle;
+
+  /// No description provided for @blockProfileConfirmMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocking will remove interests/shortlists between both profiles and hide this profile from you.'**
+  String get blockProfileConfirmMessage;
+
+  /// No description provided for @viewProfileColon.
+  ///
+  /// In en, this message translates to:
+  /// **'View profile:'**
+  String get viewProfileColon;
+
+  /// No description provided for @photoActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo actions'**
+  String get photoActions;
+
+  /// No description provided for @aboutName.
+  ///
+  /// In en, this message translates to:
+  /// **'About {name}'**
+  String aboutName(String name);
+
+  /// No description provided for @photosCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos {current}/{total}'**
+  String photosCounter(int current, int total);
+
+  /// No description provided for @contactValueCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} copied.'**
+  String contactValueCopied(String label);
+
+  /// No description provided for @profileIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile ID: {id}'**
+  String profileIdLabel(String id);
 }
 
 class _AppLocalizationsDelegate

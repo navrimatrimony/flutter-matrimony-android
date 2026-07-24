@@ -967,5 +967,78 @@
   "yourProfileViewedTimes": "Your profile was viewed $count times",
   "yourProfileViewedTimesInWindow": "$window your profile was viewed $count times",
   "yourProfileWasViewed": "Your profile was viewed.",
-  "zoom": "Zoom"
+  "zoom": "Zoom",
+  "back": "Back",
+  "viewPlans": "View Plans",
+  "profileActions": "Profile actions",
+  "shareProfile": "Share profile",
+  "addToShortlist": "Add to Shortlist",
+  "hideThisProfile": "Hide this Profile",
+  "blockThisProfile": "Block this Profile",
+  "reportThisProfile": "Report this Profile",
+  "gunmilan": "Gunmilan",
+  "requestContact": "Request Contact",
+  "close": "Close",
+  "sendRequest": "Send Request",
+  "hide": "Hide",
+  "block": "Block",
+  "whatsappResponse": "WhatsApp Response",
+  "viewContact": "View Contact",
+  "upgradeToViewContact": "Upgrade to View Contact",
+  "statusOnline": "Online",
+  "comparisonYouAndHer": "You & Her",
+  "comparisonYouAndHim": "You & Him",
+  "comparisonYouAndProfile": "You & Profile",
+  "contactInformationTitle": "Contact Information",
+  "contactInformationAvailable": "Contact information is available.",
+  "upgradeToViewAllPhotos": "Upgrade to view all photos.",
+  "uploadPhotoToUnlockProfiles": "Upload your photo to unlock more profiles.",
+  "photoAccessLockedForPlan": "Photo access is locked for your current plan.",
+  "contactDetailsUnlocked": "Contact details unlocked.",
+  "contactRequestSent": "Contact request sent.",
+  "profileHidden": "Profile hidden.",
+  "profileBlocked": "Profile blocked.",
+  "profileLinkReadyToShare": "Profile link ready to share.",
+  "profileLinkCopied": "Profile link copied.",
+  "reportSubmitted": "Report submitted.",
+  "comparisonTitle": "Comparison",
+  "comparisonViewerYou": "You",
+  "heightLabel": "Height",
+  "astro": "Astro",
+  "moreProfilesYouMayLike2": "More profiles you may like",
+  "contactMethods": "Contact methods",
+  "reason": "Reason",
+  "otherReason": "Other reason",
+  "reportProfileTitle": "Report profile",
+  "hideProfileConfirmTitle": "Hide profile?",
+  "hideProfileConfirmMessage": "This profile will be hidden from your browse/search list.",
+  "blockProfileConfirmTitle": "Block profile?",
+  "blockProfileConfirmMessage": "Blocking will remove interests/shortlists between both profiles and hide this profile from you.",
+  "viewProfileColon": "View profile:",
+  "photoActions": "Photo actions",
+  "aboutName": "About {name}",
+  "@aboutName": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "photosCounter": "Photos {current}/{total}",
+  "@photosCounter": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+  "contactValueCopied": "{label} copied.",
+  "@contactValueCopied": {
+    "placeholders": {
+      "label": { "type": "String" }
+    }
+  },
+  "profileIdLabel": "Profile ID: {id}",
+  "@profileIdLabel": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  }
 }

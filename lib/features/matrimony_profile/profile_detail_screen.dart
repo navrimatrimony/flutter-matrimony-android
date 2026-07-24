@@ -492,7 +492,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           padding: const EdgeInsets.fromLTRB(12, 8, 0, 0),
           child: _buildRoundIconButton(
             icon: Icons.arrow_back,
-            tooltip: 'Back',
+            tooltip: appText.back,
             onTap: () => Navigator.maybePop(context),
           ),
         ),
@@ -758,7 +758,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final aboutBody = _displayString(about?['body']);
     final aboutTitle =
         _displayString(about?['title']) ??
-        'About ${_displayString(hero?['name']) ?? _nameText(profile)}';
+        appText.aboutName(_displayString(hero?['name']) ?? _nameText(profile));
     final previewSections = _usingInitialProfile && displaySections.isEmpty
         ? _initialProfilePreviewSections(profile, hero, age, location)
         : const <ProfileDisplaySectionData>[];
@@ -1017,7 +1017,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               if (isPremium) ...[
                 _buildStatusPill(
                   icon: Icons.workspace_premium,
-                  label: 'Premium',
+                  label: appText.biodataTemplatePremium,
                   color: const Color(0xFFFFB84D),
                 ),
                 const SizedBox(width: 8),
@@ -1115,7 +1115,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   FilledButton(
                     onPressed: () => Navigator.pushNamed(context, route),
                     child: Text(
-                      route == '/plans' ? 'View Plans' : 'Upload Photo',
+                      route == '/plans' ? appText.viewPlans : appText.uploadPhoto,
                     ),
                   ),
                 ],
@@ -1222,18 +1222,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       color: Colors.black.withValues(alpha: 0.35),
       shape: const CircleBorder(),
       child: PopupMenuButton<String>(
-        tooltip: 'Profile actions',
+        tooltip: appText.profileActions,
         enabled: !_isProfileActionInFlight,
         icon: const Icon(Icons.more_vert, color: Colors.white),
         onSelected: _handleMenuAction,
         itemBuilder: (context) {
           final items = <PopupMenuEntry<String>>[
-            const PopupMenuItem(
+            PopupMenuItem(
               value: 'share',
               child: ListTile(
                 dense: true,
-                leading: Icon(Icons.ios_share),
-                title: Text('Share profile'),
+                leading: const Icon(Icons.ios_share),
+                title: Text(appText.shareProfile),
               ),
             ),
           ];
@@ -1249,8 +1249,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                   ),
                   title: Text(
                     _isShortlisted
-                        ? 'Remove from Shortlist'
-                        : 'Add to Shortlist',
+                        ? appText.removeFromShortlist
+                        : appText.addToShortlist,
                   ),
                 ),
               ),
@@ -1259,12 +1259,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
           if (_canShowHideAction()) {
             items.add(
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'hide',
                 child: ListTile(
                   dense: true,
-                  leading: Icon(Icons.visibility_off_outlined),
-                  title: Text('Hide this Profile'),
+                  leading: const Icon(Icons.visibility_off_outlined),
+                  title: Text(appText.hideThisProfile),
                 ),
               ),
             );
@@ -1272,25 +1272,25 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
           if (_canShowBlockAction()) {
             items.add(
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'block',
                 child: ListTile(
                   dense: true,
-                  leading: Icon(Icons.block),
-                  title: Text('Block this Profile'),
+                  leading: const Icon(Icons.block),
+                  title: Text(appText.blockThisProfile),
                 ),
               ),
             );
           }
 
-          items.addAll(const [
-            PopupMenuDivider(),
+          items.addAll([
+            const PopupMenuDivider(),
             PopupMenuItem(
               value: 'report',
               child: ListTile(
                 dense: true,
-                leading: Icon(Icons.flag_outlined),
-                title: Text('Report this Profile'),
+                leading: const Icon(Icons.flag_outlined),
+                title: Text(appText.reportThisProfile),
               ),
             ),
           ]);
@@ -1624,7 +1624,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (previewAbout != null) {
       widgets.add(
         _buildAboutCard(
-          'About ${_displayString(hero?['name']) ?? _nameText(profile)}',
+          appText.aboutName(_displayString(hero?['name']) ?? _nameText(profile)),
           previewAbout,
         ),
       );
@@ -1659,7 +1659,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     addItem(AppStrings.age, _ageText(age), 'calendar');
     addItem(
-      'Height',
+      appText.heightLabel,
       _displayString(hero?['height_label']) ??
           ApiClient.profileHeightLabel(profile),
       'height',
@@ -1676,7 +1676,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       'education',
     );
     addItem(
-      'Occupation',
+      appText.occupation,
       _displayString(hero?['occupation_label']) ??
           ApiClient.profileOccupationLabel(profile),
       'work',
@@ -1771,12 +1771,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     return ProfileDisplaySection(
       section: section,
-      titleOverride: isAstro ? 'Astro' : null,
+      titleOverride: isAstro ? appText.astro : null,
       headerTrailing: isAstro && gunamilan != null
           ? OutlinedButton.icon(
               onPressed: () => _openGunamilanDetails(gunamilan),
               icon: const Icon(Icons.auto_awesome, size: 16),
-              label: const Text('Gunmilan'),
+              label: Text(appText.gunmilan),
               style: OutlinedButton.styleFrom(
                 visualDensity: VisualDensity.compact,
                 padding: const EdgeInsets.symmetric(
@@ -2178,7 +2178,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'More profiles you may like',
+                  appText.moreProfilesYouMayLike2,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: const Color(0xFF2E2220),
@@ -2361,7 +2361,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return _displayString(card?['name']) ??
         ApiClient.safeDisplayLabel(profile['full_name']) ??
         ApiClient.safeDisplayLabel(profile['name']) ??
-        'Profile';
+        appText.profile;
   }
 
   int? _suggestedAge(Map<String, dynamic> profile) {
@@ -2476,8 +2476,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.chat_bubble_outline, size: 18),
-                  label: const Text(
-                    'Chat',
+                  label: Text(
+                    appText.chatMenu,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -2607,7 +2607,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   Future<void> _copyContactValue(String label, String value) async {
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
-    _showSnackBar('$label copied.', Colors.black87);
+    _showSnackBar(appText.contactValueCopied(label), Colors.black87);
   }
 
   Future<void> _handleContactPrimaryAction(ProfileContactCtaData cta) async {
@@ -2666,7 +2666,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
         if (!mounted) return;
         _showSnackBar(
-          _backendMessage(response, 'Contact details unlocked.'),
+          _backendMessage(response, appText.contactDetailsUnlocked),
           Colors.green,
         );
         return;
@@ -2742,7 +2742,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
         if (!mounted) return;
         _showSnackBar(
-          _backendMessage(response, 'Contact request sent.'),
+          _backendMessage(response, appText.contactRequestSent),
           Colors.green,
         );
         return;
@@ -2833,10 +2833,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                     children: [
                       Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Request Contact',
-                              style: TextStyle(
+                              appText.requestContact,
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w900,
                                 color: Color(0xFF2E2220),
@@ -2844,7 +2844,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Close',
+                            tooltip: appText.close,
                             onPressed: () => Navigator.pop(sheetContext),
                             icon: const Icon(Icons.close),
                           ),
@@ -2853,9 +2853,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         initialValue: selectedReason,
-                        decoration: const InputDecoration(
-                          labelText: 'Reason',
-                          prefixIcon: Icon(Icons.help_outline),
+                        decoration: InputDecoration(
+                          labelText: appText.reason,
+                          prefixIcon: const Icon(Icons.help_outline),
                         ),
                         items: reasonOptions
                             .map(
@@ -2878,16 +2878,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                         TextField(
                           controller: otherController,
                           maxLines: 2,
-                          decoration: const InputDecoration(
-                            labelText: 'Other reason',
-                            prefixIcon: Icon(Icons.edit_note),
+                          decoration: InputDecoration(
+                            labelText: appText.otherReason,
+                            prefixIcon: const Icon(Icons.edit_note),
                           ),
                         ),
                       ],
                       const SizedBox(height: 16),
-                      const Text(
-                        'Contact methods',
-                        style: TextStyle(
+                      Text(
+                        appText.contactMethods,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w900,
                           color: Color(0xFF594044),
@@ -2934,7 +2934,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                       ElevatedButton.icon(
                         onPressed: submit,
                         icon: const Icon(Icons.mark_email_unread_outlined),
-                        label: const Text('Send Request'),
+                        label: Text(appText.sendRequest),
                       ),
                     ],
                   ),
@@ -3042,9 +3042,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (_isProfileActionInFlight || _profile == null) return;
 
     final confirmed = await _confirmProfileAction(
-      title: 'Hide profile?',
-      message: 'This profile will be hidden from your browse/search list.',
-      confirmLabel: 'Hide',
+      title: appText.hideProfileConfirmTitle,
+      message: appText.hideProfileConfirmMessage,
+      confirmLabel: appText.hide,
     );
     if (!mounted || !confirmed) return;
 
@@ -3059,7 +3059,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       if (_responseSuccess(response)) {
         _applyActionStateFromResponse(response, fallbackHidden: true);
         _showSnackBar(
-          _backendMessage(response, 'Profile hidden.'),
+          _backendMessage(response, appText.profileHidden),
           Colors.green,
         );
         Navigator.pop(context, {
@@ -3089,10 +3089,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (_isProfileActionInFlight || _profile == null) return;
 
     final confirmed = await _confirmProfileAction(
-      title: 'Block profile?',
-      message:
-          'Blocking will remove interests/shortlists between both profiles and hide this profile from you.',
-      confirmLabel: 'Block',
+      title: appText.blockProfileConfirmTitle,
+      message: appText.blockProfileConfirmMessage,
+      confirmLabel: appText.block,
       isDestructive: true,
     );
     if (!mounted || !confirmed) return;
@@ -3112,7 +3111,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           fallbackBlocked: true,
         );
         _showSnackBar(
-          _backendMessage(response, 'Profile blocked.'),
+          _backendMessage(response, appText.profileBlocked),
           Colors.green,
         );
         Navigator.pop(context, {
@@ -3153,7 +3152,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(appText.cancel),
             ),
             ElevatedButton(
               style: isDestructive
@@ -3246,12 +3245,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     try {
       await Share.share(payload['text']!, subject: payload['title']);
       if (!mounted) return;
-      _showSnackBar('Profile link ready to share.', Colors.green);
+      _showSnackBar(appText.profileLinkReadyToShare, Colors.green);
     } catch (_) {
       try {
         await Clipboard.setData(ClipboardData(text: payload['text']!));
         if (!mounted) return;
-        _showSnackBar('Profile link copied.', Colors.green);
+        _showSnackBar(appText.profileLinkCopied, Colors.green);
       } catch (_) {
         if (!mounted) return;
         _showSnackBar(appText.couldNotShareProfile, Colors.red);
@@ -3299,7 +3298,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final hero = _displayHero();
     final name =
         _displayString(hero?['name']) ??
-        (profile != null ? _nameText(profile) : 'Profile');
+        (profile != null ? _nameText(profile) : appText.profile);
     final age =
         _displayInt(hero?['age']) ??
         _calculateAge(profile?['date_of_birth']?.toString());
@@ -3320,7 +3319,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         return cleanedBackendText;
       }
 
-      return '$cleanedBackendText\n\nView profile:\n$url';
+      return '$cleanedBackendText\n\n${appText.viewProfileColon}\n$url';
     }
 
     final profile = _profile;
@@ -3339,7 +3338,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       if (communityLabel != null) communityLabel,
       if (location != null) location,
       '',
-      'View profile:',
+      appText.viewProfileColon,
       url,
     ];
 
@@ -3348,7 +3347,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   String _fallbackProfileShareText() {
     final profile = _profile;
-    if (profile == null) return 'Profile ID: $_currentProfileId';
+    if (profile == null) {
+      return appText.profileIdLabel(_currentProfileId.toString());
+    }
 
     final hero = _displayHero();
     final age = _calculateAge(profile['date_of_birth']?.toString());
@@ -3363,7 +3364,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       if (ageLabel != null) ageLabel else if (age != null) '$age वर्षे',
       if (communityLabel != null) communityLabel,
       if (location != null) location,
-      'Profile ID: $_currentProfileId',
+      appText.profileIdLabel(_currentProfileId.toString()),
     ];
 
     return parts.join('\n');
@@ -3406,7 +3407,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
       if (_responseSuccess(response)) {
         _showSnackBar(
-          _backendMessage(response, 'Report submitted.'),
+          _backendMessage(response, appText.reportSubmitted),
           Colors.green,
         );
         return;
@@ -3488,7 +3489,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (!hasVisibleData) return null;
 
     return ProfileContactData(
-      title: _displayString(contact['title']) ?? 'Contact Information',
+      title: _displayString(contact['title']) ?? appText.contactInformationTitle,
       state: state,
       message: message,
       phone: phone,
@@ -3555,7 +3556,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final map = _safeMap(value);
     return ProfileContactWhatsAppData(
       visible: _displaySafeBool(map?['visible']) ?? false,
-      label: _displayString(map?['label']) ?? 'WhatsApp Response',
+      label: _displayString(map?['label']) ?? appText.whatsappResponse,
       message: _displayString(map?['message']),
       enabled: _displaySafeBool(map?['enabled']) ?? false,
     );
@@ -3603,7 +3604,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   String? _fallbackContactMessage(String state) {
     switch (state) {
       case 'revealed':
-        return 'Contact information is available.';
+        return appText.contactInformationAvailable;
       case 'unlock_available':
       case 'locked':
         return appText.unlockRequiredToViewContact;
@@ -3629,11 +3630,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   String? _fallbackContactCta(String state) {
     switch (state) {
       case 'unlock_available':
-        return 'View Contact';
+        return appText.viewContact;
       case 'upgrade_required':
-        return 'Upgrade to View Contact';
+        return appText.upgradeToViewContact;
       case 'contact_request_available':
-        return 'Request Contact';
+        return appText.requestContact;
       default:
         return null;
     }
@@ -3657,13 +3658,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     final tier = _displayString(photoAlbum?['tier'])?.toLowerCase();
     if (tier == 'free_own_photo') {
-      return 'Upgrade to view all photos.';
+      return appText.upgradeToViewAllPhotos;
     }
     if (tier == 'free_no_photo') {
-      return 'Upload your photo to unlock more profiles.';
+      return appText.uploadPhotoToUnlockProfiles;
     }
 
-    return 'Photo access is locked for your current plan.';
+    return appText.photoAccessLockedForPlan;
   }
 
   String? _photoAlbumCtaRoute(Map<String, dynamic>? photoAlbum) {
@@ -3723,7 +3724,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (comparison == null) return null;
     if (_displaySafeBool(comparison['enabled']) != true) return null;
 
-    final title = _comparisonString(comparison['title']) ?? 'Comparison';
+    final title = _comparisonString(comparison['title']) ?? appText.comparisonTitle;
     final viewer = _safeMap(comparison['viewer']);
     final target = _safeMap(comparison['target']);
 
@@ -3757,9 +3758,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return ProfileComparisonData(
       title: title,
       summary: _comparisonString(comparison['summary']),
-      viewerName: _comparisonString(viewer?['name']) ?? 'You',
+      viewerName: _comparisonString(viewer?['name']) ?? appText.comparisonViewerYou,
       viewerPhotoUrl: _comparisonString(viewer?['photo_url']),
-      targetName: _comparisonString(target?['name']) ?? 'Profile',
+      targetName: _comparisonString(target?['name']) ?? appText.profile,
       targetPhotoUrl: _comparisonString(target?['photo_url']),
       matchedCount: _displayInt(comparison['matched_count']),
       totalCount: _displayInt(comparison['total_count']),
@@ -3872,7 +3873,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       widgets.add(
         _buildHeroChip(
           icon: Icons.circle,
-          label: 'Online',
+          label: appText.statusOnline,
           iconColor: Colors.greenAccent,
         ),
       );
@@ -3914,7 +3915,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   String? _displayString(dynamic value) {
     if (value == null) return null;
     if (value is Map || value is List) return null;
-    if (value is bool) return value ? 'Yes' : 'No';
+    if (value is bool) return value ? appText.yes : appText.no;
 
     final text = value.toString().trim();
     if (text.isEmpty) return null;
@@ -4091,13 +4092,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       profile['gender'],
     )?.trim().toLowerCase();
     if (gender == 'female' || gender == 'f' || gender == 'woman') {
-      return 'You & Her';
+      return appText.comparisonYouAndHer;
     }
     if (gender == 'male' || gender == 'm' || gender == 'man') {
-      return 'You & Him';
+      return appText.comparisonYouAndHim;
     }
 
-    return 'You & Profile';
+    return appText.comparisonYouAndProfile;
   }
 
   int _photoCount(Map<String, dynamic> profile, String? photoUrl) {
@@ -4216,13 +4217,13 @@ class _ProfilePhotoGalleryViewerState
         children: [
           const SizedBox(width: 4),
           IconButton(
-            tooltip: 'Close',
+            tooltip: appText.close,
             icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () => Navigator.maybePop(context),
           ),
           Expanded(
             child: Text(
-              'Photos ${_index + 1}/${widget.photos.length}',
+              appText.photosCounter(_index + 1, widget.photos.length),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -4233,25 +4234,25 @@ class _ProfilePhotoGalleryViewerState
             ),
           ),
           PopupMenuButton<String>(
-            tooltip: 'Photo actions',
+            tooltip: appText.photoActions,
             color: Colors.white,
             icon: const Icon(Icons.more_vert, color: Colors.white),
             onSelected: widget.onMenuAction,
-            itemBuilder: (context) => const [
+            itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'share',
                 child: ListTile(
                   dense: true,
-                  leading: Icon(Icons.ios_share),
-                  title: Text('Share profile'),
+                  leading: const Icon(Icons.ios_share),
+                  title: Text(appText.shareProfile),
                 ),
               ),
               PopupMenuItem(
                 value: 'report',
                 child: ListTile(
                   dense: true,
-                  leading: Icon(Icons.flag_outlined),
-                  title: Text('Report this Profile'),
+                  leading: const Icon(Icons.flag_outlined),
+                  title: Text(appText.reportThisProfile),
                 ),
               ),
             ],
@@ -4388,7 +4389,7 @@ class _ProfilePhotoGalleryViewerState
                     FilledButton(
                       onPressed: () => Navigator.pushNamed(context, route),
                       child: Text(
-                        route == '/plans' ? 'View Plans' : 'Upload Photo',
+                        route == '/plans' ? appText.viewPlans : appText.uploadPhoto,
                       ),
                     ),
                   ],
@@ -4561,7 +4562,7 @@ class _ReportReasonDialogState extends State<_ReportReasonDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Report profile'),
+      title: Text(appText.reportProfileTitle),
       content: TextField(
         controller: _reasonController,
         autofocus: true,
@@ -4584,9 +4585,9 @@ class _ReportReasonDialogState extends State<_ReportReasonDialog> {
           onPressed: () {
             Navigator.of(context, rootNavigator: true).pop(null);
           },
-          child: const Text('Cancel'),
+          child: Text(appText.cancel),
         ),
-        ElevatedButton(onPressed: _submit, child: const Text('Submit')),
+        ElevatedButton(onPressed: _submit, child: Text(appText.submit)),
       ],
     );
   }

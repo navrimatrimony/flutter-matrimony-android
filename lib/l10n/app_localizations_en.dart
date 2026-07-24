@@ -3149,4 +3149,172 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get zoom => 'Zoom';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get viewPlans => 'View Plans';
+
+  @override
+  String get profileActions => 'Profile actions';
+
+  @override
+  String get shareProfile => 'Share profile';
+
+  @override
+  String get addToShortlist => 'Add to Shortlist';
+
+  @override
+  String get hideThisProfile => 'Hide this Profile';
+
+  @override
+  String get blockThisProfile => 'Block this Profile';
+
+  @override
+  String get reportThisProfile => 'Report this Profile';
+
+  @override
+  String get gunmilan => 'Gunmilan';
+
+  @override
+  String get requestContact => 'Request Contact';
+
+  @override
+  String get close => 'Close';
+
+  @override
+  String get sendRequest => 'Send Request';
+
+  @override
+  String get hide => 'Hide';
+
+  @override
+  String get block => 'Block';
+
+  @override
+  String get whatsappResponse => 'WhatsApp Response';
+
+  @override
+  String get viewContact => 'View Contact';
+
+  @override
+  String get upgradeToViewContact => 'Upgrade to View Contact';
+
+  @override
+  String get statusOnline => 'Online';
+
+  @override
+  String get comparisonYouAndHer => 'You & Her';
+
+  @override
+  String get comparisonYouAndHim => 'You & Him';
+
+  @override
+  String get comparisonYouAndProfile => 'You & Profile';
+
+  @override
+  String get contactInformationTitle => 'Contact Information';
+
+  @override
+  String get contactInformationAvailable => 'Contact information is available.';
+
+  @override
+  String get upgradeToViewAllPhotos => 'Upgrade to view all photos.';
+
+  @override
+  String get uploadPhotoToUnlockProfiles =>
+      'Upload your photo to unlock more profiles.';
+
+  @override
+  String get photoAccessLockedForPlan =>
+      'Photo access is locked for your current plan.';
+
+  @override
+  String get contactDetailsUnlocked => 'Contact details unlocked.';
+
+  @override
+  String get contactRequestSent => 'Contact request sent.';
+
+  @override
+  String get profileHidden => 'Profile hidden.';
+
+  @override
+  String get profileBlocked => 'Profile blocked.';
+
+  @override
+  String get profileLinkReadyToShare => 'Profile link ready to share.';
+
+  @override
+  String get profileLinkCopied => 'Profile link copied.';
+
+  @override
+  String get reportSubmitted => 'Report submitted.';
+
+  @override
+  String get comparisonTitle => 'Comparison';
+
+  @override
+  String get comparisonViewerYou => 'You';
+
+  @override
+  String get heightLabel => 'Height';
+
+  @override
+  String get astro => 'Astro';
+
+  @override
+  String get moreProfilesYouMayLike2 => 'More profiles you may like';
+
+  @override
+  String get contactMethods => 'Contact methods';
+
+  @override
+  String get reason => 'Reason';
+
+  @override
+  String get otherReason => 'Other reason';
+
+  @override
+  String get reportProfileTitle => 'Report profile';
+
+  @override
+  String get hideProfileConfirmTitle => 'Hide profile?';
+
+  @override
+  String get hideProfileConfirmMessage =>
+      'This profile will be hidden from your browse/search list.';
+
+  @override
+  String get blockProfileConfirmTitle => 'Block profile?';
+
+  @override
+  String get blockProfileConfirmMessage =>
+      'Blocking will remove interests/shortlists between both profiles and hide this profile from you.';
+
+  @override
+  String get viewProfileColon => 'View profile:';
+
+  @override
+  String get photoActions => 'Photo actions';
+
+  @override
+  String aboutName(String name) {
+    return 'About $name';
+  }
+
+  @override
+  String photosCounter(int current, int total) {
+    return 'Photos $current/$total';
+  }
+
+  @override
+  String contactValueCopied(String label) {
+    return '$label copied.';
+  }
+
+  @override
+  String profileIdLabel(String id) {
+    return 'Profile ID: $id';
+  }
 }
