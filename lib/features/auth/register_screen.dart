@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_language.dart';
 
 /// Legacy email/password registration screen.
 /// Production registration routes use SmartOnboardingScreen.
@@ -48,8 +49,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (result.containsKey('token') && result['token'] != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration यशस्वी! Profile create करा...'),
+        SnackBar(
+          content: Text(appText.registrationSuccessfulCreateProfile),
           backgroundColor: Colors.green,
           duration: Duration(seconds: 2),
         ),

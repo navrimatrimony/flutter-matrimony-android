@@ -4,6 +4,7 @@ import '../../core/app_strings.dart';
 import '../../core/email_hint_service.dart';
 import '../../core/phone_number_hint_service.dart';
 import '../onboarding/smart_onboarding_screen.dart';
+import '../../core/app_language.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});
@@ -67,7 +68,7 @@ class LandingScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  _copy('Choose email', 'Email निवडा'),
+                  _copy('Choose email', appText.selectEmail),
                   style: Theme.of(sheetContext)
                       .textTheme
                       .titleLarge
@@ -77,7 +78,7 @@ class LandingScreen extends StatelessWidget {
                 Text(
                   _copy(
                     'This email will be used for your account. Mobile verification is required to continue.',
-                    'हा email account साठी वापरला जाईल. पुढे जाण्यासाठी मोबाइल verification आवश्यक आहे.',
+                    appText.emailUsedForAccountMobileVerification,
                   ),
                   style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
                     color: Colors.grey.shade700,
@@ -207,7 +208,7 @@ class LandingScreen extends StatelessWidget {
                           ),
                           label: _copy(
                             'Sign Up with Email',
-                            'Email ने सुरू करा',
+                            appText.startWithEmail,
                           ),
                           onPressed: () => _captureEmailAndStartMobile(
                             context,
@@ -221,7 +222,7 @@ class LandingScreen extends StatelessWidget {
                               child: Text(
                                 _copy(
                                   'Already have an account?',
-                                  'आधीपासून account आहे?',
+                                  appText.alreadyHaveAccount,
                                 ),
                                 textAlign: TextAlign.right,
                                 style: const TextStyle(

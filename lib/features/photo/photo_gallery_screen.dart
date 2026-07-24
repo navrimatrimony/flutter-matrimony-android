@@ -65,7 +65,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
       }
 
       setState(() {
-        _errorMessage = _responseMessage(response, 'Photos load झाल्या नाहीत.');
+        _errorMessage = _responseMessage(response, appText.couldNotLoadPhotos);
         _isLoading = false;
       });
     } catch (e) {
@@ -161,13 +161,13 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
         _applyResponse(response, preferredPhotoId: preferredPhotoId);
         _isUploading = false;
       });
-      _showMessage(_responseMessage(response, 'Photo upload झाला.'));
+      _showMessage(_responseMessage(response, appText.photoUploaded));
       _schedulePostUploadRefresh();
       return;
     }
 
     setState(() => _isUploading = false);
-    _showMessage(_responseMessage(response, 'Photo upload fail झाला.'));
+    _showMessage(_responseMessage(response, appText.photoUploadFailed));
   }
 
   void _schedulePostUploadRefresh() {
@@ -282,7 +282,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
         return;
       }
 
-      _showMessage(_responseMessage(response, 'Photo reorder fail झाला.'));
+      _showMessage(_responseMessage(response, appText.photoReorderFailed));
       await _loadGallery();
     } catch (e) {
       _showMessage(e.toString());
@@ -769,7 +769,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
       title: AppStrings.photoGalleryEmpty,
       icon: Icons.image_not_supported_outlined,
       child: Text(
-        'Clear profile photo upload करा. Backend approval नंतरच approved status दिसेल.',
+        appText.uploadClearProfilePhoto,
         style: TextStyle(color: Colors.grey.shade700),
       ),
     );
@@ -1445,9 +1445,9 @@ class _PhotoCropSheetState extends State<_PhotoCropSheet> {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Photo crop करता आला नाही. कृपया पुन्हा try करा किंवा दुसरा photo निवडा.',
+              appText.couldNotCropPhoto,
             ),
           ),
         );

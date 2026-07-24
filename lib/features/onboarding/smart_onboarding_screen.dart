@@ -2882,7 +2882,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         }
         return 'मित्र/मैत्रिणीची';
     }
-    return 'या profile ची';
+    return appText.ofThisProfile;
   }
 
   Widget _buildStepCard(BuildContext context) {

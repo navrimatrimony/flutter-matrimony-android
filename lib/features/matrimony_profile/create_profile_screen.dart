@@ -334,7 +334,7 @@ class _CreateMatrimonyProfileScreenState
       setState(() {
         _religionsLoading = false;
       });
-      _showMessage('Religion list load करता आली नाही.');
+      _showMessage(appText.couldNotLoadReligionList);
       return;
     }
     if (!mounted) return;
@@ -376,7 +376,7 @@ class _CreateMatrimonyProfileScreenState
       setState(() {
         _castesLoading = false;
       });
-      _showMessage('Caste list load करता आली नाही.');
+      _showMessage(appText.couldNotLoadCasteList);
       return;
     }
     if (!mounted) return;
@@ -507,7 +507,7 @@ class _CreateMatrimonyProfileScreenState
         _subCasteSearching = false;
         _subCasteSuggestions = <Map<String, dynamic>>[];
       });
-      _showMessage('Sub-caste search करता आली नाही.');
+      _showMessage(appText.couldNotSearchSubCaste);
       return;
     }
     if (!mounted || requestId != _subCasteSearchRequest) return;
@@ -582,7 +582,7 @@ class _CreateMatrimonyProfileScreenState
         _locationSearching = false;
         _locationSuggestions = <Map<String, dynamic>>[];
       });
-      _showMessage('Location search करता आली नाही.');
+      _showMessage(appText.couldNotSearchLocation);
       return;
     }
     if (!mounted || requestId != _locationSearchRequest) return;
@@ -664,7 +664,7 @@ class _CreateMatrimonyProfileScreenState
 
   bool _validateBasicStep() {
     if (_fullNameController.text.trim().isEmpty) {
-      _showMessage('कृपया full name भरा.');
+      _showMessage(appText.pleaseEnterFullName);
       return false;
     }
 
@@ -674,7 +674,7 @@ class _CreateMatrimonyProfileScreenState
     }
 
     if (_dobController.text.trim().isEmpty) {
-      _showMessage('कृपया date of birth निवडा.');
+      _showMessage(appText.pleaseSelectDateOfBirth);
       return false;
     }
 
@@ -705,19 +705,19 @@ class _CreateMatrimonyProfileScreenState
     }
 
     _showMessage(
-      'कृपया suggestions मधून sub-caste निवडा किंवा field रिकामी ठेवा.',
+      appText.selectSubCasteFromSuggestionsOrLeaveEmpty,
     );
     return false;
   }
 
   bool _validateCommunityStep() {
     if (_selectedReligionId == null) {
-      _showMessage('कृपया suggestions मधून religion निवडा.');
+      _showMessage(appText.pleaseSelectReligionFromSuggestions);
       return false;
     }
 
     if (_selectedCasteId == null || (_selectedCasteLabel?.trim().isEmpty ?? true)) {
-      _showMessage('कृपया suggestions मधून caste निवडा.');
+      _showMessage(appText.pleaseSelectCasteFromSuggestions);
       return false;
     }
 
@@ -726,12 +726,12 @@ class _CreateMatrimonyProfileScreenState
 
   bool _validateEducationLocationStep() {
     if (_educationSubmitText().isEmpty) {
-      _showMessage('कृपया education भरा किंवा suggestion निवडा.');
+      _showMessage(appText.pleaseEnterEducationOrSelectSuggestion);
       return false;
     }
 
     if (_selectedLocationId == null) {
-      _showMessage('कृपया suggestions मधून location निवडा.');
+      _showMessage(appText.pleaseSelectLocationFromSuggestions);
       return false;
     }
 
@@ -803,7 +803,7 @@ class _CreateMatrimonyProfileScreenState
         _subCasteController.text = _selectedSubCasteLabel ?? subCasteText;
       } else {
         _showMessage(
-          'कृपया suggestions मधून sub-caste निवडा किंवा field रिकामी ठेवा.',
+          appText.selectSubCasteFromSuggestionsOrLeaveEmpty,
         );
         return;
       }
@@ -814,19 +814,19 @@ class _CreateMatrimonyProfileScreenState
       return;
     }
     if (_selectedReligionId == null) {
-      _showMessage('कृपया suggestions मधून religion निवडा.');
+      _showMessage(appText.pleaseSelectReligionFromSuggestions);
       return;
     }
     if (_selectedCasteId == null || casteLabel.isEmpty) {
-      _showMessage('कृपया suggestions मधून caste निवडा.');
+      _showMessage(appText.pleaseSelectCasteFromSuggestions);
       return;
     }
     if (_selectedLocationId == null) {
-      _showMessage('कृपया suggestions मधून location निवडा.');
+      _showMessage(appText.pleaseSelectLocationFromSuggestions);
       return;
     }
     if (educationText.isEmpty) {
-      _showMessage('कृपया education भरा किंवा suggestion निवडा.');
+      _showMessage(appText.pleaseEnterEducationOrSelectSuggestion);
       return;
     }
 
@@ -859,7 +859,7 @@ class _CreateMatrimonyProfileScreenState
       setState(() {
         _loading = false;
       });
-      _showMessage('Profile save करता आली नाही. कृपया पुन्हा प्रयत्न करा.');
+      _showMessage(appText.couldNotSaveProfile);
       return;
     }
 
@@ -874,7 +874,7 @@ class _CreateMatrimonyProfileScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isCreate ? 'Profile create यशस्वी!' : 'Profile update यशस्वी!',
+            isCreate ? appText.profileCreatedSuccessfully : appText.profileUpdatedSuccessfully,
           ),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),

@@ -190,7 +190,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
       if (statusCode == 401) {
         setState(() {
-          _errorMessage = '🔒 Auth expired! पुन्हा login करा';
+          _errorMessage = appText.authExpiredLoginAgain;
           _isLoading = false;
         });
         return;
@@ -773,8 +773,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               ),
             ),
             const SizedBox(height: 22),
-            const Text(
-              'आजचे recommendations पूर्ण झाले',
+            Text(
+              appText.todaysRecommendationsComplete,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
@@ -787,7 +787,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             ),
             const SizedBox(height: 10),
             Text(
-              'नवीन set उपलब्ध झाल्यावर इथे दिसेल. तोपर्यंत तुम्ही regular matches पाहू शकता.',
+              appText.newSetWillAppearHere,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.grey.shade700,
@@ -802,7 +802,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               child: ElevatedButton.icon(
                 onPressed: _closeRecommendationDeck,
                 icon: const Icon(Icons.favorite_border_rounded),
-                label: const Text('Matches पहा'),
+                label: Text(appText.viewMatches),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
@@ -813,7 +813,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             ),
             const SizedBox(height: 10),
             Text(
-              'काही क्षणात matches screen दिसेल.',
+              appText.matchesScreenWillAppearSoon,
               style: TextStyle(
                 color: Colors.grey.shade600,
                 fontSize: 12,
@@ -3383,8 +3383,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     if (!_canSendInterest(profile)) {
       _showSnackBar(
         _interestSent(profile)
-            ? 'Interest आधीच पाठवला आहे.'
-            : 'या प्रोफाइलसाठी interest पाठवता येत नाही.',
+            ? appText.interestAlreadySent
+            : appText.cannotSendInterestForThisProfile,
       );
       return _interestSent(profile);
     }
@@ -3410,13 +3410,13 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       } else {
         _showSnackBar(
           _displayString(response['message']) ??
-              'Interest पाठवता आला नाही. पुन्हा प्रयत्न करा.',
+              appText.couldNotSendInterest,
         );
         return false;
       }
     } catch (_) {
       if (!mounted) return false;
-      _showSnackBar('Interest पाठवता आला नाही. पुन्हा प्रयत्न करा.');
+      _showSnackBar(appText.couldNotSendInterest);
       return false;
     } finally {
       if (mounted) {

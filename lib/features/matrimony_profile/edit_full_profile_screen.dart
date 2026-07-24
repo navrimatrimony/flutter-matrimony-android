@@ -2301,7 +2301,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       ]);
     } catch (_) {
       if (!mounted) return;
-      _loadError = 'Profile load करता आली नाही.';
+      _loadError = appText.couldNotLoadProfile;
       setState(() {
         _loading = false;
       });
@@ -2437,7 +2437,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _optionsError = 'Dropdown options load करता आले नाहीत.';
+        _optionsError = appText.couldNotLoadDropdownOptions;
       });
     } finally {
       if (mounted) {
@@ -2474,7 +2474,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (!mounted) return;
       setState(() {
         _educationCareerOptionsError =
-            'Education आणि career options load करता आले नाहीत.';
+            appText.couldNotLoadEducationAndCareerOptions;
       });
     } finally {
       if (mounted) {
@@ -2513,7 +2513,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (!mounted) return;
       setState(() {
         _maritalLifestyleOptionsError =
-            'Marital आणि lifestyle options load करता आले नाहीत.';
+            appText.couldNotLoadMaritalAndLifestyleOptions;
       });
     } finally {
       if (mounted) {
@@ -2565,7 +2565,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (!mounted) return;
       setState(() {
         _remainingProfileOptionsError =
-            'Family आणि horoscope options load करता आले नाहीत.';
+            appText.couldNotLoadFamilyAndHoroscopeOptions;
       });
     } finally {
       if (mounted) {
@@ -2613,7 +2613,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (!mounted) return;
       setState(() {
         _partnerPreferenceOptionsError =
-            'Partner preference options load करता आले नाहीत.';
+            appText.couldNotLoadPartnerPreferenceOptions;
       });
     } finally {
       if (mounted) {
@@ -3726,7 +3726,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   bool _validateRequiredFields() {
     if (_fullNameController.text.trim().isEmpty) {
-      _showMessage('कृपया full name भरा.');
+      _showMessage(appText.pleaseEnterFullName);
       return false;
     }
     if (_selectedGenderId == null) {
@@ -3734,25 +3734,25 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       return false;
     }
     if (_dobController.text.trim().isEmpty) {
-      _showMessage('कृपया date of birth निवडा.');
+      _showMessage(appText.pleaseSelectDateOfBirth);
       return false;
     }
     if (_selectedReligionId == null) {
-      _showMessage('कृपया suggestions मधून religion निवडा.');
+      _showMessage(appText.pleaseSelectReligionFromSuggestions);
       return false;
     }
     if (_selectedCasteId == null) {
-      _showMessage('कृपया suggestions मधून caste निवडा.');
+      _showMessage(appText.pleaseSelectCasteFromSuggestions);
       return false;
     }
     if (_educationController.text.trim().isEmpty) {
-      _showMessage('कृपया education भरा.');
+      _showMessage(appText.pleaseEnterEducation);
       return false;
     }
     final currentAddressLocationId =
         _currentSelfAddressRow()?.locationId ?? _selectedLocationId;
     if (currentAddressLocationId == null) {
-      _showMessage('कृपया suggestions मधून location निवडा.');
+      _showMessage(appText.pleaseSelectLocationFromSuggestions);
       return false;
     }
     return true;
@@ -3762,21 +3762,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final ageMin = _selectedPreferredAgeMin;
     final ageMax = _selectedPreferredAgeMax;
     if (ageMin != null && ageMax != null && ageMin > ageMax) {
-      _showMessage('Preferred age range चुकीची आहे.');
+      _showMessage(appText.preferredAgeRangeInvalid);
       return false;
     }
 
     final heightMin = _selectedPreferredHeightMinCm;
     final heightMax = _selectedPreferredHeightMaxCm;
     if (heightMin != null && heightMax != null && heightMin > heightMax) {
-      _showMessage('Preferred height range चुकीची आहे.');
+      _showMessage(appText.preferredHeightRangeInvalid);
       return false;
     }
 
     final incomeMin = _selectedPreferredIncomeMin;
     final incomeMax = _selectedPreferredIncomeMax;
     if (incomeMin != null && incomeMax != null && incomeMin > incomeMax) {
-      _showMessage('Preferred income range चुकीची आहे.');
+      _showMessage(appText.preferredIncomeRangeInvalid);
       return false;
     }
 
@@ -3798,7 +3798,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       if (effectiveValueType == 'exact' ||
           effectiveValueType == 'approximate') {
         if (_nullableNumber(amountController) == null) {
-          _showMessage('$title amount भरा.');
+          _showMessage(appText.enterTitleAmount);
           return false;
         }
       }
@@ -3806,11 +3806,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         final minAmount = _nullableNumber(minAmountController);
         final maxAmount = _nullableNumber(maxAmountController);
         if (minAmount == null || maxAmount == null) {
-          _showMessage('$title range amount भरा.');
+          _showMessage(appText.enterTitleRangeAmount);
           return false;
         }
         if (minAmount > maxAmount) {
-          _showMessage('$title range चुकीची आहे.');
+          _showMessage(appText.titleRangeInvalid);
           return false;
         }
       }
@@ -4285,9 +4285,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Future<bool> _saveProfile({
     bool navigateOnSuccess = true,
-    String successMessage = 'Profile update यशस्वी!',
+    String? successMessage,
     _EditProfileSection? section,
   }) async {
+    successMessage ??= appText.profileUpdatedSuccessfully;
     final includePartnerPreferences =
         section == null || section == _EditProfileSection.partnerPreferences;
     if (!_validateRequiredFields()) return false;
@@ -4318,7 +4319,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       setState(() {
         _saving = false;
       });
-      _showMessage('Profile save करता आली नाही. कृपया पुन्हा प्रयत्न करा.');
+      _showMessage(appText.couldNotSaveProfile);
       return false;
     }
 
@@ -5258,8 +5259,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: const Text('Unsaved changes'),
-          content: const Text(
-            'या section मधील बदल save करायचे का discard करायचे?',
+          content: Text(
+            appText.saveOrDiscardChangesInSection,
           ),
           actions: [
             TextButton(
@@ -5293,7 +5294,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       case _UnsavedSectionAction.save:
         return _saveProfile(
           navigateOnSuccess: false,
-          successMessage: 'Section save झाली.',
+          successMessage: appText.sectionSaved,
           section: _expandedSection,
         );
       case _UnsavedSectionAction.discard:
@@ -5396,7 +5397,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     final saved = await _saveProfile(
       navigateOnSuccess: false,
-      successMessage: '${_sectionTitle(section)} save झाले.',
+      successMessage: ( '${_sectionTitle(section)} जतन झाले.' ),
       section: section,
     );
     if (!mounted || !saved) return;
@@ -6184,7 +6185,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         helperText: loading
             ? AppStrings.loading
             : options.isEmpty
-            ? 'Options available झाल्यावर निवडा.'
+            ? appText.selectWhenOptionsAvailable
             : null,
         suffixIcon: selectedIds.isEmpty || _saving
             ? null
@@ -8400,9 +8401,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           controller: _otherRelativesController,
           maxLines: 3,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Other relatives (Optional)',
-            helperText: 'Contact numbers किंवा private details टाकू नका.',
+            helperText: appText.doNotEnterContactNumbersOrPrivateDetails,
             prefixIcon: Icon(Icons.people_outline),
           ),
         ),
@@ -8712,8 +8713,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         prefixIcon: const Icon(Icons.place_outlined),
         border: const OutlineInputBorder(),
         helperText: _selectedPreferredLocationRows.isEmpty
-            ? 'Nearby taluka suggestions backend मधून येतात.'
-            : 'नको असलेले taluka save करण्यापूर्वी काढा.',
+            ? appText.nearbyTalukaSuggestionsComeFromBackend
+            : appText.removeUnwantedTalukasBeforeSaving,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -8817,12 +8818,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         if (_selectedPreferredReligionIds.isEmpty)
-          const InputDecorator(
+          InputDecorator(
             decoration: InputDecoration(
               labelText: 'Preferred castes (Optional)',
               prefixIcon: Icon(Icons.groups_outlined),
               border: OutlineInputBorder(),
-              helperText: 'Preferred caste निवडण्यासाठी आधी religion निवडा.',
+              helperText: appText.selectReligionFirstToChoosePreferredCaste,
             ),
             child: Text('Not selected'),
           )
@@ -8980,9 +8981,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           controller: _expectationsController,
           maxLines: 5,
           textInputAction: TextInputAction.newline,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Expectations (Optional)',
-            helperText: 'Partner बद्दल अपेक्षा थोडक्यात लिहा.',
+            helperText: appText.writeExpectationsAboutPartnerBriefly,
             alignLabelWithHint: true,
             prefixIcon: Icon(Icons.notes_outlined),
           ),
@@ -9041,7 +9042,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'एकावेळी एक section edit करा. Save केल्यानंतर profile fresh reload होईल.',
+                        appText.editOneSectionAtATimeProfileReloadsAfterSave,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: Colors.grey.shade700,
                         ),

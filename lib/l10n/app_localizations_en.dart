@@ -67,6 +67,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Add photos and review partner preference to improve suggestions.';
 
   @override
+  String get addedToShortlist => 'Added to Shortlist.';
+
+  @override
   String get addressLineOptional => 'Address line optional';
 
   @override
@@ -78,6 +81,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get allowLocationToApplyTheClosest =>
       'Allow location to apply the closest app location.';
+
+  @override
+  String get alreadyHaveAccount => 'Already have an account?';
 
   @override
   String get alreadyRegisteredVerifyMobileToContinue =>
@@ -109,10 +115,26 @@ class AppLocalizationsEn extends AppLocalizations {
       'Approved photo is visible on your profile. You can replace it with a new photo.';
 
   @override
+  String get approvedPhotoShownOnProfile =>
+      'This approved photo is shown on your profile.';
+
+  @override
+  String get approvedPhotoShownReplace =>
+      'The approved photo is shown on your profile. You can select a new photo to replace it.';
+
+  @override
   String get approx => 'Approx';
 
   @override
   String get astroDetails => 'Astro details';
+
+  @override
+  String get authExpiredLoginAgain =>
+      'Authentication expired! Please log in again';
+
+  @override
+  String get authExpiredPleaseLoginAgain =>
+      'Authentication expired. Please log in again.';
 
   @override
   String get basedOnYourPartnerPreferences =>
@@ -289,6 +311,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get biodataLinkCopied => 'Biodata link copied.';
 
   @override
+  String get biodataNotReadyForReview =>
+      'This biodata is not yet ready for review.';
+
+  @override
   String get biodataPreviewAction => 'Open preview';
 
   @override
@@ -359,10 +385,18 @@ class AppLocalizationsEn extends AppLocalizations {
       'Camera किंवा gallery मधून profile photo add करा.';
 
   @override
+  String get canSendContactRequestForProfile =>
+      'You can send a contact request for this profile.';
+
+  @override
   String get cancel => 'Cancel';
 
   @override
   String get cancel2 => 'Cancel';
+
+  @override
+  String get cannotSendInterestForThisProfile =>
+      'Interest cannot be sent for this profile.';
 
   @override
   String get careerWithBalance => 'Career with balance';
@@ -425,7 +459,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatUpgradeToRead => 'Upgrade to read';
 
   @override
+  String get checkThisNumberBeforeSaving =>
+      'This number must be checked before saving';
+
+  @override
   String get checkingGoogleEmail => 'Checking Google email';
+
+  @override
+  String get checkingProfile => 'Checking profile.';
 
   @override
   String get childLivingWithOptionsCouldNot =>
@@ -484,6 +525,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get citySuburban => 'City / Suburban';
+
+  @override
+  String get cleanBorderPhotoRightA4Portrait =>
+      'Clean border, photo on the right and A4 portrait layout.';
 
   @override
   String get clearFace => 'Clear face';
@@ -549,6 +594,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactInbox => 'Contact inbox';
 
   @override
+  String get contactInboxDidNotLoad => 'Contact inbox did not load.';
+
+  @override
+  String get contactInformationNotAvailable =>
+      'Contact information is currently not available.';
+
+  @override
+  String get contactRequestNotAvailable =>
+      'Contact request is not available right now.';
+
+  @override
+  String get contactRequestOptionsNotAvailable =>
+      'Contact request options are not available.';
+
+  @override
+  String get contactRequestPending => 'Your contact request is pending.';
+
+  @override
+  String get contactRequestRejected =>
+      'Your contact request has been rejected.';
+
+  @override
   String get contactRequests => 'Contact Requests';
 
   @override
@@ -558,7 +625,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get contactRuleStrictness => 'Contact rule strictness';
 
   @override
+  String get contactUnlockComingSoon =>
+      'The contact unlock feature will be available soon.';
+
+  @override
   String get contactUnlockMode => 'Contact unlock mode';
+
+  @override
+  String get contactUnlockNotAvailable =>
+      'Contact unlock is not available right now.';
 
   @override
   String get contactVisibility => 'Contact visibility';
@@ -573,7 +648,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get continuing => 'Continuing...';
 
   @override
+  String get couldNotAcceptInterest => 'Could not accept interest.';
+
+  @override
+  String get couldNotApproveContact => 'Could not approve contact.';
+
+  @override
+  String get couldNotBlockProfile => 'Could not block profile.';
+
+  @override
+  String get couldNotCheckProfile => 'Could not check profile.';
+
+  @override
+  String get couldNotCropPhoto =>
+      'Could not crop the photo. Please try again or select a different photo.';
+
+  @override
+  String get couldNotHideProfile => 'Could not hide profile.';
+
+  @override
+  String get couldNotLoadCasteList => 'Could not load caste list.';
+
+  @override
+  String get couldNotLoadDropdownOptions =>
+      'Could not load the dropdown options.';
+
+  @override
+  String get couldNotLoadEducationAndCareerOptions =>
+      'Could not load the education and career options.';
+
+  @override
+  String get couldNotLoadFamilyAndHoroscopeOptions =>
+      'Could not load the family and horoscope options.';
+
+  @override
+  String get couldNotLoadInterests => 'Could not load interests.';
+
+  @override
+  String get couldNotLoadMaritalAndLifestyleOptions =>
+      'Could not load the marital and lifestyle options.';
+
+  @override
   String get couldNotLoadOptions => 'Could not load options.';
+
+  @override
+  String get couldNotLoadPartnerPreferenceOptions =>
+      'Could not load the partner preference options.';
+
+  @override
+  String get couldNotLoadPhotos => 'Photos could not be loaded.';
+
+  @override
+  String get couldNotLoadProfile => 'Could not load the profile.';
+
+  @override
+  String get couldNotLoadReligionList => 'Could not load religion list.';
 
   @override
   String get couldNotReadAGoogleEmail =>
@@ -590,23 +719,75 @@ class AppLocalizationsEn extends AppLocalizations {
   String get couldNotReadMobileLocation => 'Could not read mobile location.';
 
   @override
+  String get couldNotRefreshPhotoStatus => 'Could not refresh photo status.';
+
+  @override
+  String get couldNotRefreshProfile => 'Could not refresh the profile.';
+
+  @override
+  String get couldNotRefreshProfileDetails =>
+      'Profile details could not be refreshed.';
+
+  @override
+  String get couldNotRejectContact => 'Could not reject contact.';
+
+  @override
+  String get couldNotRejectInterest => 'Could not reject interest.';
+
+  @override
+  String get couldNotRemoveFromShortlist => 'Could not remove from Shortlist.';
+
+  @override
   String get couldNotSavePassword => 'Could not save password.';
+
+  @override
+  String get couldNotSaveProfile =>
+      'Could not save the profile. Please try again.';
 
   @override
   String get couldNotSaveTheAboutSection => 'Could not save the about section.';
 
   @override
+  String get couldNotSearchLocation => 'Could not search location.';
+
+  @override
+  String get couldNotSearchSubCaste => 'Could not search sub-caste.';
+
+  @override
+  String get couldNotSendContactRequest =>
+      'Could not send the contact request.';
+
+  @override
   String get couldNotSendEmailOtp => 'Could not send email OTP.';
 
   @override
+  String get couldNotSendInterest =>
+      'Could not send interest. Please try again.';
+
+  @override
+  String get couldNotSendInterest2 => 'Could not send interest.';
+
+  @override
   String get couldNotSendOtp => 'Could not send OTP.';
+
+  @override
+  String get couldNotShareProfile => 'Could not share profile.';
+
+  @override
+  String get couldNotShortlist => 'Could not add to Shortlist.';
 
   @override
   String get couldNotSubmitLocationRequestCheck =>
       'Could not submit location request. Check the selected district and taluka, then try again.';
 
   @override
+  String get couldNotSubmitReport => 'Could not submit report.';
+
+  @override
   String get couldNotSubmitRequest => 'Could not submit request.';
+
+  @override
+  String get couldNotUnlockContact => 'Could not unlock the contact.';
 
   @override
   String get couldNotUseLocation => 'Could not use location.';
@@ -616,6 +797,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldNotVerifyEmail => 'Could not verify email.';
+
+  @override
+  String get couldNotWithdrawInterest => 'Could not withdraw interest.';
 
   @override
   String get country => 'Country';
@@ -838,10 +1022,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get district => 'District';
 
   @override
+  String get doNotCloseScreenUntilUploadComplete =>
+      'Do not close the screen until the upload is complete.';
+
+  @override
+  String get doNotEnterContactNumbersOrPrivateDetails =>
+      'Do not enter contact numbers or private details.';
+
+  @override
+  String get doubleBorderPortrait => 'Double Border Portrait';
+
+  @override
+  String get draftParsedReview => 'Draft / parsed review';
+
+  @override
+  String get draftRowsUnavailable => 'Draft rows are not available.';
+
+  @override
   String get drinking => 'Drinking';
 
   @override
   String get edit => 'Edit';
+
+  @override
+  String get editOneSectionAtATimeProfileReloadsAfterSave =>
+      'Edit one section at a time. After saving, the profile will reload freshly.';
 
   @override
   String get editProfile => 'Update Profile';
@@ -878,6 +1083,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get emailOtp => 'Email OTP';
 
   @override
+  String get emailUsedForAccountMobileVerification =>
+      'This email will be used for the account. Mobile verification is required to proceed.';
+
+  @override
   String get emailVerified => 'Email verified';
 
   @override
@@ -903,6 +1112,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get enterAValidMinIncome => 'Enter a valid min income.';
 
   @override
+  String get enterCandidateRealNameBeforeSaving =>
+      'Enter the candidate\'s real name before saving';
+
+  @override
   String get enterChildAge => 'Enter child age.';
 
   @override
@@ -923,6 +1136,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get enterTheOtpSentToYour => 'Enter the OTP sent to your email.';
+
+  @override
+  String get enterTitleAmount => 'Enter the \$title amount.';
+
+  @override
+  String get enterTitleRangeAmount => 'Enter the \$title range amount.';
 
   @override
   String get enterValidChildAge => 'Enter valid child age.';
@@ -1004,6 +1223,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get googleVerifiedYourEmail => 'Google verified your email.';
+
+  @override
+  String get grantAtLeastOneContactMethod =>
+      'Grant at least one contact method.';
 
   @override
   String get groomRelativeSDetails => 'Groom relative’s details';
@@ -1094,7 +1317,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get intercasteAccepted => 'Intercaste accepted.';
 
   @override
+  String get interestAlreadySent => 'Interest has already been sent.';
+
+  @override
   String get interestSent => 'Interest Sent';
+
+  @override
+  String get interestSent2 => 'Interest sent.';
 
   @override
   String get interestStatistics => 'Interest Statistics';
@@ -1114,6 +1343,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get landingSubline =>
       'Safe, simple and family-friendly matrimony platform';
+
+  @override
+  String get landscapeLayoutLargePhotoCompact =>
+      'Large photo and compact information in a landscape layout.';
 
   @override
   String get languageMenu => 'Language';
@@ -1283,6 +1516,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logoutToExit => 'Use Logout when you want to leave this account.';
 
   @override
+  String get makeSelectionBeforeSaving =>
+      'A selection must be made before saving';
+
+  @override
   String get male => 'Male';
 
   @override
@@ -1303,6 +1540,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get matchesFilterHint => 'Age, caste, location';
+
+  @override
+  String get matchesScreenWillAppearSoon =>
+      'The matches screen will appear in a moment.';
 
   @override
   String get matchesTabDaily => 'Daily';
@@ -1411,10 +1652,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nearbyLocation => 'Nearby location';
 
   @override
+  String get nearbyTalukaSuggestionsComeFromBackend =>
+      'Nearby taluka suggestions come from the backend.';
+
+  @override
+  String get newEditableIntakeNotReady =>
+      'A new editable intake was created, but it is not ready yet.';
+
+  @override
   String get newMatchesDigest => 'New matches digest';
 
   @override
+  String get newSetWillAppearHere =>
+      'It will appear here when a new set is available. Until then you can view regular matches.';
+
+  @override
   String get no => 'No';
+
+  @override
+  String get noBiodataIntakeUploadedYet =>
+      'No biodata intake has been uploaded yet.';
 
   @override
   String get noBlockedProfiles => 'No blocked profiles.';
@@ -1443,6 +1700,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get noProfilesFoundTryReducingFilters =>
       'No profiles found. Try reducing filters and search again.';
+
+  @override
+  String get noSafeNewDataToSave =>
+      'There is no safe new information to save. The previous profile information has been kept as is.';
 
   @override
   String get noShortlistedProfiles => 'No shortlisted profiles yet.';
@@ -1504,6 +1765,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get occupationRequestSubmitted => 'Occupation request submitted.';
+
+  @override
+  String get ofThisProfile => 'Of this profile';
 
   @override
   String get oneFinalProfileDetailHelpsFamilies =>
@@ -1611,6 +1875,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoGalleryEmpty => 'No photos uploaded yet.';
 
   @override
+  String get photoInReviewShownWhenApproved =>
+      'The photo is under review. It will be shown on your profile once approved.';
+
+  @override
   String get photoIsNotValidPleaseSelect =>
       'Photo is not valid. Please select a clear image.';
 
@@ -1632,8 +1900,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoNotUploaded => 'Photo not uploaded';
 
   @override
+  String get photoPreviewUnavailable => 'Photo preview is not available.';
+
+  @override
   String get photoReachedBackendQualityAndSafety =>
       'Photo reached backend. Quality and safety check is in progress.';
+
+  @override
+  String get photoReceivedByBackend =>
+      'The backend has received the photo. Quality and safety check is in progress.';
+
+  @override
+  String get photoReceivedCheckingQualitySafety =>
+      'The photo has been received. The backend is checking quality and safety.';
+
+  @override
+  String get photoReorderFailed => 'Photo reorder failed.';
 
   @override
   String get photoSelectedCropItIfNeeded =>
@@ -1650,6 +1932,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get photoUnavailable => 'Photo not available';
 
   @override
+  String get photoUploadFailed => 'Photo upload failed.';
+
+  @override
   String get photoUploadFailedPleaseTryAgain =>
       'Photo upload failed. Please try again.';
 
@@ -1662,6 +1947,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Photo upload is not allowed for this account.';
 
   @override
+  String get photoUploadNotAllowedForAccount =>
+      'Photo upload is currently not allowed for your account.';
+
+  @override
+  String get photoUploadProblem =>
+      'A problem occurred while uploading the photo. Please try again.';
+
+  @override
+  String get photoUploaded => 'Photo uploaded.';
+
+  @override
+  String get photoUploadedApprovalPending =>
+      'The photo is uploaded. Approval or safety check is pending.';
+
+  @override
   String get photoUploadedBackendQualitySafetyCheck =>
       'Photo uploaded आहे. Backend quality आणि safety check नंतर तो visible होईल.';
 
@@ -1672,6 +1972,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get photoUploadedReviewIsPendingSo =>
       'Photo uploaded. Review is pending, so we will continue.';
+
+  @override
+  String get photoUploadedStatusWillUpdate =>
+      'Photo uploaded. Status will update here.';
+
+  @override
+  String get photoUploadedToModerationEngine =>
+      'This photo will be uploaded to the backend moderation engine.';
 
   @override
   String get photoVisibility => 'Photo visibility';
@@ -1688,6 +1996,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pincodeOptional => 'Pincode optional';
+
+  @override
+  String get plainLandscape => 'Plain Landscape';
 
   @override
   String get plansActiveSubscription => 'Active subscription';
@@ -1763,17 +2074,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseCheckThisInformation => 'Please check this information.';
 
   @override
+  String get pleaseEnterEducation => 'Please enter education.';
+
+  @override
+  String get pleaseEnterEducationOrSelectSuggestion =>
+      'Please enter education or select a suggestion.';
+
+  @override
   String get pleaseEnterFullName => 'Please enter full name.';
 
   @override
   String get pleaseSelectAPhotoFirst => 'Please select a photo first.';
 
   @override
+  String get pleaseSelectCasteFromSuggestions =>
+      'Please select a caste from the suggestions.';
+
+  @override
+  String get pleaseSelectDateOfBirth => 'Please select date of birth.';
+
+  @override
   String get pleaseSelectLivingWithAgain => 'Please select living with again.';
+
+  @override
+  String get pleaseSelectLocationFromSuggestions =>
+      'Please select a location from the suggestions.';
 
   @override
   String get pleaseSelectMotherTongueAgain =>
       'Please select mother tongue again.';
+
+  @override
+  String get pleaseSelectReligionFromSuggestions =>
+      'Please select a religion from the suggestions.';
 
   @override
   String get pleaseSelectWhetherThereAreChildren =>
@@ -1790,25 +2123,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseVerifyMobileFirst => 'Please verify mobile first.';
 
   @override
+  String get pleaseWriteReportReason =>
+      'Please write the reason for the report';
+
+  @override
+  String get preferredAgeRangeInvalid => 'The preferred age range is invalid.';
+
+  @override
+  String get preferredHeightRangeInvalid =>
+      'The preferred height range is invalid.';
+
+  @override
+  String get preferredIncomeRangeInvalid =>
+      'The preferred income range is invalid.';
+
+  @override
+  String get premiumDoubleBorderElegantA4Portrait =>
+      'Premium double border, photo and an elegant A4 portrait.';
+
+  @override
   String get premiumProfiles => 'Premium profiles';
 
   @override
   String get premiumProfilesSubtitle => 'Selected premium profiles';
 
   @override
+  String get premiumRoyalStyleLandscape =>
+      'Premium royal style, with a landscape photo.';
+
+  @override
   String get preparingProfilesForYou => 'Preparing profiles for you.';
+
+  @override
+  String get preparingReviewScreen => 'Preparing the review screen...';
 
   @override
   String get preparingYourInformation => 'Preparing your information.';
 
   @override
+  String get previousBiodataTextUnavailable =>
+      'The previous biodata text is not available. Please upload the biodata again.';
+
+  @override
   String get primaryPhoto => 'Primary';
+
+  @override
+  String get problemSelectingPhoto =>
+      'A problem occurred while selecting the photo. Please try again.';
+
+  @override
+  String get professionalLandscapeBiodataNoPhoto =>
+      'Professional landscape biodata without a photo.';
 
   @override
   String get professionalPreferences => 'Professional Preferences';
 
   @override
   String get profile => 'Profile';
+
+  @override
+  String get profileCreatedSuccessfully => 'Profile created successfully!';
+
+  @override
+  String get profileDetailsCopied => 'Profile details copied.';
 
   @override
   String get profileListsBlocked => 'Blocked';
@@ -1832,6 +2209,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileManagedBy => 'Profile managed by';
 
   @override
+  String get profileNotFoundCreateFirst =>
+      'Profile not found. Please create a profile first.';
+
+  @override
   String get profileOpenNotAllowed =>
       'This profile cannot be opened right now.';
 
@@ -1840,6 +2221,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profilePhoto2 => 'Profile Photo';
+
+  @override
+  String get profileQuality => 'Profile quality';
 
   @override
   String get profileRemovedFromShortlist => 'Profile removed from shortlist.';
@@ -1855,6 +2239,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileUnhidden => 'Profile unhidden.';
+
+  @override
+  String get profileUpdatedSuccessfully => 'Profile updated successfully!';
 
   @override
   String get profileViewed => 'Profile viewed';
@@ -1905,6 +2292,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentlyActive => 'Recently active';
 
   @override
+  String get recognizedButNotAddedToForm =>
+      'Information that was recognized but not added to the form';
+
+  @override
   String get refresh => 'Refresh';
 
   @override
@@ -1922,6 +2313,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get registrationIsCompleteNextSettingsImprove =>
       'Registration is complete. Next settings improve match suggestions.';
+
+  @override
+  String get registrationSuccessfulCreateProfile =>
+      'Registration successful! Create your profile...';
 
   @override
   String get rejected => 'Rejected';
@@ -1948,10 +2343,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get removeFromShortlist => 'Remove from shortlist';
 
   @override
+  String get removeUnwantedTalukasBeforeSaving =>
+      'Remove unwanted talukas before saving.';
+
+  @override
+  String get removedFromShortlist => 'Removed from Shortlist.';
+
+  @override
   String get replaceApprovedPhoto => 'Replace approved photo';
 
   @override
   String get replacePhoto => 'Replace photo';
+
+  @override
+  String get reportReasonMinLength =>
+      'Report reason must be at least 10 characters.';
 
   @override
   String get requestEducation => 'Request education';
@@ -1982,6 +2388,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Review the preference prepared from your profile. You can widen it for more matches.';
 
   @override
+  String get royalLandscape => 'Royal Landscape';
+
+  @override
   String get rural => 'Rural';
 
   @override
@@ -2002,6 +2411,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get saveNormalPreferenceAndFinishSetup =>
       'Save normal preference and finish setup';
+
+  @override
+  String get saveOrDiscardChangesInSection =>
+      'Do you want to save or discard the changes in this section?';
 
   @override
   String get saveSection => 'Save section';
@@ -2067,7 +2480,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchWorkType => 'Search work type';
 
   @override
+  String get sectionSaved => 'Section saved.';
+
+  @override
   String get sectionUpdated => 'Section updated.';
+
+  @override
+  String get seeHowYourProfileMatchesHer =>
+      'See how well your profile matches her expectations';
+
+  @override
+  String get seeHowYourProfileMatchesHis =>
+      'See how well your profile matches his expectations';
+
+  @override
+  String get seeHowYourProfileMatchesThisMatch =>
+      'See how well your profile matches this match\'s expectations';
 
   @override
   String get seeWhoViewedYourProfile => 'See who viewed your profile';
@@ -2083,10 +2511,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectAgeBetween1And30 => 'Select age between 1 and 30.';
 
   @override
+  String get selectAtLeastOneContactMethod =>
+      'Select at least one contact method.';
+
+  @override
   String get selectCaste => 'Select caste.';
 
   @override
   String get selectChildGender => 'Select child gender.';
+
+  @override
+  String get selectClearPortraitPhoto =>
+      'Select a clear portrait photo from the camera or gallery.';
 
   @override
   String get selectCountry => 'Select country';
@@ -2109,6 +2545,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectEducation => 'Select education.';
+
+  @override
+  String get selectEmail => 'Select Email';
 
   @override
   String get selectFamilyStatus => 'Select family status.';
@@ -2142,6 +2581,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectLocation => 'Select location';
 
   @override
+  String get selectLocationBeforeSaving =>
+      'A place of residence must be selected before saving';
+
+  @override
   String get selectMaritalStatus => 'Select marital status.';
 
   @override
@@ -2167,10 +2610,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectReligion => 'Select religion.';
 
   @override
+  String get selectReligionFirstToChoosePreferredCaste =>
+      'Select a religion first to choose a preferred caste.';
+
+  @override
   String get selectState => 'Select state';
 
   @override
   String get selectState2 => 'Select state.';
+
+  @override
+  String get selectSubCasteFromSuggestionsOrLeaveEmpty =>
+      'Please select a sub-caste from the suggestions or leave the field empty.';
 
   @override
   String get selectTalukaCityOrSuburb => 'Select taluka, city or suburb';
@@ -2180,6 +2631,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get selectTheCurrentWorkType => 'Select the current work type.';
+
+  @override
+  String get selectWhenOptionsAvailable => 'Select once options are available.';
 
   @override
   String get selectWorkType => 'Select work type';
@@ -2213,6 +2667,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sentInterestsSubtitle => 'View interests you have sent';
+
+  @override
+  String get sessionExpiredPleaseLogin =>
+      'Session expired. Please log in again.';
 
   @override
   String get sessionExpiredPleaseLoginAgain =>
@@ -2318,6 +2776,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get spectaclesLens => 'Spectacles / Lens';
 
   @override
+  String get startWithEmail => 'Start with Email';
+
+  @override
   String get startWithProfileOwner => 'Start with profile owner';
 
   @override
@@ -2391,7 +2852,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get thisWeek => 'this week';
 
   @override
+  String get titleRangeInvalid => 'The \$title range is invalid.';
+
+  @override
   String get today => 'today';
+
+  @override
+  String get todaysRecommendationsComplete =>
+      'Today\'s recommendations are complete';
 
   @override
   String get total => 'Total';
@@ -2401,6 +2869,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get traditionOpenMind2 => 'Tradition & open mind';
+
+  @override
+  String get traditionalColorsDecorativeBorder =>
+      'Traditional colors, decorative border and an introduction card with photo.';
 
   @override
   String get tryAgainAfterTheLatestServer =>
@@ -2423,10 +2895,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get unlock => 'Unlock';
 
   @override
+  String get unlockRequiredToViewContact =>
+      'Unlock is required to view contact details.';
+
+  @override
   String get upDown => 'Up / down';
 
   @override
   String get upgrade => 'Upgrade';
+
+  @override
+  String get upgradeRequiredToViewContact =>
+      'Upgrade is required to view contact details.';
 
   @override
   String get upgradeToSeeVisitors => 'Upgrade to see visitors';
@@ -2434,6 +2914,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get uploadAProfilePhotoBeforeContinuing =>
       'Upload a profile photo before continuing.';
+
+  @override
+  String get uploadClearProfilePhoto =>
+      'Upload a clear profile photo. The approved status will appear only after backend approval.';
+
+  @override
+  String get uploadClearSafeSinglePersonPhoto =>
+      'Please upload a clear, safe and single-person photo.';
 
   @override
   String get uploadCompleteScreen =>
@@ -2454,6 +2942,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get uploadTheSelectedPhotoBeforeContinuing =>
       'Upload the selected photo before continuing.';
+
+  @override
+  String get uploadedBiodataPhoto => 'Uploaded biodata photo';
 
   @override
   String get uploading => 'Uploading...';
@@ -2554,6 +3045,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewedRecently => 'Viewed recently';
 
   @override
+  String get viewedYourProfile => 'Viewed your profile';
+
+  @override
   String get villageLocationName => 'Village / location name';
 
   @override
@@ -2574,6 +3068,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get weWillAddThisOnlyIf =>
       'We will add this only if it is not already available.';
+
+  @override
+  String get whatsappResponseAvailable => 'WhatsApp Response is available.';
+
+  @override
+  String get whatsappResponseComingSoon =>
+      'WhatsApp Response feature will be available soon.';
 
   @override
   String get whatsappResponseInboxWillBeAvailable =>
@@ -2605,6 +3106,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get writeAShortAboutSection => 'Write a short about section.';
 
   @override
+  String get writeExpectationsAboutPartnerBriefly =>
+      'Write your expectations about a partner briefly.';
+
+  @override
+  String get writeOtherReason => 'Write the other reason.';
+
+  @override
   String get years => ' years';
 
   @override
@@ -2628,6 +3136,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get yourProfileHasBeenCreatedSuccessfully =>
       'Your profile has been created successfully.';
+
+  @override
+  String get yourProfileViewedTimes => 'Your profile was viewed \$count times';
+
+  @override
+  String get yourProfileViewedTimesInWindow =>
+      '\$window your profile was viewed \$count times';
 
   @override
   String get yourProfileWasViewed => 'Your profile was viewed.';

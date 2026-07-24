@@ -42,7 +42,7 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
 
       if (statusCode == 401) {
         setState(() {
-          _errorMessage = '🔒 Auth expired! पुन्हा login करा';
+          _errorMessage = appText.authExpiredLoginAgain;
           _isLoading = false;
         });
         return;
@@ -66,7 +66,7 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
       } else {
         setState(() {
           _interests = [];
-          _errorMessage = response['message'] ?? 'Interests लोड होऊ शकले नाही.';
+          _errorMessage = response['message'] ?? appText.couldNotLoadInterests;
           _isLoading = false;
         });
       }
@@ -98,7 +98,7 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
         _fetchReceivedInterests();
       } else {
         final errorMessage =
-            response['message'] ?? 'Interest accept करता आला नाही.';
+            response['message'] ?? appText.couldNotAcceptInterest;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ $errorMessage'),
@@ -138,7 +138,7 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
         _fetchReceivedInterests();
       } else {
         final errorMessage =
-            response['message'] ?? 'Interest reject करता आला नाही.';
+            response['message'] ?? appText.couldNotRejectInterest;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('❌ $errorMessage'),

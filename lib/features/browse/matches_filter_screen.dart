@@ -538,7 +538,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       children: [
         _buildSectionCard(
-          title: _text('Profile quality', 'प्रोफाइल quality'),
+          title: _text('Profile quality', appText.profileQuality),
           children: [
             _buildSwitchTile(
               icon: Icons.photo_camera_back_outlined,

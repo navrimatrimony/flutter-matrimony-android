@@ -1067,10 +1067,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (AppStrings.isMarathi) {
       final profilePhrase = base.contains('तुमचे प्रोफाइल पाहिले')
           ? 'तुमचे प्रोफाइल पाहिले'
-          : 'तुमचे profile पाहिले';
+          : appText.viewedYourProfile;
       final replacement = window.isEmpty
-          ? 'तुमचे profile $count वेळा पाहिले'
-          : '$window तुमचे profile $count वेळा पाहिले';
+          ? appText.yourProfileViewedTimes
+          : appText.yourProfileViewedTimesInWindow;
 
       return _withSentencePeriod(base.replaceFirst(profilePhrase, replacement));
     }
@@ -1126,7 +1126,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _mentionsProfileView(String text) {
     final lower = text.toLowerCase();
     return lower.contains('viewed your profile') ||
-        lower.contains('profile पाहिले') ||
+        lower.contains(appText.profileViewed) ||
         lower.contains('प्रोफाइल पाहिले');
   }
 

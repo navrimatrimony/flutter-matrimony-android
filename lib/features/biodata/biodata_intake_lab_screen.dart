@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import '../../core/app_language.dart';
 
 class BiodataIntakeScreen extends StatefulWidget {
   const BiodataIntakeScreen({super.key});
@@ -259,7 +260,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
           _parseFailureMessage(responseIntake) ??
               _text(
                 'This biodata is not ready for review yet.',
-                'हा बायोडाटा अजून review साठी तयार नाही.',
+                appText.biodataNotReadyForReview,
               ),
         );
         return;
@@ -551,7 +552,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
         _showSnackBar(
           _text(
             'No safe new details to save. Existing profile information was kept.',
-            'Save करण्यासाठी सुरक्षित नवीन माहिती नाही. आधीची profile माहिती तशीच ठेवली आहे.',
+            appText.noSafeNewDataToSave,
           ),
         );
         return;
@@ -721,7 +722,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       _showSnackBar(
         _text(
           'Existing biodata text is not available. Upload the biodata again.',
-          'आधीचा biodata text उपलब्ध नाही. Biodata पुन्हा upload करा.',
+          appText.previousBiodataTextUnavailable,
         ),
       );
       return null;
@@ -754,7 +755,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
             previewResponse,
             _text(
               'A fresh editable intake was created, but it is not ready yet.',
-              'नवीन editable intake तयार झाला, पण तो अजून ready नाही.',
+              appText.newEditableIntakeNotReady,
             ),
           ),
         );
@@ -1013,7 +1014,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
           helperText: key == 'full_name' && _isSuspiciousFullName(value)
               ? _text(
                   'Enter the actual candidate name before saving',
-                  'Save करण्याआधी उमेदवाराचे खरे नाव भरा',
+                  appText.enterCandidateRealNameBeforeSaving,
                 )
               : null,
           keyboardType: keyboardType,
@@ -1055,7 +1056,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
           value: rawValue,
           helperText: _text(
             'Detected text needs numeric review before saving',
-            'Save करण्याआधी हा आकडा तपासावा लागेल',
+            appText.checkThisNumberBeforeSaving,
           ),
         ),
       );
@@ -1099,7 +1100,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                 value: displayLabel,
                 helperText: _text(
                   'Needs selection before saving',
-                  'Save करण्याआधी निवड करावी लागेल',
+                  appText.makeSelectionBeforeSaving,
                 ),
               )
             : _DraftField(
@@ -1704,7 +1705,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
         value: label,
         helperText: _text(
           'Match a residence location before saving',
-          'Save करण्याआधी राहण्याचे ठिकाण निवडावे लागेल',
+          appText.selectLocationBeforeSaving,
         ),
       ),
     );
@@ -2167,7 +2168,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     final path = _pickedImagePath;
     if (path == null) return const SizedBox.shrink();
     return _panel(
-      title: _text('Uploaded biodata photo', 'Upload केलेला बायोडाटा फोटो'),
+      title: _text('Uploaded biodata photo', appText.uploadedBiodataPhoto),
       icon: Icons.image_outlined,
       collapseKey: 'uploaded_photo',
       child: ClipRRect(
@@ -2178,7 +2179,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
           errorBuilder: (context, error, stackTrace) => _emptyPanelText(
             _text(
               'Photo preview is not available.',
-              'फोटो preview उपलब्ध नाही.',
+              appText.photoPreviewUnavailable,
             ),
           ),
         ),
@@ -2206,7 +2207,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
           ? _emptyPanelText(
               _text(
                 'No biodata intake uploaded yet.',
-                'अजून कोणताही बायोडाटा इंटेक upload केलेला नाही.',
+                appText.noBiodataIntakeUploadedYet,
               ),
             )
           : Column(
@@ -2855,7 +2856,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
             _subsectionTitle(
               _text(
                 'Detected but not included',
-                'ओळखले पण form मध्ये न घेतलेली माहिती',
+                appText.recognizedButNotAddedToForm,
               ),
             ),
             for (final row in detected)
@@ -2875,7 +2876,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
               tilePadding: EdgeInsets.zero,
               childrenPadding: const EdgeInsets.only(bottom: 8),
               title: Text(
-                _text('Draft / parsed reconciliation', 'Draft / parsed तपासणी'),
+                _text('Draft / parsed reconciliation', appText.draftParsedReview),
                 style: const TextStyle(fontWeight: FontWeight.w900),
               ),
               children: [
@@ -2910,7 +2911,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
             ),
           if (sectionEntries.isEmpty && detected.isEmpty)
             _emptyPanelText(
-              _text('No draft rows.', 'Draft rows उपलब्ध नाहीत.'),
+              _text('No draft rows.', appText.draftRowsUnavailable),
             ),
         ],
       ),

@@ -200,6 +200,12 @@ abstract class AppLocalizations {
   /// **'Add photos and review partner preference to improve suggestions.'**
   String get addPhotosAndReviewPartnerPreference;
 
+  /// No description provided for @addedToShortlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to Shortlist.'**
+  String get addedToShortlist;
+
   /// No description provided for @addressLineOptional.
   ///
   /// In en, this message translates to:
@@ -223,6 +229,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Allow location to apply the closest app location.'**
   String get allowLocationToApplyTheClosest;
+
+  /// No description provided for @alreadyHaveAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have an account?'**
+  String get alreadyHaveAccount;
 
   /// No description provided for @alreadyRegisteredVerifyMobileToContinue.
   ///
@@ -278,6 +290,18 @@ abstract class AppLocalizations {
   /// **'Approved photo is visible on your profile. You can replace it with a new photo.'**
   String get approvedPhotoIsVisibleOnYour;
 
+  /// No description provided for @approvedPhotoShownOnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'This approved photo is shown on your profile.'**
+  String get approvedPhotoShownOnProfile;
+
+  /// No description provided for @approvedPhotoShownReplace.
+  ///
+  /// In en, this message translates to:
+  /// **'The approved photo is shown on your profile. You can select a new photo to replace it.'**
+  String get approvedPhotoShownReplace;
+
   /// No description provided for @approx.
   ///
   /// In en, this message translates to:
@@ -289,6 +313,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Astro details'**
   String get astroDetails;
+
+  /// No description provided for @authExpiredLoginAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication expired! Please log in again'**
+  String get authExpiredLoginAgain;
+
+  /// No description provided for @authExpiredPleaseLoginAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication expired. Please log in again.'**
+  String get authExpiredPleaseLoginAgain;
 
   /// No description provided for @basedOnYourPartnerPreferences.
   ///
@@ -602,6 +638,12 @@ abstract class AppLocalizations {
   /// **'Biodata link copied.'**
   String get biodataLinkCopied;
 
+  /// No description provided for @biodataNotReadyForReview.
+  ///
+  /// In en, this message translates to:
+  /// **'This biodata is not yet ready for review.'**
+  String get biodataNotReadyForReview;
+
   /// No description provided for @biodataPreviewAction.
   ///
   /// In en, this message translates to:
@@ -740,6 +782,12 @@ abstract class AppLocalizations {
   /// **'Camera किंवा gallery मधून profile photo add करा.'**
   String get cameraGalleryProfilePhotoAdd;
 
+  /// No description provided for @canSendContactRequestForProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'You can send a contact request for this profile.'**
+  String get canSendContactRequestForProfile;
+
   /// No description provided for @cancel.
   ///
   /// In en, this message translates to:
@@ -751,6 +799,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel2;
+
+  /// No description provided for @cannotSendInterestForThisProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest cannot be sent for this profile.'**
+  String get cannotSendInterestForThisProfile;
 
   /// No description provided for @careerWithBalance.
   ///
@@ -872,11 +926,23 @@ abstract class AppLocalizations {
   /// **'Upgrade to read'**
   String get chatUpgradeToRead;
 
+  /// No description provided for @checkThisNumberBeforeSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'This number must be checked before saving'**
+  String get checkThisNumberBeforeSaving;
+
   /// No description provided for @checkingGoogleEmail.
   ///
   /// In en, this message translates to:
   /// **'Checking Google email'**
   String get checkingGoogleEmail;
+
+  /// No description provided for @checkingProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking profile.'**
+  String get checkingProfile;
 
   /// No description provided for @childLivingWithOptionsCouldNot.
   ///
@@ -985,6 +1051,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'City / Suburban'**
   String get citySuburban;
+
+  /// No description provided for @cleanBorderPhotoRightA4Portrait.
+  ///
+  /// In en, this message translates to:
+  /// **'Clean border, photo on the right and A4 portrait layout.'**
+  String get cleanBorderPhotoRightA4Portrait;
 
   /// No description provided for @clearFace.
   ///
@@ -1106,6 +1178,42 @@ abstract class AppLocalizations {
   /// **'Contact inbox'**
   String get contactInbox;
 
+  /// No description provided for @contactInboxDidNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact inbox did not load.'**
+  String get contactInboxDidNotLoad;
+
+  /// No description provided for @contactInformationNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact information is currently not available.'**
+  String get contactInformationNotAvailable;
+
+  /// No description provided for @contactRequestNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact request is not available right now.'**
+  String get contactRequestNotAvailable;
+
+  /// No description provided for @contactRequestOptionsNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact request options are not available.'**
+  String get contactRequestOptionsNotAvailable;
+
+  /// No description provided for @contactRequestPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contact request is pending.'**
+  String get contactRequestPending;
+
+  /// No description provided for @contactRequestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Your contact request has been rejected.'**
+  String get contactRequestRejected;
+
   /// No description provided for @contactRequests.
   ///
   /// In en, this message translates to:
@@ -1124,11 +1232,23 @@ abstract class AppLocalizations {
   /// **'Contact rule strictness'**
   String get contactRuleStrictness;
 
+  /// No description provided for @contactUnlockComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'The contact unlock feature will be available soon.'**
+  String get contactUnlockComingSoon;
+
   /// No description provided for @contactUnlockMode.
   ///
   /// In en, this message translates to:
   /// **'Contact unlock mode'**
   String get contactUnlockMode;
+
+  /// No description provided for @contactUnlockNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact unlock is not available right now.'**
+  String get contactUnlockNotAvailable;
 
   /// No description provided for @contactVisibility.
   ///
@@ -1154,11 +1274,107 @@ abstract class AppLocalizations {
   /// **'Continuing...'**
   String get continuing;
 
+  /// No description provided for @couldNotAcceptInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not accept interest.'**
+  String get couldNotAcceptInterest;
+
+  /// No description provided for @couldNotApproveContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not approve contact.'**
+  String get couldNotApproveContact;
+
+  /// No description provided for @couldNotBlockProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not block profile.'**
+  String get couldNotBlockProfile;
+
+  /// No description provided for @couldNotCheckProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not check profile.'**
+  String get couldNotCheckProfile;
+
+  /// No description provided for @couldNotCropPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not crop the photo. Please try again or select a different photo.'**
+  String get couldNotCropPhoto;
+
+  /// No description provided for @couldNotHideProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not hide profile.'**
+  String get couldNotHideProfile;
+
+  /// No description provided for @couldNotLoadCasteList.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load caste list.'**
+  String get couldNotLoadCasteList;
+
+  /// No description provided for @couldNotLoadDropdownOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the dropdown options.'**
+  String get couldNotLoadDropdownOptions;
+
+  /// No description provided for @couldNotLoadEducationAndCareerOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the education and career options.'**
+  String get couldNotLoadEducationAndCareerOptions;
+
+  /// No description provided for @couldNotLoadFamilyAndHoroscopeOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the family and horoscope options.'**
+  String get couldNotLoadFamilyAndHoroscopeOptions;
+
+  /// No description provided for @couldNotLoadInterests.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load interests.'**
+  String get couldNotLoadInterests;
+
+  /// No description provided for @couldNotLoadMaritalAndLifestyleOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the marital and lifestyle options.'**
+  String get couldNotLoadMaritalAndLifestyleOptions;
+
   /// No description provided for @couldNotLoadOptions.
   ///
   /// In en, this message translates to:
   /// **'Could not load options.'**
   String get couldNotLoadOptions;
+
+  /// No description provided for @couldNotLoadPartnerPreferenceOptions.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the partner preference options.'**
+  String get couldNotLoadPartnerPreferenceOptions;
+
+  /// No description provided for @couldNotLoadPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos could not be loaded.'**
+  String get couldNotLoadPhotos;
+
+  /// No description provided for @couldNotLoadProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load the profile.'**
+  String get couldNotLoadProfile;
+
+  /// No description provided for @couldNotLoadReligionList.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load religion list.'**
+  String get couldNotLoadReligionList;
 
   /// No description provided for @couldNotReadAGoogleEmail.
   ///
@@ -1184,11 +1400,53 @@ abstract class AppLocalizations {
   /// **'Could not read mobile location.'**
   String get couldNotReadMobileLocation;
 
+  /// No description provided for @couldNotRefreshPhotoStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh photo status.'**
+  String get couldNotRefreshPhotoStatus;
+
+  /// No description provided for @couldNotRefreshProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not refresh the profile.'**
+  String get couldNotRefreshProfile;
+
+  /// No description provided for @couldNotRefreshProfileDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile details could not be refreshed.'**
+  String get couldNotRefreshProfileDetails;
+
+  /// No description provided for @couldNotRejectContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reject contact.'**
+  String get couldNotRejectContact;
+
+  /// No description provided for @couldNotRejectInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reject interest.'**
+  String get couldNotRejectInterest;
+
+  /// No description provided for @couldNotRemoveFromShortlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not remove from Shortlist.'**
+  String get couldNotRemoveFromShortlist;
+
   /// No description provided for @couldNotSavePassword.
   ///
   /// In en, this message translates to:
   /// **'Could not save password.'**
   String get couldNotSavePassword;
+
+  /// No description provided for @couldNotSaveProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save the profile. Please try again.'**
+  String get couldNotSaveProfile;
 
   /// No description provided for @couldNotSaveTheAboutSection.
   ///
@@ -1196,11 +1454,41 @@ abstract class AppLocalizations {
   /// **'Could not save the about section.'**
   String get couldNotSaveTheAboutSection;
 
+  /// No description provided for @couldNotSearchLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not search location.'**
+  String get couldNotSearchLocation;
+
+  /// No description provided for @couldNotSearchSubCaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not search sub-caste.'**
+  String get couldNotSearchSubCaste;
+
+  /// No description provided for @couldNotSendContactRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the contact request.'**
+  String get couldNotSendContactRequest;
+
   /// No description provided for @couldNotSendEmailOtp.
   ///
   /// In en, this message translates to:
   /// **'Could not send email OTP.'**
   String get couldNotSendEmailOtp;
+
+  /// No description provided for @couldNotSendInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send interest. Please try again.'**
+  String get couldNotSendInterest;
+
+  /// No description provided for @couldNotSendInterest2.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send interest.'**
+  String get couldNotSendInterest2;
 
   /// No description provided for @couldNotSendOtp.
   ///
@@ -1208,17 +1496,41 @@ abstract class AppLocalizations {
   /// **'Could not send OTP.'**
   String get couldNotSendOtp;
 
+  /// No description provided for @couldNotShareProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not share profile.'**
+  String get couldNotShareProfile;
+
+  /// No description provided for @couldNotShortlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not add to Shortlist.'**
+  String get couldNotShortlist;
+
   /// No description provided for @couldNotSubmitLocationRequestCheck.
   ///
   /// In en, this message translates to:
   /// **'Could not submit location request. Check the selected district and taluka, then try again.'**
   String get couldNotSubmitLocationRequestCheck;
 
+  /// No description provided for @couldNotSubmitReport.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not submit report.'**
+  String get couldNotSubmitReport;
+
   /// No description provided for @couldNotSubmitRequest.
   ///
   /// In en, this message translates to:
   /// **'Could not submit request.'**
   String get couldNotSubmitRequest;
+
+  /// No description provided for @couldNotUnlockContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not unlock the contact.'**
+  String get couldNotUnlockContact;
 
   /// No description provided for @couldNotUseLocation.
   ///
@@ -1237,6 +1549,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Could not verify email.'**
   String get couldNotVerifyEmail;
+
+  /// No description provided for @couldNotWithdrawInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not withdraw interest.'**
+  String get couldNotWithdrawInterest;
 
   /// No description provided for @country.
   ///
@@ -1646,6 +1964,36 @@ abstract class AppLocalizations {
   /// **'District'**
   String get district;
 
+  /// No description provided for @doNotCloseScreenUntilUploadComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not close the screen until the upload is complete.'**
+  String get doNotCloseScreenUntilUploadComplete;
+
+  /// No description provided for @doNotEnterContactNumbersOrPrivateDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not enter contact numbers or private details.'**
+  String get doNotEnterContactNumbersOrPrivateDetails;
+
+  /// No description provided for @doubleBorderPortrait.
+  ///
+  /// In en, this message translates to:
+  /// **'Double Border Portrait'**
+  String get doubleBorderPortrait;
+
+  /// No description provided for @draftParsedReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft / parsed review'**
+  String get draftParsedReview;
+
+  /// No description provided for @draftRowsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Draft rows are not available.'**
+  String get draftRowsUnavailable;
+
   /// No description provided for @drinking.
   ///
   /// In en, this message translates to:
@@ -1657,6 +2005,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit'**
   String get edit;
+
+  /// No description provided for @editOneSectionAtATimeProfileReloadsAfterSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit one section at a time. After saving, the profile will reload freshly.'**
+  String get editOneSectionAtATimeProfileReloadsAfterSave;
 
   /// No description provided for @editProfile.
   ///
@@ -1724,6 +2078,12 @@ abstract class AppLocalizations {
   /// **'Email OTP'**
   String get emailOtp;
 
+  /// No description provided for @emailUsedForAccountMobileVerification.
+  ///
+  /// In en, this message translates to:
+  /// **'This email will be used for the account. Mobile verification is required to proceed.'**
+  String get emailUsedForAccountMobileVerification;
+
   /// No description provided for @emailVerified.
   ///
   /// In en, this message translates to:
@@ -1772,6 +2132,12 @@ abstract class AppLocalizations {
   /// **'Enter a valid min income.'**
   String get enterAValidMinIncome;
 
+  /// No description provided for @enterCandidateRealNameBeforeSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the candidate\'s real name before saving'**
+  String get enterCandidateRealNameBeforeSaving;
+
   /// No description provided for @enterChildAge.
   ///
   /// In en, this message translates to:
@@ -1813,6 +2179,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter the OTP sent to your email.'**
   String get enterTheOtpSentToYour;
+
+  /// No description provided for @enterTitleAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the \$title amount.'**
+  String get enterTitleAmount;
+
+  /// No description provided for @enterTitleRangeAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the \$title range amount.'**
+  String get enterTitleRangeAmount;
 
   /// No description provided for @enterValidChildAge.
   ///
@@ -1969,6 +2347,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Google verified your email.'**
   String get googleVerifiedYourEmail;
+
+  /// No description provided for @grantAtLeastOneContactMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant at least one contact method.'**
+  String get grantAtLeastOneContactMethod;
 
   /// No description provided for @groomRelativeSDetails.
   ///
@@ -2144,11 +2528,23 @@ abstract class AppLocalizations {
   /// **'Intercaste accepted.'**
   String get intercasteAccepted;
 
+  /// No description provided for @interestAlreadySent.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest has already been sent.'**
+  String get interestAlreadySent;
+
   /// No description provided for @interestSent.
   ///
   /// In en, this message translates to:
   /// **'Interest Sent'**
   String get interestSent;
+
+  /// No description provided for @interestSent2.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest sent.'**
+  String get interestSent2;
 
   /// No description provided for @interestStatistics.
   ///
@@ -2185,6 +2581,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Safe, simple and family-friendly matrimony platform'**
   String get landingSubline;
+
+  /// No description provided for @landscapeLayoutLargePhotoCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Large photo and compact information in a landscape layout.'**
+  String get landscapeLayoutLargePhotoCompact;
 
   /// No description provided for @languageMenu.
   ///
@@ -2504,6 +2906,12 @@ abstract class AppLocalizations {
   /// **'Use Logout when you want to leave this account.'**
   String get logoutToExit;
 
+  /// No description provided for @makeSelectionBeforeSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'A selection must be made before saving'**
+  String get makeSelectionBeforeSaving;
+
   /// No description provided for @male.
   ///
   /// In en, this message translates to:
@@ -2545,6 +2953,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Age, caste, location'**
   String get matchesFilterHint;
+
+  /// No description provided for @matchesScreenWillAppearSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'The matches screen will appear in a moment.'**
+  String get matchesScreenWillAppearSoon;
 
   /// No description provided for @matchesTabDaily.
   ///
@@ -2744,17 +3158,41 @@ abstract class AppLocalizations {
   /// **'Nearby location'**
   String get nearbyLocation;
 
+  /// No description provided for @nearbyTalukaSuggestionsComeFromBackend.
+  ///
+  /// In en, this message translates to:
+  /// **'Nearby taluka suggestions come from the backend.'**
+  String get nearbyTalukaSuggestionsComeFromBackend;
+
+  /// No description provided for @newEditableIntakeNotReady.
+  ///
+  /// In en, this message translates to:
+  /// **'A new editable intake was created, but it is not ready yet.'**
+  String get newEditableIntakeNotReady;
+
   /// No description provided for @newMatchesDigest.
   ///
   /// In en, this message translates to:
   /// **'New matches digest'**
   String get newMatchesDigest;
 
+  /// No description provided for @newSetWillAppearHere.
+  ///
+  /// In en, this message translates to:
+  /// **'It will appear here when a new set is available. Until then you can view regular matches.'**
+  String get newSetWillAppearHere;
+
   /// No description provided for @no.
   ///
   /// In en, this message translates to:
   /// **'No'**
   String get no;
+
+  /// No description provided for @noBiodataIntakeUploadedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No biodata intake has been uploaded yet.'**
+  String get noBiodataIntakeUploadedYet;
 
   /// No description provided for @noBlockedProfiles.
   ///
@@ -2809,6 +3247,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No profiles found. Try reducing filters and search again.'**
   String get noProfilesFoundTryReducingFilters;
+
+  /// No description provided for @noSafeNewDataToSave.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no safe new information to save. The previous profile information has been kept as is.'**
+  String get noSafeNewDataToSave;
 
   /// No description provided for @noShortlistedProfiles.
   ///
@@ -2923,6 +3367,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Occupation request submitted.'**
   String get occupationRequestSubmitted;
+
+  /// No description provided for @ofThisProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Of this profile'**
+  String get ofThisProfile;
 
   /// No description provided for @oneFinalProfileDetailHelpsFamilies.
   ///
@@ -3116,6 +3566,12 @@ abstract class AppLocalizations {
   /// **'No photos uploaded yet.'**
   String get photoGalleryEmpty;
 
+  /// No description provided for @photoInReviewShownWhenApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo is under review. It will be shown on your profile once approved.'**
+  String get photoInReviewShownWhenApproved;
+
   /// No description provided for @photoIsNotValidPleaseSelect.
   ///
   /// In en, this message translates to:
@@ -3152,11 +3608,35 @@ abstract class AppLocalizations {
   /// **'Photo not uploaded'**
   String get photoNotUploaded;
 
+  /// No description provided for @photoPreviewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo preview is not available.'**
+  String get photoPreviewUnavailable;
+
   /// No description provided for @photoReachedBackendQualityAndSafety.
   ///
   /// In en, this message translates to:
   /// **'Photo reached backend. Quality and safety check is in progress.'**
   String get photoReachedBackendQualityAndSafety;
+
+  /// No description provided for @photoReceivedByBackend.
+  ///
+  /// In en, this message translates to:
+  /// **'The backend has received the photo. Quality and safety check is in progress.'**
+  String get photoReceivedByBackend;
+
+  /// No description provided for @photoReceivedCheckingQualitySafety.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo has been received. The backend is checking quality and safety.'**
+  String get photoReceivedCheckingQualitySafety;
+
+  /// No description provided for @photoReorderFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo reorder failed.'**
+  String get photoReorderFailed;
 
   /// No description provided for @photoSelectedCropItIfNeeded.
   ///
@@ -3182,6 +3662,12 @@ abstract class AppLocalizations {
   /// **'Photo not available'**
   String get photoUnavailable;
 
+  /// No description provided for @photoUploadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo upload failed.'**
+  String get photoUploadFailed;
+
   /// No description provided for @photoUploadFailedPleaseTryAgain.
   ///
   /// In en, this message translates to:
@@ -3200,6 +3686,30 @@ abstract class AppLocalizations {
   /// **'Photo upload is not allowed for this account.'**
   String get photoUploadIsNotAllowedFor;
 
+  /// No description provided for @photoUploadNotAllowedForAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo upload is currently not allowed for your account.'**
+  String get photoUploadNotAllowedForAccount;
+
+  /// No description provided for @photoUploadProblem.
+  ///
+  /// In en, this message translates to:
+  /// **'A problem occurred while uploading the photo. Please try again.'**
+  String get photoUploadProblem;
+
+  /// No description provided for @photoUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo uploaded.'**
+  String get photoUploaded;
+
+  /// No description provided for @photoUploadedApprovalPending.
+  ///
+  /// In en, this message translates to:
+  /// **'The photo is uploaded. Approval or safety check is pending.'**
+  String get photoUploadedApprovalPending;
+
   /// No description provided for @photoUploadedBackendQualitySafetyCheck.
   ///
   /// In en, this message translates to:
@@ -3217,6 +3727,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Photo uploaded. Review is pending, so we will continue.'**
   String get photoUploadedReviewIsPendingSo;
+
+  /// No description provided for @photoUploadedStatusWillUpdate.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo uploaded. Status will update here.'**
+  String get photoUploadedStatusWillUpdate;
+
+  /// No description provided for @photoUploadedToModerationEngine.
+  ///
+  /// In en, this message translates to:
+  /// **'This photo will be uploaded to the backend moderation engine.'**
+  String get photoUploadedToModerationEngine;
 
   /// No description provided for @photoVisibility.
   ///
@@ -3247,6 +3769,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pincode optional'**
   String get pincodeOptional;
+
+  /// No description provided for @plainLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Plain Landscape'**
+  String get plainLandscape;
 
   /// No description provided for @plansActiveSubscription.
   ///
@@ -3386,6 +3914,18 @@ abstract class AppLocalizations {
   /// **'Please check this information.'**
   String get pleaseCheckThisInformation;
 
+  /// No description provided for @pleaseEnterEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter education.'**
+  String get pleaseEnterEducation;
+
+  /// No description provided for @pleaseEnterEducationOrSelectSuggestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter education or select a suggestion.'**
+  String get pleaseEnterEducationOrSelectSuggestion;
+
   /// No description provided for @pleaseEnterFullName.
   ///
   /// In en, this message translates to:
@@ -3398,17 +3938,41 @@ abstract class AppLocalizations {
   /// **'Please select a photo first.'**
   String get pleaseSelectAPhotoFirst;
 
+  /// No description provided for @pleaseSelectCasteFromSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a caste from the suggestions.'**
+  String get pleaseSelectCasteFromSuggestions;
+
+  /// No description provided for @pleaseSelectDateOfBirth.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select date of birth.'**
+  String get pleaseSelectDateOfBirth;
+
   /// No description provided for @pleaseSelectLivingWithAgain.
   ///
   /// In en, this message translates to:
   /// **'Please select living with again.'**
   String get pleaseSelectLivingWithAgain;
 
+  /// No description provided for @pleaseSelectLocationFromSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a location from the suggestions.'**
+  String get pleaseSelectLocationFromSuggestions;
+
   /// No description provided for @pleaseSelectMotherTongueAgain.
   ///
   /// In en, this message translates to:
   /// **'Please select mother tongue again.'**
   String get pleaseSelectMotherTongueAgain;
+
+  /// No description provided for @pleaseSelectReligionFromSuggestions.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a religion from the suggestions.'**
+  String get pleaseSelectReligionFromSuggestions;
 
   /// No description provided for @pleaseSelectWhetherThereAreChildren.
   ///
@@ -3434,6 +3998,36 @@ abstract class AppLocalizations {
   /// **'Please verify mobile first.'**
   String get pleaseVerifyMobileFirst;
 
+  /// No description provided for @pleaseWriteReportReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Please write the reason for the report'**
+  String get pleaseWriteReportReason;
+
+  /// No description provided for @preferredAgeRangeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The preferred age range is invalid.'**
+  String get preferredAgeRangeInvalid;
+
+  /// No description provided for @preferredHeightRangeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The preferred height range is invalid.'**
+  String get preferredHeightRangeInvalid;
+
+  /// No description provided for @preferredIncomeRangeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The preferred income range is invalid.'**
+  String get preferredIncomeRangeInvalid;
+
+  /// No description provided for @premiumDoubleBorderElegantA4Portrait.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium double border, photo and an elegant A4 portrait.'**
+  String get premiumDoubleBorderElegantA4Portrait;
+
   /// No description provided for @premiumProfiles.
   ///
   /// In en, this message translates to:
@@ -3446,11 +4040,23 @@ abstract class AppLocalizations {
   /// **'Selected premium profiles'**
   String get premiumProfilesSubtitle;
 
+  /// No description provided for @premiumRoyalStyleLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium royal style, with a landscape photo.'**
+  String get premiumRoyalStyleLandscape;
+
   /// No description provided for @preparingProfilesForYou.
   ///
   /// In en, this message translates to:
   /// **'Preparing profiles for you.'**
   String get preparingProfilesForYou;
+
+  /// No description provided for @preparingReviewScreen.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing the review screen...'**
+  String get preparingReviewScreen;
 
   /// No description provided for @preparingYourInformation.
   ///
@@ -3458,11 +4064,29 @@ abstract class AppLocalizations {
   /// **'Preparing your information.'**
   String get preparingYourInformation;
 
+  /// No description provided for @previousBiodataTextUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'The previous biodata text is not available. Please upload the biodata again.'**
+  String get previousBiodataTextUnavailable;
+
   /// No description provided for @primaryPhoto.
   ///
   /// In en, this message translates to:
   /// **'Primary'**
   String get primaryPhoto;
+
+  /// No description provided for @problemSelectingPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'A problem occurred while selecting the photo. Please try again.'**
+  String get problemSelectingPhoto;
+
+  /// No description provided for @professionalLandscapeBiodataNoPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Professional landscape biodata without a photo.'**
+  String get professionalLandscapeBiodataNoPhoto;
 
   /// No description provided for @professionalPreferences.
   ///
@@ -3475,6 +4099,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile'**
   String get profile;
+
+  /// No description provided for @profileCreatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile created successfully!'**
+  String get profileCreatedSuccessfully;
+
+  /// No description provided for @profileDetailsCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile details copied.'**
+  String get profileDetailsCopied;
 
   /// No description provided for @profileListsBlocked.
   ///
@@ -3518,6 +4154,12 @@ abstract class AppLocalizations {
   /// **'Profile managed by'**
   String get profileManagedBy;
 
+  /// No description provided for @profileNotFoundCreateFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile not found. Please create a profile first.'**
+  String get profileNotFoundCreateFirst;
+
   /// No description provided for @profileOpenNotAllowed.
   ///
   /// In en, this message translates to:
@@ -3535,6 +4177,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile Photo'**
   String get profilePhoto2;
+
+  /// No description provided for @profileQuality.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile quality'**
+  String get profileQuality;
 
   /// No description provided for @profileRemovedFromShortlist.
   ///
@@ -3565,6 +4213,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile unhidden.'**
   String get profileUnhidden;
+
+  /// No description provided for @profileUpdatedSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile updated successfully!'**
+  String get profileUpdatedSuccessfully;
 
   /// No description provided for @profileViewed.
   ///
@@ -3656,6 +4310,12 @@ abstract class AppLocalizations {
   /// **'Recently active'**
   String get recentlyActive;
 
+  /// No description provided for @recognizedButNotAddedToForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Information that was recognized but not added to the form'**
+  String get recognizedButNotAddedToForm;
+
   /// No description provided for @refresh.
   ///
   /// In en, this message translates to:
@@ -3691,6 +4351,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Registration is complete. Next settings improve match suggestions.'**
   String get registrationIsCompleteNextSettingsImprove;
+
+  /// No description provided for @registrationSuccessfulCreateProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Registration successful! Create your profile...'**
+  String get registrationSuccessfulCreateProfile;
 
   /// No description provided for @rejected.
   ///
@@ -3740,6 +4406,18 @@ abstract class AppLocalizations {
   /// **'Remove from shortlist'**
   String get removeFromShortlist;
 
+  /// No description provided for @removeUnwantedTalukasBeforeSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove unwanted talukas before saving.'**
+  String get removeUnwantedTalukasBeforeSaving;
+
+  /// No description provided for @removedFromShortlist.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed from Shortlist.'**
+  String get removedFromShortlist;
+
   /// No description provided for @replaceApprovedPhoto.
   ///
   /// In en, this message translates to:
@@ -3751,6 +4429,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Replace photo'**
   String get replacePhoto;
+
+  /// No description provided for @reportReasonMinLength.
+  ///
+  /// In en, this message translates to:
+  /// **'Report reason must be at least 10 characters.'**
+  String get reportReasonMinLength;
 
   /// No description provided for @requestEducation.
   ///
@@ -3806,6 +4490,12 @@ abstract class AppLocalizations {
   /// **'Review the preference prepared from your profile. You can widen it for more matches.'**
   String get reviewThePreferencePreparedFromYour;
 
+  /// No description provided for @royalLandscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Royal Landscape'**
+  String get royalLandscape;
+
   /// No description provided for @rural.
   ///
   /// In en, this message translates to:
@@ -3847,6 +4537,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save normal preference and finish setup'**
   String get saveNormalPreferenceAndFinishSetup;
+
+  /// No description provided for @saveOrDiscardChangesInSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Do you want to save or discard the changes in this section?'**
+  String get saveOrDiscardChangesInSection;
 
   /// No description provided for @saveSection.
   ///
@@ -3968,11 +4664,35 @@ abstract class AppLocalizations {
   /// **'Search work type'**
   String get searchWorkType;
 
+  /// No description provided for @sectionSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Section saved.'**
+  String get sectionSaved;
+
   /// No description provided for @sectionUpdated.
   ///
   /// In en, this message translates to:
   /// **'Section updated.'**
   String get sectionUpdated;
+
+  /// No description provided for @seeHowYourProfileMatchesHer.
+  ///
+  /// In en, this message translates to:
+  /// **'See how well your profile matches her expectations'**
+  String get seeHowYourProfileMatchesHer;
+
+  /// No description provided for @seeHowYourProfileMatchesHis.
+  ///
+  /// In en, this message translates to:
+  /// **'See how well your profile matches his expectations'**
+  String get seeHowYourProfileMatchesHis;
+
+  /// No description provided for @seeHowYourProfileMatchesThisMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'See how well your profile matches this match\'s expectations'**
+  String get seeHowYourProfileMatchesThisMatch;
 
   /// No description provided for @seeWhoViewedYourProfile.
   ///
@@ -3998,6 +4718,12 @@ abstract class AppLocalizations {
   /// **'Select age between 1 and 30.'**
   String get selectAgeBetween1And30;
 
+  /// No description provided for @selectAtLeastOneContactMethod.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least one contact method.'**
+  String get selectAtLeastOneContactMethod;
+
   /// No description provided for @selectCaste.
   ///
   /// In en, this message translates to:
@@ -4009,6 +4735,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select child gender.'**
   String get selectChildGender;
+
+  /// No description provided for @selectClearPortraitPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a clear portrait photo from the camera or gallery.'**
+  String get selectClearPortraitPhoto;
 
   /// No description provided for @selectCountry.
   ///
@@ -4051,6 +4783,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select education.'**
   String get selectEducation;
+
+  /// No description provided for @selectEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Email'**
+  String get selectEmail;
 
   /// No description provided for @selectFamilyStatus.
   ///
@@ -4112,6 +4850,12 @@ abstract class AppLocalizations {
   /// **'Select location'**
   String get selectLocation;
 
+  /// No description provided for @selectLocationBeforeSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'A place of residence must be selected before saving'**
+  String get selectLocationBeforeSaving;
+
   /// No description provided for @selectMaritalStatus.
   ///
   /// In en, this message translates to:
@@ -4160,6 +4904,12 @@ abstract class AppLocalizations {
   /// **'Select religion.'**
   String get selectReligion;
 
+  /// No description provided for @selectReligionFirstToChoosePreferredCaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a religion first to choose a preferred caste.'**
+  String get selectReligionFirstToChoosePreferredCaste;
+
   /// No description provided for @selectState.
   ///
   /// In en, this message translates to:
@@ -4171,6 +4921,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select state.'**
   String get selectState2;
+
+  /// No description provided for @selectSubCasteFromSuggestionsOrLeaveEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a sub-caste from the suggestions or leave the field empty.'**
+  String get selectSubCasteFromSuggestionsOrLeaveEmpty;
 
   /// No description provided for @selectTalukaCityOrSuburb.
   ///
@@ -4189,6 +4945,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Select the current work type.'**
   String get selectTheCurrentWorkType;
+
+  /// No description provided for @selectWhenOptionsAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Select once options are available.'**
+  String get selectWhenOptionsAvailable;
 
   /// No description provided for @selectWorkType.
   ///
@@ -4255,6 +5017,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View interests you have sent'**
   String get sentInterestsSubtitle;
+
+  /// No description provided for @sessionExpiredPleaseLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Session expired. Please log in again.'**
+  String get sessionExpiredPleaseLogin;
 
   /// No description provided for @sessionExpiredPleaseLoginAgain.
   ///
@@ -4454,6 +5222,12 @@ abstract class AppLocalizations {
   /// **'Spectacles / Lens'**
   String get spectaclesLens;
 
+  /// No description provided for @startWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with Email'**
+  String get startWithEmail;
+
   /// No description provided for @startWithProfileOwner.
   ///
   /// In en, this message translates to:
@@ -4580,11 +5354,23 @@ abstract class AppLocalizations {
   /// **'this week'**
   String get thisWeek;
 
+  /// No description provided for @titleRangeInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'The \$title range is invalid.'**
+  String get titleRangeInvalid;
+
   /// No description provided for @today.
   ///
   /// In en, this message translates to:
   /// **'today'**
   String get today;
+
+  /// No description provided for @todaysRecommendationsComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s recommendations are complete'**
+  String get todaysRecommendationsComplete;
 
   /// No description provided for @total.
   ///
@@ -4603,6 +5389,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Tradition & open mind'**
   String get traditionOpenMind2;
+
+  /// No description provided for @traditionalColorsDecorativeBorder.
+  ///
+  /// In en, this message translates to:
+  /// **'Traditional colors, decorative border and an introduction card with photo.'**
+  String get traditionalColorsDecorativeBorder;
 
   /// No description provided for @tryAgainAfterTheLatestServer.
   ///
@@ -4640,6 +5432,12 @@ abstract class AppLocalizations {
   /// **'Unlock'**
   String get unlock;
 
+  /// No description provided for @unlockRequiredToViewContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock is required to view contact details.'**
+  String get unlockRequiredToViewContact;
+
   /// No description provided for @upDown.
   ///
   /// In en, this message translates to:
@@ -4652,6 +5450,12 @@ abstract class AppLocalizations {
   /// **'Upgrade'**
   String get upgrade;
 
+  /// No description provided for @upgradeRequiredToViewContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade is required to view contact details.'**
+  String get upgradeRequiredToViewContact;
+
   /// No description provided for @upgradeToSeeVisitors.
   ///
   /// In en, this message translates to:
@@ -4663,6 +5467,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upload a profile photo before continuing.'**
   String get uploadAProfilePhotoBeforeContinuing;
+
+  /// No description provided for @uploadClearProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a clear profile photo. The approved status will appear only after backend approval.'**
+  String get uploadClearProfilePhoto;
+
+  /// No description provided for @uploadClearSafeSinglePersonPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Please upload a clear, safe and single-person photo.'**
+  String get uploadClearSafeSinglePersonPhoto;
 
   /// No description provided for @uploadCompleteScreen.
   ///
@@ -4699,6 +5515,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Upload the selected photo before continuing.'**
   String get uploadTheSelectedPhotoBeforeContinuing;
+
+  /// No description provided for @uploadedBiodataPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploaded biodata photo'**
+  String get uploadedBiodataPhoto;
 
   /// No description provided for @uploading.
   ///
@@ -4892,6 +5714,12 @@ abstract class AppLocalizations {
   /// **'Viewed recently'**
   String get viewedRecently;
 
+  /// No description provided for @viewedYourProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Viewed your profile'**
+  String get viewedYourProfile;
+
   /// No description provided for @villageLocationName.
   ///
   /// In en, this message translates to:
@@ -4927,6 +5755,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We will add this only if it is not already available.'**
   String get weWillAddThisOnlyIf;
+
+  /// No description provided for @whatsappResponseAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp Response is available.'**
+  String get whatsappResponseAvailable;
+
+  /// No description provided for @whatsappResponseComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'WhatsApp Response feature will be available soon.'**
+  String get whatsappResponseComingSoon;
 
   /// No description provided for @whatsappResponseInboxWillBeAvailable.
   ///
@@ -4982,6 +5822,18 @@ abstract class AppLocalizations {
   /// **'Write a short about section.'**
   String get writeAShortAboutSection;
 
+  /// No description provided for @writeExpectationsAboutPartnerBriefly.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your expectations about a partner briefly.'**
+  String get writeExpectationsAboutPartnerBriefly;
+
+  /// No description provided for @writeOtherReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Write the other reason.'**
+  String get writeOtherReason;
+
   /// No description provided for @years.
   ///
   /// In en, this message translates to:
@@ -5029,6 +5881,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your profile has been created successfully.'**
   String get yourProfileHasBeenCreatedSuccessfully;
+
+  /// No description provided for @yourProfileViewedTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile was viewed \$count times'**
+  String get yourProfileViewedTimes;
+
+  /// No description provided for @yourProfileViewedTimesInWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'\$window your profile was viewed \$count times'**
+  String get yourProfileViewedTimesInWindow;
 
   /// No description provided for @yourProfileWasViewed.
   ///

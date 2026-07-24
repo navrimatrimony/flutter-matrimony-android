@@ -50,7 +50,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       setState(() {
         _errorMessage = _responseErrorMessage(
           response,
-          'Contact inbox load झाली नाही.',
+          appText.contactInboxDidNotLoad,
         );
         _isLoading = false;
       });
@@ -413,7 +413,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
             void submit() {
               if (selectedScopes.isEmpty) {
                 setSheetState(() {
-                  errorText = 'किमान एक contact method grant करा.';
+                  errorText = appText.grantAtLeastOneContactMethod;
                 });
                 return;
               }
@@ -562,7 +562,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       }
 
       _showSnackBar(
-        _responseErrorMessage(response, 'Contact approve करता आला नाही.'),
+        _responseErrorMessage(response, appText.couldNotApproveContact),
         error: true,
       );
     } catch (e) {
@@ -615,7 +615,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       }
 
       _showSnackBar(
-        _responseErrorMessage(response, 'Contact reject करता आली नाही.'),
+        _responseErrorMessage(response, appText.couldNotRejectContact),
         error: true,
       );
     } catch (e) {

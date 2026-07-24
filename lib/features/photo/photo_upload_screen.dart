@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_language.dart';
 
 enum _PhotoUploadStage {
   idle,
@@ -87,7 +88,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
       });
     } catch (error) {
       _showMessage(
-        'Photo निवडताना problem आला. कृपया पुन्हा प्रयत्न करा.',
+        appText.problemSelectingPhoto,
         _NoticeTone.error,
       );
       if (!mounted) return;
@@ -100,7 +101,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
 
   Future<void> _uploadImage() async {
     if (_selectedImage == null) {
-      _showMessage('कृपया आधी photo निवडा.', _NoticeTone.warning);
+      _showMessage(appText.pleaseSelectAPhotoFirst, _NoticeTone.warning);
       return;
     }
 
@@ -113,7 +114,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
     setState(() {
       _uploading = true;
       _stage = _PhotoUploadStage.uploading;
-      _detailMessage = 'Photo upload होत आहे. कृपया थांबा.';
+      _detailMessage = appText.photoIsUploadingPleaseWait;
     });
 
     try {
@@ -122,27 +123,27 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
 
       final statusCode = response['statusCode'];
       if (statusCode == 401) {
-        _setFailure('Session expired. कृपया पुन्हा login करा.');
+        _setFailure(appText.sessionExpiredPleaseLogin);
         return;
       }
       if (statusCode == 403) {
         _setFailure(
           response['message']?.toString() ??
-              'Photo upload सध्या तुमच्या account साठी allowed नाही.',
+              appText.photoUploadNotAllowedForAccount,
         );
         return;
       }
       if (statusCode == 404) {
         _setFailure(
           response['message']?.toString() ??
-              'Profile सापडली नाही. कृपया आधी profile तयार करा.',
+              appText.profileNotFoundCreateFirst,
         );
         return;
       }
       if (statusCode == 422) {
         _setFailure(
           response['message']?.toString() ??
-              'Photo valid नाही. कृपया clear image निवडा.',
+              appText.photoIsNotValidPleaseSelect,
         );
         return;
       }
@@ -159,13 +160,13 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
           _approvedPhotoUrl = uploadedUrl ?? _approvedPhotoUrl;
           _stage = _stageFromUploadStatus(status);
           _detailMessage =
-              'Photo backend ला मिळाला आहे. Quality आणि safety check चालू आहे.';
+              appText.photoReceivedByBackend;
         });
 
         await _refreshProfileStatus(silent: true);
         widget.onUploaded?.call();
         _showMessage(
-          'Photo upload झाला. Status इथे update होईल.',
+          appText.photoUploadedStatusWillUpdate,
           _NoticeTone.success,
         );
 
@@ -179,10 +180,10 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
 
       _setFailure(
         response['message']?.toString() ??
-            'Photo upload fail झाला. कृपया पुन्हा प्रयत्न करा.',
+            appText.photoUploadFailedPleaseTryAgain,
       );
     } catch (_) {
-      _setFailure('Photo upload करताना problem आला. कृपया पुन्हा प्रयत्न करा.');
+      _setFailure(appText.photoUploadProblem);
     } finally {
       if (mounted) {
         setState(() {
@@ -195,7 +196,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
   Future<bool> _verifyProfileExists() async {
     setState(() {
       _checkingStatus = true;
-      _detailMessage = 'Profile तपासत आहे.';
+      _detailMessage = appText.checkingProfile;
     });
 
     try {
@@ -205,7 +206,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
       final profileStatusCode = profileCheck['statusCode'];
       if (profileStatusCode == 404 || profileCheck['success'] != true) {
         _showMessage(
-          'Profile सापडली नाही. कृपया आधी profile तयार करा.',
+          appText.profileNotFoundCreateFirst,
           _NoticeTone.error,
         );
         Navigator.pushReplacementNamed(context, '/smart-onboarding');
@@ -215,7 +216,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
       _applyProfileSnapshot(ApiClient.currentUserProfile);
       return true;
     } catch (_) {
-      _showMessage('Profile तपासता आली नाही.', _NoticeTone.error);
+      _showMessage(appText.couldNotCheckProfile, _NoticeTone.error);
       return false;
     } finally {
       if (mounted) {
@@ -242,14 +243,14 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         _applyProfileSnapshot(ApiClient.currentUserProfile);
       } else if (!silent) {
         _showMessage(
-          'Photo status refresh करता आला नाही.',
+          appText.couldNotRefreshPhotoStatus,
           _NoticeTone.warning,
         );
       }
     } catch (_) {
       if (!silent) {
         _showMessage(
-          'Photo status refresh करता आला नाही.',
+          appText.couldNotRefreshPhotoStatus,
           _NoticeTone.warning,
         );
       }
@@ -305,7 +306,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         _selectedImage = null;
         _stage = _PhotoUploadStage.approved;
         _detailMessage =
-            'Approved photo profile वर दिसत आहे. नवीन photo निवडून replace करू शकता.';
+            appText.approvedPhotoShownReplace;
         return;
       }
 
@@ -315,14 +316,14 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         _stage = _PhotoUploadStage.rejected;
         _detailMessage =
             rejectedReason ??
-            'हा photo approve होऊ शकला नाही. कृपया दुसरा clear photo upload करा.';
+            appText.thisPhotoCouldNotBeApproved;
         return;
       }
 
       if (hasUploaded && _stage != _PhotoUploadStage.selected) {
         _stage = _PhotoUploadStage.pending;
         _detailMessage =
-            'Photo uploaded आहे. Approval किंवा safety check pending आहे.';
+            appText.photoUploadedApprovalPending;
       }
     }
 
@@ -687,19 +688,19 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
   String _stageDescription(_PhotoUploadStage stage) {
     return switch (stage) {
       _PhotoUploadStage.idle =>
-        'Camera किंवा gallery मधून clear portrait photo निवडा.',
+        appText.selectClearPortraitPhoto,
       _PhotoUploadStage.selected =>
-        'हा photo backend moderation engine कडे upload होईल.',
+        appText.photoUploadedToModerationEngine,
       _PhotoUploadStage.uploading =>
-        'Upload complete होईपर्यंत screen बंद करू नका.',
+        appText.doNotCloseScreenUntilUploadComplete,
       _PhotoUploadStage.processing =>
-        'Photo received आहे. Backend quality आणि safety check करत आहे.',
+        appText.photoReceivedCheckingQualitySafety,
       _PhotoUploadStage.approved =>
-        'हा approved photo तुमच्या profile वर दिसत आहे.',
+        appText.approvedPhotoShownOnProfile,
       _PhotoUploadStage.pending =>
-        'Photo review मध्ये आहे. Approved झाल्यावर profile वर दिसेल.',
+        appText.photoInReviewShownWhenApproved,
       _PhotoUploadStage.rejected =>
-        'कृपया clear, safe आणि single-person photo upload करा.',
+        appText.uploadClearSafeSinglePersonPhoto,
       _PhotoUploadStage.error => 'कृपया पुन्हा प्रयत्न करा.',
     };
   }

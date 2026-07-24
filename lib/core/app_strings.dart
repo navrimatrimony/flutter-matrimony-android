@@ -440,9 +440,9 @@ class AppStrings {
       'classic_portrait_no_photo' => 'क्लासिक फोटोशिवाय',
       'parichay_patra_photo' => 'पारंपरिक परिचय पत्र',
       'photo_side_biodata' => 'फोटो साइड बायोडाटा',
-      'simple_landscape_no_photo' => 'साधा Landscape',
-      'double_portrait_photo' => 'Double Border उभा',
-      'royal_landscape_photo' => 'Royal आडवा',
+      'simple_landscape_no_photo' => appText.plainLandscape,
+      'double_portrait_photo' => appText.doubleBorderPortrait,
+      'royal_landscape_photo' => appText.royalLandscape,
       _ => fallback,
     };
   }
@@ -452,18 +452,18 @@ class AppStrings {
 
     return switch (key) {
       'classic_portrait_photo' =>
-        'स्वच्छ border, उजवीकडे फोटो आणि A4 portrait layout.',
+        appText.cleanBorderPhotoRightA4Portrait,
       'classic_portrait_no_photo' =>
         'फोटोशिवाय साधा, वाचायला सोपा A4 बायोडाटा.',
       'parichay_patra_photo' =>
-        'पारंपरिक रंग, decorative border आणि फोटोसह परिचय पत्र.',
+        appText.traditionalColorsDecorativeBorder,
       'photo_side_biodata' =>
-        'Landscape layout मध्ये मोठा फोटो आणि compact माहिती.',
+        appText.landscapeLayoutLargePhotoCompact,
       'simple_landscape_no_photo' =>
-        'फोटोशिवाय professional landscape biodata.',
+        appText.professionalLandscapeBiodataNoPhoto,
       'double_portrait_photo' =>
-        'Premium double border, फोटो आणि elegant A4 portrait.',
-      'royal_landscape_photo' => 'Premium royal style, landscape फोटोसह.',
+        appText.premiumDoubleBorderElegantA4Portrait,
+      'royal_landscape_photo' => appText.premiumRoyalStyleLandscape,
       _ => fallback,
     };
   }
@@ -534,7 +534,7 @@ class AppStrings {
           'बायोडाटा प्रोसेस होत आहे...',
           'मजकूर वाचत आहोत...',
           'माहिती व्यवस्थित फॉरमॅट करत आहोत...',
-          'Review screen तयार करत आहोत...',
+          appText.preparingReviewScreen,
         ]
       : <String>[
           'Processing biodata...',
@@ -804,9 +804,9 @@ class AppStrings {
     final subject = _comparisonPreferenceSubject(comparisonLabel);
     if (_mr) {
       return switch (subject) {
-        'her' => 'तिच्या अपेक्षांशी तुमचे profile किती जुळते ते पहा',
-        'his' => 'त्याच्या अपेक्षांशी तुमचे profile किती जुळते ते पहा',
-        _ => 'या स्थळाच्या अपेक्षांशी तुमचे profile किती जुळते ते पहा',
+        'her' => appText.seeHowYourProfileMatchesHer,
+        'his' => appText.seeHowYourProfileMatchesHis,
+        _ => appText.seeHowYourProfileMatchesThisMatch,
       };
     }
 

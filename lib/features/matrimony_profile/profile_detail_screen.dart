@@ -10,6 +10,7 @@ import '../chat/chat_screen.dart';
 import 'widgets/profile_comparison_card.dart';
 import 'widgets/profile_contact_card.dart';
 import 'widgets/profile_display_section.dart';
+import '../../core/app_language.dart';
 
 /// ===============================
 /// PROFILE DETAIL SCREEN (OTHER USER)
@@ -190,7 +191,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
       if (statusCode == 401) {
         setState(() {
-          _errorMessage = 'Auth expired. पुन्हा login करा.';
+          _errorMessage = appText.authExpiredPleaseLoginAgain;
           _isLoading = false;
         });
         return;
@@ -225,7 +226,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       } else {
         if (_profile != null) {
           final message =
-              response['message'] ?? 'प्रोफाइल तपशील refresh होऊ शकले नाहीत.';
+              response['message'] ?? appText.couldNotRefreshProfileDetails;
           setState(() {
             _isLoading = false;
           });
@@ -244,7 +245,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showSnackBar('प्रोफाइल refresh करता आली नाही.', Colors.orange);
+        _showSnackBar(appText.couldNotRefreshProfile, Colors.orange);
         return;
       }
 
@@ -396,24 +397,24 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           _interestSent = true;
           _isSendingInterest = false;
         });
-        _showSnackBar('Interest पाठवला.', Colors.green);
+        _showSnackBar(appText.interestSent2, Colors.green);
       } else if (statusCode == 409) {
         setState(() {
           _interestSent = true;
           _isSendingInterest = false;
         });
-        _showSnackBar('Interest आधीच पाठवला आहे.', Colors.orange);
+        _showSnackBar(appText.interestAlreadySent, Colors.orange);
       } else if (statusCode == 401) {
         setState(() {
           _isSendingInterest = false;
         });
-        _showSnackBar('Auth expired. पुन्हा login करा.', Colors.red);
+        _showSnackBar(appText.authExpiredPleaseLoginAgain, Colors.red);
       } else {
         setState(() {
           _isSendingInterest = false;
         });
         final errorMessage =
-            response['message'] ?? 'Interest send करता आला नाही.';
+            response['message'] ?? appText.couldNotSendInterest2;
         _showSnackBar(errorMessage.toString(), Colors.red);
       }
     } catch (e) {
@@ -2622,14 +2623,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     }
 
     if (action != 'view_contact') {
-      _showSnackBar('Contact unlock सुविधा लवकरच उपलब्ध होईल.', Colors.black87);
+      _showSnackBar(appText.contactUnlockComingSoon, Colors.black87);
       return;
     }
 
     if (_isContactRevealInFlight) return;
 
     if (!cta.enabled) {
-      _showSnackBar('Contact unlock सध्या उपलब्ध नाही.', Colors.black87);
+      _showSnackBar(appText.contactUnlockNotAvailable, Colors.black87);
       return;
     }
 
@@ -2675,7 +2676,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _isContactRevealInFlight = false;
       });
       _showSnackBar(
-        _responseErrorMessage(response, 'Contact unlock करता आली नाही.'),
+        _responseErrorMessage(response, appText.couldNotUnlockContact),
         Colors.red,
       );
     } catch (e) {
@@ -2691,13 +2692,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     if (_isContactRequestInFlight) return;
 
     if (!cta.enabled) {
-      _showSnackBar('Contact request सध्या उपलब्ध नाही.', Colors.black87);
+      _showSnackBar(appText.contactRequestNotAvailable, Colors.black87);
       return;
     }
 
     final options = _contactData()?.requestOptions;
     if (options == null || !options.isUsable) {
-      _showSnackBar('Contact request options उपलब्ध नाहीत.', Colors.red);
+      _showSnackBar(appText.contactRequestOptionsNotAvailable, Colors.red);
       return;
     }
 
@@ -2751,7 +2752,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _isContactRequestInFlight = false;
       });
       _showSnackBar(
-        _responseErrorMessage(response, 'Contact request पाठवता आली नाही.'),
+        _responseErrorMessage(response, appText.couldNotSendContactRequest),
         Colors.red,
       );
     } catch (e) {
@@ -2793,7 +2794,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
               void submit() {
                 if (selectedScopes.isEmpty) {
                   setSheetState(() {
-                    errorText = 'किमान एक contact method निवडा.';
+                    errorText = appText.selectAtLeastOneContactMethod;
                   });
                   return;
                 }
@@ -2801,7 +2802,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
                 final otherText = otherController.text.trim();
                 if (selectedReason == 'other' && otherText.isEmpty) {
                   setSheetState(() {
-                    errorText = 'Other reason लिहा.';
+                    errorText = appText.writeOtherReason;
                   });
                   return;
                 }
@@ -2950,7 +2951,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   void _handleWhatsAppResponseAction() {
     _showSnackBar(
-      'WhatsApp Response सुविधा लवकरच उपलब्ध होईल.',
+      appText.whatsappResponseComingSoon,
       Colors.black87,
     );
   }
@@ -3003,8 +3004,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           _backendMessage(
             response,
             shouldShortlist
-                ? 'Shortlist मध्ये जोडले.'
-                : 'Shortlist मधून काढले.',
+                ? appText.addedToShortlist
+                : appText.removedFromShortlist,
           ),
           Colors.green,
         );
@@ -3018,8 +3019,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _responseErrorMessage(
           response,
           shouldShortlist
-              ? 'Shortlist करता आली नाही.'
-              : 'Shortlist मधून काढता आली नाही.',
+              ? appText.couldNotShortlist
+              : appText.couldNotRemoveFromShortlist,
         ),
         Colors.red,
       );
@@ -3030,8 +3031,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       });
       _showSnackBar(
         shouldShortlist
-            ? 'Shortlist करता आली नाही.'
-            : 'Shortlist मधून काढता आली नाही.',
+            ? appText.couldNotShortlist
+            : appText.couldNotRemoveFromShortlist,
         Colors.red,
       );
     }
@@ -3072,7 +3073,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _isProfileActionInFlight = false;
       });
       _showSnackBar(
-        _responseErrorMessage(response, 'Profile hide करता आली नाही.'),
+        _responseErrorMessage(response, appText.couldNotHideProfile),
         Colors.red,
       );
     } catch (_) {
@@ -3080,7 +3081,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       setState(() {
         _isProfileActionInFlight = false;
       });
-      _showSnackBar('Profile hide करता आली नाही.', Colors.red);
+      _showSnackBar(appText.couldNotHideProfile, Colors.red);
     }
   }
 
@@ -3125,7 +3126,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _isProfileActionInFlight = false;
       });
       _showSnackBar(
-        _responseErrorMessage(response, 'Profile block करता आली नाही.'),
+        _responseErrorMessage(response, appText.couldNotBlockProfile),
         Colors.red,
       );
     } catch (_) {
@@ -3133,7 +3134,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       setState(() {
         _isProfileActionInFlight = false;
       });
-      _showSnackBar('Profile block करता आली नाही.', Colors.red);
+      _showSnackBar(appText.couldNotBlockProfile, Colors.red);
     }
   }
 
@@ -3221,7 +3222,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   String _responseErrorMessage(Map<String, dynamic> response, String fallback) {
     final statusCode = _responseStatusCode(response);
-    if (statusCode == 401) return 'Auth expired. पुन्हा login करा.';
+    if (statusCode == 401) return appText.authExpiredPleaseLoginAgain;
 
     return _backendMessage(response, fallback);
   }
@@ -3232,7 +3233,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     await Clipboard.setData(ClipboardData(text: _fallbackProfileShareText()));
     if (!mounted) return;
-    _showSnackBar('Profile details copy झाले.', Colors.green);
+    _showSnackBar(appText.profileDetailsCopied, Colors.green);
   }
 
   Future<void> _shareProfile() async {
@@ -3253,7 +3254,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _showSnackBar('Profile link copied.', Colors.green);
       } catch (_) {
         if (!mounted) return;
-        _showSnackBar('Profile share करता आली नाही.', Colors.red);
+        _showSnackBar(appText.couldNotShareProfile, Colors.red);
       }
     }
   }
@@ -3384,7 +3385,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
     final trimmedReason = reason.trim();
     if (trimmedReason.length < 10) {
-      _showSnackBar('Report reason किमान 10 अक्षरांचे असावे.', Colors.orange);
+      _showSnackBar(appText.reportReasonMinLength, Colors.orange);
       return;
     }
 
@@ -3412,7 +3413,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       }
 
       _showSnackBar(
-        _responseErrorMessage(response, 'Report submit करता आला नाही.'),
+        _responseErrorMessage(response, appText.couldNotSubmitReport),
         Colors.red,
       );
     } catch (_) {
@@ -3420,7 +3421,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       setState(() {
         _isProfileActionInFlight = false;
       });
-      _showSnackBar('Report submit करता आला नाही.', Colors.red);
+      _showSnackBar(appText.couldNotSubmitReport, Colors.red);
     }
   }
 
@@ -3605,21 +3606,21 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         return 'Contact information is available.';
       case 'unlock_available':
       case 'locked':
-        return 'Contact details पाहण्यासाठी unlock आवश्यक आहे.';
+        return appText.unlockRequiredToViewContact;
       case 'upgrade_required':
-        return 'Contact details पाहण्यासाठी upgrade आवश्यक आहे.';
+        return appText.upgradeRequiredToViewContact;
       case 'whatsapp_response_available':
-        return 'WhatsApp Response उपलब्ध आहे.';
+        return appText.whatsappResponseAvailable;
       case 'contact_request_available':
-        return 'या profile साठी contact request पाठवू शकता.';
+        return appText.canSendContactRequestForProfile;
       case 'contact_request_pending':
-        return 'तुमची contact request pending आहे.';
+        return appText.contactRequestPending;
       case 'contact_request_rejected':
-        return 'तुमची contact request reject झाली आहे.';
+        return appText.contactRequestRejected;
       case 'contact_request_unavailable':
-        return 'Contact request सध्या उपलब्ध नाही.';
+        return appText.contactRequestNotAvailable;
       case 'unavailable':
-        return 'Contact information सध्या उपलब्ध नाही.';
+        return appText.contactInformationNotAvailable;
       default:
         return null;
     }
@@ -4549,7 +4550,7 @@ class _ReportReasonDialogState extends State<_ReportReasonDialog> {
     final reason = _reasonController.text.trim();
     if (reason.length < 10) {
       setState(() {
-        _errorText = 'Report reason किमान 10 अक्षरांचे असावे.';
+        _errorText = appText.reportReasonMinLength;
       });
       return;
     }
@@ -4573,7 +4574,7 @@ class _ReportReasonDialogState extends State<_ReportReasonDialog> {
           });
         },
         decoration: InputDecoration(
-          hintText: 'कृपया report चे कारण लिहा',
+          hintText: appText.pleaseWriteReportReason,
           border: const OutlineInputBorder(),
           errorText: _errorText,
         ),
