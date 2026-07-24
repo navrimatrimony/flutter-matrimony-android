@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'l10n/app_localizations.dart';
 import 'core/app_language.dart';
 import 'core/app_storage.dart';
 import 'core/api_client.dart';
@@ -46,8 +47,22 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
+    // Rebuild the whole app when the language switches, and hand Flutter the
+    // matching locale so its own Localizations (and the generated
+    // AppLocalizations) rebuild in step with the app's own copy.
+    return ValueListenableBuilder<AppLanguage?>(
+      valueListenable: appLanguage,
+      builder: (context, _, _) => _buildApp(),
+    );
+  }
+
+  Widget _buildApp() {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+
+      locale: Locale(appLanguageCode(currentAppLanguage)),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
 
       initialRoute: '/bootstrap',
 
