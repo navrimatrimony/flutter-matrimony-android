@@ -16,11 +16,11 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get aClearPhotoUsuallyImprovesResponse =>
-      'स्पष्ट profile photo response quality वाढवू शकतो.';
+      'स्पष्ट फोटोमुळे सहसा चांगला प्रतिसाद मिळतो.';
 
   @override
   String get aLocationRequestIsAlreadyRunning =>
-      'Location request आधीच चालू आहे.';
+      'ठिकाणाची विनंती आधीच सुरू आहे.';
 
   @override
   String get aboutProfile => 'प्रोफाइलबद्दल';
@@ -37,11 +37,11 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get addAClearPhotoCropIt =>
-      'Clear photo add करा. गरज असल्यास crop करा आणि approval साठी upload करा.';
+      'स्पष्ट फोटो जोडा. गरज असल्यास कापा आणि मंजुरीसाठी अपलोड करा.';
 
   @override
   String get addAProfilePhotoFromCamera =>
-      'Camera or gallery मधून profile photo add करा.';
+      'कॅमेरा किंवा गॅलरीमधून प्रोफाइल फोटो जोडा.';
 
   @override
   String get addChild => 'मूल जोडा';
@@ -53,18 +53,18 @@ class AppLocalizationsMr extends AppLocalizations {
   String get addName => 'नाव जोडा';
 
   @override
-  String get addNewLocation => 'नवीन location entry करा';
+  String get addNewLocation => 'नवीन ठिकाण जोडा';
 
   @override
   String get addOccupationAndOptionalWorkInfo =>
-      'व्यवसाय आणि कामाची optional माहिती भरा.';
+      'व्यवसाय आणि कामाची माहिती (ऐच्छिक) भरा.';
 
   @override
   String get addPhotos => 'फोटो जोडा';
 
   @override
   String get addPhotosAndReviewPartnerPreference =>
-      'योग्य स्थळे सुचण्यासाठी photos आणि partner preference पूर्ण करूया.';
+      'अधिक चांगली स्थळे सुचण्यासाठी फोटो जोडा आणि जोडीदाराची पसंती तपासा.';
 
   @override
   String get addressLineOptional => 'पत्ता ओळ ऐच्छिक';
@@ -73,11 +73,11 @@ class AppLocalizationsMr extends AppLocalizations {
   String get age => 'वय';
 
   @override
-  String get ageRange => 'वय range';
+  String get ageRange => 'वयोमर्यादा';
 
   @override
   String get allowLocationToApplyTheClosest =>
-      'मोबाईल permission घेऊन जवळचे शहर/location apply करू.';
+      'जवळचे ठिकाण लावण्यासाठी ठिकाणाची परवानगी द्या.';
 
   @override
   String get alreadyRegisteredVerifyMobileToContinue =>
@@ -96,17 +96,17 @@ class AppLocalizationsMr extends AppLocalizations {
   String get appName => 'नवरी मिळे नवऱ्याला';
 
   @override
-  String get applyCrop => 'Crop apply करा';
+  String get applyCrop => 'कापलेले लागू करा';
 
   @override
-  String get approvalPending => 'Approval pending आहे';
+  String get approvalPending => 'मंजुरी प्रलंबित आहे';
 
   @override
   String get approvalRequired => 'मंजुरी आवश्यक';
 
   @override
   String get approvedPhotoIsVisibleOnYour =>
-      'Approved photo profile वर दिसत आहे. नवीन photo निवडून replace करू शकता.';
+      'मंजूर फोटो तुमच्या प्रोफाइलवर दिसत आहे. तुम्ही तो नवीन फोटोने बदलू शकता.';
 
   @override
   String get approx => 'अंदाजे';
@@ -124,76 +124,76 @@ class AppLocalizationsMr extends AppLocalizations {
   String get basicPreferences => 'मूलभूत अपेक्षा';
 
   @override
-  String get basics => 'Basic';
+  String get basics => 'मूलभूत माहिती';
 
   @override
   String get before => 'आधी';
 
   @override
-  String get biodataCopyLink => 'Link copy करा';
+  String get biodataCopyLink => 'दुवा कॉपी करा';
 
   @override
-  String get biodataExpiresAt => 'Link valid until';
+  String get biodataExpiresAt => 'लिंक वैध असेपर्यंत';
 
   @override
-  String get biodataExportBrowserOpened => 'Biodata browser मध्ये उघडले आहे.';
+  String get biodataExportBrowserOpened => 'बायोडाटा ब्राउझरमध्ये उघडला आहे.';
 
   @override
-  String get biodataExportDownload => 'Download करा';
+  String get biodataExportDownload => 'डाउनलोड करा';
 
   @override
-  String get biodataExportFailed => 'बायोडाटा export तयार झाला नाही.';
+  String get biodataExportFailed => 'बायोडाटा निर्यात करता आला नाही.';
 
   @override
-  String get biodataExportFormat => 'Format निवडा';
+  String get biodataExportFormat => 'स्वरूप निवडा';
 
   @override
   String get biodataExportLinkExpires =>
-      'Share/download link थोड्या वेळासाठीच valid असते.';
+      'शेअर/डाउनलोड दुवे थोड्याच वेळासाठी वैध असतात.';
 
   @override
   String get biodataExportLinkMissing =>
-      'Backend कडून download link मिळाली नाही.';
+      'सर्व्हरकडून डाउनलोड दुवा मिळाला नाही.';
 
   @override
   String get biodataExportLoadFailed =>
-      'बायोडाटा export options load झाले नाहीत.';
+      'बायोडाटा निर्यातीचे पर्याय उघडता आले नाहीत.';
 
   @override
   String get biodataExportMenu => 'बायोडाटा एक्सपोर्ट';
 
   @override
   String get biodataExportOpenFailedCopied =>
-      'Browser उघडू शकला नाही. Link clipboard मध्ये copy केली.';
+      'ब्राउझर उघडता आला नाही. दुवा क्लिपबोर्डवर कॉपी केला.';
 
   @override
-  String get biodataExportShare => 'Share करा';
+  String get biodataExportShare => 'शेअर करा';
 
   @override
-  String get biodataExportShared => 'Biodata share link तयार आहे.';
+  String get biodataExportShared => 'बायोडाटा शेअर दुवा तयार आहे.';
 
   @override
   String get biodataExportSubtitle =>
-      'तुमचा स्वतःचा बायोडाटा PDF म्हणून download किंवा share करा.';
+      'तुमचा स्वतःचा बायोडाटा PDF म्हणून डाउनलोड किंवा शेअर करा.';
 
   @override
-  String get biodataExportTemplate => 'Template निवडा';
+  String get biodataExportTemplate => 'नमुना निवडा';
 
   @override
   String get biodataExportTitle => 'बायोडाटा एक्सपोर्ट';
 
   @override
-  String get biodataExportUnavailable => 'बायोडाटा export सध्या उपलब्ध नाही.';
+  String get biodataExportUnavailable => 'बायोडाटा निर्यात सध्या उपलब्ध नाही.';
 
   @override
   String get biodataExportWarnings => 'पूर्णता सूचना';
 
   @override
   String get biodataGeneratedSubtitle =>
-      'Preview, download किंवा share करण्यासाठी हा link वापरा.';
+      'तयार झालेला बायोडाटा पाहण्यासाठी, डाउनलोड किंवा शेअर करण्यासाठी हा दुवा वापरा.';
 
   @override
-  String get biodataGeneratedTitle => 'Generated biodata तयार आहे';
+  String get biodataGeneratedTitle => 'तयार झालेला बायोडाटा उपलब्ध आहे';
 
   @override
   String get biodataIntakeAlreadyApprovedLocked =>
@@ -204,21 +204,22 @@ class AppLocalizationsMr extends AppLocalizations {
       'कृपया ही माहिती नीट तपासा';
 
   @override
-  String get biodataIntakeConfirmSave => 'Confirm & Save';
+  String get biodataIntakeConfirmSave => 'खात्री करा व जतन करा';
 
   @override
-  String get biodataIntakeExtractedText => 'Autofill साठी वापरलेला मजकूर';
+  String get biodataIntakeExtractedText =>
+      'आपोआप भरण्यासाठी वापरलेला बायोडाटा मजकूर';
 
   @override
   String get biodataIntakeFailureCodes => 'त्रुटी संकेत';
 
   @override
   String get biodataIntakeFieldsEmpty =>
-      'System ने structured fields ओळखले नाहीत. खालील text तपासा आणि clear photo वापरून पुन्हा प्रयत्न करा.';
+      'कोणतीही रचनाबद्ध माहिती ओळखता आली नाही. खालील मजकूर तपासा आणि अधिक स्पष्ट फोटो वापरून पुन्हा प्रयत्न करा.';
 
   @override
   String get biodataIntakeIntroSubtitle =>
-      'Clear फोटो किंवा screenshot द्या. App text वाचून पुढच्या screen वर edit करण्यासाठी माहिती भरून दाखवेल.';
+      'स्पष्ट फोटो किंवा स्क्रीनशॉट वापरा. App मजकूर वाचून पुढच्या स्क्रीनवर बदलता येणारी माहिती दाखवेल.';
 
   @override
   String get biodataIntakeIntroTitle => 'बायोडाटा फोटो निवडा';
@@ -231,10 +232,10 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get biodataIntakeNoReadableText =>
-      'या फोटोमधून पुरेसा text वाचता आला नाही. कृपया clear, सरळ आणि उजेडातला फोटो वापरा.';
+      'या फोटोमधून पुरेसा मजकूर वाचता आला नाही. कृपया अधिक स्पष्ट, सरळ आणि चांगल्या उजेडातला फोटो वापरा.';
 
   @override
-  String get biodataIntakeOpenProfile => 'Profile पहा';
+  String get biodataIntakeOpenProfile => 'प्रोफाइल पहा';
 
   @override
   String get biodataIntakeOverallQuality => 'एकूण गुणवत्ता';
@@ -247,35 +248,35 @@ class AppLocalizationsMr extends AppLocalizations {
   String get biodataIntakeQualitySignals => 'गुणवत्ता संकेत';
 
   @override
-  String get biodataIntakeReviewSaveFailed => 'Review save करता आला नाही.';
+  String get biodataIntakeReviewSaveFailed => 'पडताळणी जतन करता आली नाही.';
 
   @override
   String get biodataIntakeReviewSaveSuccess =>
-      'Review save झाला. Approve वेगळे करावे लागेल.';
+      'पडताळणी जतन झाली. मंजुरी अजून वेगळी करावी लागेल.';
 
   @override
   String get biodataIntakeReviewSubtitle =>
-      'चुकलेली माहिती edit करा आणि मग save करा.';
+      'चुकीची वाटणारी माहिती बदला आणि मग जतन करा.';
 
   @override
   String get biodataIntakeReviewTitle => 'माहिती तपासा';
 
   @override
-  String get biodataIntakeSaveFailed => 'माहिती save करता आली नाही.';
+  String get biodataIntakeSaveFailed => 'माहिती जतन करता आली नाही.';
 
   @override
-  String get biodataIntakeSavePending => 'माहिती review साठी save झाली आहे.';
+  String get biodataIntakeSavePending => 'माहिती पडताळणीसाठी जतन झाली आहे.';
 
   @override
-  String get biodataIntakeSaveReview => 'Review save करा';
+  String get biodataIntakeSaveReview => 'पडताळणी जतन करा';
 
   @override
   String get biodataIntakeSaveSuccess =>
-      'माहिती save झाली. Profile update झाले.';
+      'माहिती जतन झाली. प्रोफाइल अद्ययावत झाले.';
 
   @override
   String get biodataIntakeSubtitle =>
-      'फोटोमधून माहिती वाचून profile draft तयार करा.';
+      'बायोडाटा फोटोमधील मजकूर वाचून प्रोफाइलचा मसुदा तयार करा.';
 
   @override
   String get biodataIntakeTitle => 'बायोडाटा इंटेक';
@@ -284,16 +285,16 @@ class AppLocalizationsMr extends AppLocalizations {
   String get biodataIntakeTryAnother => 'दुसरा फोटो';
 
   @override
-  String get biodataLinkCopied => 'Biodata link clipboard मध्ये copy केली.';
+  String get biodataLinkCopied => 'बायोडाटा लिंक कॉपी झाली.';
 
   @override
-  String get biodataPreviewAction => 'Preview उघडा';
+  String get biodataPreviewAction => 'पूर्वावलोकन उघडा';
 
   @override
   String get biodataPrintAction => 'बायोडाटा / प्रिंट';
 
   @override
-  String get biodataTemplateDesignPreview => 'डिझाइन preview';
+  String get biodataTemplateDesignPreview => 'डिझाइन पूर्वावलोकन';
 
   @override
   String get biodataTemplateLocked => 'लॉक';
@@ -350,23 +351,23 @@ class AppLocalizationsMr extends AppLocalizations {
   String get calmSteady => 'शांत आणि स्थिर';
 
   @override
-  String get camera => 'Camera';
+  String get camera => 'कॅमेरा';
 
   @override
   String get cameraGalleryProfilePhotoAdd =>
-      'Camera किंवा gallery मधून profile photo add करा.';
+      'कॅमेरा किंवा गॅलरीमधून प्रोफाइल फोटो जोडा.';
 
   @override
   String get cancel => 'रद्द करा';
 
   @override
-  String get cancel2 => 'Cancel';
+  String get cancel2 => 'रद्द करा';
 
   @override
-  String get careerWithBalance => 'Career आणि balance';
+  String get careerWithBalance => 'संतुलनासह करिअर';
 
   @override
-  String get careerWithBalance2 => 'Career balance';
+  String get careerWithBalance2 => 'समतोल राखणारे करिअर';
 
   @override
   String get caste => 'जात';
@@ -381,29 +382,29 @@ class AppLocalizationsMr extends AppLocalizations {
   String get chatAll => 'सर्व';
 
   @override
-  String get chatComingSoon => 'Chat सुविधा लवकरच app मध्ये येईल.';
+  String get chatComingSoon => 'संवाद सुविधा लवकरच App मध्ये येईल.';
 
   @override
-  String get chatEmpty => 'अजून कोणतीही chat नाही.';
+  String get chatEmpty => 'अजून कोणताही संवाद नाही.';
 
   @override
   String get chatInbox => 'चॅट इनबॉक्स';
 
   @override
-  String get chatLoadFailed => 'Chat load झाली नाही.';
+  String get chatLoadFailed => 'संवाद उघडता आला नाही.';
 
   @override
   String get chatMenu => 'चॅट';
 
   @override
-  String get chatMessageHint => 'Message लिहा...';
+  String get chatMessageHint => 'संदेश लिहा...';
 
   @override
-  String get chatOpenFailed => 'Chat उघडता आली नाही.';
+  String get chatOpenFailed => 'संवाद उघडता आला नाही.';
 
   @override
   String get chatReadLocked =>
-      'हा message वाचण्यासाठी upgrade आवश्यक असू शकते.';
+      'हा संदेश वाचण्यासाठी योजना वाढवणे आवश्यक असू शकते.';
 
   @override
   String get chatRequests => 'रिक्वेस्ट';
@@ -412,7 +413,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get chatSend => 'पाठवा';
 
   @override
-  String get chatSendFailed => 'Message पाठवता आला नाही.';
+  String get chatSendFailed => 'संदेश पाठवता आला नाही.';
 
   @override
   String get chatTitle => 'चॅट';
@@ -424,7 +425,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get chatUpgradeToRead => 'वाचण्यासाठी अपग्रेड करा';
 
   @override
-  String get checkingGoogleEmail => 'Google email तपासत आहे';
+  String get checkingGoogleEmail => 'Google ईमेल तपासत आहे';
 
   @override
   String get childLivingWithOptionsCouldNot =>
@@ -440,8 +441,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get childrenSeparate => 'मुले वेगळी राहत असतील तर';
 
   @override
-  String get chooseCityDistrictFromFilters =>
-      'Filters मधून city/district निवडा.';
+  String get chooseCityDistrictFromFilters => 'गाळणीमधून शहर/जिल्हा निवडा.';
 
   @override
   String get chooseCommunityDetails => 'समुदायाची माहिती निवडा';
@@ -453,11 +453,11 @@ class AppLocalizationsMr extends AppLocalizations {
   String get chooseLanguage => 'भाषा निवडा';
 
   @override
-  String get chooseLocationFilter => 'Location निवडा';
+  String get chooseLocationFilter => 'ठिकाण निवडा';
 
   @override
   String get chooseLocationForNearMe =>
-      'जवळची स्थळे पाहण्यासाठी location filter निवडा.';
+      'जवळची स्थळे पाहण्यासाठी ठिकाणाची गाळणी निवडा.';
 
   @override
   String get chooseOccupation => 'व्यवसाय निवडा.';
@@ -473,7 +473,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get chooseWhereTheProfileLives => 'प्रोफाइलचे सध्याचे ठिकाण निवडा.';
 
   @override
-  String get chooseWhoThisProfileIsFor => 'हे profile कोणासाठी आहे ते निवडा.';
+  String get chooseWhoThisProfileIsFor => 'हे प्रोफाइल कोणासाठी आहे ते निवडा.';
 
   @override
   String get chooseWhoThisProfileIsFor2 => 'ही प्रोफाइल कोणासाठी आहे ते निवडा.';
@@ -485,13 +485,13 @@ class AppLocalizationsMr extends AppLocalizations {
   String get citySuburban => 'शहर / उपनगर';
 
   @override
-  String get clearFace => 'Clear face';
+  String get clearFace => 'स्पष्ट चेहरा';
 
   @override
-  String get clearFilter => 'Clear filter';
+  String get clearFilter => 'गाळणी काढून टाका';
 
   @override
-  String get clearLocation => 'Location काढा';
+  String get clearLocation => 'ठिकाण काढा';
 
   @override
   String get community => 'समुदाय';
@@ -501,10 +501,10 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get communityPreferencesHelpKeepSuggestionsRelevant =>
-      'समुदायाची माहिती suggestions अधिक relevant ठेवते.';
+      'समुदायाची पसंती सुचवलेली स्थळे अधिक सुसंगत ठेवण्यास मदत करते.';
 
   @override
-  String get companyOptional => 'Company optional';
+  String get companyOptional => 'कंपनी (ऐच्छिक)';
 
   @override
   String get comparisonShowLess => 'कमी दाखवा';
@@ -527,10 +527,10 @@ class AppLocalizationsMr extends AppLocalizations {
   String get completeRegistration => 'नोंदणी पूर्ण करा';
 
   @override
-  String get confirmAction => 'Confirm करा';
+  String get confirmAction => 'निश्चित करा';
 
   @override
-  String get confirmPassword => 'Password पुन्हा भरा';
+  String get confirmPassword => 'पासवर्ड पुन्हा भरा';
 
   @override
   String get connectContactRequests => 'कॉन्टॅक्ट';
@@ -557,7 +557,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get contactRuleStrictness => 'संपर्क नियम';
 
   @override
-  String get contactUnlockMode => 'Contact unlock पद्धत';
+  String get contactUnlockMode => 'संपर्क उघडण्याची पद्धत';
 
   @override
   String get contactVisibility => 'संपर्क कोण पाहू शकतो';
@@ -566,85 +566,85 @@ class AppLocalizationsMr extends AppLocalizations {
   String get continueLabel => 'पुढे जा';
 
   @override
-  String get continueToPartnerPreference => 'Partner preference कडे जा';
+  String get continueToPartnerPreference => 'जोडीदार पसंतीकडे जा';
 
   @override
   String get continuing => 'पुढे जात आहे...';
 
   @override
-  String get couldNotLoadOptions => 'पर्याय load करता आले नाहीत.';
+  String get couldNotLoadOptions => 'पर्याय आणता आले नाहीत.';
 
   @override
-  String get couldNotReadAGoogleEmail =>
-      'या device वरून Google email मिळाला नाही.';
+  String get couldNotReadAGoogleEmail => 'या फोनवरून Google ईमेल मिळाला नाही.';
 
   @override
   String get couldNotReadAccountNamePlease =>
-      'Account नाव मिळाले नाही. कृपया मागे जाऊन पुन्हा प्रयत्न करा.';
+      'खात्याचे नाव मिळाले नाही. कृपया मागे जाऊन पुन्हा प्रयत्न करा.';
 
   @override
-  String get couldNotReadEmailFromGoogle => 'Google कडून email मिळाला नाही.';
+  String get couldNotReadEmailFromGoogle => 'Google कडून ईमेल मिळाला नाही.';
 
   @override
-  String get couldNotReadMobileLocation => 'मोबाईल location मिळाली नाही.';
+  String get couldNotReadMobileLocation => 'मोबाईलचे ठिकाण मिळाले नाही.';
 
   @override
-  String get couldNotSavePassword => 'Password save झाला नाही.';
+  String get couldNotSavePassword => 'पासवर्ड जतन झाला नाही.';
 
   @override
-  String get couldNotSaveTheAboutSection => 'About section save झाला नाही.';
+  String get couldNotSaveTheAboutSection =>
+      'तुमच्याबद्दलची माहिती जतन झाली नाही.';
 
   @override
-  String get couldNotSendEmailOtp => 'Email OTP पाठवता आला नाही.';
+  String get couldNotSendEmailOtp => 'ईमेल OTP पाठवता आला नाही.';
 
   @override
   String get couldNotSendOtp => 'OTP पाठवता आला नाही.';
 
   @override
   String get couldNotSubmitLocationRequestCheck =>
-      'Location request submit झाली नाही. निवडलेला जिल्हा आणि तालुका तपासा, मग पुन्हा प्रयत्न करा.';
+      'ठिकाणाची विनंती पाठवता आली नाही. निवडलेला जिल्हा आणि तालुका तपासा, मग पुन्हा प्रयत्न करा.';
 
   @override
-  String get couldNotSubmitRequest => 'Request submit झाली नाही.';
+  String get couldNotSubmitRequest => 'विनंती पाठवता आली नाही.';
 
   @override
-  String get couldNotUseLocation => 'Location वापरता आले नाही.';
+  String get couldNotUseLocation => 'ठिकाण वापरता आले नाही.';
 
   @override
-  String get couldNotUseMobileLocation => 'मोबाईल location वापरता आली नाही.';
+  String get couldNotUseMobileLocation => 'मोबाईलचे ठिकाण वापरता आले नाही.';
 
   @override
-  String get couldNotVerifyEmail => 'Email verify झाला नाही.';
+  String get couldNotVerifyEmail => 'ईमेलची पडताळणी झाली नाही.';
 
   @override
   String get country => 'देश';
 
   @override
   String get createAPasswordNowIfYou =>
-      'नंतर password ने login करायचे असल्यास आत्ता password तयार करा.';
+      'नंतर पासवर्डने लॉगिन करायचे असल्यास आत्ताच पासवर्ड तयार करा.';
 
   @override
-  String get createAdd => 'Create / add';
+  String get createAdd => 'तयार करा / जोडा';
 
   @override
-  String get createAddYourLocation => 'तुमचे location create / add करा';
+  String get createAddYourLocation => 'तुमचे ठिकाण तयार करा / जोडा';
 
   @override
-  String get createPassword => 'Password तयार करा';
+  String get createPassword => 'पासवर्ड तयार करा';
 
   @override
-  String get cropAdjustPhoto => 'Photo crop/adjust करा';
+  String get cropAdjustPhoto => 'फोटो कापा / जुळवा';
 
   @override
-  String get cropPhoto => 'Photo crop करा';
+  String get cropPhoto => 'फोटो कापा';
 
   @override
   String get cropTheSelectedPhotoIfNeeded =>
-      'Selected photo गरज असल्यास crop करा आणि upload करा.';
+      'निवडलेला फोटो गरज असल्यास कापा आणि नंतर अपलोड करा.';
 
   @override
   String get croppedPhotoIsReadyUploadIt =>
-      'Cropped photo ready आहे. पुढे जाण्यासाठी upload करा.';
+      'कापलेला फोटो तयार आहे. पुढे जाण्यासाठी तो अपलोड करा.';
 
   @override
   String get dashboard => 'माझे डॅशबोर्ड';
@@ -653,13 +653,13 @@ class AppLocalizationsMr extends AppLocalizations {
   String get dashboardAccountTools => 'इतर पर्याय';
 
   @override
-  String get dashboardActivity => 'तुमची activity';
+  String get dashboardActivity => 'तुमची घडामोड';
 
   @override
-  String get dashboardAddNow => 'Add now';
+  String get dashboardAddNow => 'आता जोडा';
 
   @override
-  String get dashboardBasicDetails => 'Basic details';
+  String get dashboardBasicDetails => 'मूलभूत माहिती';
 
   @override
   String get dashboardChangePlan => 'प्लॅन बदला';
@@ -668,41 +668,40 @@ class AppLocalizationsMr extends AppLocalizations {
   String get dashboardCheckNotifications => 'सूचना तपासा';
 
   @override
-  String get dashboardCheckNotificationsSubtitle =>
-      'नवीन सूचना आणि updates पहा.';
+  String get dashboardCheckNotificationsSubtitle => 'नवीन सूचना आणि बदल पहा.';
 
   @override
-  String get dashboardCompleteProfile => 'Profile पूर्ण करा';
+  String get dashboardCompleteProfile => 'प्रोफाइल पूर्ण करा';
 
   @override
   String get dashboardCompleteProfileSubtitle =>
-      'महत्त्वाची माहिती पूर्ण केल्यावर matching चांगले होते.';
+      'महत्त्वाची माहिती पूर्ण केल्यास जुळवणी अधिक चांगली होते.';
 
   @override
   String get dashboardCreateProfile => 'प्रोफाइल तयार करा';
 
   @override
   String get dashboardCreateProfileSubtitle =>
-      'Dashboard fallback: profile नसल्यास इथून onboarding सुरू करा.';
+      'प्रोफाइल नसल्यास इथून नोंदणी सुरू करा.';
 
   @override
-  String get dashboardEducationCareer => 'Education / Career';
+  String get dashboardEducationCareer => 'शिक्षण / करिअर';
 
   @override
-  String get dashboardFreePlan => 'Free Plan';
+  String get dashboardFreePlan => 'मोफत योजना';
 
   @override
   String get dashboardHeadline => 'तुमच्या योग्य स्थळांसाठी पुढचे पाऊल';
 
   @override
   String get dashboardHeroFallback =>
-      'तुमच्या योग्य स्थळांसाठी dashboard तयार आहे.';
+      'तुमच्या योग्य स्थळांसाठी डॅशबोर्ड तयार आहे.';
 
   @override
-  String get dashboardListsToolSubtitle => 'Shortlist, block आणि hidden list';
+  String get dashboardListsToolSubtitle => 'निवडक, अडवलेले आणि लपवलेले';
 
   @override
-  String get dashboardLocationDetails => 'Location details';
+  String get dashboardLocationDetails => 'ठिकाणाची माहिती';
 
   @override
   String get dashboardNeedsAttention => 'पूर्ण करणे बाकी';
@@ -711,38 +710,38 @@ class AppLocalizationsMr extends AppLocalizations {
   String get dashboardNextBestAction => 'पुढचे योग्य पाऊल';
 
   @override
-  String get dashboardPartnerPreference => 'Partner Preference';
+  String get dashboardPartnerPreference => 'जोडीदाराची पसंती';
 
   @override
-  String get dashboardPhoto => 'Photo';
+  String get dashboardPhoto => 'फोटो';
 
   @override
-  String get dashboardPhotoApproved => 'Photo approved';
+  String get dashboardPhotoApproved => 'फोटो मंजूर झाला';
 
   @override
-  String get dashboardPhotoMissing => 'Photo missing';
+  String get dashboardPhotoMissing => 'फोटो नाही';
 
   @override
-  String get dashboardPhotoPending => 'Photo pending';
+  String get dashboardPhotoPending => 'फोटो प्रलंबित';
 
   @override
   String get dashboardPhotoPendingSubtitle =>
-      'तुमच्या photo verification ची स्थिती तपासा.';
+      'तुमच्या फोटो पडताळणीची स्थिती तपासा.';
 
   @override
-  String get dashboardPlanContact => 'Plan / Contact status';
+  String get dashboardPlanContact => 'योजना / संपर्क स्थिती';
 
   @override
-  String get dashboardPlanToolSubtitle => 'Plan, payment आणि contact credits';
+  String get dashboardPlanToolSubtitle => 'योजना, पेमेंट आणि संपर्क क्रेडिट';
 
   @override
-  String get dashboardPremiumMember => 'Premium Member';
+  String get dashboardPremiumMember => 'प्रीमियम सदस्य';
 
   @override
-  String get dashboardProfileActive => 'Profile active';
+  String get dashboardProfileActive => 'प्रोफाइल सक्रिय';
 
   @override
-  String get dashboardProfileMissing => 'Profile तयार नाही';
+  String get dashboardProfileMissing => 'प्रोफाइल तयार नाही';
 
   @override
   String get dashboardQuickActions => 'क्विक लिंक्स';
@@ -752,50 +751,49 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get dashboardReadinessSubtitle =>
-      'Fake percentage नाही; उपलब्ध माहितीवर आधारित checklist.';
+      'खोटी टक्केवारी नाही; उपलब्ध माहितीवर आधारित यादी.';
 
   @override
   String get dashboardReady => 'पूर्ण';
 
   @override
-  String get dashboardReplyMessages => 'Messages ला reply द्या';
+  String get dashboardReplyMessages => 'संदेशांना उत्तर द्या';
 
   @override
   String get dashboardReplyMessagesSubtitle =>
-      'Unread chat तुमच्या प्रतिसादाची वाट पाहत आहे.';
+      'न वाचलेले संवाद तुमच्या उत्तराची वाट पाहत आहेत.';
 
   @override
   String get dashboardRespondInterests => 'आलेल्या इंटरेस्टला उत्तर द्या';
 
   @override
   String get dashboardRespondInterestsSubtitle =>
-      'Pending proposals पाहून accept/reject करा.';
+      'प्रलंबित प्रस्ताव पाहून त्यांना उत्तर द्या.';
 
   @override
-  String get dashboardReviewContactRequests => 'Contact requests तपासा';
+  String get dashboardReviewContactRequests => 'संपर्क विनंत्या तपासा';
 
   @override
   String get dashboardReviewContactRequestsSubtitle =>
-      'Pending contact requests सुरक्षितपणे review करा.';
+      'प्रलंबित संपर्क विनंत्या सुरक्षितपणे तपासा.';
 
   @override
-  String get dashboardSettingsToolSubtitle =>
-      'Privacy आणि notification preferences';
+  String get dashboardSettingsToolSubtitle => 'गोपनीयता आणि पसंती';
 
   @override
   String get dashboardSubtitle =>
       'प्रोफाइल, फोटो आणि इंटरेस्ट एका ठिकाणी व्यवस्थापित करा.';
 
   @override
-  String get dashboardUpgradePlan => 'Plan upgrade करा';
+  String get dashboardUpgradePlan => 'योजना वाढवा';
 
   @override
   String get dashboardUpgradePlanSubtitle =>
-      'Contact unlock आणि premium benefits पाहा.';
+      'संपर्क अनलॉक आणि प्रीमियम फायदे पाहा.';
 
   @override
   String get dashboardUploadPhotoPrompt =>
-      'Clear photo upload करा आणि जास्त प्रतिसाद मिळवा.';
+      'स्पष्ट फोटो अपलोड करा आणि जास्त प्रतिसाद मिळवा.';
 
   @override
   String get dashboardViewMatches => 'स्थळे पहा';
@@ -819,17 +817,17 @@ class AppLocalizationsMr extends AppLocalizations {
   String get daughterSFullName => 'मुलीचे पूर्ण नाव *';
 
   @override
-  String get delete => 'Delete';
+  String get delete => 'काढा';
 
   @override
-  String get deletePhoto => 'फोटो delete करा';
+  String get deletePhoto => 'फोटो काढा';
 
   @override
   String get deviceLocationIsOffTurnOn =>
-      'Mobile location बंद आहे. Settings मधून location सुरू करा.';
+      'मोबाइलचे ठिकाण बंद आहे. सेटिंग्जमधून ठिकाण सुरू करा.';
 
   @override
-  String get didnTGetTheCodeYet => 'Code मिळाला नाही?';
+  String get didnTGetTheCodeYet => 'अजून कोड मिळाला नाही?';
 
   @override
   String get diet => 'आहार';
@@ -838,17 +836,17 @@ class AppLocalizationsMr extends AppLocalizations {
   String get district => 'जिल्हा';
 
   @override
-  String get drinking => 'Drinking';
+  String get drinking => 'मद्यपान';
 
   @override
-  String get edit => 'Edit';
+  String get edit => 'बदला';
 
   @override
   String get editProfile => 'प्रोफाइल अपडेट करा';
 
   @override
   String get editTheEmailIfNeededThen =>
-      'Email बदलायचा असल्यास edit करा, मग Google किंवा email OTP ने verify करा.';
+      'गरज असल्यास ईमेल बदला, मग Google किंवा ईमेल OTP ने पडताळणी करा.';
 
   @override
   String get education => 'शिक्षण';
@@ -860,28 +858,28 @@ class AppLocalizationsMr extends AppLocalizations {
   String get educationCareer => 'शिक्षण आणि करिअर';
 
   @override
-  String get educationLabel => 'Education label';
+  String get educationLabel => 'शिक्षण';
 
   @override
-  String get educationRequestSubmitted => 'Education request submit झाली.';
+  String get educationRequestSubmitted => 'शिक्षणाची विनंती पाठवली.';
 
   @override
-  String get emailAdded => 'Email जोडला';
+  String get emailAdded => 'ईमेल जोडला';
 
   @override
-  String get emailAddress => 'Email address';
+  String get emailAddress => 'ईमेल पत्ता';
 
   @override
-  String get emailAlerts => 'Email सूचना';
+  String get emailAlerts => 'ईमेल सूचना';
 
   @override
-  String get emailOtp => 'Email OTP';
+  String get emailOtp => 'ईमेल OTP';
 
   @override
-  String get emailVerified => 'Email verified';
+  String get emailVerified => 'ईमेल पडताळणी झाली';
 
   @override
-  String get emailVerifiedSuccessfully => 'Email verify झाला.';
+  String get emailVerifiedSuccessfully => 'ईमेलची पडताळणी झाली.';
 
   @override
   String get enterAValid10DigitMobile => 'वैध 10 अंकी मोबाइल नंबर भरा.';
@@ -890,16 +888,16 @@ class AppLocalizationsMr extends AppLocalizations {
   String get enterAValidDob => 'वैध जन्मतारीख भरा.';
 
   @override
-  String get enterAValidEmailAddress => 'कृपया योग्य email address भरा.';
+  String get enterAValidEmailAddress => 'कृपया योग्य ईमेल पत्ता भरा.';
 
   @override
-  String get enterAValidIncomeAmount => 'योग्य income amount भरा.';
+  String get enterAValidIncomeAmount => 'योग्य उत्पन्नाची रक्कम भरा.';
 
   @override
-  String get enterAValidMaxIncome => 'योग्य max income भरा.';
+  String get enterAValidMaxIncome => 'योग्य कमाल उत्पन्न भरा.';
 
   @override
-  String get enterAValidMinIncome => 'योग्य min income भरा.';
+  String get enterAValidMinIncome => 'योग्य किमान उत्पन्न भरा.';
 
   @override
   String get enterChildAge => 'मुलाचे/मुलीचे वय भरा.';
@@ -908,11 +906,11 @@ class AppLocalizationsMr extends AppLocalizations {
   String get enterFullName => 'पूर्ण नाव भरा.';
 
   @override
-  String get enterMinIncomeToo => 'Min income सुद्धा भरा.';
+  String get enterMinIncomeToo => 'किमान उत्पन्न सुद्धा भरा.';
 
   @override
   String get enterPasswordAndConfirmPassword =>
-      'Password आणि confirm password दोन्ही भरा.';
+      'पासवर्ड आणि पुष्टीकरण पासवर्ड दोन्ही भरा.';
 
   @override
   String get enterThe6DigitOtp => '6 अंकी OTP भरा.';
@@ -921,20 +919,20 @@ class AppLocalizationsMr extends AppLocalizations {
   String get enterThe6DigitOtp2 => '६ अंकी OTP टाका.';
 
   @override
-  String get enterTheOtpSentToYour => 'तुमच्या email वर आलेला OTP टाका.';
+  String get enterTheOtpSentToYour => 'तुमच्या ईमेलवर आलेला OTP टाका.';
 
   @override
   String get enterValidChildAge => 'मुलाचे/मुलीचे योग्य वय भरा.';
 
   @override
   String get enterYourMobileNumberToReceive =>
-      'सुरक्षित ६ अंकी code मिळण्यासाठी मोबाइल नंबर भरा.';
+      'सुरक्षित 6 अंकी कोड मिळण्यासाठी मोबाइल नंबर भरा.';
 
   @override
   String get exact => 'अचूक';
 
   @override
-  String get extraNoteOptional => 'Extra note optional';
+  String get extraNoteOptional => 'अतिरिक्त टीप (ऐच्छिक)';
 
   @override
   String get familyAndAbout => 'कुटुंब आणि ओळख';
@@ -979,7 +977,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get fullName => 'पूर्ण नाव *';
 
   @override
-  String get gallery => 'Gallery';
+  String get gallery => 'गॅलरी';
 
   @override
   String get gender => 'लिंग';
@@ -988,21 +986,21 @@ class AppLocalizationsMr extends AppLocalizations {
   String get getOtp => 'OTP मिळवा';
 
   @override
-  String get gettingLocation => 'Location घेत आहे...';
+  String get gettingLocation => 'ठिकाण घेत आहे...';
 
   @override
-  String get goodLight => 'Good light';
+  String get goodLight => 'चांगला उजेड';
 
   @override
   String get googleVerificationFailedWeWillVerify =>
-      'Google verification झाले नाही. हा email OTP ने verify करूया.';
+      'Google पडताळणी झाली नाही. हा ईमेल OTP ने पडताळून पाहू.';
 
   @override
   String get googleVerificationIsNotReadyWe =>
-      'Google verification तयार नाही. हा email OTP ने verify करूया.';
+      'Google पडताळणी तयार नाही. हा ईमेल OTP ने पडताळून पाहू.';
 
   @override
-  String get googleVerifiedYourEmail => 'Google ने तुमचा email verify केला.';
+  String get googleVerifiedYourEmail => 'Google ने तुमचा ईमेल पडताळला.';
 
   @override
   String get groomRelativeSDetails => 'नातेवाईक वराची माहिती';
@@ -1012,7 +1010,7 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get gunamilanDisclaimer =>
-      'गुणमिलन हा फक्त compatibility reference आहे. अंतिम निर्णय कुटुंबीयांनी चर्चा करून घ्यावा.';
+      'गुणमिलन हा फक्त जुळणीसाठीचा संदर्भ आहे. अंतिम निर्णय कुटुंबीयांनी चर्चा करून घ्यावा.';
 
   @override
   String get gunamilanHideDetails => 'तपशील लपवा';
@@ -1033,16 +1031,16 @@ class AppLocalizationsMr extends AppLocalizations {
   String get height => 'उंची *';
 
   @override
-  String get heightRangeCm => 'उंची range cm';
+  String get heightRangeCm => 'उंचीची मर्यादा सेमी';
 
   @override
   String get herMotherTongue => 'तिची मातृभाषा';
 
   @override
-  String get hideFromBlockedUsers => 'Block केलेल्यांपासून लपवा';
+  String get hideFromBlockedUsers => 'अवरोधित केलेल्यांपासून लपवा';
 
   @override
-  String get hidePassword => 'Password लपवा';
+  String get hidePassword => 'पासवर्ड लपवा';
 
   @override
   String get highestSelected => 'सर्वात उच्च निवड: ';
@@ -1060,34 +1058,34 @@ class AppLocalizationsMr extends AppLocalizations {
   String get iWillDoThisLater => 'मी हे नंतर करेन';
 
   @override
-  String get importantSettingsAreNext => 'पुढे महत्त्वाच्या settings आहेत';
+  String get importantSettingsAreNext => 'पुढे महत्त्वाच्या सेटिंग्ज आहेत';
 
   @override
-  String get inactiveReminder => 'Inactive reminder';
+  String get inactiveReminder => 'निष्क्रिय असल्याची आठवण';
 
   @override
   String get income => 'उत्पन्न';
 
   @override
-  String get incomeAmount => 'Income amount';
+  String get incomeAmount => 'उत्पन्नाची रक्कम';
 
   @override
   String get incomeAmount2 => 'उत्पन्न रक्कम';
 
   @override
-  String get incomeCanBeKeptPrivate => 'उत्पन्न private ठेवू शकता.';
+  String get incomeCanBeKeptPrivate => 'उत्पन्न खासगी ठेवू शकता.';
 
   @override
-  String get incomePeriod => 'Income period';
+  String get incomePeriod => 'उत्पन्नाचा कालावधी';
 
   @override
   String get incomeRange => 'उत्पन्न श्रेणी';
 
   @override
-  String get incomeRange2 => 'उत्पन्न range';
+  String get incomeRange2 => 'उत्पन्नाची मर्यादा';
 
   @override
-  String get incomeType => 'Income type';
+  String get incomeType => 'उत्पन्नाचा प्रकार';
 
   @override
   String get intercasteAccepted => 'जातिबंधन नाही';
@@ -1099,13 +1097,13 @@ class AppLocalizationsMr extends AppLocalizations {
   String get interestStatistics => 'इंटरेस्ट स्थिती';
 
   @override
-  String get keepIncomePrivate => 'Income private ठेवा';
+  String get keepIncomePrivate => 'उत्पन्न खासगी ठेवा';
 
   @override
   String get keepIncomePrivate2 => 'उत्पन्न खाजगी ठेवा';
 
   @override
-  String get label => 'label_mr';
+  String get label => 'मथळा';
 
   @override
   String get landingHeadline => 'योग्य जोडीदार शोधण्याचा विश्वासार्ह मार्ग';
@@ -1121,17 +1119,17 @@ class AppLocalizationsMr extends AppLocalizations {
   String get languageSwitchSubtitle => 'App भाषा बदला';
 
   @override
-  String get leftRight => 'Left / right';
+  String get leftRight => 'डावी / उजवी';
 
   @override
   String get lessThan1YearIsNot =>
-      'सध्याच्या save rules मध्ये 1 वर्षापेक्षा कमी वय support नाही. आत्ता 1 वर्ष निवडा.';
+      'सध्याच्या जतन नियमांमध्ये 1 वर्षापेक्षा कमी चालत नाही. आत्ता 1 वर्ष निवडा.';
 
   @override
-  String get lifestyle => 'Lifestyle';
+  String get lifestyle => 'जीवनशैली';
 
   @override
-  String get lifestyleDetails => 'Lifestyle माहिती';
+  String get lifestyleDetails => 'जीवनशैली माहिती';
 
   @override
   String get lifestylePreferences => 'जीवनशैली अपेक्षा';
@@ -1150,28 +1148,28 @@ class AppLocalizationsMr extends AppLocalizations {
   String get loading => 'लोड होत आहे...';
 
   @override
-  String get loadingBiodataOptions => 'Biodata options लोड होत आहेत';
+  String get loadingBiodataOptions => 'बायोडेटा पर्याय लोड होत आहेत';
 
   @override
-  String get loadingChats => 'Chats लोड होत आहेत';
+  String get loadingChats => 'संवाद लोड होत आहेत';
 
   @override
-  String get loadingContactRequests => 'Contact requests लोड होत आहेत';
+  String get loadingContactRequests => 'संपर्क विनंत्या लोड होत आहेत';
 
   @override
-  String get loadingConversation => 'Conversation लोड होत आहे';
+  String get loadingConversation => 'संभाषण लोड होत आहे';
 
   @override
   String get loadingMatches => 'स्थळे लोड होत आहेत';
 
   @override
-  String get loadingNotifications => 'Notifications लोड होत आहेत';
+  String get loadingNotifications => 'सूचना लोड होत आहेत';
 
   @override
-  String get loadingPhotos => 'Photos लोड होत आहेत';
+  String get loadingPhotos => 'फोटो लोड होत आहेत';
 
   @override
-  String get loadingPlans => 'Plans लोड होत आहेत';
+  String get loadingPlans => 'योजना लोड होत आहेत';
 
   @override
   String get loadingProfile => 'प्रोफाइल लोड होत आहे';
@@ -1180,13 +1178,13 @@ class AppLocalizationsMr extends AppLocalizations {
   String get loadingProfileLists => 'प्रोफाइल यादी लोड होत आहे';
 
   @override
-  String get loadingReceivedInterests => 'आलेले interests लोड होत आहेत';
+  String get loadingReceivedInterests => 'आलेल्या पसंती लोड होत आहेत';
 
   @override
-  String get loadingSentInterests => 'पाठवलेले interests लोड होत आहेत';
+  String get loadingSentInterests => 'पाठवलेल्या पसंती लोड होत आहेत';
 
   @override
-  String get loadingSettings => 'Settings लोड होत आहेत';
+  String get loadingSettings => 'सेटिंग्ज लोड होत आहेत';
 
   @override
   String get location => 'ठिकाण';
@@ -1196,18 +1194,18 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get locationEntryAddedYouCanContinue =>
-      'Location entry add झाली. तुम्ही पुढे जाऊ शकता.';
+      'ठिकाण जोडले गेले. तुम्ही पुढे जाऊ शकता.';
 
   @override
   String get locationFoundButNoMatchingApp =>
-      'Location मिळाले, पण app list मध्ये जवळचे ठिकाण match झाले नाही.';
+      'ठिकाण मिळाले, पण अ‍ॅपमधील यादीत जुळणारे ठिकाण सापडले नाही.';
 
   @override
   String get locationPermissionIsNeededForNearby =>
-      'Nearby साठी location permission लागेल.';
+      'जवळपासच्या साठी ठिकाणाची परवानगी लागेल.';
 
   @override
-  String get locationPermissionWasDenied => 'Location permission नाकारली आहे.';
+  String get locationPermissionWasDenied => 'ठिकाणाची परवानगी नाकारली आहे.';
 
   @override
   String get locationPreference => 'ठिकाण पसंती';
@@ -1216,11 +1214,11 @@ class AppLocalizationsMr extends AppLocalizations {
   String get locationPreferences => 'ठिकाण अपेक्षा';
 
   @override
-  String get locationSelected => 'Location निवडले आहे';
+  String get locationSelected => 'ठिकाण निवडले आहे';
 
   @override
   String get locationTookTooLongTryAgain =>
-      'Location मिळायला जास्त वेळ लागला. पुन्हा प्रयत्न करा.';
+      'ठिकाण मिळायला खूप वेळ लागला. पुन्हा प्रयत्न करा.';
 
   @override
   String get lockedProfile => 'लॉक केलेली माहिती';
@@ -1232,7 +1230,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get login => 'लॉगिन करा';
 
   @override
-  String get loginFailed => 'Login failed. Login किंवा password तपासा.';
+  String get loginFailed => 'लॉगिन झाले नाही. लॉगिन किंवा पासवर्ड तपासा.';
 
   @override
   String get loginHidePassword => 'पासवर्ड लपवा';
@@ -1245,29 +1243,29 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get loginKeepSignedInSubtitle =>
-      'पुढच्या वेळी password न टाकता app उघडेल.';
+      'पुढच्या वेळी पासवर्ड न टाकता अ‍ॅप उघडेल.';
 
   @override
-  String get loginMissingFields => 'Login आणि password दोन्ही भरा.';
+  String get loginMissingFields => 'लॉगिन आणि पासवर्ड भरा.';
 
   @override
   String get loginPasswordLabel => 'पासवर्ड';
 
   @override
   String get loginProfileCheckFailed =>
-      'Profile तपासता आली नाही. पुन्हा प्रयत्न करा.';
+      'प्रोफाइल तपासता आली नाही. पुन्हा प्रयत्न करा.';
 
   @override
   String get loginProfileMissing => 'प्रोफाइल सापडली नाही. प्रोफाइल तयार करा.';
 
   @override
-  String get loginRegisterPrompt => 'नवीन user? इथे register करा';
+  String get loginRegisterPrompt => 'नवीन वापरकर्ता? इथे नोंदणी करा';
 
   @override
   String get loginShowPassword => 'पासवर्ड दाखवा';
 
   @override
-  String get loginSuccess => 'Login यशस्वी. Welcome back.';
+  String get loginSuccess => 'लॉगिन यशस्वी. पुन्हा स्वागत आहे.';
 
   @override
   String get loginWelcomeSubtitle =>
@@ -1280,7 +1278,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get logout => 'लॉगआउट';
 
   @override
-  String get logoutToExit => 'App मधून बाहेर पडण्यासाठी Logout वापरा.';
+  String get logoutToExit => 'या खात्यातून बाहेर पडायचे असल्यास लॉगआउट वापरा.';
 
   @override
   String get male => 'पुरुष';
@@ -1323,38 +1321,38 @@ class AppLocalizationsMr extends AppLocalizations {
   String get matchesTabSearch => 'शोध';
 
   @override
-  String get max => 'Max';
+  String get max => 'कमाल';
 
   @override
-  String get maxIncome => 'Max income';
+  String get maxIncome => 'कमाल उत्पन्न';
 
   @override
   String get maxIncomeMustBeMoreThan =>
-      'Max income min income पेक्षा जास्त असावे.';
+      'कमाल उत्पन्न किमान उत्पन्नापेक्षा जास्त असावे.';
 
   @override
   String get membersYouMayLike => 'तुम्हाला आवडू शकणारी स्थळे';
 
   @override
-  String get min => 'Min';
+  String get min => 'किमान';
 
   @override
-  String get minIncome => 'Min income';
+  String get minIncome => 'किमान उत्पन्न';
 
   @override
   String get mobileLocationFilledPleaseReviewIt =>
-      'मोबाईल location भरले. Continue करण्यापूर्वी तपासा.';
+      'मोबाईलवरून ठिकाण भरले. पुढे जाण्यापूर्वी तपासा.';
 
   @override
-  String get mobileLocationIsAlreadyRunning => 'मोबाईल location आधीच चालू आहे.';
+  String get mobileLocationIsAlreadyRunning => 'मोबाईल ठिकाण आधीच चालू आहे.';
 
   @override
   String get mobileLocationMatchedPleaseReviewIt =>
-      'मोबाईल location match झाली. Continue करण्यापूर्वी तपासा.';
+      'मोबाईल ठिकाण जुळले. पुढे जाण्यापूर्वी तपासा.';
 
   @override
   String get mobileLocationTimedOutTryAgain =>
-      'मोबाईल location वेळेत मिळाले नाही. पुन्हा प्रयत्न करा किंवा manually शोधा.';
+      'मोबाईल ठिकाण वेळेत मिळाले नाही. पुन्हा प्रयत्न करा किंवा स्वतः शोधा.';
 
   @override
   String get mobileNumber => 'मोबाइल नंबर *';
@@ -1364,10 +1362,10 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get mobileVerificationKeepsTheAccountSecure =>
-      'Mobile verification मुळे account सुरक्षित आणि recoverable राहते.';
+      'मोबाईल पडताळणीमुळे खाते सुरक्षित राहते आणि पुन्हा मिळवता येते.';
 
   @override
-  String get mobileVerified => 'Mobile verified';
+  String get mobileVerified => 'मोबाइल पडताळणी झालेला';
 
   @override
   String get monthly => 'मासिक';
@@ -1407,22 +1405,22 @@ class AppLocalizationsMr extends AppLocalizations {
   String get name => 'नाव';
 
   @override
-  String get nearbyLocation => 'Nearby ठिकाण';
+  String get nearbyLocation => 'जवळचे ठिकाण';
 
   @override
-  String get newMatchesDigest => 'नवीन matches digest';
+  String get newMatchesDigest => 'नवीन जुळण्यांचा सारांश';
 
   @override
   String get no => 'नाही';
 
   @override
-  String get noBlockedProfiles => 'कोणतेही blocked profiles नाहीत.';
+  String get noBlockedProfiles => 'कोणतीही अवरोधित प्रोफाइल नाहीत.';
 
   @override
-  String get noChildren => 'मुले नसलेली profile';
+  String get noChildren => 'मुले नाहीत';
 
   @override
-  String get noHiddenProfiles => 'कोणतेही hidden profiles नाहीत.';
+  String get noHiddenProfiles => 'कोणतीही लपवलेली प्रोफाइल नाहीत.';
 
   @override
   String get noInformation => 'माहिती नाही';
@@ -1441,45 +1439,46 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get noProfilesFoundTryReducingFilters =>
-      'प्रोफाइल सापडली नाही. Filters कमी करून पुन्हा प्रयत्न करा.';
+      'एकही प्रोफाइल सापडली नाही. गाळण्या कमी करून पुन्हा शोधा.';
 
   @override
-  String get noShortlistedProfiles => 'अजून कोणतीही shortlist नाही.';
+  String get noShortlistedProfiles => 'अजून एकही निवडक प्रोफाइल नाही.';
 
   @override
-  String get normal => 'Normal';
+  String get normal => 'सामान्य';
 
   @override
   String get normalModeSelectedSomePreferencesAre =>
-      'Normal mode निवडला. जास्त matches साठी काही पसंती wide केली आहे.';
+      'सामान्य पद्धत निवडली. जास्त जुळणी मिळावी म्हणून काही पसंती अधिक व्यापक ठेवल्या आहेत.';
 
   @override
-  String get notFoundRequestOccupation => 'Occupation request करा';
+  String get notFoundRequestOccupation =>
+      'सापडले नाही? व्यवसाय जोडण्याची विनंती करा';
 
   @override
-  String get notFoundRequestToAdd => 'सापडले नाही? Request करा';
+  String get notFoundRequestToAdd => 'सापडले नाही? जोडण्याची विनंती करा';
 
   @override
-  String get notesOptional => 'Notes optional';
+  String get notesOptional => 'टिपा (ऐच्छिक)';
 
   @override
   String get notificationsEmpty => 'सध्या कोणतीही सूचना नाही.';
 
   @override
-  String get notificationsLoadFailed => 'सूचना load झाल्या नाहीत.';
+  String get notificationsLoadFailed => 'सूचना उघडता आल्या नाहीत.';
 
   @override
   String get notificationsMarkAllRead => 'सर्व वाचले';
 
   @override
   String get notificationsOpenFailed =>
-      'ही सूचना app मध्ये उघडण्यासाठी route उपलब्ध नाही.';
+      'या सूचनेसाठी अ‍ॅपमध्ये उघडण्याची कोणतीही क्रिया उपलब्ध नाही.';
 
   @override
   String get notificationsRead => 'वाचले';
 
   @override
-  String get notificationsSoon => 'सूचना लवकरच app मध्ये येतील.';
+  String get notificationsSoon => 'सूचना लवकरच उपलब्ध होतील.';
 
   @override
   String get notificationsTitle => 'सूचना';
@@ -1489,54 +1488,55 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get nowSetAFewImportantThings =>
-      'आता योग्य स्थळे सुचवण्यासाठी काही महत्त्वाच्या settings पूर्ण करूया.';
+      'आता काही महत्त्वाच्या गोष्टी नोंदवा, म्हणजे आम्ही योग्य स्थळे सुचवू शकू.';
 
   @override
   String get occupation => 'व्यवसाय';
 
   @override
   String get occupationAndIncomeAreOptionalWhen =>
-      'काम करत नसल्यास व्यवसाय आणि उत्पन्न optional आहे.';
+      'काम करत नसल्यास व्यवसाय आणि उत्पन्न भरणे ऐच्छिक आहे.';
 
   @override
-  String get occupationLabel => 'Occupation label';
+  String get occupationLabel => 'व्यवसाय';
 
   @override
-  String get occupationRequestSubmitted => 'Occupation request submit झाली.';
+  String get occupationRequestSubmitted => 'व्यवसायाची विनंती पाठवली.';
 
   @override
   String get oneFinalProfileDetailHelpsFamilies =>
       'शेवटची ही माहिती योग्य स्थळे सुचवण्यासाठी उपयोगी पडते.';
 
   @override
-  String get onlyIdVerifiedProfiles => 'फक्त ID verified';
+  String get onlyIdVerifiedProfiles => 'फक्त ID पडताळणी झालेल्या प्रोफाइल';
 
   @override
-  String get onlyProfilesWithPhoto => 'फोटो असलेले profile';
+  String get onlyProfilesWithPhoto => 'फक्त फोटो असलेल्या प्रोफाइल';
 
   @override
-  String get open => 'Open';
+  String get open => 'उघडा';
 
   @override
   String get open2 => 'उघडा';
 
   @override
-  String get openLocation => 'Location open ठेवा';
+  String get openLocation => 'ठिकाण उघडा';
 
   @override
   String get openToIntercaste => 'आंतरजातीय चालेल';
 
   @override
-  String get optional => 'Optional';
+  String get optional => 'ऐच्छिक';
 
   @override
   String get optional2 => 'ऐच्छिक';
 
   @override
-  String get optionalButUsefulForBetterSuggestions => 'Optional';
+  String get optionalButUsefulForBetterSuggestions =>
+      'ऐच्छिक, पण अधिक चांगल्या सूचनांसाठी उपयुक्त';
 
   @override
-  String get optionsNotLoaded => 'Options load झाले नाहीत.';
+  String get optionsNotLoaded => 'पर्याय उघडले नाहीत.';
 
   @override
   String get other => 'इतर';
@@ -1555,32 +1555,32 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get partnerPreferencePreviewIsNotReady =>
-      'जोडीदार पसंती preview तयार नाही.';
+      'जोडीदार पसंतीचे पूर्वावलोकन तयार नाही.';
 
   @override
-  String get partnerPreferenceSaveFailed => 'जोडीदार पसंती save झाली नाही.';
+  String get partnerPreferenceSaveFailed => 'जोडीदार पसंती जतन झाली नाही.';
 
   @override
   String get partnerPreferenceSaveProblem =>
-      'Partner preference save करताना problem आला.';
+      'जोडीदार पसंती जतन करताना अडचण आली.';
 
   @override
-  String get partnerProfileWithChildren => 'मुले असलेली profile';
+  String get partnerProfileWithChildren => 'मुले असलेली जोडीदाराची प्रोफाइल';
 
   @override
   String get passwordAndConfirmPasswordDoNot =>
-      'Password आणि confirm password जुळत नाहीत.';
+      'पासवर्ड आणि पुष्टी पासवर्ड जुळत नाहीत.';
 
   @override
   String get pending => 'प्रलंबित';
 
   @override
   String get pendingSuggestionsAreNotSelectedAs =>
-      'Pending suggestion approved होईपर्यंत occupation म्हणून select होत नाही.';
+      'प्रलंबित सूचना मंजूर होईपर्यंत व्यवसाय म्हणून निवडली जात नाही.';
 
   @override
   String get pendingSuggestionsAreNotSelectedAs2 =>
-      'Pending suggestion approved होईपर्यंत education म्हणून select होत नाही.';
+      'प्रलंबित सूचना मंजूर होईपर्यंत शिक्षण म्हणून निवडले जात नाही.';
 
   @override
   String get perMonth => 'दर महिना';
@@ -1589,87 +1589,87 @@ class AppLocalizationsMr extends AppLocalizations {
   String get perYear => 'दर वर्ष';
 
   @override
-  String get photoApproved => 'Photo approved आहे';
+  String get photoApproved => 'फोटो मंजूर आहे';
 
   @override
   String get photoApprovedMovingToPartnerPreference =>
-      'Photo approve झाला. Partner preference कडे जात आहोत.';
+      'फोटो मंजूर झाला. जोडीदार पसंतीकडे जात आहोत.';
 
   @override
   String get photoAvailable => 'फोटो उपलब्ध';
 
   @override
-  String get photoCropPhoto =>
-      'Photo crop करता आला नाही. कृपया दुसरा photo निवडा.';
+  String get photoCropPhoto => 'फोटो कापता आला नाही. कृपया दुसरा फोटो निवडा.';
 
   @override
-  String get photoDeleteConfirm => 'हा photo profile मधून काढायचा आहे का?';
+  String get photoDeleteConfirm =>
+      'हा फोटो तुमच्या प्रोफाइलमधून काढायचा आहे का?';
 
   @override
-  String get photoGalleryEmpty => 'अजून photo upload केलेले नाहीत.';
+  String get photoGalleryEmpty => 'अजून एकही फोटो अपलोड केलेला नाही.';
 
   @override
   String get photoIsNotValidPleaseSelect =>
-      'Photo valid नाही. कृपया clear image निवडा.';
+      'फोटो योग्य नाही. कृपया स्पष्ट चित्र निवडा.';
 
   @override
   String get photoIsUploadedApprovalOrSafety =>
-      'Photo uploaded आहे. Approval किंवा safety check pending आहे.';
+      'फोटो अपलोड झाला आहे. मंजुरी किंवा सुरक्षा तपासणी प्रलंबित आहे.';
 
   @override
-  String get photoIsUploadingPleaseWait => 'Photo upload होत आहे. कृपया थांबा.';
+  String get photoIsUploadingPleaseWait => 'फोटो अपलोड होत आहे. कृपया थांबा.';
 
   @override
   String get photoManagementHint =>
-      'खालील thumbnail निवडा आणि त्या photo साठी action करा.';
+      'खालील छोटा फोटो निवडा आणि त्या फोटोवर कृती करा.';
 
   @override
-  String get photoNotApproved => 'Photo approve झाला नाही';
+  String get photoNotApproved => 'फोटो मंजूर झाला नाही';
 
   @override
-  String get photoNotUploaded => 'Photo upload केलेला नाही';
+  String get photoNotUploaded => 'फोटो अपलोड केलेला नाही';
 
   @override
   String get photoReachedBackendQualityAndSafety =>
-      'Photo backend ला मिळाला आहे. Quality आणि safety check चालू आहे.';
+      'फोटो सर्व्हरला मिळाला आहे. गुणवत्ता आणि सुरक्षा तपासणी चालू आहे.';
 
   @override
   String get photoSelectedCropItIfNeeded =>
-      'Photo निवडला आहे. गरज असल्यास crop करा आणि upload करा.';
+      'फोटो निवडला आहे. गरज असल्यास कापा आणि अपलोड करा.';
 
   @override
-  String get photoSelectionCancelled => 'Photo selection cancel झाले.';
+  String get photoSelectionCancelled => 'फोटो निवड रद्द झाली.';
 
   @override
   String get photoStatusCouldNotBeRefreshed =>
-      'Photo status refresh करता आला नाही.';
+      'फोटोची स्थिती नव्याने पाहता आली नाही.';
 
   @override
   String get photoUnavailable => 'फोटो उपलब्ध नाही';
 
   @override
   String get photoUploadFailedPleaseTryAgain =>
-      'Photo upload fail झाला. कृपया पुन्हा प्रयत्न करा.';
+      'फोटो अपलोड करता आला नाही. कृपया पुन्हा प्रयत्न करा.';
 
   @override
   String get photoUploadHelp =>
-      'Clear face, single person आणि चांगल्या light मधला photo upload करा.';
+      'चांगल्या प्रकाशात एकाच व्यक्तीचा स्पष्ट फोटो अपलोड करा.';
 
   @override
   String get photoUploadIsNotAllowedFor =>
-      'Photo upload सध्या तुमच्या account साठी allowed नाही.';
+      'या खात्यासाठी फोटो अपलोड करण्याची परवानगी नाही.';
 
   @override
   String get photoUploadedBackendQualitySafetyCheck =>
-      'Photo uploaded आहे. Backend quality आणि safety check नंतर तो visible होईल.';
+      'फोटो अपलोड झाला आहे. सर्व्हरवरील दर्जा व सुरक्षा पडताळणीनंतर तो दिसेल.';
 
   @override
   String get photoUploadedPleaseCheckTheStatus =>
-      'Photo upload झाला. पुढे जाण्याआधी status तपासा.';
+      'फोटो अपलोड झाला. पुढे जाण्याआधी स्थिती तपासा.';
 
   @override
   String get photoUploadedReviewIsPendingSo =>
-      'Photo upload झाला. Review pending आहे, त्यामुळे पुढे जात आहोत.';
+      'फोटो अपलोड झाला. पडताळणी प्रलंबित आहे, त्यामुळे आपण पुढे जात आहोत.';
 
   @override
   String get photoVisibility => 'फोटो कोण पाहू शकतो';
@@ -1678,60 +1678,59 @@ class AppLocalizationsMr extends AppLocalizations {
   String get photosVerification => 'फोटो / पडताळणी';
 
   @override
-  String get photosVerificationSubtitle =>
-      'फोटो gallery आणि verification status पहा';
+  String get photosVerificationSubtitle => 'गॅलरी आणि पडताळणीची स्थिती पहा';
 
   @override
   String get physicalBuild => 'शरीरयष्टी';
 
   @override
-  String get pincodeOptional => 'Pincode optional';
+  String get pincodeOptional => 'पिनकोड (ऐच्छिक)';
 
   @override
-  String get plansActiveSubscription => 'Active subscription';
+  String get plansActiveSubscription => 'सुरू असलेली वर्गणी';
 
   @override
   String get plansAvailablePlans => 'उपलब्ध प्लॅन्स';
 
   @override
   String get plansBrowserNote =>
-      'Checkout browser मध्ये उघडले आहे. Payment status Laravel कडून update होईल.';
+      'पेमेंट ब्राउझरमध्ये उघडले आहे. पेमेंटची स्थिती सर्व्हरकडून अद्ययावत होईल.';
 
   @override
   String get plansCheckoutUrlMissing =>
-      'Checkout link backend कडून मिळाला नाही.';
+      'पेमेंटची लिंक सर्व्हरकडून मिळाली नाही.';
 
   @override
   String get plansChoose => 'निवडा';
 
   @override
-  String get plansContactQuota => 'Contact unlock quota';
+  String get plansContactQuota => 'संपर्क उघडण्याची मर्यादा';
 
   @override
   String get plansCurrentPlan => 'सध्याचा प्लॅन';
 
   @override
-  String get plansEmpty => 'सध्या upgrade साठी कोणताही प्लॅन उपलब्ध नाही.';
+  String get plansEmpty => 'सध्या अपग्रेडसाठी कोणतीही योजना उपलब्ध नाही.';
 
   @override
-  String get plansFreeOrLocked => 'Free / locked state';
+  String get plansFreeOrLocked => 'मोफत / बंद स्थिती';
 
   @override
-  String get plansLoadFailed => 'Plans load झाले नाहीत.';
+  String get plansLoadFailed => 'योजना उघडता आल्या नाहीत.';
 
   @override
   String get plansManualRefreshHint =>
-      'Payment पूर्ण झाल्यावर app मध्ये परत येऊन Refresh करा.';
+      'पेमेंट झाल्यावर अ‍ॅपमध्ये परत येऊन नव्याने पाहा.';
 
   @override
   String get plansNoCurrentPlan => 'सध्याचा प्लॅन उपलब्ध नाही';
 
   @override
   String get plansOpenFailedCopied =>
-      'Browser उघडू शकला नाही. Checkout link clipboard मध्ये copy केला.';
+      'ब्राउझर उघडता आला नाही. पेमेंटची लिंक क्लिपबोर्डवर कॉपी केली आहे.';
 
   @override
-  String get plansOpeningCheckout => 'Checkout उघडत आहे...';
+  String get plansOpeningCheckout => 'पेमेंट उघडत आहे...';
 
   @override
   String get plansRefresh => 'रिफ्रेश';
@@ -1764,7 +1763,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get pleaseEnterFullName => 'कृपया पूर्ण नाव भरा.';
 
   @override
-  String get pleaseSelectAPhotoFirst => 'कृपया आधी photo निवडा.';
+  String get pleaseSelectAPhotoFirst => 'कृपया आधी फोटो निवडा.';
 
   @override
   String get pleaseSelectLivingWithAgain => 'कोणासोबत राहते ते पुन्हा निवडा.';
@@ -1777,17 +1776,17 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get pleaseTryAgainWithAClear =>
-      'कृपया clear photo निवडून पुन्हा प्रयत्न करा.';
+      'कृपया स्पष्ट फोटो निवडून पुन्हा प्रयत्न करा.';
 
   @override
   String get pleaseUploadAClearSafeSingle =>
-      'कृपया clear, safe, single-person photo upload करा.';
+      'कृपया एकाच व्यक्तीचा स्पष्ट व सुरक्षित फोटो अपलोड करा.';
 
   @override
-  String get pleaseVerifyMobileFirst => 'आधी mobile verify करा.';
+  String get pleaseVerifyMobileFirst => 'कृपया आधी मोबाइल पडताळून घ्या.';
 
   @override
-  String get premiumProfiles => 'Premium स्थळे';
+  String get premiumProfiles => 'प्रीमियम स्थळे';
 
   @override
   String get premiumProfilesSubtitle => 'सदस्यत्व असलेली निवडक स्थळे';
@@ -1800,7 +1799,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get preparingYourInformation => 'तुमची माहिती व्यवस्थित दाखवत आहोत.';
 
   @override
-  String get primaryPhoto => 'Primary';
+  String get primaryPhoto => 'मुख्य';
 
   @override
   String get professionalPreferences => 'शिक्षण / करिअर अपेक्षा';
@@ -1815,7 +1814,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get profileListsHidden => 'लपवलेले';
 
   @override
-  String get profileListsLoadFailed => 'प्रोफाइल यादी load झाली नाही.';
+  String get profileListsLoadFailed => 'प्रोफाइल यादी उघडता आली नाही.';
 
   @override
   String get profileListsMenu => 'शॉर्टलिस्ट / ब्लॉक';
@@ -1827,41 +1826,41 @@ class AppLocalizationsMr extends AppLocalizations {
   String get profileListsTitle => 'शॉर्टलिस्ट / ब्लॉक';
 
   @override
-  String get profileManagedBy => 'Profile कोणाद्वारे';
+  String get profileManagedBy => 'प्रोफाइल कोण सांभाळते';
 
   @override
-  String get profileOpenNotAllowed => 'हे profile सध्या उघडता येत नाही.';
+  String get profileOpenNotAllowed => 'हे प्रोफाइल सध्या उघडता येत नाही.';
 
   @override
-  String get profilePhoto => 'Profile photo';
+  String get profilePhoto => 'प्रोफाइल फोटो';
 
   @override
-  String get profilePhoto2 => 'Profile Photo';
+  String get profilePhoto2 => 'प्रोफाइल फोटो';
 
   @override
-  String get profileRemovedFromShortlist => 'Profile shortlist मधून काढले.';
+  String get profileRemovedFromShortlist => 'प्रोफाइल निवडयादीतून काढले.';
 
   @override
   String get profileType => 'प्रोफाइल प्रकार';
 
   @override
-  String get profileTypeLoadFailed => 'प्रोफाइल प्रकार load करता आला नाही.';
+  String get profileTypeLoadFailed => 'प्रोफाइलचा प्रकार उघडता आला नाही.';
 
   @override
-  String get profileUnblocked => 'Profile unblock केले.';
+  String get profileUnblocked => 'प्रोफाइलवरील अडथळा काढला.';
 
   @override
-  String get profileUnhidden => 'Profile unhide केले.';
+  String get profileUnhidden => 'प्रोफाइल पुन्हा दृश्यमान केले.';
 
   @override
-  String get profileViewed => 'Profile पाहिले गेले';
+  String get profileViewed => 'प्रोफाइल पाहिले';
 
   @override
   String get profileVisibility => 'प्रोफाइल दृश्यता';
 
   @override
   String get profileWasNotFoundPleaseComplete =>
-      'Profile सापडली नाही. कृपया आधी profile तयार करा.';
+      'प्रोफाइल सापडले नाही. कृपया आधी प्रोफाइल तयार करा.';
 
   @override
   String get profilesCloserToYourLocation => 'तुमच्या ठिकाणाजवळील स्थळे';
@@ -1883,7 +1882,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get rashi => 'राशी';
 
   @override
-  String get readyToUpload => 'Upload साठी ready';
+  String get readyToUpload => 'अपलोडसाठी तयार';
 
   @override
   String get receivedInterests => 'आलेले इंटरेस्ट';
@@ -1900,16 +1899,16 @@ class AppLocalizationsMr extends AppLocalizations {
       'दाखवण्यासाठी योग्य अलीकडील भेटी अजून नाहीत.';
 
   @override
-  String get recentlyActive => 'Recently active';
+  String get recentlyActive => 'अलीकडे सक्रिय';
 
   @override
-  String get refresh => 'Refresh';
+  String get refresh => 'नव्याने पाहा';
 
   @override
-  String get refreshPhotoStatus => 'Photo status refresh करा';
+  String get refreshPhotoStatus => 'फोटोची स्थिती नव्याने पाहा';
 
   @override
-  String get refreshPreference => 'Preference refresh करा';
+  String get refreshPreference => 'पसंती नव्याने पाहा';
 
   @override
   String get register => 'नोंदणी करा';
@@ -1919,7 +1918,7 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get registrationIsCompleteNextSettingsImprove =>
-      'नोंदणी पूर्ण झाली आहे. पुढील settings योग्य स्थळे सुचवायला मदत करतात.';
+      'नोंदणी पूर्ण झाली आहे. पुढील सेटिंग्ज योग्य स्थळे सुचवायला मदत करतात.';
 
   @override
   String get rejected => 'नाकारले';
@@ -1943,25 +1942,25 @@ class AppLocalizationsMr extends AppLocalizations {
   String get religiousPreferences => 'धार्मिक अपेक्षा';
 
   @override
-  String get removeFromShortlist => 'Shortlist मधून काढा';
+  String get removeFromShortlist => 'निवडयादीतून काढा';
 
   @override
-  String get replaceApprovedPhoto => 'Approved photo बदला';
+  String get replaceApprovedPhoto => 'मंजूर फोटो बदला';
 
   @override
-  String get replacePhoto => 'Photo बदला';
+  String get replacePhoto => 'फोटो बदला';
 
   @override
-  String get requestEducation => 'Education request';
+  String get requestEducation => 'शिक्षणाची विनंती करा';
 
   @override
-  String get requestOccupation => 'Occupation request';
+  String get requestOccupation => 'व्यवसायाची विनंती करा';
 
   @override
-  String get requestedLocation => 'Requested location';
+  String get requestedLocation => 'विनंती केलेले ठिकाण';
 
   @override
-  String get requireContactRequest => 'Contact request आवश्यक';
+  String get requireContactRequest => 'संपर्क विनंती आवश्यक';
 
   @override
   String get required => 'आवश्यक';
@@ -1977,55 +1976,55 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get reviewThePreferencePreparedFromYour =>
-      'तुमच्या माहितीवरून तयार केलेली पसंती तपासा. जास्त matches साठी ती wide करू शकता.';
+      'तुमच्या प्रोफाइलवरून तयार केलेली पसंती तपासा. अधिक जुळण्यांसाठी ती अधिक व्यापक करू शकता.';
 
   @override
   String get rural => 'ग्रामीण';
 
   @override
-  String get safePhoto => 'Safe photo';
+  String get safePhoto => 'सुरक्षित फोटो';
 
   @override
   String get safeProfiles => 'सुरक्षित प्रोफाइल';
 
   @override
-  String get save => 'Save';
+  String get save => 'जतन करा';
 
   @override
-  String get saveAndContinue => 'Save करून पुढे जा';
+  String get saveAndContinue => 'जतन करून पुढे जा';
 
   @override
   String get saveAndContinue2 => 'सेव्ह करून पुढे जा';
 
   @override
   String get saveNormalPreferenceAndFinishSetup =>
-      'Normal पसंती save करून setup पूर्ण करा';
+      'सामान्य पसंती जतन करून सेटअप पूर्ण करा';
 
   @override
-  String get saveSection => 'Section save करा';
+  String get saveSection => 'विभाग जतन करा';
 
   @override
   String get saveStrictPreferenceAndFinishSetup =>
-      'Strict पसंती save करून setup पूर्ण करा';
+      'कडक पसंती जतन करून सेटअप पूर्ण करा';
 
   @override
-  String get saved => 'Save झाले.';
+  String get saved => 'जतन झाले.';
 
   @override
-  String get savedChooseMaritalStatus => 'Save झाले. वैवाहिक स्थिती निवडा.';
+  String get savedChooseMaritalStatus => 'जतन झाले. वैवाहिक स्थिती निवडा.';
 
   @override
   String get savedForNowAdminCanApprove =>
-      'सध्या save झाले आहे; admin नंतर master location approve करू शकतो.';
+      'सध्या जतन झाले आहे; प्रशासक नंतर मुख्य ठिकाण मंजूर करू शकतो.';
 
   @override
-  String get search => 'Search करा';
+  String get search => 'शोधा';
 
   @override
   String get search2 => 'शोधा';
 
   @override
-  String get searchAndSelectEducation => 'Education शोधून निवडा';
+  String get searchAndSelectEducation => 'शिक्षण शोधून निवडा';
 
   @override
   String get searchCountry => 'देश शोधा';
@@ -2034,7 +2033,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get searchDistrict => 'जिल्हा शोधा';
 
   @override
-  String get searchEducation => 'Education शोधा';
+  String get searchEducation => 'शिक्षण शोधा';
 
   @override
   String get searchFilters => 'शोध फिल्टर';
@@ -2059,23 +2058,23 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get searchWithAgeCommunityLocationAnd =>
-      'वय, धर्म, जात, location आणि advanced filters वापरून शोधा.';
+      'वय, समाज, ठिकाण आणि प्रगत गाळण्या वापरून शोधा.';
 
   @override
   String get searchWorkType => 'कामाचा प्रकार शोधा';
 
   @override
-  String get sectionUpdated => 'Section update झाले.';
+  String get sectionUpdated => 'विभाग अद्ययावत झाला.';
 
   @override
-  String get seeWhoViewedYourProfile => 'तुमचे profile कोणी पाहिले ते पहा';
+  String get seeWhoViewedYourProfile => 'तुमचे प्रोफाइल कोणी पाहिले ते पहा';
 
   @override
   String get select => 'निवडा';
 
   @override
   String get selectACitySuburbVillageOr =>
-      'शहर, उपनगर, गाव निवडा किंवा तुमचे location add करा.';
+      'शहर, उपनगर, गाव निवडा किंवा तुमचे ठिकाण जोडा.';
 
   @override
   String get selectAgeBetween1And30 => 'वय 1 ते 30 मध्ये निवडा.';
@@ -2094,7 +2093,7 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get selectCountryStateDistrictAndEnter =>
-      'देश, राज्य, जिल्हा निवडा आणि location नाव भरा.';
+      'देश, राज्य, जिल्हा निवडा आणि ठिकाणाचे नाव भरा.';
 
   @override
   String get selectDistrict => 'जिल्हा निवडा';
@@ -2153,7 +2152,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get selectOccupation => 'व्यवसाय निवडा';
 
   @override
-  String get selectPhoto => 'Photo निवडा';
+  String get selectPhoto => 'फोटो निवडा';
 
   @override
   String get selectProfileType => 'कृपया वधू / वर निवडा.';
@@ -2186,10 +2185,10 @@ class AppLocalizationsMr extends AppLocalizations {
   String get selectYourGender => 'तुमचे लिंग निवडा';
 
   @override
-  String get selectedPhoto => 'Selected photo';
+  String get selectedPhoto => 'निवडलेला फोटो';
 
   @override
-  String get sendEmailOtp => 'Email OTP पाठवा';
+  String get sendEmailOtp => 'ईमेल OTP पाठवा';
 
   @override
   String get sendInterest => 'इंटरेस्ट पाठवा';
@@ -2201,7 +2200,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get sendOtpFirst => 'आधी OTP पाठवा.';
 
   @override
-  String get sendProfileAlertsOnWhatsapp => 'WhatsApp वर profile alerts पाठवा';
+  String get sendProfileAlertsOnWhatsapp => 'WhatsApp वर प्रोफाइल सूचना पाठवा';
 
   @override
   String get sendingOtp => 'OTP पाठवत आहे';
@@ -2214,24 +2213,24 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get sessionExpiredPleaseLoginAgain =>
-      'Session expired. कृपया पुन्हा login करा.';
+      'सत्र संपले. कृपया पुन्हा लॉगिन करा.';
 
   @override
   String get sessionExpiredVerifyMobileAgain =>
-      'Session expired. Mobile पुन्हा verify करा.';
+      'सत्र संपले. मोबाइल पुन्हा पडताळा.';
 
   @override
   String get setAPasswordIfYouWish =>
-      'Password ने login करायचे असल्यास password तयार करा';
+      'पासवर्डने लॉगिन करायचे असल्यास पासवर्ड तयार करा';
 
   @override
-  String get setPassword => 'Password तयार करा';
+  String get setPassword => 'पासवर्ड तयार करा';
 
   @override
-  String get setPassword2 => 'Password तयार करा';
+  String get setPassword2 => 'पासवर्ड तयार करा';
 
   @override
-  String get setPrimary => 'Primary करा';
+  String get setPrimary => 'मुख्य करा';
 
   @override
   String get settingsAccountSummary => 'अकाउंट माहिती';
@@ -2240,7 +2239,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get settingsCommunication => 'संपर्क प्राधान्ये';
 
   @override
-  String get settingsLoadFailed => 'सेटिंग्ज load झाल्या नाहीत.';
+  String get settingsLoadFailed => 'सेटिंग्ज लोड होऊ शकल्या नाहीत.';
 
   @override
   String get settingsNoProfile =>
@@ -2271,7 +2270,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get settingsTitle => 'सेटिंग्ज';
 
   @override
-  String get showPassword => 'Password दाखवा';
+  String get showPassword => 'पासवर्ड दाखवा';
 
   @override
   String get simpleFamilyFirst => 'साधी आणि कुटुंबप्रिय';
@@ -2283,7 +2282,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get simpleProcess => 'सोपे नोंदणी';
 
   @override
-  String get singlePerson => 'Single person';
+  String get singlePerson => 'एकटी व्यक्ती';
 
   @override
   String get sister => 'बहीण';
@@ -2295,13 +2294,13 @@ class AppLocalizationsMr extends AppLocalizations {
   String get sisterSFullName => 'बहिणीचे पूर्ण नाव *';
 
   @override
-  String get skipAstroDetails => 'ज्योतिष माहिती skip करा';
+  String get skipAstroDetails => 'ज्योतिष माहिती वगळा';
 
   @override
-  String get skipEmailVerification => 'Email verification skip करा';
+  String get skipEmailVerification => 'ईमेल पडताळणी वगळा';
 
   @override
-  String get smoking => 'Smoking';
+  String get smoking => 'धूम्रपान';
 
   @override
   String get son => 'मुलगा';
@@ -2325,17 +2324,17 @@ class AppLocalizationsMr extends AppLocalizations {
   String get str => ' मान्य करतो/करते.';
 
   @override
-  String get strict => 'Strict';
+  String get strict => 'कडक';
 
   @override
   String get strictModeSelectedPreferencesAreFocused =>
-      'Strict mode निवडला. पसंती तुमच्या प्रोफाइलनुसार focused आहे.';
+      'कडक पद्धत निवडली. पसंती तुमच्या प्रोफाइलनुसार मर्यादित केली आहे.';
 
   @override
   String get subCaste => 'पोटजात';
 
   @override
-  String get submit => 'Submit';
+  String get submit => 'सादर करा';
 
   @override
   String get suggestedProfilesForYou => 'तुमच्यासाठी सुचवलेली स्थळे';
@@ -2348,19 +2347,19 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get thereWasAProblemSelectingThe =>
-      'Photo निवडताना problem आला. कृपया पुन्हा प्रयत्न करा.';
+      'फोटो निवडताना अडचण आली. कृपया पुन्हा प्रयत्न करा.';
 
   @override
   String get thereWasAProblemUploadingThe =>
-      'Photo upload करताना problem आला. कृपया पुन्हा प्रयत्न करा.';
+      'फोटो अपलोड करताना अडचण आली. कृपया पुन्हा प्रयत्न करा.';
 
   @override
   String get thisApprovedPhotoIsVisibleOn =>
-      'हा approved photo तुमच्या profile वर दिसत आहे.';
+      'हा मंजूर झालेला फोटो तुमच्या प्रोफाइलवर दिसत आहे.';
 
   @override
   String get thisIsOptionalAddOnlyWhat =>
-      'ही माहिती optional आहे. आत्ता जे माहिती आहे तेवढेच भरा.';
+      'ही माहिती ऐच्छिक आहे. आत्ता जेवढे माहीत आहे तेवढेच भरा.';
 
   @override
   String get thisKeepsEveryNextQuestionRelevant =>
@@ -2368,22 +2367,22 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get thisLocationAlreadyExistsItHas =>
-      'हे location आधीपासून आहे. ते select केले आहे.';
+      'हे ठिकाण आधीपासून आहे. ते निवडले आहे.';
 
   @override
   String get thisMonth => 'या महिन्यात';
 
   @override
   String get thisPhotoCouldNotBeApproved =>
-      'हा photo approve होऊ शकला नाही. कृपया दुसरा clear photo upload करा.';
+      'हा फोटो मंजूर होऊ शकला नाही. कृपया दुसरा स्पष्ट फोटो अपलोड करा.';
 
   @override
   String get thisPhotoWasNotApprovedPlease =>
-      'हा photo approve झाला नाही. कृपया दुसरा clear photo upload करा.';
+      'हा फोटो मंजूर झाला नाही. कृपया दुसरा स्पष्ट फोटो अपलोड करा.';
 
   @override
   String get thisPreferenceIsBasedOnThe =>
-      'तुम्ही भरलेल्या माहितीनुसार ही partner preference दाखवत आहोत. हवे असल्यास section edit करू शकता किंवा नंतर बदलू शकता.';
+      'तुम्ही भरलेल्या माहितीनुसार ही पसंती दाखवत आहोत. हवे असल्यास कोणताही भाग आता बदलू शकता किंवा नंतरही बदलू शकता.';
 
   @override
   String get thisWeek => 'या आठवड्यात';
@@ -2402,26 +2401,26 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get tryAgainAfterTheLatestServer =>
-      'Server update नंतर पुन्हा प्रयत्न करा.';
+      'सर्व्हर अद्ययावत झाल्यावर पुन्हा प्रयत्न करा.';
 
   @override
-  String get tryGoogleVerification => 'Google verification करा';
+  String get tryGoogleVerification => 'Google पडताळणी करून पाहा';
 
   @override
   String get turnOnDeviceLocationInAndroid =>
-      'Android settings मध्ये device location चालू करून पुन्हा प्रयत्न करा.';
+      'मोबाइलच्या सेटिंग्जमध्ये डिव्हाइसचे ठिकाण चालू करून पुन्हा प्रयत्न करा.';
 
   @override
-  String get unblockProfile => 'Unblock करा';
+  String get unblockProfile => 'अनब्लॉक करा';
 
   @override
-  String get unhideProfile => 'Unhide करा';
+  String get unhideProfile => 'पुन्हा दाखवा';
 
   @override
-  String get unlock => 'Unlock करा';
+  String get unlock => 'अनलॉक करा';
 
   @override
-  String get upDown => 'Up / down';
+  String get upDown => 'वर / खाली';
 
   @override
   String get upgrade => 'अपग्रेड करा';
@@ -2431,14 +2430,14 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get uploadAProfilePhotoBeforeContinuing =>
-      'पुढे जाण्याआधी profile photo upload करा.';
+      'पुढे जाण्याआधी प्रोफाइल फोटो अपलोड करा.';
 
   @override
   String get uploadCompleteScreen =>
-      'Upload complete होईपर्यंत screen बंद करू नका.';
+      'अपलोड पूर्ण होईपर्यंत स्क्रीन बंद करू नका.';
 
   @override
-  String get uploadNeedsAttention => 'Upload मध्ये problem आहे';
+  String get uploadNeedsAttention => 'अपलोडकडे लक्ष देणे आवश्यक आहे';
 
   @override
   String get uploadPhoto => 'फोटो अपलोड करा';
@@ -2447,33 +2446,33 @@ class AppLocalizationsMr extends AppLocalizations {
   String get uploadPhotoSubtitle => 'प्रोफाइलसाठी फोटो अपडेट करा';
 
   @override
-  String get uploadSelectedPhoto => 'Selected photo upload करा';
+  String get uploadSelectedPhoto => 'निवडलेला फोटो अपलोड करा';
 
   @override
   String get uploadTheSelectedPhotoBeforeContinuing =>
-      'पुढे जाण्याआधी selected photo upload करा.';
+      'पुढे जाण्याआधी निवडलेला फोटो अपलोड करा.';
 
   @override
-  String get uploading => 'Uploading...';
+  String get uploading => 'अपलोड होत आहे...';
 
   @override
-  String get uploadingPhoto => 'Photo upload होत आहे';
+  String get uploadingPhoto => 'फोटो अपलोड होत आहे';
 
   @override
-  String get useLocation => 'Location वापरा';
+  String get useLocation => 'ठिकाण वापरा';
 
   @override
-  String get useLocationForNearby => 'Nearby साठी location वापरा';
+  String get useLocationForNearby => 'जवळपाससाठी ठिकाण वापरा';
 
   @override
-  String get useMobileLocation => 'मोबाईल location वापरून भरा';
+  String get useMobileLocation => 'मोबाईलचे ठिकाण वापरा';
 
   @override
-  String get useNearby => 'Nearby वापरा';
+  String get useNearby => 'जवळपास वापरा';
 
   @override
   String get useNearbyKeepsBackendSuggestedCountry =>
-      'Nearby मध्ये backend suggested country/state/district राहते. Open केल्यास location filter काढला जाईल.';
+      'जवळपास वापरल्यास सर्व्हरने सुचवलेला देश/राज्य/जिल्हा राहतो. खुले केल्यास ठिकाणाची गाळणी काढली जाते.';
 
   @override
   String get usefulForDayToDayCompatibility => 'दैनंदिन जुळवणीसाठी उपयोगी.';
@@ -2512,34 +2511,34 @@ class AppLocalizationsMr extends AppLocalizations {
   String get verificationStatus => 'पडताळणी स्थिती';
 
   @override
-  String get verified => 'Verified';
+  String get verified => 'पडताळणी झालेले';
 
   @override
-  String get verifiedEmail => 'Verified email';
+  String get verifiedEmail => 'पडताळणी झालेला ईमेल';
 
   @override
   String get verifyAndContinue => 'पडताळून पुढे जा';
 
   @override
-  String get verifyEmail => 'Email verify करा';
+  String get verifyEmail => 'ईमेल पडताळा';
 
   @override
-  String get verifyMobile => 'Mobile verify करा';
+  String get verifyMobile => 'मोबाईल पडताळा';
 
   @override
-  String get verifyMobileNumber => 'मोबाइल नंबर verify करा';
+  String get verifyMobileNumber => 'मोबाईल नंबर पडताळा';
 
   @override
-  String get verifyMobileNumber2 => 'मोबाइल नंबर verify करा';
+  String get verifyMobileNumber2 => 'मोबाईल नंबर पडताळा';
 
   @override
-  String get verifyOtp => 'OTP verify करा';
+  String get verifyOtp => 'OTP पडताळा';
 
   @override
   String get verifying => 'पडताळत आहे...';
 
   @override
-  String get verifying2 => 'Verify करत आहे';
+  String get verifying2 => 'पडताळत आहे';
 
   @override
   String get viewMatches => 'जुळण्या पहा';
@@ -2551,30 +2550,30 @@ class AppLocalizationsMr extends AppLocalizations {
   String get viewedRecently => 'अलीकडे पाहिले';
 
   @override
-  String get villageLocationName => 'गाव / location नाव';
+  String get villageLocationName => 'गाव / ठिकाणाचे नाव';
 
   @override
   String get weCouldNotSaveThisInformation =>
-      'ही माहिती सेव्ह करता आली नाही. कृपया highlight केलेले field तपासा.';
+      'ही माहिती जतन करता आली नाही. कृपया अधोरेखित केलेले क्षेत्र तपासा.';
 
   @override
   String get weFoundYourMobileLocationPlease =>
-      'मोबाईल location मिळाले. कृपया यादीतून जवळचे ठिकाण निवडा.';
+      'तुमच्या मोबाईलचे ठिकाण मिळाले. कृपया यादीतून जवळचे ठिकाण निवडा.';
 
   @override
   String get wePreparedThisFromTheInformation =>
-      'तुम्ही भरलेल्या माहितीवरून ही पसंती तयार केली आहे. ती strict ठेवू शकता किंवा normal करू शकता.';
+      'तुम्ही भरलेल्या माहितीवरून ही पसंती तयार केली आहे. ती कडक ठेवू शकता किंवा सामान्य करू शकता.';
 
   @override
-  String get weVeSentAVerificationCode => 'verification code पाठवला आहे';
+  String get weVeSentAVerificationCode => 'पडताळणी कोड पाठवला आहे';
 
   @override
   String get weWillAddThisOnlyIf =>
-      'हे location आधीपासून उपलब्ध नसेल तरच add request जाईल.';
+      'हे ठिकाण आधीपासून उपलब्ध नसेल तरच जोडले जाईल.';
 
   @override
   String get whatsappResponseInboxWillBeAvailable =>
-      'WhatsApp Response सुविधा mobile मध्ये लवकरच उपलब्ध होईल.';
+      'WhatsApp प्रतिसाद इनबॉक्स लवकरच मोबाइल अ‍ॅपमध्ये उपलब्ध होईल.';
 
   @override
   String get whoViewed => 'कोणी पाहिले';
@@ -2586,7 +2585,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get workDetails => 'कामाची माहिती';
 
   @override
-  String get workLocationOptional => 'Work location optional';
+  String get workLocationOptional => 'कामाचे ठिकाण (ऐच्छिक)';
 
   @override
   String get workingAs => 'व्यवसाय';
@@ -2596,7 +2595,7 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get writeANaturalIntroductionFamilyBackground =>
-      'स्वभाव, कुटुंब पार्श्वभूमी आणि profile समजायला मदत होईल अशी थोडक्यात माहिती लिहा.';
+      'स्वभाव, कुटुंबाची पार्श्वभूमी आणि हे प्रोफाइल सहज समजायला मदत होईल अशी नैसर्गिक ओळख लिहा.';
 
   @override
   String get writeAShortAboutSection => 'थोडक्यात ओळख लिहा.';
@@ -2627,8 +2626,8 @@ class AppLocalizationsMr extends AppLocalizations {
       'तुमची नोंदणी यशस्वीरीत्या पूर्ण झाली आहे.';
 
   @override
-  String get yourProfileWasViewed => 'तुमचे profile पाहिले गेले.';
+  String get yourProfileWasViewed => 'तुमचे प्रोफाइल पाहिले गेले.';
 
   @override
-  String get zoom => 'Zoom';
+  String get zoom => 'मोठे करा';
 }

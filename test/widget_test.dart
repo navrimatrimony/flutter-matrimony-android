@@ -16,9 +16,16 @@ void main() {
     appLanguage.value = null;
 
     await tester.pumpWidget(const MyApp());
-    await tester.pump(const Duration(milliseconds: 500));
+    // Bootstrap waits 300ms and then requests startup permissions before it
+    // routes to the language gate, so a single pump lands before navigation.
+    // Pump past the delay, then let the navigation settle.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text(AppStrings.chooseLanguage), findsOneWidget);
+    // The language gate renders the bilingual header (both scripts at once), so
+    // the assertion checks that exact widget, plus the two option labels.
+    expect(find.text(AppStrings.chooseLanguageBilingual), findsOneWidget);
     expect(find.text(AppStrings.marathi), findsOneWidget);
     expect(find.text(AppStrings.english), findsOneWidget);
 
