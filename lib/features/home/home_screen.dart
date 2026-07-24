@@ -1053,16 +1053,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     final summaryText = missing.isNotEmpty
         ? _readinessCopy(
             '${missing.length} sections are missing',
-            '${missing.length} sections बाकी आहेत',
+            '${missing.length} विभाग बाकी आहेत',
           )
         : partial.isNotEmpty
         ? _readinessCopy(
             '${partial.length} sections need details',
-            '${partial.length} sections अर्धवट आहेत',
+            '${partial.length} विभाग अर्धवट आहेत',
           )
         : _readinessCopy(
             'All key profile sections are ready',
-            'Profile चे महत्त्वाचे sections तयार आहेत',
+            'प्रोफाइलचे महत्त्वाचे विभाग तयार आहेत',
           );
 
     return _sectionCard(
@@ -1121,7 +1121,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             _readinessFold(
               title: _readinessCopy(
                 '${completed.length} completed sections',
-                '${completed.length} पूर्ण sections',
+                '${completed.length} पूर्ण विभाग',
               ),
               expanded: _showCompletedReadiness,
               onTap: () => setState(
