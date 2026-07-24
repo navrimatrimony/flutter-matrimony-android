@@ -916,7 +916,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get enterThe6DigitOtp => '6 अंकी OTP भरा.';
 
   @override
-  String get enterThe6DigitOtp2 => '६ अंकी OTP टाका.';
+  String get enterThe6DigitOtp2 => '6 अंकी OTP टाका.';
 
   @override
   String get enterTheOtpSentToYour => 'तुमच्या ईमेलवर आलेला OTP टाका.';
