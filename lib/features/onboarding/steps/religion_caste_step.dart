@@ -10,6 +10,7 @@ import '../widgets/onboarding_error_highlight.dart';
 import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 enum CommunityStrictness { open, preferred, required }
 
@@ -57,8 +58,6 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
   bool _religionError = false;
   bool _casteError = false;
   int _hydrationToken = 0;
-
-  bool get _mr => widget.locale == 'mr';
 
   bool get _motherTongueSelected => _motherTongue?.intId != null;
 
@@ -116,7 +115,6 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     unawaited(_hydrateSelectedOptions());
   }
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   void _syncMotherTongueFromWidget() {
     _motherTongue = _resolveMotherTongue(widget.selectedMotherTongue);
@@ -378,8 +376,8 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
       }
       widget.onMessage(
         missingReligion
-            ? _t('Select religion.', 'धर्म निवडा.')
-            : _t('Select caste.', 'जात निवडा.'),
+            ? appText.selectReligion
+            : appText.selectCaste,
       );
       return;
     }
@@ -413,11 +411,8 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     final hasMotherTongueError =
         widget.motherTongueError?.trim().isNotEmpty ?? false;
     return OnboardingStepScaffold(
-      title: _t('Community details', 'समुदायाची माहिती'),
-      subtitle: _t(
-        'Select mother tongue, religion and caste to continue.',
-        'पुढे जाण्यासाठी मातृभाषा, धर्म आणि जात निवडा.',
-      ),
+      title: appText.communityDetails,
+      subtitle: appText.selectMotherTongueReligionAndCaste,
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
@@ -427,7 +422,7 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
           pulseKey:
               'mother_tongue:${widget.motherTongueError}:${_motherTongue?.intId}',
           child: _picker(
-            label: _t('Mother tongue *', 'मातृभाषा *'),
+            label: appText.motherTongue,
             selected: _motherTongue,
             loadPage: _motherTonguePage,
             errorText: widget.motherTongueError,
@@ -440,12 +435,12 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
         ),
         const SizedBox(height: 16),
         _picker(
-          label: _t('Religion *', 'धर्म *'),
+          label: appText.religion2,
           selected: _religion,
           loadPage: _religionPage,
           enabled: _motherTongueSelected,
           errorText: _religionError
-              ? _t('Select religion.', 'धर्म निवडा.')
+              ? appText.selectReligion
               : null,
           onChanged: (option) => setState(() {
             if (_religion?.identity == option?.identity) return;
@@ -459,10 +454,10 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
         if (_religion != null) ...[
           const SizedBox(height: 16),
           _picker(
-            label: _t('Caste *', 'जात *'),
+            label: appText.caste2,
             selected: _caste,
             loadPage: _castePage,
-            errorText: _casteError ? _t('Select caste.', 'जात निवडा.') : null,
+            errorText: _casteError ? appText.selectCaste : null,
             onChanged: (option) => setState(() {
               if (_caste?.identity == option?.identity) return;
               _caste = option;
@@ -474,7 +469,7 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
         if (_caste != null) ...[
           const SizedBox(height: 16),
           _picker(
-            label: _t('Sub-caste', 'पोटजात'),
+            label: appText.subCaste,
             selected: _subCaste,
             loadPage: _subCastePage,
             onChanged: (option) => setState(() => _subCaste = option),
@@ -487,7 +482,7 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
               ? null
               : (value) => setState(() => _intercasteAccepted = value ?? false),
           title: Text(
-            _t('Intercaste accepted.', 'जातिबंधन नाही'),
+            appText.intercasteAccepted,
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
           controlAffinity: ListTileControlAffinity.leading,
@@ -510,8 +505,8 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
     return OnboardingPickerField(
       label: label,
       selectedItems: selected == null ? const [] : [selected],
-      placeholder: _t('Select', 'निवडा'),
-      searchHint: _t('Search', 'शोधा'),
+      placeholder: appText.select,
+      searchHint: appText.search2,
       enabled: enabled,
       errorText: errorText,
       loadPage: loadPage,

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/app_language.dart';
 
 class BiodataExportScreen extends StatefulWidget {
   const BiodataExportScreen({super.key});
@@ -202,9 +203,7 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return AppLoadingState.list(
-        title: AppStrings.isMarathi
-            ? 'Biodata options लोड होत आहेत'
-            : 'Loading biodata options',
+        title: appText.loadingBiodataOptions,
         icon: Icons.article_outlined,
       );
     }

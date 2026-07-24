@@ -4,6 +4,7 @@ import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_photo_view.dart';
+import '../../core/app_language.dart';
 
 class ContactInboxScreen extends StatefulWidget {
   const ContactInboxScreen({super.key});
@@ -84,9 +85,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return AppLoadingState.list(
-        title: AppStrings.isMarathi
-            ? 'Contact requests लोड होत आहेत'
-            : 'Loading contact requests',
+        title: appText.loadingContactRequests,
         icon: Icons.contact_mail_outlined,
       );
     }

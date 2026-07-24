@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/app_language.dart';
 
 class PlansScreen extends StatefulWidget {
   const PlansScreen({super.key});
@@ -141,9 +142,7 @@ class _PlansScreenState extends State<PlansScreen> {
       appBar: AppBar(title: Text(AppStrings.plansTitle)),
       body: _loading
           ? AppLoadingState.list(
-              title: AppStrings.isMarathi
-                  ? 'Plans लोड होत आहेत'
-                  : 'Loading plans',
+              title: appText.loadingPlans,
               icon: Icons.workspace_premium_outlined,
             )
           : RefreshIndicator(

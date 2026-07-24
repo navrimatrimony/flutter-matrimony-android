@@ -7,6 +7,7 @@ import '../models/paged_lookup_response.dart';
 import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 class CareerStep extends StatefulWidget {
   const CareerStep({
@@ -47,8 +48,6 @@ class _CareerStepState extends State<CareerStep> {
   String _currencySymbol = '₹';
   bool _incomePrivate = true;
   int _page = 0;
-
-  bool get _mr => widget.locale == 'mr';
 
   @override
   void initState() {
@@ -91,7 +90,6 @@ class _CareerStepState extends State<CareerStep> {
     _incomePrivate = onboardingBool(data['income_private']) ?? true;
   }
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   OnboardingOption? _placeholder(dynamic id) {
     return selectedValuePlaceholderOption(id, widget.locale, failed: true);
@@ -225,7 +223,7 @@ class _CareerStepState extends State<CareerStep> {
 
   Future<void> _continue() async {
     if (_page == 0 && _workingWith == null) {
-      widget.onMessage(_t('Choose work details.', 'कामाची माहिती निवडा.'));
+      widget.onMessage(appText.chooseWorkDetails);
       return;
     }
 
@@ -235,7 +233,7 @@ class _CareerStepState extends State<CareerStep> {
     }
 
     if (_page == 1 && _occupation == null) {
-      widget.onMessage(_t('Choose occupation.', 'व्यवसाय निवडा.'));
+      widget.onMessage(appText.chooseOccupation);
       return;
     }
 
@@ -259,28 +257,22 @@ class _CareerStepState extends State<CareerStep> {
   String get _pageTitle {
     switch (_page) {
       case 0:
-        return _t('Work details', 'कामाची माहिती');
+        return appText.workDetails;
       case 1:
-        return _t('Occupation', 'व्यवसाय');
+        return appText.occupation;
       default:
-        return _t('Annual income', 'वार्षिक उत्पन्न');
+        return appText.annualIncome;
     }
   }
 
   String? get _pageSubtitle {
     switch (_page) {
       case 0:
-        return _t(
-          'Select the current work type.',
-          'सध्याचा कामाचा प्रकार निवडा.',
-        );
+        return appText.selectTheCurrentWorkType;
       case 1:
-        return _t(
-          'Add occupation and optional work info.',
-          'व्यवसाय आणि कामाची optional माहिती भरा.',
-        );
+        return appText.addOccupationAndOptionalWorkInfo;
       default:
-        return _t('Income can be kept private.', 'उत्पन्न private ठेवू शकता.');
+        return appText.incomeCanBeKeptPrivate;
     }
   }
 
@@ -293,7 +285,7 @@ class _CareerStepState extends State<CareerStep> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text(_t('Request occupation', 'Occupation request')),
+            title: Text(appText.requestOccupation),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -301,7 +293,7 @@ class _CareerStepState extends State<CareerStep> {
                   TextField(
                     controller: label,
                     decoration: InputDecoration(
-                      labelText: _t('Occupation label', 'Occupation label'),
+                      labelText: appText.occupationLabel,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -316,15 +308,12 @@ class _CareerStepState extends State<CareerStep> {
                   TextField(
                     controller: notes,
                     decoration: InputDecoration(
-                      labelText: _t('Notes optional', 'Notes optional'),
+                      labelText: appText.notesOptional,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _t(
-                      'Pending suggestions are not selected as occupation until approved.',
-                      'Pending suggestion approved होईपर्यंत occupation म्हणून select होत नाही.',
-                    ),
+                    appText.pendingSuggestionsAreNotSelectedAs,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -333,7 +322,7 @@ class _CareerStepState extends State<CareerStep> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(_t('Cancel', 'Cancel')),
+                child: Text(appText.cancel2),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -349,20 +338,14 @@ class _CareerStepState extends State<CareerStep> {
                   Navigator.pop(context);
                   widget.onMessage(
                     response['success'] == true || response['statusCode'] == 201
-                        ? _t(
-                            'Occupation request submitted.',
-                            'Occupation request submit झाली.',
-                          )
+                        ? appText.occupationRequestSubmitted
                         : readableApiError(
                             response,
-                            _t(
-                              'Could not submit request.',
-                              'Request submit झाली नाही.',
-                            ),
+                            appText.couldNotSubmitRequest,
                           ),
                   );
                 },
-                child: Text(_t('Submit', 'Submit')),
+                child: Text(appText.submit),
               ),
             ],
           );
@@ -384,8 +367,8 @@ class _CareerStepState extends State<CareerStep> {
       onBack: _back,
       onContinue: _continue,
       continueLabel: _page < 2 && !_notWorking
-          ? _t('Continue', 'पुढे जा')
-          : _t('Save and continue', 'Save करून पुढे जा'),
+          ? appText.continueLabel
+          : appText.saveAndContinue,
       secondary: _page == 1
           ? OutlinedButton.icon(
               onPressed: widget.loading || _workingWith == null
@@ -393,17 +376,17 @@ class _CareerStepState extends State<CareerStep> {
                   : _showSuggestionDialog,
               icon: const Icon(Icons.add),
               label: Text(
-                _t('Not found? Request occupation', 'Occupation request करा'),
+                appText.notFoundRequestOccupation,
               ),
             )
           : null,
       children: switch (_page) {
         0 => [
           OnboardingPickerField(
-            label: _t('Working with', 'कामाचा प्रकार'),
+            label: appText.workingWith,
             selectedItems: _workingWith == null ? const [] : [_workingWith!],
-            placeholder: _t('Select work type', 'कामाचा प्रकार निवडा'),
-            searchHint: _t('Search work type', 'कामाचा प्रकार शोधा'),
+            placeholder: appText.selectWorkType,
+            searchHint: appText.searchWorkType,
             loadPage: _workingWithPage,
             onChanged: (items) => setState(() {
               final next = items.isEmpty ? null : items.first;
@@ -419,20 +402,17 @@ class _CareerStepState extends State<CareerStep> {
           if (_notWorking) ...[
             const SizedBox(height: 12),
             Text(
-              _t(
-                'Occupation and income are optional when not working.',
-                'काम करत नसल्यास व्यवसाय आणि उत्पन्न optional आहे.',
-              ),
+              appText.occupationAndIncomeAreOptionalWhen,
             ),
           ],
         ],
         1 => [
           OnboardingPickerField(
-            label: _t('Working as', 'व्यवसाय'),
+            label: appText.workingAs,
             selectedItems: _occupation == null ? const [] : [_occupation!],
             enabled: _workingWith != null,
-            placeholder: _t('Select occupation', 'व्यवसाय निवडा'),
-            searchHint: _t('Search occupation', 'व्यवसाय शोधा'),
+            placeholder: appText.selectOccupation,
+            searchHint: appText.searchOccupation,
             loadPage: _occupationPage,
             itemSubtitleBuilder: (option) => option.metaText('category_label'),
             allowRequestToAdd: true,
@@ -445,14 +425,14 @@ class _CareerStepState extends State<CareerStep> {
           TextField(
             controller: _companyController,
             decoration: InputDecoration(
-              labelText: _t('Company optional', 'Company optional'),
+              labelText: appText.companyOptional,
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _workLocationController,
             decoration: InputDecoration(
-              labelText: _t('Work location optional', 'Work location optional'),
+              labelText: appText.workLocationOptional,
             ),
           ),
         ],
@@ -461,7 +441,7 @@ class _CareerStepState extends State<CareerStep> {
             children: [
               Expanded(
                 child: OnboardingPickerField(
-                  label: _t('Income period', 'Income period'),
+                  label: appText.incomePeriod,
                   selectedItems: _period == null ? const [] : [_period!],
                   loadPage: (query, page, limit) =>
                       _staticPage(_periods, query, page, limit),
@@ -473,7 +453,7 @@ class _CareerStepState extends State<CareerStep> {
               const SizedBox(width: 10),
               Expanded(
                 child: OnboardingPickerField(
-                  label: _t('Income type', 'Income type'),
+                  label: appText.incomeType,
                   selectedItems: _valueType == null ? const [] : [_valueType!],
                   loadPage: (query, page, limit) =>
                       _staticPage(_valueTypes, query, page, limit),
@@ -494,7 +474,7 @@ class _CareerStepState extends State<CareerStep> {
                       controller: _minAmountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: _t('Min income', 'Min income'),
+                        labelText: appText.minIncome,
                         prefixText: _currencySymbol,
                       ),
                     ),
@@ -505,7 +485,7 @@ class _CareerStepState extends State<CareerStep> {
                       controller: _maxAmountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: _t('Max income', 'Max income'),
+                        labelText: appText.maxIncome,
                         prefixText: _currencySymbol,
                       ),
                     ),
@@ -517,7 +497,7 @@ class _CareerStepState extends State<CareerStep> {
                 controller: _amountController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
-                  labelText: _t('Income amount', 'Income amount'),
+                  labelText: appText.incomeAmount,
                   prefixText: _currencySymbol,
                 ),
               ),
@@ -525,7 +505,7 @@ class _CareerStepState extends State<CareerStep> {
           const SizedBox(height: 8),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text(_t('Keep income private', 'Income private ठेवा')),
+            title: Text(appText.keepIncomePrivate),
             value: _incomePrivate,
             onChanged: (value) => setState(() => _incomePrivate = value),
           ),

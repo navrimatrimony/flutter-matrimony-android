@@ -7,6 +7,7 @@ import '../models/paged_lookup_response.dart';
 import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 class AstroStep extends StatefulWidget {
   const AstroStep({
@@ -35,8 +36,6 @@ class _AstroStepState extends State<AstroStep> {
   OnboardingOption? _nakshatra;
   OnboardingOption? _rashi;
   int? _charan;
-
-  bool get _mr => widget.locale == 'mr';
 
   @override
   void initState() {
@@ -69,7 +68,6 @@ class _AstroStepState extends State<AstroStep> {
     _charan = onboardingInt(widget.data['charan']);
   }
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   List<OnboardingOption> get _charanOptions {
     if (widget.bootstrap.charanOptions.isNotEmpty) {
@@ -134,31 +132,28 @@ class _AstroStepState extends State<AstroStep> {
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: _t('Astro details', 'ज्योतिष माहिती'),
-      subtitle: _t(
-        'This is optional. Add only what you know now.',
-        'ही माहिती optional आहे. आत्ता जे माहिती आहे तेवढेच भरा.',
-      ),
+      title: appText.astroDetails,
+      subtitle: appText.thisIsOptionalAddOnlyWhat,
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
-      continueLabel: _t('Save and continue', 'सेव्ह करून पुढे जा'),
+      continueLabel: appText.saveAndContinue2,
       secondary: TextButton(
         onPressed: widget.loading ? null : () => _save(skip: true),
-        child: Text(_t('Skip astro details', 'ज्योतिष माहिती skip करा')),
+        child: Text(appText.skipAstroDetails),
       ),
       children: [
         _mangalDoshGroup(context),
         const SizedBox(height: 14),
         _picker(
-          label: _t('Nakshatra', 'नक्षत्र'),
+          label: appText.nakshatra,
           selected: _nakshatra,
           options: widget.bootstrap.nakshatras,
           onChanged: (option) => setState(() => _nakshatra = option),
         ),
         const SizedBox(height: 12),
         _picker(
-          label: _t('Rashi', 'राशी'),
+          label: appText.rashi,
           selected: _rashi,
           options: widget.bootstrap.rashis,
           onChanged: (option) => setState(() => _rashi = option),
@@ -173,7 +168,7 @@ class _AstroStepState extends State<AstroStep> {
     final options = widget.bootstrap.mangalDoshTypes;
     if (options.isEmpty) {
       return _picker(
-        label: _t('Mangal dosh', 'मंगळ दोष'),
+        label: appText.mangalDosh,
         selected: _mangalDosh,
         options: options,
         onChanged: (option) => setState(() => _mangalDosh = option),
@@ -181,8 +176,8 @@ class _AstroStepState extends State<AstroStep> {
     }
 
     return _AstroSectionCard(
-      title: _t('Mangal dosh', 'मंगळ दोष'),
-      subtitle: _t('Select if known', 'माहित असल्यास निवडा'),
+      title: appText.mangalDosh,
+      subtitle: appText.selectIfKnown,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final width = constraints.maxWidth;
@@ -214,8 +209,8 @@ class _AstroStepState extends State<AstroStep> {
 
   Widget _charanGroup(BuildContext context) {
     return _AstroSectionCard(
-      title: _t('Charan', 'चरण'),
-      subtitle: _t('Optional', 'Optional'),
+      title: appText.charan,
+      subtitle: appText.optional,
       child: Wrap(
         spacing: 10,
         runSpacing: 10,
@@ -247,15 +242,12 @@ class _AstroStepState extends State<AstroStep> {
     return OnboardingPickerField(
       label: label,
       selectedItems: selected == null ? const [] : [selected],
-      placeholder: _t('Select', 'निवडा'),
+      placeholder: appText.select,
       loadPage: (query, page, limit) =>
           _pageOptions(options, query, page, limit),
       onChanged: (items) => onChanged(items.isEmpty ? null : items.first),
-      emptyTitle: _t('No options found', 'पर्याय मिळाले नाहीत'),
-      emptyMessage: _t(
-        'Try again after the latest server update.',
-        'Server update नंतर पुन्हा प्रयत्न करा.',
-      ),
+      emptyTitle: appText.noOptionsFound2,
+      emptyMessage: appText.tryAgainAfterTheLatestServer,
     );
   }
 }

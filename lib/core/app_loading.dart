@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_strings.dart';
+import '../core/app_language.dart';
 
 class AppLoadingState extends StatelessWidget {
   final String title;
@@ -20,10 +21,8 @@ class AppLoadingState extends StatelessWidget {
 
   factory AppLoadingState.matches() {
     return AppLoadingState(
-      title: AppStrings.isMarathi ? 'स्थळे लोड होत आहेत' : 'Loading matches',
-      message: AppStrings.isMarathi
-          ? 'तुमच्यासाठी योग्य प्रोफाइल तयार करत आहोत.'
-          : 'Preparing profiles for you.',
+      title: appText.loadingMatches,
+      message: appText.preparingProfilesForYou,
       icon: Icons.favorite_border_rounded,
       skeletonRows: 2,
     );
@@ -31,10 +30,8 @@ class AppLoadingState extends StatelessWidget {
 
   factory AppLoadingState.profile() {
     return AppLoadingState(
-      title: AppStrings.isMarathi ? 'प्रोफाइल लोड होत आहे' : 'Loading profile',
-      message: AppStrings.isMarathi
-          ? 'तुमची माहिती व्यवस्थित दाखवत आहोत.'
-          : 'Preparing your information.',
+      title: appText.loadingProfile,
+      message: appText.preparingYourInformation,
       icon: Icons.person_outline_rounded,
       skeletonRows: 4,
     );

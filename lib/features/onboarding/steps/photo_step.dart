@@ -10,6 +10,7 @@ import '../../../core/api_client.dart';
 import '../models/onboarding_status.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 enum _PhotoStepState {
   missing,
@@ -55,9 +56,6 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   bool _autoContinuing = false;
   _PhotoStepState _stage = _PhotoStepState.missing;
 
-  bool get _mr => widget.locale == 'mr';
-
-  String _t(String en, String mr) => _mr ? mr : en;
 
   @override
   void initState() {
@@ -92,10 +90,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   Future<void> _continue() async {
     if (_stage == _PhotoStepState.rejected) {
       _showMessage(
-        _t(
-          'This photo was not approved. Please upload another clear photo.',
-          'हा photo approve झाला नाही. कृपया दुसरा clear photo upload करा.',
-        ),
+        appText.thisPhotoWasNotApprovedPlease,
         _NoticeTone.warning,
       );
       return;
@@ -119,28 +114,19 @@ class _PhotoStepControllerState extends State<PhotoStep> {
 
     if (!uploaded) {
       _showMessage(
-        _t(
-          'Upload a profile photo before continuing.',
-          'पुढे जाण्याआधी profile photo upload करा.',
-        ),
+        appText.uploadAProfilePhotoBeforeContinuing,
         _NoticeTone.warning,
       );
       setState(() {
         _stage = _PhotoStepState.missing;
-        _detailMessage = _t(
-          'Add a profile photo from camera or gallery.',
-          'Camera or gallery मधून profile photo add करा.',
-        );
+        _detailMessage = appText.addAProfilePhotoFromCamera;
       });
       return;
     }
 
     if (_stage == _PhotoStepState.selected) {
       _showMessage(
-        _t(
-          'Upload the selected photo before continuing.',
-          'पुढे जाण्याआधी selected photo upload करा.',
-        ),
+        appText.uploadTheSelectedPhotoBeforeContinuing,
         _NoticeTone.warning,
       );
       return;
@@ -173,7 +159,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
 
       if (pickedFile == null) {
         _showMessage(
-          _t('Photo selection cancelled.', 'Photo selection cancel झाले.'),
+          appText.photoSelectionCancelled,
           _NoticeTone.info,
         );
         return;
@@ -182,10 +168,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       await _setSelectedImage(File(pickedFile.path), cropped: false);
     } catch (error) {
       _showMessage(
-        _t(
-          'There was a problem selecting the photo. Please try again.',
-          'Photo निवडताना problem आला. कृपया पुन्हा प्रयत्न करा.',
-        ),
+        appText.thereWasAProblemSelectingThe,
         _NoticeTone.error,
       );
       if (!mounted) return;
@@ -205,14 +188,8 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       _selectedImage = file;
       _fileInfo = cropped ? '$fileSizeMB MB, cropped' : '$fileSizeMB MB';
       _detailMessage = cropped
-          ? _t(
-              'Cropped photo is ready. Upload it to continue.',
-              'Cropped photo ready आहे. पुढे जाण्यासाठी upload करा.',
-            )
-          : _t(
-              'Photo selected. Crop it if needed, then upload.',
-              'Photo निवडला आहे. गरज असल्यास crop करा आणि upload करा.',
-            );
+          ? appText.croppedPhotoIsReadyUploadIt
+          : appText.photoSelectedCropItIfNeeded;
       _stage = _PhotoStepState.selected;
     });
   }
@@ -221,7 +198,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     final file = _selectedImage;
     if (file == null) {
       _showMessage(
-        _t('Please select a photo first.', 'कृपया आधी photo निवडा.'),
+        appText.pleaseSelectAPhotoFirst,
         _NoticeTone.warning,
       );
       return;
@@ -239,10 +216,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       await _setSelectedImage(croppedFile, cropped: true);
     } catch (_) {
       _showMessage(
-        _t(
-          'Photo crop करता आला नाही. कृपया दुसरा photo निवडा.',
-          'Photo crop करता आला नाही. कृपया दुसरा photo निवडा.',
-        ),
+        appText.photoCropPhoto,
         _NoticeTone.error,
       );
     } finally {
@@ -253,7 +227,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   Future<void> _uploadImage() async {
     if (_selectedImage == null) {
       _showMessage(
-        _t('Please select a photo first.', 'कृपया आधी photo निवडा.'),
+        appText.pleaseSelectAPhotoFirst,
         _NoticeTone.warning,
       );
       return;
@@ -263,10 +237,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     setState(() {
       _uploading = true;
       _stage = _PhotoStepState.uploading;
-      _detailMessage = _t(
-        'Photo is uploading. Please wait.',
-        'Photo upload होत आहे. कृपया थांबा.',
-      );
+      _detailMessage = appText.photoIsUploadingPleaseWait;
     });
 
     try {
@@ -276,40 +247,28 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       final statusCode = response['statusCode'];
       if (statusCode == 401) {
         _setFailure(
-          _t(
-            'Session expired. Please login again.',
-            'Session expired. कृपया पुन्हा login करा.',
-          ),
+          appText.sessionExpiredPleaseLoginAgain,
         );
         return;
       }
       if (statusCode == 403) {
         _setFailure(
           response['message']?.toString() ??
-              _t(
-                'Photo upload is not allowed for this account.',
-                'Photo upload सध्या तुमच्या account साठी allowed नाही.',
-              ),
+              appText.photoUploadIsNotAllowedFor,
         );
         return;
       }
       if (statusCode == 404) {
         _setFailure(
           response['message']?.toString() ??
-              _t(
-                'Profile was not found. Please complete profile first.',
-                'Profile सापडली नाही. कृपया आधी profile तयार करा.',
-              ),
+              appText.profileWasNotFoundPleaseComplete,
         );
         return;
       }
       if (statusCode == 422) {
         _setFailure(
           response['message']?.toString() ??
-              _t(
-                'Photo is not valid. Please select a clear image.',
-                'Photo valid नाही. कृपया clear image निवडा.',
-              ),
+              appText.photoIsNotValidPleaseSelect,
         );
         return;
       }
@@ -321,10 +280,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
 
         setState(() {
           _stage = uploadStage;
-          _detailMessage = _t(
-            'Photo reached backend. Quality and safety check is in progress.',
-            'Photo backend ला मिळाला आहे. Quality आणि safety check चालू आहे.',
-          );
+          _detailMessage = appText.photoReachedBackendQualityAndSafety;
         });
 
         await _refreshProfileStatus(silent: true);
@@ -337,17 +293,11 @@ class _PhotoStepControllerState extends State<PhotoStep> {
 
       _setFailure(
         response['message']?.toString() ??
-            _t(
-              'Photo upload failed. Please try again.',
-              'Photo upload fail झाला. कृपया पुन्हा प्रयत्न करा.',
-            ),
+            appText.photoUploadFailedPleaseTryAgain,
       );
     } catch (_) {
       _setFailure(
-        _t(
-          'There was a problem uploading the photo. Please try again.',
-          'Photo upload करताना problem आला. कृपया पुन्हा प्रयत्न करा.',
-        ),
+        appText.thereWasAProblemUploadingThe,
       );
     } finally {
       if (mounted) {
@@ -377,10 +327,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     if (effectiveStage == _PhotoStepState.rejected) {
       final message =
           _detailMessage ??
-          _t(
-            'This photo was not approved. Please upload another clear photo.',
-            'हा photo approve झाला नाही. कृपया दुसरा clear photo upload करा.',
-          );
+          appText.thisPhotoWasNotApprovedPlease;
       setState(() {
         _selectedImage = null;
         _fileInfo = null;
@@ -395,24 +342,15 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         effectiveStage == _PhotoStepState.pending;
     if (!canContinue) {
       _showMessage(
-        _t(
-          'Photo uploaded. Please check the status before continuing.',
-          'Photo upload झाला. पुढे जाण्याआधी status तपासा.',
-        ),
+        appText.photoUploadedPleaseCheckTheStatus,
         _NoticeTone.info,
       );
       return;
     }
 
     final message = effectiveStage == _PhotoStepState.approved
-        ? _t(
-            'Photo approved. Moving to partner preference.',
-            'Photo approve झाला. Partner preference कडे जात आहोत.',
-          )
-        : _t(
-            'Photo uploaded. Review is pending, so we will continue.',
-            'Photo upload झाला. Review pending आहे, त्यामुळे पुढे जात आहोत.',
-          );
+        ? appText.photoApprovedMovingToPartnerPreference
+        : appText.photoUploadedReviewIsPendingSo;
 
     setState(() {
       _detailMessage = message;
@@ -454,20 +392,14 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         }
       } else if (!silent) {
         _showMessage(
-          _t(
-            'Photo status could not be refreshed.',
-            'Photo status refresh करता आला नाही.',
-          ),
+          appText.photoStatusCouldNotBeRefreshed,
           _NoticeTone.warning,
         );
       }
     } catch (_) {
       if (!silent) {
         _showMessage(
-          _t(
-            'Photo status could not be refreshed.',
-            'Photo status refresh करता आला नाही.',
-          ),
+          appText.photoStatusCouldNotBeRefreshed,
           _NoticeTone.warning,
         );
       }
@@ -528,10 +460,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         _selectedImage = null;
         _fileInfo = null;
         _stage = _PhotoStepState.approved;
-        _detailMessage = _t(
-          'Approved photo is visible on your profile. You can replace it with a new photo.',
-          'Approved photo profile वर दिसत आहे. नवीन photo निवडून replace करू शकता.',
-        );
+        _detailMessage = appText.approvedPhotoIsVisibleOnYour;
         return;
       }
 
@@ -543,19 +472,13 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         _fileInfo = null;
         _detailMessage =
             rejectionReason ??
-            _t(
-              'This photo could not be approved. Please upload another clear photo.',
-              'हा photo approve होऊ शकला नाही. कृपया दुसरा clear photo upload करा.',
-            );
+            appText.thisPhotoCouldNotBeApproved;
         return;
       }
 
       if (uploaded) {
         _stage = _PhotoStepState.pending;
-        _detailMessage = _t(
-          'Photo is uploaded. Approval or safety check is pending.',
-          'Photo uploaded आहे. Approval किंवा safety check pending आहे.',
-        );
+        _detailMessage = appText.photoIsUploadedApprovalOrSafety;
         return;
       }
 
@@ -598,11 +521,8 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         widget.loading || _uploading || _checkingStatus || _autoContinuing;
 
     return OnboardingStepScaffold(
-      title: _t('Profile Photo', 'Profile Photo'),
-      subtitle: _t(
-        'Add a clear photo. Crop it if needed, then upload it for approval.',
-        'Clear photo add करा. गरज असल्यास crop करा आणि approval साठी upload करा.',
-      ),
+      title: appText.profilePhoto2,
+      subtitle: appText.addAClearPhotoCropIt,
       loading: busy,
       continueEnabled:
           !_uploading &&
@@ -610,10 +530,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
           currentStage != _PhotoStepState.rejected,
       onBack: widget.onBack,
       onContinue: _continue,
-      continueLabel: _t(
-        'Continue to partner preference',
-        'Partner preference कडे जा',
-      ),
+      continueLabel: appText.continueToPartnerPreference,
       secondary: TextButton.icon(
         onPressed: busy ? null : () async => _refreshProfileStatus(),
         icon: _checkingStatus
@@ -623,7 +540,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.refresh),
-        label: Text(_t('Refresh photo status', 'Photo status refresh करा')),
+        label: Text(appText.refreshPhotoStatus),
       ),
       children: [
         _PhotoHero(
@@ -638,7 +555,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
               child: OutlinedButton.icon(
                 onPressed: busy ? null : () => _pickImage(ImageSource.camera),
                 icon: const Icon(Icons.photo_camera_outlined),
-                label: Text(_t('Camera', 'Camera')),
+                label: Text(appText.camera),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                 ),
@@ -649,7 +566,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
               child: OutlinedButton.icon(
                 onPressed: busy ? null : () => _pickImage(ImageSource.gallery),
                 icon: const Icon(Icons.photo_library_outlined),
-                label: Text(_t('Gallery', 'Gallery')),
+                label: Text(appText.gallery),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                 ),
@@ -662,7 +579,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
           OutlinedButton.icon(
             onPressed: busy ? null : _cropSelectedImage,
             icon: const Icon(Icons.crop),
-            label: Text(_t('Crop / adjust photo', 'Photo crop/adjust करा')),
+            label: Text(appText.cropAdjustPhoto),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
             ),
@@ -679,8 +596,8 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                 : const Icon(Icons.cloud_upload_outlined),
             label: Text(
               _uploading
-                  ? _t('Uploading photo', 'Photo upload होत आहे')
-                  : _t('Upload selected photo', 'Selected photo upload करा'),
+                  ? appText.uploadingPhoto
+                  : appText.uploadSelectedPhoto,
             ),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
@@ -697,8 +614,8 @@ class _PhotoStepControllerState extends State<PhotoStep> {
             ),
             label: Text(
               approved
-                  ? _t('Replace approved photo', 'Approved photo बदला')
-                  : _t('Select photo', 'Photo निवडा'),
+                  ? appText.replaceApprovedPhoto
+                  : appText.selectPhoto,
             ),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(52),
@@ -715,10 +632,10 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         const SizedBox(height: 12),
         _PhotoGuidelines(
           labels: [
-            _t('Clear face', 'Clear face'),
-            _t('Single person', 'Single person'),
-            _t('Good light', 'Good light'),
-            _t('Safe photo', 'Safe photo'),
+            appText.clearFace,
+            appText.singlePerson,
+            appText.goodLight,
+            appText.safePhoto,
           ],
         ),
       ],
@@ -727,58 +644,25 @@ class _PhotoStepControllerState extends State<PhotoStep> {
 
   String _statusTitle(_PhotoStepState state) {
     return switch (state) {
-      _PhotoStepState.approved => _t('Photo approved', 'Photo approved आहे'),
-      _PhotoStepState.pending => _t('Approval pending', 'Approval pending आहे'),
-      _PhotoStepState.rejected => _t(
-        'Photo not approved',
-        'Photo approve झाला नाही',
-      ),
-      _PhotoStepState.uploading => _t(
-        'Uploading photo',
-        'Photo upload होत आहे',
-      ),
-      _PhotoStepState.error => _t(
-        'Upload needs attention',
-        'Upload मध्ये problem आहे',
-      ),
-      _PhotoStepState.selected => _t('Ready to upload', 'Upload साठी ready'),
-      _PhotoStepState.missing => _t(
-        'Photo not uploaded',
-        'Photo upload केलेला नाही',
-      ),
+      _PhotoStepState.approved => appText.photoApproved,
+      _PhotoStepState.pending => appText.approvalPending,
+      _PhotoStepState.rejected => appText.photoNotApproved,
+      _PhotoStepState.uploading => appText.uploadingPhoto,
+      _PhotoStepState.error => appText.uploadNeedsAttention,
+      _PhotoStepState.selected => appText.readyToUpload,
+      _PhotoStepState.missing => appText.photoNotUploaded,
     };
   }
 
   String _statusMessage(_PhotoStepState state) {
     return switch (state) {
-      _PhotoStepState.approved => _t(
-        'This approved photo is visible on your profile.',
-        'हा approved photo तुमच्या profile वर दिसत आहे.',
-      ),
-      _PhotoStepState.pending => _t(
-        'Photo uploaded आहे. Backend quality आणि safety check नंतर तो visible होईल.',
-        'Photo uploaded आहे. Backend quality आणि safety check नंतर तो visible होईल.',
-      ),
-      _PhotoStepState.rejected => _t(
-        'Please upload a clear, safe, single-person photo.',
-        'कृपया clear, safe, single-person photo upload करा.',
-      ),
-      _PhotoStepState.uploading => _t(
-        'Upload complete होईपर्यंत screen बंद करू नका.',
-        'Upload complete होईपर्यंत screen बंद करू नका.',
-      ),
-      _PhotoStepState.error => _t(
-        'Please try again with a clear photo.',
-        'कृपया clear photo निवडून पुन्हा प्रयत्न करा.',
-      ),
-      _PhotoStepState.selected => _t(
-        'Crop the selected photo if needed, then upload it.',
-        'Selected photo गरज असल्यास crop करा आणि upload करा.',
-      ),
-      _PhotoStepState.missing => _t(
-        'Camera किंवा gallery मधून profile photo add करा.',
-        'Camera किंवा gallery मधून profile photo add करा.',
-      ),
+      _PhotoStepState.approved => appText.thisApprovedPhotoIsVisibleOn,
+      _PhotoStepState.pending => appText.photoUploadedBackendQualitySafetyCheck,
+      _PhotoStepState.rejected => appText.pleaseUploadAClearSafeSingle,
+      _PhotoStepState.uploading => appText.uploadCompleteScreen,
+      _PhotoStepState.error => appText.pleaseTryAgainWithAClear,
+      _PhotoStepState.selected => appText.cropTheSelectedPhotoIfNeeded,
+      _PhotoStepState.missing => appText.cameraGalleryProfilePhotoAdd,
     };
   }
 
@@ -893,7 +777,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text(
-                        _t('Crop photo', 'Photo crop करा'),
+                        appText.cropPhoto,
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
@@ -918,7 +802,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                       ),
                       const SizedBox(height: 14),
                       _CropSlider(
-                        label: _t('Zoom', 'Zoom'),
+                        label: appText.zoom,
                         value: zoom,
                         min: 1,
                         max: 3,
@@ -931,7 +815,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                               },
                       ),
                       _CropSlider(
-                        label: _t('Left / right', 'Left / right'),
+                        label: appText.leftRight,
                         value: centerX,
                         min: 0,
                         max: 1,
@@ -944,7 +828,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                               },
                       ),
                       _CropSlider(
-                        label: _t('Up / down', 'Up / down'),
+                        label: appText.upDown,
                         value: centerY,
                         min: 0,
                         max: 1,
@@ -964,7 +848,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                               onPressed: saving
                                   ? null
                                   : () => Navigator.of(dialogContext).pop(),
-                              child: Text(_t('Cancel', 'Cancel')),
+                              child: Text(appText.cancel2),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -980,7 +864,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                                       ),
                                     )
                                   : const Icon(Icons.check),
-                              label: Text(_t('Apply crop', 'Crop apply करा')),
+                              label: Text(appText.applyCrop),
                             ),
                           ),
                         ],

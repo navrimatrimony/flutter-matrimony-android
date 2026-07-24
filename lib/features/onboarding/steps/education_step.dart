@@ -7,6 +7,7 @@ import '../models/paged_lookup_response.dart';
 import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 class EducationStep extends StatefulWidget {
   const EducationStep({
@@ -32,7 +33,6 @@ class EducationStep extends StatefulWidget {
 
 class _EducationStepState extends State<EducationStep> {
   List<OnboardingOption> _selected = <OnboardingOption>[];
-  bool get _mr => widget.locale == 'mr';
 
   @override
   void initState() {
@@ -88,7 +88,6 @@ class _EducationStepState extends State<EducationStep> {
     }
   }
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   Future<PagedLookupResponse> _educationPage(
     String query,
@@ -138,7 +137,7 @@ class _EducationStepState extends State<EducationStep> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text(_t('Request education', 'Education request')),
+            title: Text(appText.requestEducation),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -146,7 +145,7 @@ class _EducationStepState extends State<EducationStep> {
                   TextField(
                     controller: label,
                     decoration: InputDecoration(
-                      labelText: _t('Education label', 'Education label'),
+                      labelText: appText.educationLabel,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -159,15 +158,12 @@ class _EducationStepState extends State<EducationStep> {
                   TextField(
                     controller: notes,
                     decoration: InputDecoration(
-                      labelText: _t('Notes optional', 'Notes optional'),
+                      labelText: appText.notesOptional,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _t(
-                      'Pending suggestions are not selected as education until approved.',
-                      'Pending suggestion approved होईपर्यंत education म्हणून select होत नाही.',
-                    ),
+                    appText.pendingSuggestionsAreNotSelectedAs2,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -176,7 +172,7 @@ class _EducationStepState extends State<EducationStep> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(_t('Cancel', 'Cancel')),
+                child: Text(appText.cancel2),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -191,20 +187,14 @@ class _EducationStepState extends State<EducationStep> {
                   Navigator.pop(context);
                   widget.onMessage(
                     response['success'] == true
-                        ? _t(
-                            'Education request submitted.',
-                            'Education request submit झाली.',
-                          )
+                        ? appText.educationRequestSubmitted
                         : readableApiError(
                             response,
-                            _t(
-                              'Could not submit request.',
-                              'Request submit झाली नाही.',
-                            ),
+                            appText.couldNotSubmitRequest,
                           ),
                   );
                 },
-                child: Text(_t('Submit', 'Submit')),
+                child: Text(appText.submit),
               ),
             ],
           );
@@ -227,11 +217,8 @@ class _EducationStepState extends State<EducationStep> {
       );
 
     return OnboardingStepScaffold(
-      title: _t('Education', 'शिक्षण'),
-      subtitle: _t(
-        'Choose the highest or relevant education.',
-        'सर्वात उच्च किंवा योग्य शिक्षण निवडा.',
-      ),
+      title: appText.education,
+      subtitle: appText.chooseTheHighestOrRelevantEducation,
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
@@ -239,19 +226,16 @@ class _EducationStepState extends State<EducationStep> {
         onPressed: widget.loading ? null : _showSuggestionDialog,
         icon: const Icon(Icons.add),
         label: Text(
-          _t('Not found? Request to add', 'सापडले नाही? Request करा'),
+          appText.notFoundRequestToAdd,
         ),
       ),
       children: [
         OnboardingPickerField(
-          label: _t('Education', 'शिक्षण'),
+          label: appText.education,
           selectedItems: _selected,
           multiSelect: true,
-          placeholder: _t(
-            'Search and select education',
-            'Education शोधून निवडा',
-          ),
-          searchHint: _t('Search education', 'Education शोधा'),
+          placeholder: appText.searchAndSelectEducation,
+          searchHint: appText.searchEducation,
           loadPage: _educationPage,
           itemSubtitleBuilder: (option) => option.metaText('category_label'),
           allowRequestToAdd: true,
@@ -261,7 +245,7 @@ class _EducationStepState extends State<EducationStep> {
         if (highest.isNotEmpty) ...[
           const SizedBox(height: 10),
           Text(
-            _t('Highest selected: ', 'सर्वात उच्च निवड: ') +
+            appText.highestSelected +
                 highest.first.label,
             style: Theme.of(context).textTheme.bodySmall,
           ),

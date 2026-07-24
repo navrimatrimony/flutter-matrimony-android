@@ -4,6 +4,7 @@ import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_photo_view.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
+import '../../core/app_language.dart';
 
 /// ===============================
 /// SENT INTERESTS SCREEN
@@ -155,9 +156,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return AppLoadingState.list(
-        title: AppStrings.isMarathi
-            ? 'पाठवलेले interests लोड होत आहेत'
-            : 'Loading sent interests',
+        title: appText.loadingSentInterests,
         icon: Icons.send_outlined,
       );
     }

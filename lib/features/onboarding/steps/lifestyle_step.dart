@@ -8,6 +8,7 @@ import '../models/paged_lookup_response.dart';
 import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 class LifestyleStep extends StatefulWidget {
   const LifestyleStep({
@@ -37,8 +38,6 @@ class _LifestyleStepState extends State<LifestyleStep> {
   OnboardingOption? _drinking;
   OnboardingOption? _physicalBuild;
   OnboardingOption? _spectaclesLens;
-
-  bool get _mr => widget.locale == 'mr';
 
   @override
   void initState() {
@@ -85,7 +84,6 @@ class _LifestyleStepState extends State<LifestyleStep> {
         );
   }
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   Future<PagedLookupResponse> _page(
     String type,
@@ -151,11 +149,8 @@ class _LifestyleStepState extends State<LifestyleStep> {
       onContinue: _save,
       children: [
         _optionGroup(
-          label: _t('Diet', 'आहार'),
-          helper: _t(
-            'Useful for day-to-day compatibility.',
-            'दैनंदिन जुळवणीसाठी उपयोगी.',
-          ),
+          label: appText.diet,
+          helper: appText.usefulForDayToDayCompatibility,
           options: widget.bootstrap.diets,
           lookupType: 'diet',
           selected: _diet,
@@ -164,8 +159,8 @@ class _LifestyleStepState extends State<LifestyleStep> {
         ),
         const SizedBox(height: 16),
         _optionGroup(
-          label: _t('Smoking', 'Smoking'),
-          helper: _t('Optional', 'Optional'),
+          label: appText.smoking,
+          helper: appText.optional,
           options: widget.bootstrap.smokingOptions,
           lookupType: 'smoking',
           selected: _smoking,
@@ -174,8 +169,8 @@ class _LifestyleStepState extends State<LifestyleStep> {
         ),
         const SizedBox(height: 16),
         _optionGroup(
-          label: _t('Drinking', 'Drinking'),
-          helper: _t('Optional', 'Optional'),
+          label: appText.drinking,
+          helper: appText.optional,
           options: widget.bootstrap.drinkingOptions,
           lookupType: 'drinking',
           selected: _drinking,
@@ -184,8 +179,8 @@ class _LifestyleStepState extends State<LifestyleStep> {
         ),
         const SizedBox(height: 16),
         _optionGroup(
-          label: _t('Physical Build', 'शरीरयष्टी'),
-          helper: _t('Optional', 'Optional'),
+          label: appText.physicalBuild,
+          helper: appText.optional,
           options: widget.bootstrap.physicalBuilds,
           lookupType: 'physical-builds',
           selected: _physicalBuild,
@@ -193,8 +188,8 @@ class _LifestyleStepState extends State<LifestyleStep> {
         ),
         const SizedBox(height: 16),
         _optionGroup(
-          label: _t('Spectacles / Lens', 'चष्मा / लेन्स'),
-          helper: _t('Optional', 'Optional'),
+          label: appText.spectaclesLens,
+          helper: appText.optional,
           options: widget.bootstrap.spectaclesLensOptions,
           lookupType: 'spectacles-lens',
           selected: _spectaclesLens,
@@ -270,7 +265,7 @@ class _LifestyleStepState extends State<LifestyleStep> {
     return OnboardingPickerField(
       label: label,
       selectedItems: selected == null ? const [] : [selected],
-      placeholder: _t('Select', 'निवडा'),
+      placeholder: appText.select,
       loadPage: loadPage,
       onChanged: (items) => onChanged(items.isEmpty ? null : items.first),
     );

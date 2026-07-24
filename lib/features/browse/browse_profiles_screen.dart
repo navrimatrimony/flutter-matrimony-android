@@ -12,6 +12,7 @@ import '../interests/sent_interests_screen.dart';
 import '../contact/contact_inbox_screen.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 import 'matches_filter_screen.dart';
+import '../../core/app_language.dart';
 
 /// ===============================
 /// MATCHES / BROWSE PROFILES SCREEN
@@ -498,11 +499,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         ? _locationSummary(_nearbyLocationOnlyFilters())
         : _searchSummary(_filters);
     final title = isNearby
-        ? (AppStrings.isMarathi ? 'Nearby ठिकाण' : 'Nearby location')
-        : (AppStrings.isMarathi ? 'शोध फिल्टर' : 'Search filters');
+        ? (appText.nearbyLocation)
+        : (appText.searchFilters);
     final clearLabel = isNearby
-        ? (AppStrings.isMarathi ? 'Location काढा' : 'Clear location')
-        : (AppStrings.isMarathi ? 'Clear filter' : 'Clear filter');
+        ? (appText.clearLocation)
+        : (appText.clearFilter);
 
     return Container(
       width: double.infinity,
@@ -588,17 +589,15 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       if (filters.maritalStatusLabel?.trim().isNotEmpty == true)
         filters.maritalStatusLabel!.trim(),
       if (filters.photoAvailable)
-        AppStrings.isMarathi ? 'फोटो उपलब्ध' : 'Photo available',
-      if (filters.verifiedPhoto) AppStrings.isMarathi ? 'Verified' : 'Verified',
+        appText.photoAvailable,
+      if (filters.verifiedPhoto) appText.verified,
       if (filters.recentlyActive)
-        AppStrings.isMarathi ? 'Recently active' : 'Recently active',
+        appText.recentlyActive,
       if (filters.hasLocationFilter) _locationSummary(filters),
     ];
 
     if (parts.isEmpty) {
-      return AppStrings.isMarathi
-          ? 'शोध फिल्टर निवडा'
-          : 'Choose search filters';
+      return appText.chooseSearchFilters;
     }
     return parts.take(4).join(' • ');
   }
@@ -616,7 +615,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         filters.countryLabel!.trim(),
     ];
     return parts.isEmpty
-        ? (AppStrings.isMarathi ? 'Location निवडले आहे' : 'Location selected')
+        ? (appText.locationSelected)
         : parts.take(3).join(' • ');
   }
 
@@ -1560,9 +1559,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppStrings.isMarathi
-                          ? 'शोध फिल्टर निवडा'
-                          : 'Choose search filters',
+                      appText.chooseSearchFilters,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -1573,9 +1570,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      AppStrings.isMarathi
-                          ? 'वय, धर्म, जात, location आणि advanced filters वापरून शोधा.'
-                          : 'Search with age, community, location and advanced filters.',
+                      appText.searchWithAgeCommunityLocationAnd,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1650,9 +1645,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppStrings.isMarathi
-                          ? 'Nearby साठी location वापरा'
-                          : 'Use location for Nearby',
+                      appText.useLocationForNearby,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -1664,9 +1657,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                     const SizedBox(height: 4),
                     Text(
                       _nearbyLocationMessage ??
-                          (AppStrings.isMarathi
-                              ? 'मोबाईल permission घेऊन जवळचे शहर/location apply करू.'
-                              : 'Allow location to apply the closest app location.'),
+                          (appText.allowLocationToApplyTheClosest),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -1690,7 +1681,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                       : _useCurrentLocationForNearby,
                   icon: const Icon(Icons.near_me_outlined),
                   label: Text(
-                    AppStrings.isMarathi ? 'Location वापरा' : 'Use location',
+                    appText.useLocation,
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _brandColor,
@@ -1724,15 +1715,13 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   Future<void> _useCurrentLocationForNearby() async {
     setState(() {
       _nearbyLocationBusy = true;
-      _nearbyLocationMessage = AppStrings.isMarathi
-          ? 'Location घेत आहे...'
-          : 'Getting location...';
+      _nearbyLocationMessage = appText.gettingLocation;
     });
 
     try {
       final payload = await _nativeLocationChannel
           .invokeMapMethod<String, dynamic>('getApproximateLocation', {
-            'locale': AppStrings.isMarathi ? 'mr' : 'en',
+            'locale': appLanguageCode(currentAppLanguage),
           });
       if (!mounted) return;
 
@@ -1742,14 +1731,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       if (location == null) {
         setState(() {
           _nearbyLocationBusy = false;
-          _nearbyLocationMessage = AppStrings.isMarathi
-              ? 'Location मिळाले, पण app list मध्ये जवळचे ठिकाण match झाले नाही.'
-              : 'Location found, but no matching app location was found.';
+          _nearbyLocationMessage = appText.locationFoundButNoMatchingApp;
         });
         _showSnackBar(
-          AppStrings.isMarathi
-              ? 'Filters मधून city/district निवडा.'
-              : 'Choose city/district from filters.',
+          appText.chooseCityDistrictFromFilters,
         );
         return;
       }
@@ -1777,9 +1762,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       if (!mounted) return;
       setState(() {
         _nearbyLocationBusy = false;
-        _nearbyLocationMessage = AppStrings.isMarathi
-            ? 'Location वापरता आले नाही.'
-            : 'Could not use location.';
+        _nearbyLocationMessage = appText.couldNotUseLocation;
       });
     }
   }
@@ -1830,7 +1813,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       final results = await ApiClient.searchLocations(
         term,
         limit: 6,
-        locale: AppStrings.isMarathi ? 'mr' : 'en',
+        locale: appLanguageCode(currentAppLanguage),
       );
       if (results.isNotEmpty) return results.first;
     }
@@ -1867,25 +1850,15 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   String _nearbyLocationErrorMessage(PlatformException error) {
     return switch (error.code) {
       'PERMISSION_DENIED' =>
-        AppStrings.isMarathi
-            ? 'Nearby साठी location permission लागेल.'
-            : 'Location permission is needed for Nearby.',
+        appText.locationPermissionIsNeededForNearby,
       'LOCATION_DISABLED' =>
-        AppStrings.isMarathi
-            ? 'Mobile location बंद आहे. Settings मधून location सुरू करा.'
-            : 'Device location is off. Turn on location from settings.',
+        appText.deviceLocationIsOffTurnOn,
       'LOCATION_TIMEOUT' =>
-        AppStrings.isMarathi
-            ? 'Location मिळायला जास्त वेळ लागला. पुन्हा प्रयत्न करा.'
-            : 'Location took too long. Try again.',
+        appText.locationTookTooLongTryAgain,
       'LOCATION_PENDING' =>
-        AppStrings.isMarathi
-            ? 'Location request आधीच चालू आहे.'
-            : 'A location request is already running.',
+        appText.aLocationRequestIsAlreadyRunning,
       _ =>
-        AppStrings.isMarathi
-            ? 'Location वापरता आले नाही.'
-            : 'Could not use location.',
+        appText.couldNotUseLocation,
     };
   }
 
@@ -2083,9 +2056,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         border: Border.all(color: _brandSoft),
       ),
       child: Text(
-        AppStrings.isMarathi
-            ? 'अधिक स्थळे सध्या उपलब्ध नाहीत. उपलब्ध स्थळे खाली दाखवत आहोत.'
-            : 'More Matches sections are unavailable. Showing available matches below.',
+        appText.moreMatchesSectionsAreUnavailableShowing,
         style: TextStyle(
           color: Colors.grey.shade700,
           fontWeight: FontWeight.w700,
@@ -2244,7 +2215,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   Widget _buildRecentVisitorTeaserCard(Map<String, dynamic> teaser) {
     final headline =
         _displayString(teaser['headline']) ??
-        (AppStrings.isMarathi ? 'लॉक केलेली भेट' : 'Locked visitor');
+        (appText.lockedVisitor);
     final lines = _teaserLines(teaser).take(2).toList();
     final viewedSummary = _displayString(teaser['viewed_summary']);
     final accentLine = _displayString(teaser['accent_line']);
@@ -2600,9 +2571,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               const Spacer(),
               Text(
                 viewedAt ??
-                    (AppStrings.isMarathi
-                        ? 'अलीकडे पाहिले'
-                        : 'Viewed recently'),
+                    (appText.viewedRecently),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
@@ -3795,9 +3764,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   String _emptyProfilesMessage({bool prefixIcon = false}) {
-    final message = AppStrings.isMarathi
-        ? 'प्रोफाइल सापडली नाही. Filters कमी करून पुन्हा प्रयत्न करा.'
-        : 'No profiles found. Try reducing filters and search again.';
+    final message = appText.noProfilesFoundTryReducingFilters;
     return prefixIcon ? '❌ $message' : message;
   }
 

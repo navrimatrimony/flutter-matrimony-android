@@ -4,6 +4,7 @@ import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
+import '../../core/app_language.dart';
 
 enum _ProfileListKind { shortlisted, blocked, hidden }
 
@@ -101,9 +102,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return AppLoadingState.list(
-        title: AppStrings.isMarathi
-            ? 'प्रोफाइल यादी लोड होत आहे'
-            : 'Loading profile lists',
+        title: appText.loadingProfileLists,
         icon: Icons.bookmarks_outlined,
       );
     }

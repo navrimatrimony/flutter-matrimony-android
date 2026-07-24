@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import '../../core/app_language.dart';
 
 const Object _unset = Object();
 
@@ -840,7 +841,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
       loader: (query) async => _rowsFromResponse(
         await ApiClient.searchReligions(
           query: query,
-          locale: _isMarathi ? 'mr' : 'en',
+          locale: appLanguageCode(currentAppLanguage),
         ),
       ),
     );
@@ -869,7 +870,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
         await ApiClient.searchCastes(
           religionId: religionId,
           query: query,
-          locale: _isMarathi ? 'mr' : 'en',
+          locale: appLanguageCode(currentAppLanguage),
         ),
       ),
     );
@@ -893,7 +894,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
         await ApiClient.searchLocationsForOnboarding(
           query: query,
           type: type,
-          locale: _isMarathi ? 'mr' : 'en',
+          locale: appLanguageCode(currentAppLanguage),
         ),
       ),
       locationRows: true,
@@ -938,7 +939,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
       loader: (query) async => _rowsFromResponse(
         await ApiClient.searchEducation(
           query: query,
-          locale: _isMarathi ? 'mr' : 'en',
+          locale: appLanguageCode(currentAppLanguage),
         ),
       ),
     );
@@ -958,7 +959,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
       loader: (query) async => _rowsFromResponse(
         await ApiClient.searchOccupations(
           query: query,
-          locale: _isMarathi ? 'mr' : 'en',
+          locale: appLanguageCode(currentAppLanguage),
         ),
       ),
     );
@@ -1160,9 +1161,7 @@ class _LookupPickerSheetState extends State<_LookupPickerSheet> {
       setState(() {
         _rows = <Map<String, dynamic>>[];
         _loading = false;
-        _error = widget.isMarathi
-            ? 'पर्याय load करता आले नाहीत.'
-            : 'Could not load options.';
+        _error = appText.couldNotLoadOptions;
       });
     }
   }
@@ -1222,7 +1221,7 @@ class _LookupPickerSheetState extends State<_LookupPickerSheet> {
                 controller: _searchController,
                 textInputAction: TextInputAction.search,
                 decoration: InputDecoration(
-                  hintText: widget.isMarathi ? 'Search करा' : 'Search',
+                  hintText: appText.search,
                   prefixIcon: const Icon(Icons.search_rounded),
                   filled: true,
                   fillColor: const Color(0xFFFCFBFA),
@@ -1268,7 +1267,7 @@ class _LookupPickerSheetState extends State<_LookupPickerSheet> {
         child: Padding(
           padding: const EdgeInsets.all(18),
           child: Text(
-            widget.isMarathi ? 'पर्याय सापडले नाहीत.' : 'No options found.',
+            appText.noOptionsFound,
             textAlign: TextAlign.center,
           ),
         ),

@@ -5,6 +5,7 @@ import '../../../core/api_client.dart';
 import '../widgets/onboarding_error_highlight.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 typedef FamilyAboutStepSaver =
     Future<bool> Function(Map<String, dynamic> familyData, String aboutText);
@@ -52,8 +53,6 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   String? _familyStatusError;
   String? _aboutError;
   int? _selectedSuggestionIndex;
-
-  bool get _mr => widget.locale == 'mr';
   @override
   void initState() {
     super.initState();
@@ -77,7 +76,6 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     super.dispose();
   }
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   void _prefill() {
     _familyStatus = onboardingText(widget.data['family_status']);
@@ -95,17 +93,17 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     if (widget.aboutSuggestions.isNotEmpty) return widget.aboutSuggestions;
     return <AboutTemplateSuggestion>[
       AboutTemplateSuggestion(
-        label: _t('Simple & family-first', 'साधी ओळख'),
+        label: appText.simpleFamilyFirst2,
         text:
             'Family values and mutual respect are important to me. I believe in a balanced life with clear communication, patience, and support from both families.',
       ),
       AboutTemplateSuggestion(
-        label: _t('Career with balance', 'Career balance'),
+        label: appText.careerWithBalance2,
         text:
             'I take responsibilities seriously and like keeping a healthy balance between work, family, and personal growth. I value honesty and steady understanding.',
       ),
       AboutTemplateSuggestion(
-        label: _t('Tradition & open mind', 'परंपरा आणि विचार'),
+        label: appText.traditionOpenMind2,
         text:
             'I respect traditions while staying open to practical modern thinking. I am looking for a relationship built on trust, kindness, and shared decisions.',
       ),
@@ -200,15 +198,12 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     if (_familyStatus == null || about.isEmpty) {
       setState(() {
         _familyStatusError = _familyStatus == null
-            ? _t('Select family status.', 'कुटुंब स्थिती निवडा.')
+            ? appText.selectFamilyStatus
             : null;
         _aboutError = about.isEmpty
-            ? _t('Write a short about section.', 'थोडक्यात ओळख लिहा.')
+            ? appText.writeAShortAboutSection
             : null;
-        _localError = _t(
-          'Select family status and write a short about section.',
-          'कुटुंब स्थिती निवडा आणि थोडक्यात स्वतःबद्दल लिहा.',
-        );
+        _localError = appText.selectFamilyStatusAndWriteA;
       });
       return;
     }
@@ -231,22 +226,19 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: _t('Family and about', 'कुटुंब आणि ओळख'),
-      subtitle: _t(
-        'One final profile detail helps families understand the match better.',
-        'शेवटची ही माहिती योग्य स्थळे सुचवण्यासाठी उपयोगी पडते.',
-      ),
+      title: appText.familyAndAbout,
+      subtitle: appText.oneFinalProfileDetailHelpsFamilies,
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
-      continueLabel: _t('Complete registration', 'नोंदणी पूर्ण करा'),
+      continueLabel: appText.completeRegistration,
       children: [
         OnboardingErrorHighlight(
           hasError: _familyStatusError != null,
           pulseKey: 'family_status:$_familyStatusError:$_familyStatus',
           child: _FamilyPanel(
-            title: _t('Family status', 'कुटुंब स्थिती'),
-            subtitle: _t('Required', 'आवश्यक'),
+            title: appText.familyStatus,
+            subtitle: appText.required,
             trailing: _optionsLoading
                 ? const SizedBox(
                     width: 18,
@@ -281,11 +273,8 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
         ],
         const SizedBox(height: 14),
         _FamilyPanel(
-          title: _t('Family values', 'कुटुंब मूल्ये'),
-          subtitle: _t(
-            'Optional, but useful for better suggestions',
-            'Optional',
-          ),
+          title: appText.familyValues,
+          subtitle: appText.optionalButUsefulForBetterSuggestions,
           child: _ChoiceWrap(
             options: _valueOptions,
             selectedKey: _familyValues,
@@ -304,8 +293,8 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
           hasError: _aboutError != null,
           pulseKey: 'about_profile:$_aboutError',
           child: _FamilyPanel(
-            title: _t('About profile', 'प्रोफाइलबद्दल'),
-            subtitle: _t('Required', 'आवश्यक'),
+            title: appText.aboutProfile,
+            subtitle: appText.required,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -328,10 +317,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
                     _localError = null;
                   }),
                   decoration: InputDecoration(
-                    hintText: _t(
-                      'Write a natural introduction, family background, and what makes this profile easy to understand.',
-                      'स्वभाव, कुटुंब पार्श्वभूमी आणि profile समजायला मदत होईल अशी थोडक्यात माहिती लिहा.',
-                    ),
+                    hintText: appText.writeANaturalIntroductionFamilyBackground,
                     errorText: _aboutError,
                     alignLabelWithHint: true,
                   ),

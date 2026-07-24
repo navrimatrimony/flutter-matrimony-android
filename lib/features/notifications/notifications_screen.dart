@@ -8,6 +8,7 @@ import '../../core/app_strings.dart';
 import '../../core/profile_photo_view.dart';
 import '../interests/received_interests_screen.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
+import '../../core/app_language.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -192,9 +193,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     if (routeHint == 'mediation_inbox') {
       _showSnackBar(
-        AppStrings.isMarathi
-            ? 'WhatsApp Response सुविधा mobile मध्ये लवकरच उपलब्ध होईल.'
-            : 'WhatsApp Response inbox will be available in the mobile app soon.',
+        appText.whatsappResponseInboxWillBeAvailable,
       );
       return;
     }
@@ -281,9 +280,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildBody() {
     if (_loading) {
       return AppLoadingState.list(
-        title: AppStrings.isMarathi
-            ? 'Notifications लोड होत आहेत'
-            : 'Loading notifications',
+        title: appText.loadingNotifications,
         icon: Icons.notifications_none,
       );
     }
@@ -780,7 +777,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final headline = _stringValue(
       teaser['headline'],
       fallback: fallbackMessage.isEmpty
-          ? (AppStrings.isMarathi ? 'लॉक केलेली माहिती' : 'Locked profile')
+          ? (appText.lockedProfile)
           : fallbackMessage,
     );
     final lines = _stringList(teaser['lines']).take(3).toList();
@@ -979,14 +976,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final raw = _stringValue(
       teaser['headline'],
       fallback: fallbackMessage.isEmpty
-          ? (AppStrings.isMarathi ? 'Profile पाहिले गेले' : 'Profile viewed')
+          ? (appText.profileViewed)
           : fallbackMessage,
     );
     final cleaned = _sanitizeLockedHeadline(raw);
     if (cleaned.isEmpty) {
-      return AppStrings.isMarathi
-          ? 'तुमचे profile पाहिले गेले.'
-          : 'Your profile was viewed.';
+      return appText.yourProfileWasViewed;
     }
 
     final headline = _mentionsProfileView(cleaned)
@@ -1107,13 +1102,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String _lockedRepeatWindow(Map<String, dynamic> teaser) {
     final summary = _stringValue(teaser['viewed_summary']).toLowerCase();
     if (summary.contains('today') || summary.contains('आज')) {
-      return AppStrings.isMarathi ? 'आज' : 'today';
+      return appText.today;
     }
     if (summary.contains('this week') || summary.contains('या आठवड')) {
-      return AppStrings.isMarathi ? 'या आठवड्यात' : 'this week';
+      return appText.thisWeek;
     }
     if (summary.contains('this month') || summary.contains('या महिन')) {
-      return AppStrings.isMarathi ? 'या महिन्यात' : 'this month';
+      return appText.thisMonth;
     }
 
     return '';
@@ -1246,16 +1241,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     final routeHint = _stringValue(action['route_hint']);
     return switch (routeHint) {
-      'profile' => AppStrings.isMarathi ? 'प्रोफाइल पहा' : 'View profile',
+      'profile' => appText.viewProfile,
       'contact_inbox' =>
-        AppStrings.isMarathi ? 'कॉन्टॅक्ट इनबॉक्स' : 'Contact inbox',
+        appText.contactInbox,
       'mediation_inbox' => 'WhatsApp Response',
-      'plans' => AppStrings.isMarathi ? 'Unlock करा' : 'Unlock',
-      'matches' => AppStrings.isMarathi ? 'जुळण्या पहा' : 'View matches',
+      'plans' => appText.unlock,
+      'matches' => appText.viewMatches,
       'received_interests' =>
-        AppStrings.isMarathi ? 'आलेल्या इच्छा' : 'Received interests',
-      'who_viewed' => AppStrings.isMarathi ? 'कोणी पाहिले' : 'Who viewed',
-      _ => AppStrings.isMarathi ? 'उघडा' : 'Open',
+        appText.receivedInterests2,
+      'who_viewed' => appText.whoViewed,
+      _ => appText.open2,
     };
   }
 

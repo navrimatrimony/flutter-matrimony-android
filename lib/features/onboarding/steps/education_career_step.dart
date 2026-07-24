@@ -9,6 +9,7 @@ import '../widgets/onboarding_picker_field.dart';
 import '../widgets/smart_picker_panel.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 class _IncomeBand {
   const _IncomeBand({
@@ -740,11 +741,11 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   String _incomeOptionLabel(OnboardingOption option) {
     return switch (option.key) {
-      'annual' => _t('Annual', 'वार्षिक'),
-      'monthly' => _t('Monthly', 'मासिक'),
-      'exact' => _t('Exact', 'अचूक'),
-      'approximate' => _t('Approx', 'अंदाजे'),
-      'range' => _t('Range', 'श्रेणी'),
+      'annual' => appText.annual,
+      'monthly' => appText.monthly,
+      'exact' => appText.exact,
+      'approximate' => appText.approx,
+      'range' => appText.range,
       _ => option.label,
     };
   }
@@ -759,17 +760,17 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   String _incomeGroupLabel(String key) {
     return switch (key) {
-      'monthly_10_30k' => _t('10K to 30K', '10K ते 30K'),
-      'monthly_30k_1l' => _t('30K to 1L', '30K ते 1L'),
-      'monthly_1_2l' => _t('1L to 2L', '1L ते 2L'),
-      'monthly_2_5l' => _t('2L to 5L', '2L ते 5L'),
-      'monthly_5l_plus' => _t('5L and above', '5L आणि पुढे'),
-      'annual_1_2l' => _t('1L to 2L', '1L ते 2L'),
-      'annual_2_5l' => _t('2L to 5L', '2L ते 5L'),
-      'annual_5_10l' => _t('5L to 10L', '5L ते 10L'),
-      'annual_10_30l' => _t('10L to 30L', '10L ते 30L'),
-      'annual_30_50l' => _t('30L to 50L', '30L ते 50L'),
-      'annual_50l_plus' => _t('50L and above', '50L आणि पुढे'),
+      'monthly_10_30k' => appText.v10kTo30k,
+      'monthly_30k_1l' => appText.v30kTo1l,
+      'monthly_1_2l' => appText.v1lTo2l,
+      'monthly_2_5l' => appText.v2lTo5l,
+      'monthly_5l_plus' => appText.v5lAndAbove,
+      'annual_1_2l' => appText.v1lTo2l,
+      'annual_2_5l' => appText.v2lTo5l,
+      'annual_5_10l' => appText.v5lTo10l,
+      'annual_10_30l' => appText.v10lTo30l,
+      'annual_30_50l' => appText.v30lTo50l,
+      'annual_50l_plus' => appText.v50lAndAbove,
       _ => '',
     };
   }
@@ -824,8 +825,8 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   OnboardingOption _incomeBandOption(_IncomeBand band, String periodKey) {
     final periodLabel = periodKey == 'monthly'
-        ? _t('per month', 'दर महिना')
-        : _t('per year', 'दर वर्ष');
+        ? appText.perMonth
+        : appText.perYear;
     return OnboardingOption(
       key: '${periodKey}_${band.key}',
       label: '$_currencySymbol${band.label}',
@@ -911,15 +912,15 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     final selected = _selectedIncomeRangeOption();
     await SmartPickerPanel.show(
       context,
-      title: _t('Select income range', 'उत्पन्न श्रेणी निवडा'),
+      title: appText.selectIncomeRange,
       selectedItems: [selected],
       showSearch: false,
       showDividers: true,
       groupOptions: true,
       initialFilterKey: _incomeIsMonthly ? 'monthly' : 'annual',
       filterOptions: [
-        SmartPickerFilterOption(key: 'monthly', label: _t('Monthly', 'मासिक')),
-        SmartPickerFilterOption(key: 'annual', label: _t('Annual', 'वार्षिक')),
+        SmartPickerFilterOption(key: 'monthly', label: appText.monthly),
+        SmartPickerFilterOption(key: 'annual', label: appText.annual),
       ],
       loadPage: _incomeRangePage,
       filteredLoadPage: _incomeRangeFilteredPage,
@@ -933,8 +934,8 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   String _incomePeriodSuffix() {
     return _incomeIsMonthly
-        ? _t('per month', 'दर महिना')
-        : _t('per year', 'दर वर्ष');
+        ? appText.perMonth
+        : appText.perYear;
   }
 
   Map<String, dynamic> _educationPayload() {
@@ -1018,27 +1019,24 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
       if (minText.isNotEmpty && minAmount == null) {
         field = 'min';
-        error = _t('Enter a valid min income.', 'योग्य min income भरा.');
+        error = appText.enterAValidMinIncome;
       } else if (maxText.isNotEmpty && maxAmount == null) {
         field = 'max';
-        error = _t('Enter a valid max income.', 'योग्य max income भरा.');
+        error = appText.enterAValidMaxIncome;
       } else if (minText.isEmpty && maxText.isNotEmpty) {
         field = 'min';
-        error = _t('Enter min income too.', 'Min income सुद्धा भरा.');
+        error = appText.enterMinIncomeToo;
       } else if (minAmount != null &&
           maxAmount != null &&
           maxAmount < minAmount) {
         field = 'max';
-        error = _t(
-          'Max income must be more than min income.',
-          'Max income min income पेक्षा जास्त असावे.',
-        );
+        error = appText.maxIncomeMustBeMoreThan;
       }
     } else {
       final amountText = _amountController.text.trim();
       if (amountText.isNotEmpty && onboardingInt(amountText) == null) {
         field = 'amount';
-        error = _t('Enter a valid income amount.', 'योग्य income amount भरा.');
+        error = appText.enterAValidIncomeAmount;
       }
     }
 
@@ -1073,21 +1071,21 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   Future<void> _continue() async {
     if (_selectedEducation.isEmpty) {
-      final message = _t('Select education.', 'शिक्षण निवडा.');
+      final message = appText.selectEducation;
       setState(() => _educationError = message);
       widget.onMessage(message);
       return;
     }
 
     if (_workingWith == null) {
-      final message = _t('Choose work details.', 'कामाची माहिती निवडा.');
+      final message = appText.chooseWorkDetails;
       setState(() => _workingWithError = message);
       widget.onMessage(message);
       return;
     }
 
     if (!_notWorking && _occupation == null) {
-      final message = _t('Choose occupation.', 'व्यवसाय निवडा.');
+      final message = appText.chooseOccupation;
       setState(() => _occupationError = message);
       widget.onMessage(message);
       return;
@@ -1126,7 +1124,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text(_t('Request education', 'Education request')),
+            title: Text(appText.requestEducation),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1134,7 +1132,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
                   TextField(
                     controller: label,
                     decoration: InputDecoration(
-                      labelText: _t('Education label', 'Education label'),
+                      labelText: appText.educationLabel,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -1147,15 +1145,12 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
                   TextField(
                     controller: notes,
                     decoration: InputDecoration(
-                      labelText: _t('Notes optional', 'Notes optional'),
+                      labelText: appText.notesOptional,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _t(
-                      'Pending suggestions are not selected as education until approved.',
-                      'Pending suggestion approved होईपर्यंत education म्हणून select होत नाही.',
-                    ),
+                    appText.pendingSuggestionsAreNotSelectedAs2,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -1164,7 +1159,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(_t('Cancel', 'Cancel')),
+                child: Text(appText.cancel2),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -1179,20 +1174,14 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
                   Navigator.pop(context);
                   widget.onMessage(
                     response['success'] == true
-                        ? _t(
-                            'Education request submitted.',
-                            'Education request submit झाली.',
-                          )
+                        ? appText.educationRequestSubmitted
                         : readableApiError(
                             response,
-                            _t(
-                              'Could not submit request.',
-                              'Request submit झाली नाही.',
-                            ),
+                            appText.couldNotSubmitRequest,
                           ),
                   );
                 },
-                child: Text(_t('Submit', 'Submit')),
+                child: Text(appText.submit),
               ),
             ],
           );
@@ -1214,7 +1203,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text(_t('Request occupation', 'Occupation request')),
+            title: Text(appText.requestOccupation),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -1222,7 +1211,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
                   TextField(
                     controller: label,
                     decoration: InputDecoration(
-                      labelText: _t('Occupation label', 'Occupation label'),
+                      labelText: appText.occupationLabel,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -1237,15 +1226,12 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
                   TextField(
                     controller: notes,
                     decoration: InputDecoration(
-                      labelText: _t('Notes optional', 'Notes optional'),
+                      labelText: appText.notesOptional,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _t(
-                      'Pending suggestions are not selected as occupation until approved.',
-                      'Pending suggestion approved होईपर्यंत occupation म्हणून select होत नाही.',
-                    ),
+                    appText.pendingSuggestionsAreNotSelectedAs,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
@@ -1254,7 +1240,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(_t('Cancel', 'Cancel')),
+                child: Text(appText.cancel2),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -1270,20 +1256,14 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
                   Navigator.pop(context);
                   widget.onMessage(
                     response['success'] == true || response['statusCode'] == 201
-                        ? _t(
-                            'Occupation request submitted.',
-                            'Occupation request submit झाली.',
-                          )
+                        ? appText.occupationRequestSubmitted
                         : readableApiError(
                             response,
-                            _t(
-                              'Could not submit request.',
-                              'Request submit झाली नाही.',
-                            ),
+                            appText.couldNotSubmitRequest,
                           ),
                   );
                 },
-                child: Text(_t('Submit', 'Submit')),
+                child: Text(appText.submit),
               ),
             ],
           );
@@ -1308,10 +1288,10 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         borderRadius: BorderRadius.circular(10),
         onTap: () => SmartPickerPanel.show(
           context,
-          title: _t('Education', 'शिक्षण'),
+          title: appText.education,
           selectedItems: _selectedEducation,
           multiSelect: true,
-          searchHint: _t('Search education', 'Education शोधा'),
+          searchHint: appText.searchEducation,
           loadPage: _educationPage,
           itemSubtitleBuilder: (option) => option.metaText('category_label'),
           allowRequestToAdd: true,
@@ -1323,7 +1303,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         ),
         child: InputDecorator(
           decoration: InputDecoration(
-            labelText: _t('Education *', 'शिक्षण *'),
+            labelText: appText.education2,
             errorText: _educationError,
             isDense: true,
             contentPadding: const EdgeInsets.fromLTRB(12, 10, 6, 8),
@@ -1384,7 +1364,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
                   ),
                 )
               : Text(
-                  _t('Search and select education', 'Education शोधून निवडा'),
+                  appText.searchAndSelectEducation,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(color: Colors.grey.shade700),
@@ -1405,7 +1385,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           child: Text(
-            _t('+ Add company / work location', '+ कंपनी / कामाचे ठिकाण जोडा'),
+            appText.addCompanyWorkLocation,
           ),
         ),
       );
@@ -1416,7 +1396,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         TextField(
           controller: _companyController,
           decoration: InputDecoration(
-            labelText: _t('Company optional', 'Company optional'),
+            labelText: appText.companyOptional,
             isDense: true,
           ),
         ),
@@ -1424,7 +1404,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         TextField(
           controller: _workLocationController,
           decoration: InputDecoration(
-            labelText: _t('Work location optional', 'Work location optional'),
+            labelText: appText.workLocationOptional,
             isDense: true,
           ),
         ),
@@ -1468,7 +1448,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
       children: [
         Expanded(
           child: Text(
-            _t('Income', 'उत्पन्न'),
+            appText.income,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -1478,7 +1458,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
           context,
           label: _periodLabel,
           onTap: () => _showIncomeOptionPicker(
-            title: _t('Income period', 'Income period'),
+            title: appText.incomePeriod,
             options: _periodOptions,
             selected: _period,
             onSelected: _setIncomePeriod,
@@ -1489,7 +1469,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
           context,
           label: _valueTypeLabel,
           onTap: () => _showIncomeOptionPicker(
-            title: _t('Income type', 'Income type'),
+            title: appText.incomeType,
             options: _valueTypeOptions,
             selected: _valueType,
             onSelected: _setIncomeValueType,
@@ -1516,7 +1496,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
       onTap: () => _showIncomeRangePicker(context),
       child: InputDecorator(
         decoration: InputDecoration(
-          labelText: _t('Income range', 'उत्पन्न श्रेणी'),
+          labelText: appText.incomeRange,
           errorText: rangeError,
           isDense: true,
           contentPadding: const EdgeInsets.fromLTRB(12, 10, 6, 8),
@@ -1575,7 +1555,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
       onChanged: (_) => _clearIncomeError(),
       decoration: InputDecoration(
         isDense: true,
-        labelText: _t('Income amount', 'उत्पन्न रक्कम'),
+        labelText: appText.incomeAmount2,
         prefixText: _currencySymbol,
         errorText: _incomeFieldError('amount'),
       ),
@@ -1589,7 +1569,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         children: [
           Expanded(
             child: Text(
-              _t('Keep income private', 'उत्पन्न खाजगी ठेवा'),
+              appText.keepIncomePrivate2,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
@@ -1613,7 +1593,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _continue,
-      continueLabel: _t('Save and continue', 'Save करून पुढे जा'),
+      continueLabel: appText.saveAndContinue,
       children: [
         _compactEducationPicker(context),
         const SizedBox(height: 12),
@@ -1621,10 +1601,10 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
           hasError: _workingWithError != null,
           pulseKey: 'working_with:$_workingWithError:${_workingWith?.identity}',
           child: OnboardingPickerField(
-            label: _t('Working with', 'कामाचा प्रकार'),
+            label: appText.workingWith,
             selectedItems: _workingWith == null ? const [] : [_workingWith!],
-            placeholder: _t('Select work type', 'कामाचा प्रकार निवडा'),
-            searchHint: _t('Search work type', 'कामाचा प्रकार शोधा'),
+            placeholder: appText.selectWorkType,
+            searchHint: appText.searchWorkType,
             loadPage: _workingWithPage,
             errorText: _workingWithError,
             onChanged: (items) => setState(() {
@@ -1644,10 +1624,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         if (_notWorking) ...[
           const SizedBox(height: 8),
           Text(
-            _t(
-              'Occupation and income are optional when not working.',
-              'काम करत नसल्यास व्यवसाय आणि उत्पन्न optional आहे.',
-            ),
+            appText.occupationAndIncomeAreOptionalWhen,
           ),
         ],
         if (_showOccupationSection) ...[
@@ -1656,11 +1633,11 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
             hasError: _occupationError != null,
             pulseKey: 'occupation:$_occupationError:${_occupation?.identity}',
             child: OnboardingPickerField(
-              label: _t('Working as', 'व्यवसाय'),
+              label: appText.workingAs,
               selectedItems: _occupation == null ? const [] : [_occupation!],
               enabled: _workingWith != null,
-              placeholder: _t('Select occupation', 'व्यवसाय निवडा'),
-              searchHint: _t('Search occupation', 'व्यवसाय शोधा'),
+              placeholder: appText.selectOccupation,
+              searchHint: appText.searchOccupation,
               loadPage: _occupationPage,
               itemSubtitleBuilder: (option) =>
                   option.metaText('category_label'),

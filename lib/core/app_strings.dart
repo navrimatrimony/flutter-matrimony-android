@@ -4,299 +4,247 @@ class AppStrings {
   static bool get _mr => isMarathiApp;
 
   static String get appName =>
-      _mr ? 'नवरी मिळे नवऱ्याला' : 'Navri Mile Navryala';
+      appText.appName;
 
   static bool get isMarathi => _mr;
 
-  static String get chooseLanguage => _mr ? 'भाषा निवडा' : 'Choose Language';
+  static String get chooseLanguage => appText.chooseLanguage;
 
   static String get chooseLanguageBilingual => 'भाषा निवडा\nChoose language';
 
-  static String get languageMenu => _mr ? 'भाषा' : 'Language';
+  static String get languageMenu => appText.languageMenu;
 
   static String get languageSwitchSubtitle =>
-      _mr ? 'App भाषा बदला' : 'Change app language';
+      appText.languageSwitchSubtitle;
 
   static String get marathi => 'मराठी';
 
   static String get english => 'English';
 
-  static String get landingHeadline => _mr
-      ? 'योग्य जोडीदार शोधण्याचा विश्वासार्ह मार्ग'
-      : 'A trusted way to find the right match';
+  static String get landingHeadline => appText.landingHeadline;
 
-  static String get landingSubline => _mr
-      ? 'सुरक्षित, सोपे आणि कुटुंबासाठी योग्य विवाह-जुळवणी व्यासपीठ'
-      : 'Safe, simple and family-friendly matrimony platform';
+  static String get landingSubline => appText.landingSubline;
 
-  static String get safeProfiles => _mr ? 'सुरक्षित प्रोफाइल' : 'Safe profiles';
+  static String get safeProfiles => appText.safeProfiles;
 
   static String get familyFriendly =>
-      _mr ? 'कुटुंबांसाठी योग्य' : 'Family-friendly';
+      appText.familyFriendly;
 
   static String get simpleProcess =>
-      _mr ? 'सोपे नोंदणी' : 'Simple registration';
+      appText.simpleProcess;
 
-  static String get register => _mr ? 'नोंदणी करा' : 'Register';
+  static String get register => appText.register;
 
-  static String get login => _mr ? 'लॉगिन करा' : 'Login';
+  static String get login => appText.login;
 
   static String get loginWelcomeTitle =>
-      _mr ? 'परत स्वागत आहे' : 'Welcome back';
+      appText.loginWelcomeTitle;
 
-  static String get loginWelcomeSubtitle => _mr
-      ? 'तुमच्या स्थळांचा प्रवास सुरक्षितपणे पुढे सुरू करा.'
-      : 'Continue your matrimony journey securely.';
+  static String get loginWelcomeSubtitle => appText.loginWelcomeSubtitle;
 
   static String get loginIdentifierLabel =>
-      _mr ? 'मोबाइल / ईमेल / युजरनेम' : 'Mobile / Email / Username';
+      appText.loginIdentifierLabel;
 
-  static String get loginPasswordLabel => _mr ? 'पासवर्ड' : 'Password';
+  static String get loginPasswordLabel => appText.loginPasswordLabel;
 
   static String get loginShowPassword =>
-      _mr ? 'पासवर्ड दाखवा' : 'Show password';
+      appText.loginShowPassword;
 
-  static String get loginHidePassword => _mr ? 'पासवर्ड लपवा' : 'Hide password';
+  static String get loginHidePassword => appText.loginHidePassword;
 
   static String get loginKeepSignedIn =>
-      _mr ? 'लॉगिन कायम ठेवा' : 'Keep me signed in';
+      appText.loginKeepSignedIn;
 
-  static String get loginKeepSignedInSubtitle => _mr
-      ? 'पुढच्या वेळी password न टाकता app उघडेल.'
-      : 'Open the app next time without entering your password.';
+  static String get loginKeepSignedInSubtitle => appText.loginKeepSignedInSubtitle;
 
   static String get loginMissingFields =>
-      _mr ? 'Login आणि password दोन्ही भरा.' : 'Enter login and password.';
+      appText.loginMissingFields;
 
   static String get loginSuccess =>
-      _mr ? 'Login यशस्वी. Welcome back.' : 'Login successful. Welcome back.';
+      appText.loginSuccess;
 
-  static String get loginProfileMissing => _mr
-      ? 'प्रोफाइल सापडली नाही. प्रोफाइल तयार करा.'
-      : 'Profile not found. Create your profile.';
+  static String get loginProfileMissing => appText.loginProfileMissing;
 
-  static String get loginProfileCheckFailed => _mr
-      ? 'Profile तपासता आली नाही. पुन्हा प्रयत्न करा.'
-      : 'Profile check failed. Please try again.';
+  static String get loginProfileCheckFailed => appText.loginProfileCheckFailed;
 
-  static String get loginFailed => _mr
-      ? 'Login failed. Login किंवा password तपासा.'
-      : 'Login failed. Check login or password.';
+  static String get loginFailed => appText.loginFailed;
 
   static String get loginRegisterPrompt =>
-      _mr ? 'नवीन user? इथे register करा' : 'New user? Register here';
+      appText.loginRegisterPrompt;
 
-  static String get logoutToExit => _mr
-      ? 'App मधून बाहेर पडण्यासाठी Logout वापरा.'
-      : 'Use Logout when you want to leave this account.';
+  static String get logoutToExit => appText.logoutToExit;
 
-  static String get dashboard => _mr ? 'माझे डॅशबोर्ड' : 'My Dashboard';
+  static String get dashboard => appText.dashboard;
 
-  static String get dashboardHeadline => _mr
-      ? 'तुमच्या योग्य स्थळांसाठी पुढचे पाऊल'
-      : 'Your next step toward the right match';
+  static String get dashboardHeadline => appText.dashboardHeadline;
 
-  static String get dashboardSubtitle => _mr
-      ? 'प्रोफाइल, फोटो आणि इंटरेस्ट एका ठिकाणी व्यवस्थापित करा.'
-      : 'Manage your profile, photo and interests in one place.';
+  static String get dashboardSubtitle => appText.dashboardSubtitle;
 
   static String dashboardGreeting(String name) =>
       _mr ? 'नमस्कार, $name!' : 'Hello, $name!';
 
-  static String get dashboardHeroFallback => _mr
-      ? 'तुमच्या योग्य स्थळांसाठी dashboard तयार आहे.'
-      : 'Your matrimony dashboard is ready.';
+  static String get dashboardHeroFallback => appText.dashboardHeroFallback;
 
   static String get dashboardPremiumMember =>
-      _mr ? 'Premium Member' : 'Premium Member';
+      appText.dashboardPremiumMember;
 
-  static String get dashboardFreePlan => _mr ? 'Free Plan' : 'Free Plan';
+  static String get dashboardFreePlan => appText.dashboardFreePlan;
 
   static String get dashboardProfileActive =>
-      _mr ? 'Profile active' : 'Profile active';
+      appText.dashboardProfileActive;
 
   static String get dashboardProfileMissing =>
-      _mr ? 'Profile तयार नाही' : 'Profile missing';
+      appText.dashboardProfileMissing;
 
   static String get dashboardPhotoMissing =>
-      _mr ? 'Photo missing' : 'Photo missing';
+      appText.dashboardPhotoMissing;
 
   static String get dashboardPhotoPending =>
-      _mr ? 'Photo pending' : 'Photo pending';
+      appText.dashboardPhotoPending;
 
   static String get dashboardPhotoApproved =>
-      _mr ? 'Photo approved' : 'Photo approved';
+      appText.dashboardPhotoApproved;
 
-  static String get dashboardViewMatches => _mr ? 'स्थळे पहा' : 'View Matches';
+  static String get dashboardViewMatches => appText.dashboardViewMatches;
 
-  static String get dashboardChangePlan => _mr ? 'प्लॅन बदला' : 'Change plan';
+  static String get dashboardChangePlan => appText.dashboardChangePlan;
 
   static String dashboardContactCreditsRemaining(int count) =>
       _mr ? 'Contact credits: $count शिल्लक' : 'Contact credits: $count left';
 
   static String get dashboardNextBestAction =>
-      _mr ? 'पुढचे योग्य पाऊल' : 'Next best action';
+      appText.dashboardNextBestAction;
 
   static String get dashboardCreateProfile =>
-      _mr ? 'प्रोफाइल तयार करा' : 'Create Profile';
+      appText.dashboardCreateProfile;
 
-  static String get dashboardCreateProfileSubtitle => _mr
-      ? 'Dashboard fallback: profile नसल्यास इथून onboarding सुरू करा.'
-      : 'Dashboard fallback: start onboarding if your profile is missing.';
+  static String get dashboardCreateProfileSubtitle => appText.dashboardCreateProfileSubtitle;
 
-  static String get dashboardUploadPhotoPrompt => _mr
-      ? 'Clear photo upload करा आणि जास्त प्रतिसाद मिळवा.'
-      : 'Upload a clear photo to get better responses.';
+  static String get dashboardUploadPhotoPrompt => appText.dashboardUploadPhotoPrompt;
 
-  static String get dashboardPhotoPendingSubtitle => _mr
-      ? 'तुमच्या photo verification ची स्थिती तपासा.'
-      : 'Check your photo verification status.';
+  static String get dashboardPhotoPendingSubtitle => appText.dashboardPhotoPendingSubtitle;
 
   static String get dashboardCompleteProfile =>
-      _mr ? 'Profile पूर्ण करा' : 'Complete Profile';
+      appText.dashboardCompleteProfile;
 
-  static String get dashboardCompleteProfileSubtitle => _mr
-      ? 'महत्त्वाची माहिती पूर्ण केल्यावर matching चांगले होते.'
-      : 'Complete key details to improve matching.';
+  static String get dashboardCompleteProfileSubtitle => appText.dashboardCompleteProfileSubtitle;
 
   static String get dashboardRespondInterests =>
-      _mr ? 'आलेल्या इंटरेस्टला उत्तर द्या' : 'Respond to Interests';
+      appText.dashboardRespondInterests;
 
-  static String get dashboardRespondInterestsSubtitle => _mr
-      ? 'Pending proposals पाहून accept/reject करा.'
-      : 'Review pending proposals and respond.';
+  static String get dashboardRespondInterestsSubtitle => appText.dashboardRespondInterestsSubtitle;
 
   static String get dashboardReplyMessages =>
-      _mr ? 'Messages ला reply द्या' : 'Reply to Messages';
+      appText.dashboardReplyMessages;
 
-  static String get dashboardReplyMessagesSubtitle => _mr
-      ? 'Unread chat तुमच्या प्रतिसादाची वाट पाहत आहे.'
-      : 'Unread chats are waiting for your response.';
+  static String get dashboardReplyMessagesSubtitle => appText.dashboardReplyMessagesSubtitle;
 
   static String get dashboardReviewContactRequests =>
-      _mr ? 'Contact requests तपासा' : 'Review Contact Requests';
+      appText.dashboardReviewContactRequests;
 
-  static String get dashboardReviewContactRequestsSubtitle => _mr
-      ? 'Pending contact requests सुरक्षितपणे review करा.'
-      : 'Review pending contact requests safely.';
+  static String get dashboardReviewContactRequestsSubtitle => appText.dashboardReviewContactRequestsSubtitle;
 
   static String get dashboardCheckNotifications =>
-      _mr ? 'सूचना तपासा' : 'Check Notifications';
+      appText.dashboardCheckNotifications;
 
-  static String get dashboardCheckNotificationsSubtitle => _mr
-      ? 'नवीन सूचना आणि updates पहा.'
-      : 'See new notifications and updates.';
+  static String get dashboardCheckNotificationsSubtitle => appText.dashboardCheckNotificationsSubtitle;
 
   static String get dashboardUpgradePlan =>
-      _mr ? 'Plan upgrade करा' : 'Upgrade Plan';
+      appText.dashboardUpgradePlan;
 
-  static String get dashboardUpgradePlanSubtitle => _mr
-      ? 'Contact unlock आणि premium benefits पाहा.'
-      : 'View contact unlocks and premium benefits.';
+  static String get dashboardUpgradePlanSubtitle => appText.dashboardUpgradePlanSubtitle;
 
-  static String get dashboardViewMatchesSubtitle => _mr
-      ? 'तुमच्यासाठी योग्य स्थळे पाहा.'
-      : 'Explore suitable profiles for you.';
+  static String get dashboardViewMatchesSubtitle => appText.dashboardViewMatchesSubtitle;
 
   static String get dashboardQuickActions =>
-      _mr ? 'क्विक लिंक्स' : 'Quick actions';
+      appText.dashboardQuickActions;
 
   static String get dashboardReadiness =>
-      _mr ? 'तुमची तयारी' : 'Profile readiness';
+      appText.dashboardReadiness;
 
-  static String get dashboardReadinessSubtitle => _mr
-      ? 'Fake percentage नाही; उपलब्ध माहितीवर आधारित checklist.'
-      : 'No fake percentage; checklist based on available data.';
+  static String get dashboardReadinessSubtitle => appText.dashboardReadinessSubtitle;
 
-  static String get dashboardReady => _mr ? 'पूर्ण' : 'Ready';
+  static String get dashboardReady => appText.dashboardReady;
 
   static String get dashboardNeedsAttention =>
-      _mr ? 'पूर्ण करणे बाकी' : 'Needs attention';
+      appText.dashboardNeedsAttention;
 
-  static String get dashboardAddNow => _mr ? 'Add now' : 'Add now';
+  static String get dashboardAddNow => appText.dashboardAddNow;
 
   static String get dashboardBasicDetails =>
-      _mr ? 'Basic details' : 'Basic details';
+      appText.dashboardBasicDetails;
 
-  static String get dashboardPhoto => _mr ? 'Photo' : 'Photo';
+  static String get dashboardPhoto => appText.dashboardPhoto;
 
   static String get dashboardLocationDetails =>
-      _mr ? 'Location details' : 'Location details';
+      appText.dashboardLocationDetails;
 
   static String get dashboardEducationCareer =>
-      _mr ? 'Education / Career' : 'Education / Career';
+      appText.dashboardEducationCareer;
 
   static String get dashboardPartnerPreference =>
-      _mr ? 'Partner Preference' : 'Partner Preference';
+      appText.dashboardPartnerPreference;
 
   static String get dashboardPlanContact =>
-      _mr ? 'Plan / Contact status' : 'Plan / Contact status';
+      appText.dashboardPlanContact;
 
   static String get dashboardActivity =>
-      _mr ? 'तुमची activity' : 'Your activity';
+      appText.dashboardActivity;
 
   static String get dashboardAccountTools =>
-      _mr ? 'इतर पर्याय' : 'Account tools';
+      appText.dashboardAccountTools;
 
-  static String get dashboardPlanToolSubtitle => _mr
-      ? 'Plan, payment आणि contact credits'
-      : 'Plans, payment and contact credits';
+  static String get dashboardPlanToolSubtitle => appText.dashboardPlanToolSubtitle;
 
   static String get dashboardListsToolSubtitle =>
-      _mr ? 'Shortlist, block आणि hidden list' : 'Shortlist, block and hidden';
+      appText.dashboardListsToolSubtitle;
 
   static String get dashboardSettingsToolSubtitle =>
-      _mr ? 'Privacy आणि notification preferences' : 'Privacy and preferences';
+      appText.dashboardSettingsToolSubtitle;
 
-  static String get featureNotAvailable => _mr
-      ? 'ही सुविधा सध्या उपलब्ध नाही.'
-      : 'This feature is not available right now.';
+  static String get featureNotAvailable => appText.featureNotAvailable;
 
-  static String get browseProfiles => _mr ? 'स्थळे' : 'Matches';
+  static String get browseProfiles => appText.bottomMatches;
 
-  static String get browseProfilesSubtitle => _mr
-      ? 'तुमच्यासाठी योग्य स्थळे शोधा'
-      : 'Explore suitable matrimony profiles';
+  static String get browseProfilesSubtitle => appText.browseProfilesSubtitle;
 
-  static String get matchesTabSearch => _mr ? 'शोध' : 'Search';
+  static String get matchesTabSearch => appText.matchesTabSearch;
 
-  static String get matchesTabNew => _mr ? 'नवीन' : 'New';
+  static String get matchesTabNew => appText.matchesTabNew;
 
-  static String get matchesTabDaily => _mr ? 'दैनिक' : 'Daily';
+  static String get matchesTabDaily => appText.matchesTabDaily;
 
   static String get matchesTabMyMatches =>
-      _mr ? 'माझी जुळणारी स्थळे' : 'My Matches';
+      appText.matchesTabMyMatches;
 
-  static String get matchesTabNearMe => _mr ? 'जवळची स्थळे' : 'Near Me';
+  static String get matchesTabNearMe => appText.matchesTabNearMe;
 
-  static String get matchesTabMore => _mr ? 'अधिक स्थळे' : 'More Matches';
+  static String get matchesTabMore => appText.matchesTabMore;
 
-  static String get matchesFilter => _mr ? 'फिल्टर' : 'Filters';
+  static String get matchesFilter => appText.matchesFilter;
 
   static String get matchesFilterHint =>
-      _mr ? 'वय, जात, ठिकाण निवडा' : 'Age, caste, location';
+      appText.matchesFilterHint;
 
-  static String get chooseLocationForNearMe => _mr
-      ? 'जवळची स्थळे पाहण्यासाठी location filter निवडा.'
-      : 'Choose a location filter to see nearby profiles.';
+  static String get chooseLocationForNearMe => appText.chooseLocationForNearMe;
 
   static String get chooseLocationFilter =>
-      _mr ? 'Location निवडा' : 'Choose location';
+      appText.chooseLocationFilter;
 
   static String get membersYouMayLike =>
-      _mr ? 'तुम्हाला आवडू शकणारी स्थळे' : 'Profiles you may like';
+      appText.membersYouMayLike;
 
   static String get moreProfilesYouMayLike =>
-      _mr ? 'आणखी योग्य स्थळे' : 'More suitable profiles';
+      appText.moreProfilesYouMayLike;
 
   static String get premiumProfiles =>
-      _mr ? 'Premium स्थळे' : 'Premium profiles';
+      appText.premiumProfiles;
 
   static String get premiumProfilesSubtitle =>
-      _mr ? 'सदस्यत्व असलेली निवडक स्थळे' : 'Selected premium profiles';
+      appText.premiumProfilesSubtitle;
 
   static String get profilesFromSearch =>
-      _mr ? 'तुमच्या सध्याच्या शोधातील स्थळे' : 'Profiles from your search';
+      appText.profilesFromSearch;
 
   static String moreMatchesSectionTitle(String key, String? targetGender) {
     final target = targetGender?.trim().toLowerCase();
@@ -358,156 +306,130 @@ class AppStrings {
         return 'Profiles you may like';
     }
 
-    return _mr ? 'अधिक स्थळे' : 'More Matches';
+    return appText.matchesTabMore;
   }
 
   static String moreMatchesSectionSubtitle(String key) {
     switch (key) {
       case 'looking_for_me':
-        return _mr
-            ? 'ज्यांच्या पसंतीशी तुमची माहिती जुळू शकते'
-            : 'Profiles whose preferences may match you';
+        return appText.profilesWhosePreferencesMayMatchYou;
       case 'recently_viewed':
-        return _mr
-            ? 'तुम्ही अलीकडे पाहिलेली स्थळे'
-            : 'Profiles you viewed recently';
+        return appText.profilesYouViewedRecently;
       case 'matching_my_preference':
-        return _mr
-            ? 'तुमच्या जोडीदार पसंतीवर आधारित'
-            : 'Based on your partner preferences';
+        return appText.basedOnYourPartnerPreferences;
       case 'nearby':
-        return _mr
-            ? 'तुमच्या ठिकाणाजवळील स्थळे'
-            : 'Profiles closer to your location';
+        return appText.profilesCloserToYourLocation;
       case 'recent_visitors':
-        return _mr
-            ? 'तुमचे profile कोणी पाहिले ते पहा'
-            : 'See who viewed your profile';
+        return appText.seeWhoViewedYourProfile;
       case 'you_may_like':
-        return _mr
-            ? 'तुमच्यासाठी सुचवलेली स्थळे'
-            : 'Suggested profiles for you';
+        return appText.suggestedProfilesForYou;
     }
 
     return '';
   }
 
   static String get upgradeToSeeVisitors =>
-      _mr ? 'भेट देणारे पाहण्यासाठी अपग्रेड करा' : 'Upgrade to see visitors';
+      appText.upgradeToSeeVisitors;
 
-  static String get recentVisitorsEmpty => _mr
-      ? 'दाखवण्यासाठी योग्य अलीकडील भेटी अजून नाहीत.'
-      : 'No eligible recent visitors to show yet.';
+  static String get recentVisitorsEmpty => appText.recentVisitorsEmpty;
 
-  static String get upgrade => _mr ? 'अपग्रेड करा' : 'Upgrade';
+  static String get upgrade => appText.upgrade;
 
-  static String get bottomHome => _mr ? 'होम' : 'Home';
+  static String get bottomHome => appText.bottomHome;
 
-  static String get bottomMatches => _mr ? 'स्थळे' : 'Matches';
+  static String get bottomMatches => appText.bottomMatches;
 
-  static String get bottomConnect => _mr ? 'कनेक्ट' : 'Connect';
+  static String get bottomConnect => appText.bottomConnect;
 
-  static String get bottomChat => _mr ? 'चॅट' : 'Chat';
+  static String get bottomChat => appText.chatMenu;
 
-  static String get connectReceived => _mr ? 'आलेले' : 'Received';
+  static String get connectReceived => appText.connectReceived;
 
-  static String get connectSent => _mr ? 'पाठवलेले' : 'Sent';
+  static String get connectSent => appText.connectSent;
 
-  static String get connectContactRequests => _mr ? 'कॉन्टॅक्ट' : 'Contact';
+  static String get connectContactRequests => appText.connectContactRequests;
 
-  static String get connectUpgrade => _mr ? 'अपग्रेड' : 'Upgrade';
+  static String get connectUpgrade => appText.connectUpgrade;
 
   static String get contactRequests =>
-      _mr ? 'कॉन्टॅक्ट रिक्वेस्ट' : 'Contact Requests';
+      appText.contactRequests;
 
-  static String get plansTitle => _mr ? 'प्लॅन्स' : 'Plans';
+  static String get plansTitle => appText.plansTitle;
 
   static String get plansUpgradeMenu =>
-      _mr ? 'प्लॅन / अपग्रेड' : 'Plans / Upgrade';
+      appText.plansUpgradeMenu;
 
-  static String get plansCurrentPlan => _mr ? 'सध्याचा प्लॅन' : 'Current plan';
+  static String get plansCurrentPlan => appText.plansCurrentPlan;
 
   static String get plansAvailablePlans =>
-      _mr ? 'उपलब्ध प्लॅन्स' : 'Available plans';
+      appText.plansAvailablePlans;
 
-  static String get plansRefresh => _mr ? 'रिफ्रेश' : 'Refresh';
+  static String get plansRefresh => appText.plansRefresh;
 
-  static String get plansChoose => _mr ? 'निवडा' : 'Choose';
+  static String get plansChoose => appText.plansChoose;
 
   static String get plansOpeningCheckout =>
-      _mr ? 'Checkout उघडत आहे...' : 'Opening checkout...';
+      appText.plansOpeningCheckout;
 
-  static String get plansEmpty => _mr
-      ? 'सध्या upgrade साठी कोणताही प्लॅन उपलब्ध नाही.'
-      : 'No upgrade plan is available right now.';
+  static String get plansEmpty => appText.plansEmpty;
 
   static String get plansNoCurrentPlan =>
-      _mr ? 'सध्याचा प्लॅन उपलब्ध नाही' : 'Current plan is not available';
+      appText.plansNoCurrentPlan;
 
   static String get plansContactQuota =>
-      _mr ? 'Contact unlock quota' : 'Contact unlock quota';
+      appText.plansContactQuota;
 
-  static String get plansRemaining => _mr ? 'शिल्लक' : 'remaining';
+  static String get plansRemaining => appText.plansRemaining;
 
-  static String get plansManualRefreshHint => _mr
-      ? 'Payment पूर्ण झाल्यावर app मध्ये परत येऊन Refresh करा.'
-      : 'After payment, return to the app and tap Refresh.';
+  static String get plansManualRefreshHint => appText.plansManualRefreshHint;
 
-  static String get plansBrowserNote => _mr
-      ? 'Checkout browser मध्ये उघडले आहे. Payment status Laravel कडून update होईल.'
-      : 'Checkout opened in the browser. Payment status will update from Laravel.';
+  static String get plansBrowserNote => appText.plansBrowserNote;
 
-  static String get plansCheckoutUrlMissing => _mr
-      ? 'Checkout link backend कडून मिळाला नाही.'
-      : 'Checkout link was not returned by the backend.';
+  static String get plansCheckoutUrlMissing => appText.plansCheckoutUrlMissing;
 
-  static String get plansOpenFailedCopied => _mr
-      ? 'Browser उघडू शकला नाही. Checkout link clipboard मध्ये copy केला.'
-      : 'Could not open the browser. Checkout link was copied to the clipboard.';
+  static String get plansOpenFailedCopied => appText.plansOpenFailedCopied;
 
   static String get plansLoadFailed =>
-      _mr ? 'Plans load झाले नाहीत.' : 'Plans could not be loaded.';
+      appText.plansLoadFailed;
 
   static String get plansFreeOrLocked =>
-      _mr ? 'Free / locked state' : 'Free / locked state';
+      appText.plansFreeOrLocked;
 
   static String get plansActiveSubscription =>
-      _mr ? 'Active subscription' : 'Active subscription';
+      appText.plansActiveSubscription;
 
   static String get biodataExportTitle =>
-      _mr ? 'बायोडाटा एक्सपोर्ट' : 'Biodata Export';
+      appText.biodataExportMenu;
 
   static String get biodataExportMenu =>
-      _mr ? 'बायोडाटा एक्सपोर्ट' : 'Biodata Export';
+      appText.biodataExportMenu;
 
   static String get biodataPrintAction =>
-      _mr ? 'बायोडाटा / प्रिंट' : 'Biodata / Print';
+      appText.biodataPrintAction;
 
-  static String get biodataExportSubtitle => _mr
-      ? 'तुमचा स्वतःचा बायोडाटा PDF म्हणून download किंवा share करा.'
-      : 'Download or share your own biodata as a PDF.';
+  static String get biodataExportSubtitle => appText.biodataExportSubtitle;
 
   static String get biodataExportTemplate =>
-      _mr ? 'Template निवडा' : 'Choose template';
+      appText.biodataExportTemplate;
 
   static String get biodataTemplateDesignPreview =>
-      _mr ? 'डिझाइन preview' : 'Design preview';
+      appText.biodataTemplateDesignPreview;
 
-  static String get biodataTemplateWithPhoto => _mr ? 'फोटोसह' : 'With photo';
+  static String get biodataTemplateWithPhoto => appText.biodataTemplateWithPhoto;
 
-  static String get biodataTemplateNoPhoto => _mr ? 'फोटोशिवाय' : 'No photo';
+  static String get biodataTemplateNoPhoto => appText.biodataTemplateNoPhoto;
 
-  static String get biodataTemplatePremium => _mr ? 'प्रिमियम' : 'Premium';
+  static String get biodataTemplatePremium => appText.biodataTemplatePremium;
 
-  static String get biodataTemplateLocked => _mr ? 'लॉक' : 'Locked';
+  static String get biodataTemplateLocked => appText.biodataTemplateLocked;
 
   static String biodataTemplateOrientation(String orientation) {
     final normalized = orientation.trim().toLowerCase();
     if (normalized == 'landscape') {
-      return _mr ? 'A4 आडवा' : 'A4 Landscape';
+      return appText.a4Landscape;
     }
 
-    return _mr ? 'A4 उभा' : 'A4 Portrait';
+    return appText.a4Portrait;
   }
 
   static String biodataTemplateLabel(String key, String fallback) {
@@ -547,83 +469,65 @@ class AppStrings {
   }
 
   static String get biodataExportFormat =>
-      _mr ? 'Format निवडा' : 'Choose format';
+      appText.biodataExportFormat;
 
   static String get biodataExportPdf => 'PDF';
 
   static String get biodataExportJpg => 'JPG';
 
-  static String get biodataExportDownload => _mr ? 'Download करा' : 'Download';
+  static String get biodataExportDownload => appText.biodataExportDownload;
 
-  static String get biodataExportShare => _mr ? 'Share करा' : 'Share';
+  static String get biodataExportShare => appText.biodataExportShare;
 
   static String get biodataExportWarnings =>
-      _mr ? 'पूर्णता सूचना' : 'Completeness warnings';
+      appText.biodataExportWarnings;
 
-  static String get biodataExportLoadFailed => _mr
-      ? 'बायोडाटा export options load झाले नाहीत.'
-      : 'Biodata export options could not be loaded.';
+  static String get biodataExportLoadFailed => appText.biodataExportLoadFailed;
 
   static String get biodataExportFailed =>
-      _mr ? 'बायोडाटा export तयार झाला नाही.' : 'Biodata export failed.';
+      appText.biodataExportFailed;
 
-  static String get biodataExportUnavailable => _mr
-      ? 'बायोडाटा export सध्या उपलब्ध नाही.'
-      : 'Biodata export is not available right now.';
+  static String get biodataExportUnavailable => appText.biodataExportUnavailable;
 
-  static String get biodataExportLinkMissing => _mr
-      ? 'Backend कडून download link मिळाली नाही.'
-      : 'The backend did not return a download link.';
+  static String get biodataExportLinkMissing => appText.biodataExportLinkMissing;
 
-  static String get biodataExportBrowserOpened => _mr
-      ? 'Biodata browser मध्ये उघडले आहे.'
-      : 'Biodata opened in the browser.';
+  static String get biodataExportBrowserOpened => appText.biodataExportBrowserOpened;
 
-  static String get biodataExportOpenFailedCopied => _mr
-      ? 'Browser उघडू शकला नाही. Link clipboard मध्ये copy केली.'
-      : 'Could not open the browser. Link copied to clipboard.';
+  static String get biodataExportOpenFailedCopied => appText.biodataExportOpenFailedCopied;
 
   static String get biodataExportShared =>
-      _mr ? 'Biodata share link तयार आहे.' : 'Biodata share link is ready.';
+      appText.biodataExportShared;
 
-  static String get biodataExportLinkExpires => _mr
-      ? 'Share/download link थोड्या वेळासाठीच valid असते.'
-      : 'Share/download links are valid for a short time.';
+  static String get biodataExportLinkExpires => appText.biodataExportLinkExpires;
 
   static String get biodataGeneratedTitle =>
-      _mr ? 'Generated biodata तयार आहे' : 'Generated biodata is ready';
+      appText.biodataGeneratedTitle;
 
-  static String get biodataGeneratedSubtitle => _mr
-      ? 'Preview, download किंवा share करण्यासाठी हा link वापरा.'
-      : 'Use this link to preview, download, or share the generated biodata.';
+  static String get biodataGeneratedSubtitle => appText.biodataGeneratedSubtitle;
 
   static String get biodataPreviewAction =>
-      _mr ? 'Preview उघडा' : 'Open preview';
+      appText.biodataPreviewAction;
 
-  static String get biodataCopyLink => _mr ? 'Link copy करा' : 'Copy link';
+  static String get biodataCopyLink => appText.biodataCopyLink;
 
   static String get biodataLinkCopied =>
-      _mr ? 'Biodata link clipboard मध्ये copy केली.' : 'Biodata link copied.';
+      appText.biodataLinkCopied;
 
   static String get biodataExpiresAt =>
-      _mr ? 'Link valid until' : 'Link valid until';
+      appText.biodataExpiresAt;
 
   static String get biodataIntakeTitle =>
-      _mr ? 'बायोडाटा इंटेक' : 'Biodata Intake';
+      appText.biodataIntakeMenu;
 
   static String get biodataIntakeMenu =>
-      _mr ? 'बायोडाटा इंटेक' : 'Biodata Intake';
+      appText.biodataIntakeMenu;
 
-  static String get biodataIntakeSubtitle => _mr
-      ? 'फोटोमधून माहिती वाचून profile draft तयार करा.'
-      : 'Read biodata photo text and prepare a profile draft.';
+  static String get biodataIntakeSubtitle => appText.biodataIntakeSubtitle;
 
   static String get biodataIntakeIntroTitle =>
-      _mr ? 'बायोडाटा फोटो निवडा' : 'Choose a biodata photo';
+      appText.biodataIntakeIntroTitle;
 
-  static String get biodataIntakeIntroSubtitle => _mr
-      ? 'Clear फोटो किंवा screenshot द्या. App text वाचून पुढच्या screen वर edit करण्यासाठी माहिती भरून दाखवेल.'
-      : 'Use a clear photo or screenshot. The app will read the text and show editable details on the next screen.';
+  static String get biodataIntakeIntroSubtitle => appText.biodataIntakeIntroSubtitle;
 
   static List<String> get biodataIntakeProcessingMessages => _mr
       ? <String>[
@@ -640,243 +544,211 @@ class AppStrings {
         ];
 
   static String get biodataIntakeReviewTitle =>
-      _mr ? 'माहिती तपासा' : 'Review details';
+      appText.biodataIntakeReviewTitle;
 
-  static String get biodataIntakeReviewSubtitle => _mr
-      ? 'चुकलेली माहिती edit करा आणि मग save करा.'
-      : 'Edit anything that looks wrong, then save.';
+  static String get biodataIntakeReviewSubtitle => appText.biodataIntakeReviewSubtitle;
 
   static String get biodataIntakeQualitySignals =>
-      _mr ? 'गुणवत्ता संकेत' : 'Quality signals';
+      appText.biodataIntakeQualitySignals;
 
   static String get biodataIntakeLowConfidence =>
-      _mr ? 'कमी विश्वास' : 'Low confidence';
+      appText.biodataIntakeLowConfidence;
 
   static String get biodataIntakeCheckLowConfidenceFields =>
-      _mr ? 'कृपया ही माहिती नीट तपासा' : 'Please check these fields carefully';
+      appText.biodataIntakeCheckLowConfidenceFields;
 
   static String get biodataIntakeFailureCodes =>
-      _mr ? 'त्रुटी संकेत' : 'Failure codes';
+      appText.biodataIntakeFailureCodes;
 
   static String get biodataIntakeOverallQuality =>
-      _mr ? 'एकूण गुणवत्ता' : 'Overall quality';
+      appText.biodataIntakeOverallQuality;
 
   static String get biodataIntakeExtractedText =>
-      _mr ? 'Autofill साठी वापरलेला मजकूर' : 'Biodata text used for autofill';
+      appText.biodataIntakeExtractedText;
 
   static String get biodataIntakeConfirmSave =>
-      _mr ? 'Confirm & Save' : 'Confirm & Save';
+      appText.biodataIntakeConfirmSave;
 
   static String get biodataIntakeSaveReview =>
-      _mr ? 'Review save करा' : 'Save review';
+      appText.biodataIntakeSaveReview;
 
   static String get biodataIntakeTryAnother =>
-      _mr ? 'दुसरा फोटो' : 'Another photo';
+      appText.biodataIntakeTryAnother;
 
-  static String get biodataIntakeNoReadableText => _mr
-      ? 'या फोटोमधून पुरेसा text वाचता आला नाही. कृपया clear, सरळ आणि उजेडातला फोटो वापरा.'
-      : 'Could not read enough text from this photo. Please use a clearer, straight, well-lit photo.';
+  static String get biodataIntakeNoReadableText => appText.biodataIntakeNoReadableText;
 
-  static String get biodataIntakeProcessFailed => _mr
-      ? 'बायोडाटा प्रोसेस करता आला नाही. पुन्हा प्रयत्न करा.'
-      : 'Biodata could not be processed. Please try again.';
+  static String get biodataIntakeProcessFailed => appText.biodataIntakeProcessFailed;
 
-  static String get biodataIntakeSaveSuccess => _mr
-      ? 'माहिती save झाली. Profile update झाले.'
-      : 'Details saved. Profile has been updated.';
+  static String get biodataIntakeSaveSuccess => appText.biodataIntakeSaveSuccess;
 
-  static String get biodataIntakeSavePending => _mr
-      ? 'माहिती review साठी save झाली आहे.'
-      : 'Details have been saved for review.';
+  static String get biodataIntakeSavePending => appText.biodataIntakeSavePending;
 
   static String get biodataIntakeSaveFailed =>
-      _mr ? 'माहिती save करता आली नाही.' : 'Details could not be saved.';
+      appText.biodataIntakeSaveFailed;
 
-  static String get biodataIntakeReviewSaveSuccess => _mr
-      ? 'Review save झाला. Approve वेगळे करावे लागेल.'
-      : 'Review saved. Approval is still separate.';
+  static String get biodataIntakeReviewSaveSuccess => appText.biodataIntakeReviewSaveSuccess;
 
   static String get biodataIntakeReviewSaveFailed =>
-      _mr ? 'Review save करता आला नाही.' : 'Review could not be saved.';
+      appText.biodataIntakeReviewSaveFailed;
 
-  static String get biodataIntakeAlreadyApprovedLocked => _mr
-      ? 'ही बायोडाटा माहिती आधीच मंजूर झाली आहे. येथे बदल करता येणार नाहीत.'
-      : 'This biodata is already approved and cannot be edited here.';
+  static String get biodataIntakeAlreadyApprovedLocked => appText.biodataIntakeAlreadyApprovedLocked;
 
-  static String get biodataIntakeFieldsEmpty => _mr
-      ? 'System ने structured fields ओळखले नाहीत. खालील text तपासा आणि clear photo वापरून पुन्हा प्रयत्न करा.'
-      : 'No structured fields were detected. Check the text below and try again with a clearer photo.';
+  static String get biodataIntakeFieldsEmpty => appText.biodataIntakeFieldsEmpty;
 
   static String get biodataIntakeOpenProfile =>
-      _mr ? 'Profile पहा' : 'View Profile';
+      appText.biodataIntakeOpenProfile;
 
-  static String get notificationsTitle => _mr ? 'सूचना' : 'Notifications';
+  static String get notificationsTitle => appText.settingsNotifications;
 
   static String get notificationsEmpty =>
-      _mr ? 'सध्या कोणतीही सूचना नाही.' : 'No notifications yet.';
+      appText.notificationsEmpty;
 
   static String get notificationsLoadFailed =>
-      _mr ? 'सूचना load झाल्या नाहीत.' : 'Notifications could not be loaded.';
+      appText.notificationsLoadFailed;
 
   static String get notificationsMarkAllRead =>
-      _mr ? 'सर्व वाचले' : 'Mark all read';
+      appText.notificationsMarkAllRead;
 
-  static String get notificationsUnread => _mr ? 'न वाचलेल्या' : 'Unread';
+  static String get notificationsUnread => appText.notificationsUnread;
 
-  static String get notificationsRead => _mr ? 'वाचले' : 'Read';
+  static String get notificationsRead => appText.notificationsRead;
 
-  static String get notificationsOpenFailed => _mr
-      ? 'ही सूचना app मध्ये उघडण्यासाठी route उपलब्ध नाही.'
-      : 'This notification does not have an app action.';
+  static String get notificationsOpenFailed => appText.notificationsOpenFailed;
 
-  static String get notificationsSoon => _mr
-      ? 'सूचना लवकरच app मध्ये येतील.'
-      : 'Notifications will be available soon.';
+  static String get notificationsSoon => appText.notificationsSoon;
 
-  static String get settingsTitle => _mr ? 'सेटिंग्ज' : 'Settings';
+  static String get settingsTitle => appText.settingsTitle;
 
   static String get settingsAccountSummary =>
-      _mr ? 'अकाउंट माहिती' : 'Account summary';
+      appText.settingsAccountSummary;
 
-  static String get settingsPrivacy => _mr ? 'गोपनीयता' : 'Privacy';
+  static String get settingsPrivacy => appText.settingsPrivacy;
 
   static String get settingsCommunication =>
-      _mr ? 'संपर्क प्राधान्ये' : 'Communication';
+      appText.settingsCommunication;
 
-  static String get settingsNotifications => _mr ? 'सूचना' : 'Notifications';
+  static String get settingsNotifications => appText.settingsNotifications;
 
-  static String get settingsSecurity => _mr ? 'सुरक्षा' : 'Security';
+  static String get settingsSecurity => appText.settingsSecurity;
 
-  static String get settingsSave => _mr ? 'सेव्ह करा' : 'Save';
+  static String get settingsSave => appText.settingsSave;
 
   static String get settingsSaved =>
-      _mr ? 'सेटिंग्ज सेव्ह झाल्या.' : 'Settings saved.';
+      appText.settingsSaved;
 
   static String get settingsLoadFailed =>
-      _mr ? 'सेटिंग्ज load झाल्या नाहीत.' : 'Settings could not be loaded.';
+      appText.settingsLoadFailed;
 
-  static String get settingsNoProfile => _mr
-      ? 'प्रोफाइल पूर्ण केल्यानंतर या सेटिंग्ज उपलब्ध होतील.'
-      : 'These settings will be available after your profile is complete.';
+  static String get settingsNoProfile => appText.settingsNoProfile;
 
-  static String get settingsReadOnly => _mr ? 'फक्त पाहण्यासाठी' : 'Read only';
+  static String get settingsReadOnly => appText.settingsReadOnly;
 
   static String get settingsNotAvailable =>
-      _mr ? 'उपलब्ध नाही' : 'Not available';
+      appText.settingsNotAvailable;
 
   static String get profileListsTitle =>
-      _mr ? 'शॉर्टलिस्ट / ब्लॉक' : 'Shortlist / Blocked';
+      appText.profileListsMenu;
 
   static String get profileListsMenu =>
-      _mr ? 'शॉर्टलिस्ट / ब्लॉक' : 'Shortlist / Blocked';
+      appText.profileListsMenu;
 
-  static String get profileListsShortlist => _mr ? 'शॉर्टलिस्ट' : 'Shortlist';
+  static String get profileListsShortlist => appText.profileListsShortlist;
 
-  static String get profileListsBlocked => _mr ? 'ब्लॉक केलेले' : 'Blocked';
+  static String get profileListsBlocked => appText.profileListsBlocked;
 
-  static String get profileListsHidden => _mr ? 'लपवलेले' : 'Hidden';
+  static String get profileListsHidden => appText.profileListsHidden;
 
-  static String get profileListsLoadFailed => _mr
-      ? 'प्रोफाइल यादी load झाली नाही.'
-      : 'Profile list could not be loaded.';
+  static String get profileListsLoadFailed => appText.profileListsLoadFailed;
 
   static String get noShortlistedProfiles =>
-      _mr ? 'अजून कोणतीही shortlist नाही.' : 'No shortlisted profiles yet.';
+      appText.noShortlistedProfiles;
 
   static String get noBlockedProfiles =>
-      _mr ? 'कोणतेही blocked profiles नाहीत.' : 'No blocked profiles.';
+      appText.noBlockedProfiles;
 
   static String get noHiddenProfiles =>
-      _mr ? 'कोणतेही hidden profiles नाहीत.' : 'No hidden profiles.';
+      appText.noHiddenProfiles;
 
   static String get removeFromShortlist =>
-      _mr ? 'Shortlist मधून काढा' : 'Remove from shortlist';
+      appText.removeFromShortlist;
 
-  static String get unblockProfile => _mr ? 'Unblock करा' : 'Unblock';
+  static String get unblockProfile => appText.unblockProfile;
 
-  static String get unhideProfile => _mr ? 'Unhide करा' : 'Unhide';
+  static String get unhideProfile => appText.unhideProfile;
 
   static String get profileRemovedFromShortlist =>
-      _mr ? 'Profile shortlist मधून काढले.' : 'Profile removed from shortlist.';
+      appText.profileRemovedFromShortlist;
 
   static String get profileUnblocked =>
-      _mr ? 'Profile unblock केले.' : 'Profile unblocked.';
+      appText.profileUnblocked;
 
   static String get profileUnhidden =>
-      _mr ? 'Profile unhide केले.' : 'Profile unhidden.';
+      appText.profileUnhidden;
 
-  static String get profileOpenNotAllowed => _mr
-      ? 'हे profile सध्या उघडता येत नाही.'
-      : 'This profile cannot be opened right now.';
+  static String get profileOpenNotAllowed => appText.profileOpenNotAllowed;
 
-  static String get confirmAction => _mr ? 'Confirm करा' : 'Confirm';
+  static String get confirmAction => appText.confirmAction;
 
-  static String get cancel => _mr ? 'रद्द करा' : 'Cancel';
+  static String get cancel => appText.cancel;
 
-  static String get retry => _mr ? 'पुन्हा प्रयत्न करा' : 'Retry';
+  static String get retry => appText.retry;
 
   static String get gunamilanTitle =>
-      _mr ? 'गुणमिलन / पत्रिका जुळवणी' : 'Gunamilan / Horoscope Match';
+      appText.gunamilanTitle;
 
   static String get gunamilanScore =>
-      _mr ? 'गुणमिलन स्कोअर' : 'Gunamilan score';
+      appText.gunamilanScore;
 
   static String get gunamilanIncomplete =>
-      _mr ? 'पत्रिका माहिती अपूर्ण आहे.' : 'Horoscope data is incomplete.';
+      appText.gunamilanIncomplete;
 
-  static String get gunamilanViewDetails => _mr ? 'तपशील पहा' : 'View details';
+  static String get gunamilanViewDetails => appText.gunamilanViewDetails;
 
-  static String get gunamilanHideDetails => _mr ? 'तपशील लपवा' : 'Hide details';
+  static String get gunamilanHideDetails => appText.gunamilanHideDetails;
 
-  static String get gunamilanDisclaimer => _mr
-      ? 'गुणमिलन हा फक्त compatibility reference आहे. अंतिम निर्णय कुटुंबीयांनी चर्चा करून घ्यावा.'
-      : 'Gunamilan is only a compatibility reference. Families should make the final decision after discussion.';
+  static String get gunamilanDisclaimer => appText.gunamilanDisclaimer;
 
-  static String get chatComingSoon => _mr
-      ? 'Chat सुविधा लवकरच app मध्ये येईल.'
-      : 'Chat will be available in the app soon.';
+  static String get chatComingSoon => appText.chatComingSoon;
 
-  static String get chatTitle => _mr ? 'चॅट' : 'Chat';
+  static String get chatTitle => appText.chatMenu;
 
-  static String get chatInbox => _mr ? 'चॅट इनबॉक्स' : 'Chat Inbox';
+  static String get chatInbox => appText.chatInbox;
 
-  static String get chatMenu => _mr ? 'चॅट' : 'Chat';
+  static String get chatMenu => appText.chatMenu;
 
-  static String get chatAll => _mr ? 'सर्व' : 'All';
+  static String get chatAll => appText.chatAll;
 
-  static String get chatUnread => _mr ? 'न वाचलेले' : 'Unread';
+  static String get chatUnread => appText.chatUnread;
 
-  static String get chatRequests => _mr ? 'रिक्वेस्ट' : 'Requests';
+  static String get chatRequests => appText.chatRequests;
 
   static String get chatEmpty =>
-      _mr ? 'अजून कोणतीही chat नाही.' : 'No chats yet.';
+      appText.chatEmpty;
 
   static String get chatLoadFailed =>
-      _mr ? 'Chat load झाली नाही.' : 'Chat could not be loaded.';
+      appText.chatLoadFailed;
 
   static String get chatMessageHint =>
-      _mr ? 'Message लिहा...' : 'Type a message...';
+      appText.chatMessageHint;
 
-  static String get chatSend => _mr ? 'पाठवा' : 'Send';
+  static String get chatSend => appText.chatSend;
 
   static String get chatOpenFailed =>
-      _mr ? 'Chat उघडता आली नाही.' : 'Chat could not be opened.';
+      appText.chatOpenFailed;
 
   static String get chatSendFailed =>
-      _mr ? 'Message पाठवता आला नाही.' : 'Message could not be sent.';
+      appText.chatSendFailed;
 
-  static String get chatReadLocked => _mr
-      ? 'हा message वाचण्यासाठी upgrade आवश्यक असू शकते.'
-      : 'Upgrade may be required to read this message.';
+  static String get chatReadLocked => appText.chatReadLocked;
 
   static String get chatUpgradeToRead =>
-      _mr ? 'वाचण्यासाठी अपग्रेड करा' : 'Upgrade to read';
+      appText.chatUpgradeToRead;
 
   static String get likeThisProfile =>
-      _mr ? 'हे स्थळ आवडले?' : 'Like this profile?';
+      appText.likeThisProfile;
 
   static String get photoUnavailable =>
-      _mr ? 'फोटो उपलब्ध नाही' : 'Photo not available';
+      appText.photoUnavailable;
 
   static String comparisonLabel(String label) {
     if (!_mr) return label;
@@ -947,13 +819,13 @@ class AppStrings {
 
   static String comparisonPreferenceGroup(String groupKey) {
     return switch (groupKey) {
-      'basic' => _mr ? 'मूलभूत अपेक्षा' : 'Basic Preferences',
-      'religious' => _mr ? 'धार्मिक अपेक्षा' : 'Religious Preferences',
+      'basic' => appText.basicPreferences,
+      'religious' => appText.religiousPreferences,
       'professional' =>
-        _mr ? 'शिक्षण / करिअर अपेक्षा' : 'Professional Preferences',
-      'location' => _mr ? 'ठिकाण अपेक्षा' : 'Location Preferences',
-      'lifestyle' => _mr ? 'जीवनशैली अपेक्षा' : 'Lifestyle Preferences',
-      _ => _mr ? 'इतर अपेक्षा' : 'Other Preferences',
+        appText.professionalPreferences,
+      'location' => appText.locationPreferences,
+      'lifestyle' => appText.lifestylePreferences,
+      _ => appText.otherPreferences,
     };
   }
 
@@ -971,11 +843,11 @@ class AppStrings {
   }
 
   static String get comparisonValueUnknown =>
-      _mr ? 'माहिती नाही' : 'Not specified';
+      appText.comparisonValueUnknown;
 
-  static String get comparisonViewAll => _mr ? 'सर्व पहा' : 'View all';
+  static String get comparisonViewAll => appText.comparisonViewAll;
 
-  static String get comparisonShowLess => _mr ? 'कमी दाखवा' : 'Show less';
+  static String get comparisonShowLess => appText.comparisonShowLess;
 
   static String _comparisonPreferenceSubject(String label) {
     final normalized = label.trim().toLowerCase();
@@ -984,136 +856,124 @@ class AppStrings {
     return 'profile';
   }
 
-  static String get myProfile => _mr ? 'माझे प्रोफाइल' : 'My Profile';
+  static String get myProfile => appText.myProfile;
 
   static String get myProfileSubtitle =>
-      _mr ? 'तुमची प्रोफाइल माहिती पहा' : 'View your matrimony profile';
+      appText.myProfileSubtitle;
 
   static String get editProfile =>
-      _mr ? 'प्रोफाइल अपडेट करा' : 'Update Profile';
+      appText.editProfile;
 
-  static String get uploadPhoto => _mr ? 'फोटो अपलोड करा' : 'Upload Photo';
+  static String get uploadPhoto => appText.uploadPhoto;
 
   static String get uploadPhotoSubtitle =>
-      _mr ? 'प्रोफाइलसाठी फोटो अपडेट करा' : 'Update your profile photo';
+      appText.uploadPhotoSubtitle;
 
   static String get photosVerification =>
-      _mr ? 'फोटो / पडताळणी' : 'Photos / Verification';
+      appText.photosVerification;
 
-  static String get photosVerificationSubtitle => _mr
-      ? 'फोटो gallery आणि verification status पहा'
-      : 'Manage gallery and verification status';
+  static String get photosVerificationSubtitle => appText.photosVerificationSubtitle;
 
   static String get photoGalleryEmpty =>
-      _mr ? 'अजून photo upload केलेले नाहीत.' : 'No photos uploaded yet.';
+      appText.photoGalleryEmpty;
 
-  static String get addPhotos => _mr ? 'फोटो जोडा' : 'Add photos';
+  static String get addPhotos => appText.addPhotos;
 
-  static String get photoUploadHelp => _mr
-      ? 'Clear face, single person आणि चांगल्या light मधला photo upload करा.'
-      : 'Upload a clear, single-person photo in good light.';
+  static String get photoUploadHelp => appText.photoUploadHelp;
 
   static String photoSlotsRemaining(int count) =>
       _mr ? '$count photo slots बाकी आहेत' : '$count photo slots remaining';
 
-  static String get camera => _mr ? 'Camera' : 'Camera';
+  static String get camera => appText.camera;
 
-  static String get gallery => _mr ? 'Gallery' : 'Gallery';
+  static String get gallery => appText.gallery;
 
-  static String get yourPhotos => _mr ? 'तुमचे फोटो' : 'Your photos';
+  static String get yourPhotos => appText.yourPhotos;
 
-  static String get selectedPhoto => _mr ? 'Selected photo' : 'Selected photo';
+  static String get selectedPhoto => appText.selectedPhoto;
 
-  static String get replacePhoto => _mr ? 'Photo बदला' : 'Replace photo';
+  static String get replacePhoto => appText.replacePhoto;
 
-  static String get setPrimary => _mr ? 'Primary करा' : 'Set primary';
+  static String get setPrimary => appText.setPrimary;
 
-  static String get deletePhoto => _mr ? 'फोटो delete करा' : 'Delete photo';
+  static String get deletePhoto => appText.deletePhoto;
 
-  static String get moveLeft => _mr ? 'डावीकडे' : 'Move left';
+  static String get moveLeft => appText.moveLeft;
 
-  static String get moveRight => _mr ? 'उजवीकडे' : 'Move right';
+  static String get moveRight => appText.moveRight;
 
-  static String get primaryPhoto => _mr ? 'Primary' : 'Primary';
+  static String get primaryPhoto => appText.primaryPhoto;
 
-  static String get photoManagementHint => _mr
-      ? 'खालील thumbnail निवडा आणि त्या photo साठी action करा.'
-      : 'Select a thumbnail below, then manage that photo.';
+  static String get photoManagementHint => appText.photoManagementHint;
 
-  static String get photoDeleteConfirm => _mr
-      ? 'हा photo profile मधून काढायचा आहे का?'
-      : 'Remove this photo from your profile?';
+  static String get photoDeleteConfirm => appText.photoDeleteConfirm;
 
-  static String get delete => _mr ? 'Delete' : 'Delete';
+  static String get delete => appText.delete;
 
-  static String get refresh => _mr ? 'Refresh' : 'Refresh';
+  static String get refresh => appText.refresh;
 
-  static String get uploading => _mr ? 'Uploading...' : 'Uploading...';
+  static String get uploading => appText.uploading;
 
   static String get verificationStatus =>
-      _mr ? 'पडताळणी स्थिती' : 'Verification status';
+      appText.verificationStatus;
 
   static String get sentInterests =>
-      _mr ? 'पाठवलेले इंटरेस्ट' : 'Sent Interests';
+      appText.sentInterests;
 
   static String get sentInterestsSubtitle =>
-      _mr ? 'तुम्ही पाठवलेले इंटरेस्ट पहा' : 'View interests you have sent';
+      appText.sentInterestsSubtitle;
 
   static String get receivedInterests =>
-      _mr ? 'आलेले इंटरेस्ट' : 'Received Interests';
+      appText.receivedInterests;
 
-  static String get receivedInterestsSubtitle => _mr
-      ? 'आलेले इंटरेस्ट पहा आणि प्रतिसाद द्या'
-      : 'View and respond to received interests';
+  static String get receivedInterestsSubtitle => appText.receivedInterestsSubtitle;
 
-  static String get logout => _mr ? 'लॉगआउट' : 'Logout';
+  static String get logout => appText.logout;
 
   static String get interestStatistics =>
-      _mr ? 'इंटरेस्ट स्थिती' : 'Interest Statistics';
+      appText.interestStatistics;
 
-  static String get total => _mr ? 'एकूण' : 'Total';
+  static String get total => appText.total;
 
-  static String get pending => _mr ? 'प्रलंबित' : 'Pending';
+  static String get pending => appText.pending;
 
-  static String get accepted => _mr ? 'स्वीकारले' : 'Accepted';
+  static String get accepted => appText.accepted;
 
-  static String get rejected => _mr ? 'नाकारले' : 'Rejected';
+  static String get rejected => appText.rejected;
 
-  static String get loading => _mr ? 'लोड होत आहे...' : 'Loading...';
+  static String get loading => appText.loading;
 
-  static String get profile => _mr ? 'प्रोफाइल' : 'Profile';
+  static String get profile => appText.profile;
 
-  static String get profileType => _mr ? 'प्रोफाइल प्रकार' : 'Profile type';
+  static String get profileType => appText.profileType;
 
-  static String get brideGroom => _mr ? 'वधू / वर' : 'Bride / Groom';
+  static String get brideGroom => appText.brideGroom;
 
   static String get selectProfileType =>
-      _mr ? 'कृपया वधू / वर निवडा.' : 'Please select profile type.';
+      appText.selectProfileType;
 
-  static String get profileTypeLoadFailed => _mr
-      ? 'प्रोफाइल प्रकार load करता आला नाही.'
-      : 'Profile type could not be loaded.';
+  static String get profileTypeLoadFailed => appText.profileTypeLoadFailed;
 
-  static String get name => _mr ? 'नाव' : 'Name';
+  static String get name => appText.name;
 
-  static String get dateOfBirth => _mr ? 'जन्मतारीख' : 'Date of birth';
+  static String get dateOfBirth => appText.dateOfBirth;
 
-  static String get age => _mr ? 'वय' : 'Age';
+  static String get age => appText.age;
 
-  static String get caste => _mr ? 'जात' : 'Caste';
+  static String get caste => appText.caste;
 
-  static String get education => _mr ? 'शिक्षण' : 'Education';
+  static String get education => appText.education;
 
-  static String get location => _mr ? 'ठिकाण' : 'Location';
+  static String get location => appText.location;
 
   static String years(int value) => _mr ? '$value वर्षे' : '$value years';
 
-  static String get noInformation => _mr ? 'माहिती नाही' : 'Not available';
+  static String get noInformation => appText.noInformation;
 
   static String get noProfileData =>
-      _mr ? 'प्रोफाइल डेटा उपलब्ध नाही.' : 'Profile data is not available.';
+      appText.noProfileData;
 
-  static String get sendInterest => _mr ? 'इंटरेस्ट पाठवा' : 'Send Interest';
+  static String get sendInterest => appText.sendInterest;
 
-  static String get interestSent => _mr ? 'इंटरेस्ट पाठवला' : 'Interest Sent';
+  static String get interestSent => appText.interestSent;
 }

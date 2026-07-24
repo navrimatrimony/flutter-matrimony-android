@@ -96,7 +96,7 @@ class _CreateMatrimonyProfileScreenState
   }
 
   String _genderOptionLabel(Map<String, dynamic> row) {
-    final preferredKey = AppStrings.isMarathi ? 'label_mr' : 'label';
+    final preferredKey = appText.label;
     final preferred = row[preferredKey]?.toString().trim();
     if (preferred != null && preferred.isNotEmpty) return preferred;
 

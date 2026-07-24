@@ -8,6 +8,7 @@ import '../widgets/onboarding_error_highlight.dart';
 import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 class BasicCandidateInfoStep extends StatefulWidget {
   const BasicCandidateInfoStep({
@@ -59,8 +60,6 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
   bool _nameError = false;
   bool _dobError = false;
   bool _heightError = false;
-
-  bool get _mr => widget.locale == 'mr';
 
   List<OnboardingOption> get _heightOptions {
     final backendOptions = widget.bootstrap.heightOptions;
@@ -284,7 +283,6 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
     return '${feet}ft ${inch}in ($cm cm)';
   }
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   String? get _genderMode =>
       widget.profileForWhom?.metaText('gender_mode') ??
@@ -361,73 +359,67 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
   String get _detailsTitle {
     switch (_relationKey) {
       case 'self':
-        return _t('Your details', 'तुमची माहिती');
+        return appText.yourDetails;
       case 'son':
-        return _t('Son’s details', 'मुलाची माहिती');
+        return appText.sonSDetails;
       case 'daughter':
-        return _t('Daughter’s details', 'मुलीची माहिती');
+        return appText.daughterSDetails;
       case 'brother':
-        return _t('Brother’s details', 'भावाची माहिती');
+        return appText.brotherSDetails;
       case 'sister':
-        return _t('Sister’s details', 'बहिणीची माहिती');
+        return appText.sisterSDetails;
       case 'friend':
         return _isFemaleProfile
-            ? _t('Friend’s details', 'मैत्रिणीची माहिती')
-            : _t('Friend’s details', 'मित्राची माहिती');
+            ? appText.friendSDetails
+            : appText.friendSDetails2;
       case 'relative':
         if (_isFemaleProfile) {
-          return _t('Bride relative’s details', 'नातेवाईक वधूची माहिती');
+          return appText.brideRelativeSDetails;
         }
         if (_isMaleProfile) {
-          return _t('Groom relative’s details', 'नातेवाईक वराची माहिती');
+          return appText.groomRelativeSDetails;
         }
-        return _t('Relative’s details', 'नातेवाईकाची माहिती');
+        return appText.relativeSDetails;
       default:
-        return _t('Basic details', 'मूलभूत माहिती');
+        return appText.basicDetails;
     }
   }
 
   String get _nameFieldLabel {
     switch (_relationKey) {
       case 'self':
-        return _t('Your full name *', 'तुमचे पूर्ण नाव *');
+        return appText.yourFullName;
       case 'son':
-        return _t('Son’s full name *', 'मुलाचे पूर्ण नाव *');
+        return appText.sonSFullName;
       case 'daughter':
-        return _t('Daughter’s full name *', 'मुलीचे पूर्ण नाव *');
+        return appText.daughterSFullName;
       case 'brother':
-        return _t('Brother’s full name *', 'भावाचे पूर्ण नाव *');
+        return appText.brotherSFullName;
       case 'sister':
-        return _t('Sister’s full name *', 'बहिणीचे पूर्ण नाव *');
+        return appText.sisterSFullName;
       case 'friend':
         return _isFemaleProfile
-            ? _t('Friend’s full name *', 'मैत्रिणीचे पूर्ण नाव *')
-            : _t('Friend’s full name *', 'मित्राचे पूर्ण नाव *');
+            ? appText.friendSFullName
+            : appText.friendSFullName2;
       case 'relative':
         if (_isFemaleProfile) {
-          return _t(
-            'Bride relative’s full name *',
-            'नातेवाईक वधूचे पूर्ण नाव *',
-          );
+          return appText.brideRelativeSFullName;
         }
         if (_isMaleProfile) {
-          return _t(
-            'Groom relative’s full name *',
-            'नातेवाईक वराचे पूर्ण नाव *',
-          );
+          return appText.groomRelativeSFullName;
         }
-        return _t('Relative’s full name *', 'नातेवाईकाचे पूर्ण नाव *');
+        return appText.relativeSFullName;
       default:
-        return _t('Full name *', 'पूर्ण नाव *');
+        return appText.fullName;
     }
   }
 
   String get _dobLabel {
-    return _t('Date of birth *', 'जन्मतारीख *');
+    return appText.dateOfBirth2;
   }
 
   String get _heightLabel {
-    return _t('Height *', 'उंची *');
+    return appText.height;
   }
 
   static DateTime? _parseDob(String? value) {
@@ -544,20 +536,20 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
     });
 
     if (_nameController.text.trim().isEmpty) {
-      widget.onMessage(_t('Enter full name.', 'पूर्ण नाव भरा.'));
+      widget.onMessage(appText.enterFullName);
       return;
     }
     if (invalidDob) {
-      widget.onMessage(_t('Enter a valid DOB.', 'वैध जन्मतारीख भरा.'));
+      widget.onMessage(appText.enterAValidDob);
       return;
     }
     if (missingHeight) {
-      widget.onMessage(_t('Select height.', 'उंची निवडा.'));
+      widget.onMessage(appText.selectHeight);
       return;
     }
     if (_gender == null) {
       widget.onMessage(
-        _t('Choose gender before continuing.', 'पुढे जाण्यापूर्वी लिंग निवडा.'),
+        appText.chooseGenderBeforeContinuing,
       );
       return;
     }
@@ -595,7 +587,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
-      continueLabel: _t('Continue', 'पुढे जा'),
+      continueLabel: appText.continueLabel,
       children: [
         OnboardingErrorHighlight.forField(
           field: 'full_name',
@@ -609,7 +601,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
             decoration: onboardingErrorInputDecoration(
               labelText: _nameFieldLabel,
               errorText: _nameError
-                  ? _t('Enter full name.', 'पूर्ण नाव भरा.')
+                  ? appText.enterFullName
                   : fullNameError,
             ),
             onChanged: (_) {
@@ -636,7 +628,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
                   onboardingErrorInputDecoration(
                     labelText: _dobLabel,
                     errorText: _dobError
-                        ? _t('Select DOB.', 'जन्मतारीख निवडा.')
+                        ? appText.selectDob
                         : dobFieldError,
                     suffixIcon: const Icon(Icons.calendar_today),
                   ).copyWith(
@@ -661,9 +653,9 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
             child: OnboardingPickerField(
               label: _heightLabel,
               selectedItems: _height == null ? const [] : [_height!],
-              placeholder: _t('Select height', 'उंची निवडा'),
+              placeholder: appText.selectHeight2,
               errorText: _heightError
-                  ? _t('Select height.', 'उंची निवडा.')
+                  ? appText.selectHeight
                   : heightFieldError,
               showDividers: true,
               initialScrollIndex: _heightInitialScrollIndex,

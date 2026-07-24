@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/email_hint_service.dart';
 import 'onboarding_step_helpers.dart';
+import '../../../core/app_language.dart';
 
 class RegistrationSuccessStep extends StatefulWidget {
   const RegistrationSuccessStep({
@@ -52,8 +53,6 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
   String? _challengeId;
   String? _debugOtp;
   bool _verifiedInThisStep = false;
-
-  bool get _mr => widget.locale == 'mr';
   bool get _emailVerified =>
       _verifiedInThisStep ||
       onboardingBool(widget.account['email_verified']) == true ||
@@ -66,7 +65,6 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
   bool get _busy =>
       widget.loading || _workingGoogle || _sendingOtp || _verifyingOtp;
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   @override
   void initState() {
@@ -127,10 +125,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
     if (credential == null || email.isEmpty) {
       setState(() {
         _workingGoogle = false;
-        _localError = _t(
-          'Could not read a Google email from this device.',
-          'या device वरून Google email मिळाला नाही.',
-        );
+        _localError = appText.couldNotReadAGoogleEmail;
       });
       return;
     }
@@ -144,10 +139,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
       setState(() {
         _workingGoogle = false;
         _verifiedInThisStep = true;
-        _localInfo = _t(
-          'Google verified your email.',
-          'Google ने तुमचा email verify केला.',
-        );
+        _localInfo = appText.googleVerifiedYourEmail;
       });
       return;
     }
@@ -169,10 +161,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
 
     if (!_isValidEmail(email)) {
       setState(() {
-        _localError = _t(
-          'Enter a valid email address.',
-          'कृपया योग्य email address भरा.',
-        );
+        _localError = appText.enterAValidEmailAddress;
       });
       return;
     }
@@ -200,10 +189,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
         _verificationEmail = email;
         _challengeId = onboardingText(response['challenge_id']);
         _debugOtp = onboardingText(response['debug_otp']);
-        _localInfo = _t(
-          'Enter the OTP sent to your email.',
-          'तुमच्या email वर आलेला OTP टाका.',
-        );
+        _localInfo = appText.enterTheOtpSentToYour;
       });
       return;
     }
@@ -212,7 +198,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
       _sendingOtp = false;
       _localError = readableApiError(
         response,
-        _t('Could not send email OTP.', 'Email OTP पाठवता आला नाही.'),
+        appText.couldNotSendEmailOtp,
       );
     });
   }
@@ -226,7 +212,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
     if (challengeId == null || email == null) return;
     if (!RegExp(r'^\d{6}$').hasMatch(otp)) {
       setState(() {
-        _localError = _t('Enter the 6 digit OTP.', '६ अंकी OTP टाका.');
+        _localError = appText.enterThe6DigitOtp2;
       });
       return;
     }
@@ -250,7 +236,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
         _verifiedInThisStep = true;
         _challengeId = null;
         _debugOtp = null;
-        _localInfo = _t('Email verified successfully.', 'Email verify झाला.');
+        _localInfo = appText.emailVerifiedSuccessfully;
       }
     });
   }
@@ -292,10 +278,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
               ),
               const SizedBox(height: 22),
               Text(
-                _t(
-                  'Your profile has been created successfully.',
-                  'तुमची नोंदणी यशस्वीरीत्या पूर्ण झाली आहे.',
-                ),
+                appText.yourProfileHasBeenCreatedSuccessfully,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
@@ -305,10 +288,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
               ),
               const SizedBox(height: 12),
               Text(
-                _t(
-                  'Now set a few important things so we can suggest suitable matches.',
-                  'आता योग्य स्थळे सुचवण्यासाठी काही महत्त्वाच्या settings पूर्ण करूया.',
-                ),
+                appText.nowSetAFewImportantThings,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.grey.shade700,
@@ -335,11 +315,8 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
     final challengeId = _challengeId;
     return _ActionPanel(
       icon: Icons.verified_user_outlined,
-      title: _t('Verify email', 'Email verify करा'),
-      body: _t(
-        'Edit the email if needed, then verify it with Google or email OTP.',
-        'Email बदलायचा असल्यास edit करा, मग Google किंवा email OTP ने verify करा.',
-      ),
+      title: appText.verifyEmail,
+      body: appText.editTheEmailIfNeededThen,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -353,7 +330,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
               autofillHints: const [AutofillHints.email],
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
-                labelText: _t('Email address', 'Email address'),
+                labelText: appText.emailAddress,
                 prefixIcon: const Icon(Icons.email_outlined),
               ),
               onChanged: (_) {
@@ -405,7 +382,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
             ElevatedButton.icon(
               onPressed: _busy ? null : widget.onContinue,
               icon: const Icon(Icons.arrow_forward_rounded),
-              label: Text(_t('Continue', 'पुढे जा')),
+              label: Text(appText.continueLabel),
             )
           else ...[
             ElevatedButton.icon(
@@ -419,10 +396,10 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
                   : const Icon(Icons.mark_email_read_outlined),
               label: Text(
                 _sendingOtp
-                    ? _t('Sending OTP', 'OTP पाठवत आहे')
+                    ? appText.sendingOtp
                     : challengeId == null
-                    ? _t('Send email OTP', 'Email OTP पाठवा')
-                    : _t('Send OTP again', 'OTP पुन्हा पाठवा'),
+                    ? appText.sendEmailOtp
+                    : appText.sendOtpAgain,
               ),
             ),
             const SizedBox(height: 8),
@@ -437,8 +414,8 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
                   : const _GoogleMarkIcon(),
               label: Text(
                 _workingGoogle
-                    ? _t('Checking Google email', 'Google email तपासत आहे')
-                    : _t('Try Google verification', 'Google verification करा'),
+                    ? appText.checkingGoogleEmail
+                    : appText.tryGoogleVerification,
               ),
             ),
           ],
@@ -446,7 +423,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
             onPressed: _busy ? null : widget.onSkipEmail,
             icon: const Icon(Icons.chevron_right_rounded),
             label: Text(
-              _t('Skip email verification', 'Email verification skip करा'),
+              appText.skipEmailVerification,
             ),
           ),
         ],
@@ -457,15 +434,12 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
   Widget _mobileRequestCard(BuildContext context) {
     return _ActionPanel(
       icon: Icons.phone_android_rounded,
-      title: _t('Verify mobile number', 'मोबाइल नंबर verify करा'),
-      body: _t(
-        'Mobile verification keeps the account secure and recoverable.',
-        'Mobile verification मुळे account सुरक्षित आणि recoverable राहते.',
-      ),
+      title: appText.verifyMobileNumber,
+      body: appText.mobileVerificationKeepsTheAccountSecure,
       child: ElevatedButton.icon(
         onPressed: _busy ? null : widget.onVerifyMobile,
         icon: const Icon(Icons.sms_outlined),
-        label: Text(_t('Verify mobile', 'Mobile verify करा')),
+        label: Text(appText.verifyMobile),
       ),
     );
   }
@@ -474,14 +448,8 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
     final email = onboardingText(widget.account['email']) ?? _verificationEmail;
     return _ActionPanel(
       icon: Icons.tune_rounded,
-      title: _t(
-        'Important settings are next',
-        'पुढे महत्त्वाच्या settings आहेत',
-      ),
-      body: _t(
-        'Add photos and review partner preference to improve suggestions.',
-        'योग्य स्थळे सुचण्यासाठी photos आणि partner preference पूर्ण करूया.',
-      ),
+      title: appText.importantSettingsAreNext,
+      body: appText.addPhotosAndReviewPartnerPreference,
       footer: email == null
           ? null
           : _EmailSummary(
@@ -492,7 +460,7 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
       child: ElevatedButton.icon(
         onPressed: _busy ? null : widget.onContinue,
         icon: const Icon(Icons.arrow_forward_rounded),
-        label: Text(_t('Continue', 'पुढे जा')),
+        label: Text(appText.continueLabel),
       ),
     );
   }
@@ -600,7 +568,6 @@ class _OtpBox extends StatelessWidget {
   final VoidCallback? onResend;
   final String? debugOtp;
 
-  String _t(String en, String mr) => locale == 'mr' ? mr : en;
 
   @override
   Widget build(BuildContext context) {
@@ -629,7 +596,7 @@ class _OtpBox extends StatelessWidget {
               maxLength: 6,
               decoration: InputDecoration(
                 counterText: '',
-                labelText: _t('Email OTP', 'Email OTP'),
+                labelText: appText.emailOtp,
                 prefixIcon: const Icon(Icons.password_rounded),
               ),
             ),
@@ -658,8 +625,8 @@ class _OtpBox extends StatelessWidget {
                         : const Icon(Icons.verified_rounded),
                     label: Text(
                       verifying
-                          ? _t('Verifying', 'Verify करत आहे')
-                          : _t('Verify OTP', 'OTP verify करा'),
+                          ? appText.verifying2
+                          : appText.verifyOtp,
                     ),
                   ),
                 ),
@@ -667,7 +634,7 @@ class _OtpBox extends StatelessWidget {
                 IconButton.filledTonal(
                   onPressed: onResend,
                   icon: const Icon(Icons.refresh_rounded),
-                  tooltip: _t('Resend OTP', 'OTP पुन्हा पाठवा'),
+                  tooltip: appText.resendOtp,
                 ),
               ],
             ),
@@ -689,7 +656,6 @@ class _EmailSummary extends StatelessWidget {
   final bool verified;
   final String locale;
 
-  String _t(String en, String mr) => locale == 'mr' ? mr : en;
 
   @override
   Widget build(BuildContext context) {
@@ -717,8 +683,8 @@ class _EmailSummary extends StatelessWidget {
                 children: [
                   Text(
                     verified
-                        ? _t('Verified email', 'Verified email')
-                        : _t('Email added', 'Email जोडला'),
+                        ? appText.verifiedEmail
+                        : appText.emailAdded,
                     style: TextStyle(
                       color: statusColor,
                       fontWeight: FontWeight.w900,

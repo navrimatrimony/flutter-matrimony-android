@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/onboarding_option.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 class MaritalStatusStep extends StatefulWidget {
   const MaritalStatusStep({
@@ -215,8 +216,8 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
 
   String _childGenderLabel(String value) {
     return switch (value) {
-      'male' => _t('Male', 'पुरुष'),
-      'female' => _t('Female', 'स्त्री'),
+      'male' => appText.male,
+      'female' => appText.female,
       _ => value,
     };
   }
@@ -360,18 +361,12 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
 
       final rowErrors = <String, String>{};
       if (_readChildGender(row.gender) == null) {
-        rowErrors['gender'] = _t(
-          'Select child gender.',
-          'मुलाचे/मुलीचे लिंग निवडा.',
-        );
+        rowErrors['gender'] = appText.selectChildGender;
       }
 
       final age = row.age;
       if (age == null || age < 1 || age > 30) {
-        rowErrors['age'] = _t(
-          'Select age between 1 and 30.',
-          'वय 1 ते 30 मध्ये निवडा.',
-        );
+        rowErrors['age'] = appText.selectAgeBetween1And30;
       }
 
       if (rowErrors.isEmpty) {
@@ -385,16 +380,13 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
     if (validRows == 0 && _childRowErrors.isEmpty) {
       _childRows.first.expanded = true;
       _childRowErrors[0] = <String, String>{
-        'gender': _t('Select child gender.', 'मुलाचे/मुलीचे लिंग निवडा.'),
-        'age': _t('Enter child age.', 'मुलाचे/मुलीचे वय भरा.'),
+        'gender': appText.selectChildGender,
+        'age': appText.enterChildAge,
       };
     }
 
     if (_childRowErrors.isNotEmpty) {
-      _childrenError = _t(
-        'Complete at least one child detail.',
-        'किमान एका मुलाची माहिती पूर्ण भरा.',
-      );
+      _childrenError = appText.completeAtLeastOneChildDetail;
       return false;
     }
 
@@ -422,7 +414,7 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
     final selected = _selected;
     if (selected == null || selected.intId == null) {
       setState(() => _selectionError = true);
-      widget.onMessage(_t('Select marital status.', 'वैवाहिक स्थिती निवडा.'));
+      widget.onMessage(appText.selectMaritalStatus);
       return;
     }
 
@@ -431,10 +423,7 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
     if (hasChildren && !_validateChildren()) {
       setState(() {});
       widget.onMessage(
-        _t(
-          'Complete child details before continuing.',
-          'पुढे जाण्यापूर्वी मुलांची माहिती पूर्ण भरा.',
-        ),
+        appText.completeChildDetailsBeforeContinuing,
       );
       return;
     }
@@ -473,7 +462,7 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
     final maritalError =
         widget.fieldErrors['marital_status_id'] ??
         (_selectionError
-            ? _t('Select marital status.', 'वैवाहिक स्थिती निवडा.')
+            ? appText.selectMaritalStatus
             : null);
     final childrenError =
         widget.fieldErrors['has_children'] ??
@@ -486,17 +475,14 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
       onBack: widget.onBack,
       onContinue: _continue,
       continueEnabled: options.isNotEmpty,
-      continueLabel: _t('Continue', 'पुढे जा'),
+      continueLabel: appText.continueLabel,
       children: [
         if (options.isEmpty)
           widget.loading
               ? const _MaritalStatusSkeleton()
               : _LookupFailure(
-                  message: _t(
-                    'Marital status options could not be loaded.',
-                    'वैवाहिक स्थितीचे पर्याय लोड झाले नाहीत.',
-                  ),
-                  retryLabel: _t('Retry', 'पुन्हा प्रयत्न करा'),
+                  message: appText.maritalStatusOptionsCouldNotBe,
+                  retryLabel: appText.retry,
                   onRetry: widget.onRetryLookups,
                 )
         else ...[
@@ -550,15 +536,15 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            _t('Children?', 'मुलं आहेत का?'),
+                            appText.children,
                             style: Theme.of(context).textTheme.titleSmall
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 10),
                           _YesNoSegment(
                             yesSelected: _hasChildren,
-                            yesLabel: _t('Yes', 'हो'),
-                            noLabel: _t('No', 'नाही'),
+                            yesLabel: appText.yes2,
+                            noLabel: appText.no,
                             onChanged: _setHasChildren,
                           ),
                           if (childrenError != null) ...[
@@ -583,32 +569,17 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
                                           widget.childLivingWithLoading,
                                       childLivingWithError:
                                           widget.childLivingWithError,
-                                      addLabel: _t('Add child', 'मूल जोडा'),
-                                      addNameLabel: _t('Add name', 'नाव जोडा'),
-                                      ageLabel: _t('Age', 'वय'),
-                                      genderLabel: _t('Gender', 'लिंग'),
-                                      livingWithLabel: _t(
-                                        'Living with',
-                                        'कोणासोबत राहते',
-                                      ),
-                                      nameLabel: _t(
-                                        'Child name',
-                                        'मुलाचे/मुलीचे नाव',
-                                      ),
-                                      optionalLabel: _t('Optional', 'ऐच्छिक'),
-                                      loadingLabel: _t(
-                                        'Loading...',
-                                        'लोड होत आहे...',
-                                      ),
-                                      lessThanOneLabel: _t('<1', '<1'),
-                                      retryLabel: _t(
-                                        'Retry',
-                                        'पुन्हा प्रयत्न करा',
-                                      ),
-                                      optionsUnavailableLabel: _t(
-                                        'Living-with options unavailable.',
-                                        'कोणासोबत राहते याचे पर्याय उपलब्ध नाहीत.',
-                                      ),
+                                      addLabel: appText.addChild,
+                                      addNameLabel: appText.addName,
+                                      ageLabel: appText.age,
+                                      genderLabel: appText.gender,
+                                      livingWithLabel: appText.livingWith,
+                                      nameLabel: appText.childName,
+                                      optionalLabel: appText.optional2,
+                                      loadingLabel: appText.loading,
+                                      lessThanOneLabel: appText.v1,
+                                      retryLabel: appText.retry,
+                                      optionsUnavailableLabel: appText.livingWithOptionsUnavailable,
                                       summaryBuilder: _childRowSummary,
                                       genderLabelBuilder: _childGenderLabel,
                                       livingWithLabelBuilder:
@@ -616,10 +587,7 @@ class _MaritalStatusStepState extends State<MaritalStatusStep>
                                       onRetry: widget.onRetryLookups,
                                       onUnsupportedInfantAge: () {
                                         widget.onMessage(
-                                          _t(
-                                            'Less than 1 year is not supported by the current save rules. Select 1 year for now.',
-                                            'सध्याच्या save rules मध्ये 1 वर्षापेक्षा कमी वय support नाही. आत्ता 1 वर्ष निवडा.',
-                                          ),
+                                          appText.lessThan1YearIsNot,
                                         );
                                       },
                                       onChanged: () {

@@ -4,6 +4,7 @@ import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_photo_view.dart';
+import '../../core/app_language.dart';
 
 class ChatScreen extends StatefulWidget {
   final int? initialConversationId;
@@ -317,7 +318,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildConversationList() {
     if (_loadingList) {
       return AppLoadingState.list(
-        title: AppStrings.isMarathi ? 'Chats लोड होत आहेत' : 'Loading chats',
+        title: appText.loadingChats,
         icon: Icons.chat_bubble_outline,
       );
     }
@@ -488,9 +489,7 @@ class _ChatScreenState extends State<ChatScreen> {
         Expanded(
           child: _loadingThread && _messages.isEmpty
               ? AppLoadingState.list(
-                  title: AppStrings.isMarathi
-                      ? 'Conversation लोड होत आहे'
-                      : 'Loading conversation',
+                  title: appText.loadingConversation,
                   icon: Icons.chat_outlined,
                   skeletonRows: 3,
                 )

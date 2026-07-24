@@ -10,6 +10,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/app_language.dart';
 
 class PhotoGalleryScreen extends StatefulWidget {
   const PhotoGalleryScreen({super.key});
@@ -368,7 +369,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return AppLoadingState.list(
-        title: AppStrings.isMarathi ? 'Photos लोड होत आहेत' : 'Loading photos',
+        title: appText.loadingPhotos,
         icon: Icons.photo_camera_outlined,
       );
     }

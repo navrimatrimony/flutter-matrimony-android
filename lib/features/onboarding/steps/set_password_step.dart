@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/app_language.dart';
 
 class SetPasswordStep extends StatefulWidget {
   const SetPasswordStep({
@@ -32,15 +33,12 @@ class _SetPasswordStepState extends State<SetPasswordStep> {
   bool _showConfirmation = false;
   bool _saving = false;
   String? _error;
-
-  bool get _mr => widget.locale == 'mr';
   bool get _busy => widget.loading || _saving;
   bool get _canSave =>
       _passwordController.text.trim().isNotEmpty &&
       _confirmationController.text.trim().isNotEmpty &&
       !_busy;
 
-  String _t(String en, String mr) => _mr ? mr : en;
 
   @override
   void dispose() {
@@ -56,20 +54,14 @@ class _SetPasswordStepState extends State<SetPasswordStep> {
 
     if (password.trim().isEmpty || confirmation.trim().isEmpty) {
       setState(() {
-        _error = _t(
-          'Enter password and confirm password.',
-          'Password आणि confirm password दोन्ही भरा.',
-        );
+        _error = appText.enterPasswordAndConfirmPassword;
       });
       return;
     }
 
     if (password != confirmation) {
       setState(() {
-        _error = _t(
-          'Password and confirm password do not match.',
-          'Password आणि confirm password जुळत नाहीत.',
-        );
+        _error = appText.passwordAndConfirmPasswordDoNot;
       });
       return;
     }
@@ -128,7 +120,7 @@ class _SetPasswordStepState extends State<SetPasswordStep> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      _t('Set Password', 'Password तयार करा'),
+                      appText.setPassword2,
                       style: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                         color: colors.onSurface,
@@ -159,10 +151,7 @@ class _SetPasswordStepState extends State<SetPasswordStep> {
               ),
               const SizedBox(height: 34),
               Text(
-                _t(
-                  'Set a password if you wish to log in with it',
-                  'Password ने login करायचे असल्यास password तयार करा',
-                ),
+                appText.setAPasswordIfYouWish,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
@@ -173,13 +162,13 @@ class _SetPasswordStepState extends State<SetPasswordStep> {
               const SizedBox(height: 28),
               _PasswordField(
                 controller: _passwordController,
-                label: _t('Create Password', 'Password तयार करा'),
+                label: appText.createPassword,
                 visible: _showPassword,
                 enabled: !_busy,
                 textInputAction: TextInputAction.next,
                 toggleTooltip: _showPassword
-                    ? _t('Hide password', 'Password लपवा')
-                    : _t('Show password', 'Password दाखवा'),
+                    ? appText.hidePassword
+                    : appText.showPassword,
                 onChanged: _onEdited,
                 onToggle: () {
                   setState(() {
@@ -190,13 +179,13 @@ class _SetPasswordStepState extends State<SetPasswordStep> {
               const SizedBox(height: 14),
               _PasswordField(
                 controller: _confirmationController,
-                label: _t('Confirm Password', 'Password पुन्हा भरा'),
+                label: appText.confirmPassword,
                 visible: _showConfirmation,
                 enabled: !_busy,
                 textInputAction: TextInputAction.done,
                 toggleTooltip: _showConfirmation
-                    ? _t('Hide password', 'Password लपवा')
-                    : _t('Show password', 'Password दाखवा'),
+                    ? appText.hidePassword
+                    : appText.showPassword,
                 onChanged: _onEdited,
                 onSubmitted: (_) => _submit(),
                 onToggle: () {
@@ -231,14 +220,14 @@ class _SetPasswordStepState extends State<SetPasswordStep> {
                           height: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : Text(_t('Save', 'Save')),
+                      : Text(appText.save),
                 ),
               ),
               const SizedBox(height: 18),
               TextButton(
                 onPressed: _busy ? null : widget.onSkip,
                 child: Text(
-                  _t('I will do this later', 'मी हे नंतर करेन'),
+                  appText.iWillDoThisLater,
                   style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),

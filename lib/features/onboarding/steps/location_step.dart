@@ -10,6 +10,7 @@ import '../widgets/onboarding_picker_field.dart';
 import '../widgets/smart_picker_panel.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 class LocationStep extends StatefulWidget {
   const LocationStep({
@@ -146,7 +147,7 @@ class _LocationStepState extends State<LocationStep>
 
   String _t(String en, String mr) => _mr ? mr : en;
   String get _addLocationLabel =>
-      _t('Add new location', 'नवीन location entry करा');
+      appText.addNewLocation;
 
   String _locationNotFoundTitle(String query) {
     final text = query.trim();
@@ -157,29 +158,29 @@ class _LocationStepState extends State<LocationStep>
       );
     }
 
-    return _t('No locations found.', 'ठिकाण सापडले नाही.');
+    return appText.noLocationsFound;
   }
 
   String _emptyLocationMessage(String query) => '';
 
   List<SmartPickerFilterOption> get _districtLevelFilters =>
       <SmartPickerFilterOption>[
-        SmartPickerFilterOption(key: 'all', label: _t('All', 'सर्व')),
-        SmartPickerFilterOption(key: 'taluka', label: _t('Taluka', 'तालुका')),
+        SmartPickerFilterOption(key: 'all', label: appText.chatAll),
+        SmartPickerFilterOption(key: 'taluka', label: appText.taluka),
         SmartPickerFilterOption(
           key: 'urban',
-          label: _t('City / Suburban', 'शहर / उपनगर'),
+          label: appText.citySuburban,
         ),
       ];
 
   List<SmartPickerFilterOption> get _talukaLevelFilters =>
       <SmartPickerFilterOption>[
-        SmartPickerFilterOption(key: 'all', label: _t('All', 'सर्व')),
+        SmartPickerFilterOption(key: 'all', label: appText.chatAll),
         SmartPickerFilterOption(
           key: 'urban',
-          label: _t('City / Suburban', 'शहर / उपनगर'),
+          label: appText.citySuburban,
         ),
-        SmartPickerFilterOption(key: 'rural', label: _t('Rural', 'ग्रामीण')),
+        SmartPickerFilterOption(key: 'rural', label: appText.rural),
       ];
 
   OnboardingOption? _placeholder(dynamic id) {
@@ -664,10 +665,7 @@ class _LocationStepState extends State<LocationStep>
   }
 
   String _missingLocationMessage() {
-    return _t(
-      'Select a city, suburb, village, or add your location.',
-      'शहर, उपनगर, गाव निवडा किंवा तुमचे location add करा.',
-    );
+    return appText.selectACitySuburbVillageOr;
   }
 
   Future<void> _save() async {
@@ -677,17 +675,17 @@ class _LocationStepState extends State<LocationStep>
         (localArea != null && _locationEnabled(localArea) ? localArea : null);
     if (selectedLocation == null || !_locationEnabled(selectedLocation)) {
       if (_country == null) {
-        _showLocationFieldError('country', _t('Select country.', 'देश निवडा.'));
+        _showLocationFieldError('country', appText.selectCountry2);
         return;
       }
       if (_state == null) {
-        _showLocationFieldError('state', _t('Select state.', 'राज्य निवडा.'));
+        _showLocationFieldError('state', appText.selectState2);
         return;
       }
       if (_district == null) {
         _showLocationFieldError(
           'district',
-          _t('Select district and location.', 'जिल्हा आणि ठिकाण निवडा.'),
+          appText.selectDistrictAndLocation,
         );
         return;
       }
@@ -801,7 +799,7 @@ class _LocationStepState extends State<LocationStep>
       if (!mounted) return;
       if (data == null) {
         widget.onMessage(
-          _t('Could not read mobile location.', 'मोबाईल location मिळाली नाही.'),
+          appText.couldNotReadMobileLocation,
         );
         return;
       }
@@ -828,19 +826,13 @@ class _LocationStepState extends State<LocationStep>
               (_localArea != null && _locationEnabled(_localArea!));
           widget.onMessage(
             hasFilledLocation
-                ? _t(
-                    'Mobile location filled. Please review it before continuing.',
-                    'मोबाईल location भरले. Continue करण्यापूर्वी तपासा.',
-                  )
-                : _t(
-                    'We found your mobile location. Please select the nearest location from the list.',
-                    'मोबाईल location मिळाले. कृपया यादीतून जवळचे ठिकाण निवडा.',
-                  ),
+                ? appText.mobileLocationFilledPleaseReviewIt
+                : appText.weFoundYourMobileLocationPlease,
           );
           return;
         }
         widget.onMessage(
-          _t('Could not read mobile location.', 'मोबाईल location मिळाली नाही.'),
+          appText.couldNotReadMobileLocation,
         );
         return;
       }
@@ -849,10 +841,7 @@ class _LocationStepState extends State<LocationStep>
       _fillMobileAddressLine(data);
       if (!mounted) return;
       widget.onMessage(
-        _t(
-          'Mobile location matched. Please review it before continuing.',
-          'मोबाईल location match झाली. Continue करण्यापूर्वी तपासा.',
-        ),
+        appText.mobileLocationMatchedPleaseReviewIt,
       );
     } on PlatformException catch (error) {
       if (!mounted) return;
@@ -867,10 +856,7 @@ class _LocationStepState extends State<LocationStep>
     } catch (_) {
       if (!mounted) return;
       widget.onMessage(
-        _t(
-          'Could not use mobile location.',
-          'मोबाईल location वापरता आली नाही.',
-        ),
+        appText.couldNotUseMobileLocation,
       );
     } finally {
       if (mounted) setState(() => _usingMobileLocation = false);
@@ -1339,30 +1325,15 @@ class _LocationStepState extends State<LocationStep>
   String _nativeLocationErrorMessage(PlatformException error) {
     switch (error.code) {
       case 'PERMISSION_DENIED':
-        return _t(
-          'Location permission was denied.',
-          'Location permission नाकारली आहे.',
-        );
+        return appText.locationPermissionWasDenied;
       case 'LOCATION_DISABLED':
-        return _t(
-          'Turn on device location in Android settings and try again.',
-          'Android settings मध्ये device location चालू करून पुन्हा प्रयत्न करा.',
-        );
+        return appText.turnOnDeviceLocationInAndroid;
       case 'LOCATION_TIMEOUT':
-        return _t(
-          'Mobile location timed out. Try again or search manually.',
-          'मोबाईल location वेळेत मिळाले नाही. पुन्हा प्रयत्न करा किंवा manually शोधा.',
-        );
+        return appText.mobileLocationTimedOutTryAgain;
       case 'LOCATION_PENDING':
-        return _t(
-          'Mobile location is already running.',
-          'मोबाईल location आधीच चालू आहे.',
-        );
+        return appText.mobileLocationIsAlreadyRunning;
       default:
-        return _t(
-          'Could not use mobile location.',
-          'मोबाईल location वापरता आली नाही.',
-        );
+        return appText.couldNotUseMobileLocation;
     }
   }
 
@@ -1452,10 +1423,7 @@ class _LocationStepState extends State<LocationStep>
             builder: (context, dialogSetState) {
               return AlertDialog(
                 title: Text(
-                  _t(
-                    'Create / add your location',
-                    'तुमचे location create / add करा',
-                  ),
+                  appText.createAddYourLocation,
                 ),
                 content: SingleChildScrollView(
                   child: Column(
@@ -1472,12 +1440,12 @@ class _LocationStepState extends State<LocationStep>
                         const SizedBox(height: 10),
                       ],
                       OnboardingPickerField(
-                        label: _t('Country', 'देश'),
+                        label: appText.country,
                         selectedItems: selectedCountry == null
                             ? const []
                             : [selectedCountry!],
-                        placeholder: _t('Select country', 'देश निवडा'),
-                        searchHint: _t('Search country', 'देश शोधा'),
+                        placeholder: appText.selectCountry,
+                        searchHint: appText.searchCountry,
                         loadPage: countryPage,
                         showOptionSubtitles: false,
                         onChanged: (items) {
@@ -1494,12 +1462,12 @@ class _LocationStepState extends State<LocationStep>
                       ),
                       const SizedBox(height: 10),
                       OnboardingPickerField(
-                        label: _t('State', 'राज्य'),
+                        label: appText.state,
                         selectedItems: selectedState == null
                             ? const []
                             : [selectedState!],
-                        placeholder: _t('Select state', 'राज्य निवडा'),
-                        searchHint: _t('Search state', 'राज्य शोधा'),
+                        placeholder: appText.selectState,
+                        searchHint: appText.searchState,
                         loadPage: statePage,
                         enabled: selectedCountry != null,
                         showOptionSubtitles: false,
@@ -1514,12 +1482,12 @@ class _LocationStepState extends State<LocationStep>
                       ),
                       const SizedBox(height: 10),
                       OnboardingPickerField(
-                        label: _t('District', 'जिल्हा'),
+                        label: appText.district,
                         selectedItems: selectedDistrict == null
                             ? const []
                             : [selectedDistrict!],
-                        placeholder: _t('Select district', 'जिल्हा निवडा'),
-                        searchHint: _t('Search district', 'जिल्हा शोधा'),
+                        placeholder: appText.selectDistrict,
+                        searchHint: appText.searchDistrict,
                         loadPage: districtPage,
                         enabled: selectedState != null,
                         showOptionSubtitles: false,
@@ -1535,15 +1503,12 @@ class _LocationStepState extends State<LocationStep>
                       ),
                       const SizedBox(height: 10),
                       OnboardingPickerField(
-                        label: _t('Taluka', 'तालुका'),
+                        label: appText.taluka,
                         selectedItems: selectedTaluka == null
                             ? const []
                             : [selectedTaluka!],
-                        placeholder: _t(
-                          'Select taluka optional',
-                          'तालुका निवडा ऐच्छिक',
-                        ),
-                        searchHint: _t('Search taluka', 'तालुका शोधा'),
+                        placeholder: appText.selectTalukaOptional,
+                        searchHint: appText.searchTaluka,
                         loadPage: talukaPage,
                         enabled: selectedDistrict != null,
                         showOptionSubtitles: false,
@@ -1557,27 +1522,24 @@ class _LocationStepState extends State<LocationStep>
                       const SizedBox(height: 10),
                       _dialogField(
                         villageName,
-                        _t('Village / location name', 'गाव / location नाव'),
+                        appText.villageLocationName,
                         enabled: selectedDistrict != null,
                       ),
                       _dialogField(
                         pincode,
-                        _t('Pincode optional', 'Pincode optional'),
+                        appText.pincodeOptional,
                         keyboardType: TextInputType.number,
                         enabled: selectedDistrict != null,
                       ),
                       _dialogField(
                         notes,
-                        _t('Extra note optional', 'Extra note optional'),
+                        appText.extraNoteOptional,
                         maxLines: 2,
                         enabled: selectedDistrict != null,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _t(
-                          'We will add this only if it is not already available.',
-                          'हे location आधीपासून उपलब्ध नसेल तरच add request जाईल.',
-                        ),
+                        appText.weWillAddThisOnlyIf,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -1586,7 +1548,7 @@ class _LocationStepState extends State<LocationStep>
                 actions: [
                   TextButton(
                     onPressed: submitting ? null : () => Navigator.pop(context),
-                    child: Text(_t('Cancel', 'Cancel')),
+                    child: Text(appText.cancel2),
                   ),
                   ElevatedButton(
                     onPressed: submitting
@@ -1607,10 +1569,7 @@ class _LocationStepState extends State<LocationStep>
                                 parent == null ||
                                 name.length < 2) {
                               dialogSetState(() {
-                                dialogError = _t(
-                                  'Select country, state, district and enter location name.',
-                                  'देश, राज्य, जिल्हा निवडा आणि location नाव भरा.',
-                                );
+                                dialogError = appText.selectCountryStateDistrictAndEnter;
                               });
                               return;
                             }
@@ -1638,10 +1597,7 @@ class _LocationStepState extends State<LocationStep>
                                 isRuralUnderTaluka: taluka != null,
                               );
                               widget.onMessage(
-                                _t(
-                                  'This location already exists. It has been selected.',
-                                  'हे location आधीपासून आहे. ते select केले आहे.',
-                                ),
+                                appText.thisLocationAlreadyExistsItHas,
                               );
                               return;
                             }
@@ -1757,10 +1713,7 @@ class _LocationStepState extends State<LocationStep>
                               _pendingLocationType = requestType;
                             });
                             widget.onMessage(
-                              _t(
-                                'Location entry added. You can continue.',
-                                'Location entry add झाली. तुम्ही पुढे जाऊ शकता.',
-                              ),
+                              appText.locationEntryAddedYouCanContinue,
                             );
                           },
                     child: submitting
@@ -1769,7 +1722,7 @@ class _LocationStepState extends State<LocationStep>
                             height: 18,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Text(_t('Create / add', 'Create / add')),
+                        : Text(appText.createAdd),
                   ),
                 ],
               );
@@ -1785,10 +1738,7 @@ class _LocationStepState extends State<LocationStep>
   }
 
   String _friendlyLocationRequestError([Map<String, dynamic>? response]) {
-    final fallback = _t(
-      'Could not submit location request. Check the selected district and taluka, then try again.',
-      'Location request submit झाली नाही. निवडलेला जिल्हा आणि तालुका तपासा, मग पुन्हा प्रयत्न करा.',
-    );
+    final fallback = appText.couldNotSubmitLocationRequestCheck;
     if (response == null) return fallback;
 
     final raw = readableApiError(response, fallback);
@@ -2022,11 +1972,8 @@ class _LocationStepState extends State<LocationStep>
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: _t('Location', 'ठिकाण'),
-      subtitle: _t(
-        'Choose where the profile lives.',
-        'प्रोफाइलचे सध्याचे ठिकाण निवडा.',
-      ),
+      title: appText.location,
+      subtitle: appText.chooseWhereTheProfileLives,
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
@@ -2049,7 +1996,7 @@ class _LocationStepState extends State<LocationStep>
                   )
                 : const Icon(Icons.my_location_outlined),
             label: Text(
-              _t('Use mobile location', 'मोबाईल location वापरून भरा'),
+              appText.useMobileLocation,
             ),
           ),
         ),
@@ -2057,10 +2004,10 @@ class _LocationStepState extends State<LocationStep>
         _highlightLocationField(
           'country',
           OnboardingPickerField(
-            label: _t('Country', 'देश'),
+            label: appText.country,
             selectedItems: _country == null ? const [] : [_country!],
-            placeholder: _t('Select country', 'देश निवडा'),
-            searchHint: _t('Search country', 'देश शोधा'),
+            placeholder: appText.selectCountry,
+            searchHint: appText.searchCountry,
             loadPage: _countryPage,
             errorText: _locationErrorFor('country'),
             showOptionSubtitles: false,
@@ -2071,10 +2018,10 @@ class _LocationStepState extends State<LocationStep>
         _highlightLocationField(
           'state',
           OnboardingPickerField(
-            label: _t('State', 'राज्य'),
+            label: appText.state,
             selectedItems: _state == null ? const [] : [_state!],
-            placeholder: _t('Select state', 'राज्य निवडा'),
-            searchHint: _t('Search state', 'राज्य शोधा'),
+            placeholder: appText.selectState,
+            searchHint: appText.searchState,
             loadPage: _statePage,
             enabled: _country != null,
             errorText: _locationErrorFor('state'),
@@ -2087,10 +2034,10 @@ class _LocationStepState extends State<LocationStep>
           _highlightLocationField(
             'district',
             OnboardingPickerField(
-              label: _t('District', 'जिल्हा'),
+              label: appText.district,
               selectedItems: _district == null ? const [] : [_district!],
-              placeholder: _t('Select district', 'जिल्हा निवडा'),
-              searchHint: _t('Search district', 'जिल्हा शोधा'),
+              placeholder: appText.selectDistrict,
+              searchHint: appText.searchDistrict,
               loadPage: _districtPage,
               errorText: _locationErrorFor('district'),
               showOptionSubtitles: false,
@@ -2103,16 +2050,10 @@ class _LocationStepState extends State<LocationStep>
           _highlightLocationField(
             'local_area',
             OnboardingPickerField(
-              label: _t('Taluka / City / Suburban', 'तालुका / शहर / उपनगर'),
+              label: appText.talukaCitySuburban,
               selectedItems: _localArea == null ? const [] : [_localArea!],
-              placeholder: _t(
-                'Select taluka, city or suburb',
-                'तालुका, शहर किंवा उपनगर निवडा',
-              ),
-              searchHint: _t(
-                'Search taluka, city or suburb',
-                'तालुका, शहर किंवा उपनगर शोधा',
-              ),
+              placeholder: appText.selectTalukaCityOrSuburb,
+              searchHint: appText.searchTalukaCityOrSuburb,
               loadPage: _localAreaPage,
               filteredLoadPage: _localAreaFilteredPage,
               errorText: _locationErrorFor('local_area'),
@@ -2135,10 +2076,10 @@ class _LocationStepState extends State<LocationStep>
           _highlightLocationField(
             'village',
             OnboardingPickerField(
-              label: _t('Location', 'ठिकाण'),
+              label: appText.location,
               selectedItems: _village == null ? const [] : [_village!],
-              placeholder: _t('Select location', 'ठिकाण निवडा'),
-              searchHint: _t('Search location', 'ठिकाण शोधा'),
+              placeholder: appText.selectLocation,
+              searchHint: appText.searchLocation,
               loadPage: _villagePage,
               filteredLoadPage: _villageFilteredPage,
               optionEnabled: _locationEnabled,
@@ -2165,7 +2106,7 @@ class _LocationStepState extends State<LocationStep>
         TextField(
           controller: _addressLineController,
           decoration: InputDecoration(
-            labelText: _t('Address line optional', 'पत्ता ओळ ऐच्छिक'),
+            labelText: appText.addressLineOptional,
           ),
         ),
       ],
@@ -2174,7 +2115,7 @@ class _LocationStepState extends State<LocationStep>
 
   Widget _pendingLocationCard(BuildContext context) {
     final label =
-        _pendingLocationLabel ?? _t('Requested location', 'Requested location');
+        _pendingLocationLabel ?? appText.requestedLocation;
     final type = _pendingLocationType;
     final requestId = _pendingLocationRequestId;
 
@@ -2203,10 +2144,7 @@ class _LocationStepState extends State<LocationStep>
                   [
                     if (type != null) type,
                     if (requestId != null) '#$requestId',
-                    _t(
-                      'Saved for now; admin can approve the master location later.',
-                      'सध्या save झाले आहे; admin नंतर master location approve करू शकतो.',
-                    ),
+                    appText.savedForNowAdminCanApprove,
                   ].join(' • '),
                 ),
               ],

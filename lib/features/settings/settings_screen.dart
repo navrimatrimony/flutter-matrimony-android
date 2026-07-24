@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/app_language.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -159,9 +160,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return AppLoadingState.list(
-        title: AppStrings.isMarathi
-            ? 'Settings लोड होत आहेत'
-            : 'Loading settings',
+        title: appText.loadingSettings,
         icon: Icons.settings_outlined,
       );
     }
@@ -722,39 +721,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     switch (key) {
       case 'visibility_scope':
-        return isMarathi ? 'प्रोफाइल दृश्यता' : 'Profile visibility';
+        return appText.profileVisibility;
       case 'show_photo_to':
-        return isMarathi ? 'फोटो कोण पाहू शकतो' : 'Photo visibility';
+        return appText.photoVisibility;
       case 'contact_visibility_rule':
-        return isMarathi ? 'संपर्क कोण पाहू शकतो' : 'Contact visibility';
+        return appText.contactVisibility;
       case 'contact_visibility_strictness':
-        return isMarathi ? 'संपर्क नियम' : 'Contact rule strictness';
+        return appText.contactRuleStrictness;
       case 'contact_visibility_id_verified_only':
-        return isMarathi ? 'फक्त ID verified' : 'Only ID verified profiles';
+        return appText.onlyIdVerifiedProfiles;
       case 'contact_visibility_photo_only':
-        return isMarathi ? 'फोटो असलेले profile' : 'Only profiles with photo';
+        return appText.onlyProfilesWithPhoto;
       case 'contact_visibility_require_contact_request':
-        return isMarathi ? 'Contact request आवश्यक' : 'Require contact request';
+        return appText.requireContactRequest;
       case 'contact_visibility_approval_required':
-        return isMarathi ? 'मंजुरी आवश्यक' : 'Approval required';
+        return appText.approvalRequired;
       case 'contact_routing_mode':
-        return isMarathi ? 'संपर्क मार्ग' : 'Contact route';
+        return appText.contactRoute;
       case 'hide_from_blocked_users':
-        return isMarathi
-            ? 'Block केलेल्यांपासून लपवा'
-            : 'Hide from blocked users';
+        return appText.hideFromBlockedUsers;
       case 'contact_unlock_mode':
-        return isMarathi ? 'Contact unlock पद्धत' : 'Contact unlock mode';
+        return appText.contactUnlockMode;
       case 'email_alerts':
-        return isMarathi ? 'Email सूचना' : 'Email alerts';
+        return appText.emailAlerts;
       case 'engagement_inactive_reminder':
-        return isMarathi ? 'Inactive reminder' : 'Inactive reminder';
+        return appText.inactiveReminder;
       case 'engagement_new_matches_digest':
-        return isMarathi ? 'नवीन matches digest' : 'New matches digest';
+        return appText.newMatchesDigest;
       case 'email_verified':
-        return isMarathi ? 'Email verified' : 'Email verified';
+        return appText.emailVerified;
       case 'mobile_verified':
-        return isMarathi ? 'Mobile verified' : 'Mobile verified';
+        return appText.mobileVerified;
     }
 
     return key.replaceAll('_', ' ');

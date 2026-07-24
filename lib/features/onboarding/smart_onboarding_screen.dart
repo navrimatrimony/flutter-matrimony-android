@@ -241,54 +241,42 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   String _friendlyFieldError(String field, String raw) {
     switch (field) {
       case 'full_name':
-        return _t('Please enter full name.', 'कृपया पूर्ण नाव भरा.');
+        return appText.pleaseEnterFullName;
       case 'date_of_birth':
-        return _t('Please check Date of birth.', 'कृपया जन्मतारीख तपासा.');
+        return appText.pleaseCheckDateOfBirth;
       case 'height_cm':
-        return _t('Please check Height.', 'कृपया उंची तपासा.');
+        return appText.pleaseCheckHeight;
       case 'mother_tongue_id':
       case 'mother_tongue':
-        return _t(
-          'Please select mother tongue again.',
-          'कृपया मातृभाषा पुन्हा निवडा.',
-        );
+        return appText.pleaseSelectMotherTongueAgain;
       case 'has_children':
-        return _t(
-          'Please select whether there are children.',
-          'मुलं आहेत का ते निवडा.',
-        );
+        return appText.pleaseSelectWhetherThereAreChildren;
       case 'children':
-        return _t('Please check child details.', 'कृपया मुलांची माहिती तपासा.');
+        return appText.pleaseCheckChildDetails;
     }
 
     if (field.startsWith('children.')) {
       if (field.endsWith('.gender')) {
-        return _t('Select child gender.', 'मुलाचे/मुलीचे लिंग निवडा.');
+        return appText.selectChildGender;
       }
       if (field.endsWith('.age')) {
-        return _t('Enter valid child age.', 'मुलाचे/मुलीचे योग्य वय भरा.');
+        return appText.enterValidChildAge;
       }
       if (field.endsWith('.child_living_with_id')) {
-        return _t(
-          'Please select living with again.',
-          'कोणासोबत राहते ते पुन्हा निवडा.',
-        );
+        return appText.pleaseSelectLivingWithAgain;
       }
-      return _t('Please check child details.', 'कृपया मुलांची माहिती तपासा.');
+      return appText.pleaseCheckChildDetails;
     }
 
     if (_isTechnicalOnboardingError(raw)) {
-      return _t('Please check this field.', 'कृपया ही निवड तपासा.');
+      return appText.pleaseCheckThisField;
     }
 
     return raw;
   }
 
   String _genericSaveFailureMessage() {
-    return _t(
-      'We could not save this information. Please check the highlighted field.',
-      'ही माहिती सेव्ह करता आली नाही. कृपया highlight केलेले field तपासा.',
-    );
+    return appText.weCouldNotSaveThisInformation;
   }
 
   String? _firstFieldErrorSummary(Map<String, String> fieldErrors) {
@@ -824,10 +812,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final mobile = _normalizeMobile(_mobileController.text);
     if (mobile.length != 10) {
       setState(() {
-        _error = _t(
-          'Enter a valid 10 digit mobile number.',
-          'वैध 10 अंकी मोबाइल नंबर भरा.',
-        );
+        _error = appText.enterAValid10DigitMobile;
       });
       return;
     }
@@ -866,7 +851,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       } else {
         _error =
             response.message ??
-            _t('Could not send OTP.', 'OTP पाठवता आला नाही.');
+            appText.couldNotSendOtp;
       }
     });
 
@@ -946,13 +931,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     if (challengeId == null || challengeId.isEmpty) {
       setState(() {
-        _error = _t('Send OTP first.', 'आधी OTP पाठवा.');
+        _error = appText.sendOtpFirst;
       });
       return;
     }
     if (otp.length != 6) {
       setState(() {
-        _error = _t('Enter the 6 digit OTP.', '6 अंकी OTP भरा.');
+        _error = appText.enterThe6DigitOtp;
       });
       return;
     }
@@ -979,7 +964,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           _otpAutoAdvancePending = false;
           _error =
               response.message ??
-              _t('OTP verification failed.', 'OTP पडताळणी अयशस्वी झाली.');
+              appText.otpVerificationFailed;
         });
         return;
       }
@@ -1028,7 +1013,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _loading = false;
         _otpAutoAdvancePending = false;
         _error = _isTechnicalOnboardingError(message)
-            ? _t('OTP verification failed.', 'OTP पडताळणी अयशस्वी झाली.')
+            ? appText.otpVerificationFailed
             : message;
       });
     }
@@ -1100,10 +1085,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _childLivingWithError = _t(
-          'Child living-with options could not be loaded.',
-          'मुलं कोणासोबत राहतात याचे पर्याय लोड झाले नाहीत.',
-        );
+        _childLivingWithError = appText.childLivingWithOptionsCouldNot;
       });
     } finally {
       if (mounted && showLoading) {
@@ -1194,10 +1176,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final profileForWhom = option?.key;
     if (profileForWhom == null || profileForWhom.isEmpty) {
       setState(() {
-        final message = _t(
-          'Choose who this profile is for.',
-          'हे profile कोणासाठी आहे ते निवडा.',
-        );
+        final message = appText.chooseWhoThisProfileIsFor;
         _profileForWhomError = message;
         _warmupGenderError = null;
         _fieldErrorPulseToken++;
@@ -1249,7 +1228,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _step = _SmartOnboardingStep.maritalStatus;
       });
       _showOnboardingMessage(
-        _t('Saved. Choose marital status.', 'Save झाले. वैवाहिक स्थिती निवडा.'),
+        appText.savedChooseMaritalStatus,
         type: _OnboardingMessageType.success,
       );
       await _saveLocalDraft();
@@ -1408,31 +1387,31 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     return <AboutTemplateSuggestion>[
       AboutTemplateSuggestion(
-        label: _t('Simple & family-first', 'साधी आणि कुटुंबप्रिय'),
+        label: appText.simpleFamilyFirst,
         text: body(
           'Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.',
         ),
       ),
       AboutTemplateSuggestion(
-        label: _t('Career with balance', 'Career आणि balance'),
+        label: appText.careerWithBalance,
         text: body(
           'I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.',
         ),
       ),
       AboutTemplateSuggestion(
-        label: _t('Tradition & open mind', 'परंपरा आणि खुले विचार'),
+        label: appText.traditionOpenMind,
         text: body(
           'I respect traditions and still value practical, open-minded conversations when important decisions need to be made.',
         ),
       ),
       AboutTemplateSuggestion(
-        label: _t('Honesty & respect', 'प्रामाणिकपणा आणि आदर'),
+        label: appText.honestyRespect,
         text: body(
           'Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.',
         ),
       ),
       AboutTemplateSuggestion(
-        label: _t('Calm & steady', 'शांत आणि स्थिर'),
+        label: appText.calmSteady,
         text: body(
           'I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.',
         ),
@@ -1633,7 +1612,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     if (!_isAuthenticated) {
       setState(() {
         _step = _SmartOnboardingStep.mobileOtp;
-        _error = _t('Please verify mobile first.', 'आधी mobile verify करा.');
+        _error = appText.pleaseVerifyMobileFirst;
         _profileForWhomError = null;
         _warmupGenderError = null;
         _motherTongueError = null;
@@ -1667,10 +1646,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         setState(() {
           _loading = false;
           _step = _SmartOnboardingStep.mobileOtp;
-          _error = _t(
-            'Session expired. Verify mobile again.',
-            'Session expired. Mobile पुन्हा verify करा.',
-          );
+          _error = appText.sessionExpiredVerifyMobileAgain;
         });
         return false;
       }
@@ -1721,7 +1697,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         }
       });
       _showOnboardingMessage(
-        _t('Saved.', 'Save झाले.'),
+        appText.saved,
         type: _OnboardingMessageType.success,
       );
       await _saveLocalDraft();
@@ -1807,7 +1783,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     if (!_isAuthenticated) {
       setState(() {
         _step = _SmartOnboardingStep.mobileOtp;
-        _error = _t('Please verify mobile first.', 'आधी mobile verify करा.');
+        _error = appText.pleaseVerifyMobileFirst;
         _profileForWhomError = null;
         _warmupGenderError = null;
         _motherTongueError = null;
@@ -1867,10 +1843,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           _loading = false;
           _error = readableApiError(
             response,
-            _t(
-              'Could not save the about section.',
-              'About section save झाला नाही.',
-            ),
+            appText.couldNotSaveTheAboutSection,
           );
         });
         return false;
@@ -1955,10 +1928,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     required String passwordConfirmation,
   }) async {
     if (!_isAuthenticated) {
-      final message = _t(
-        'Session expired. Verify mobile again.',
-        'Session expired. Mobile पुन्हा verify करा.',
-      );
+      final message = appText.sessionExpiredVerifyMobileAgain;
       setState(() {
         _step = _SmartOnboardingStep.mobileOtp;
         _error = message;
@@ -1968,10 +1938,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     final creatorName = _accountCreatorName();
     if (creatorName == null) {
-      return _t(
-        'Could not read account name. Please go back and try again.',
-        'Account नाव मिळाले नाही. कृपया मागे जाऊन पुन्हा प्रयत्न करा.',
-      );
+      return appText.couldNotReadAccountNamePlease;
     }
 
     setState(() {
@@ -1991,10 +1958,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       if (!mounted) return null;
 
       if (response['statusCode'] == 401) {
-        final message = _t(
-          'Session expired. Verify mobile again.',
-          'Session expired. Mobile पुन्हा verify करा.',
-        );
+        final message = appText.sessionExpiredVerifyMobileAgain;
         setState(() {
           _loading = false;
           _step = _SmartOnboardingStep.mobileOtp;
@@ -2006,7 +1970,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       if (response['success'] != true) {
         final message = readableApiError(
           response,
-          _t('Could not save password.', 'Password save झाला नाही.'),
+          appText.couldNotSavePassword,
         );
         setState(() {
           _loading = false;
@@ -2026,7 +1990,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         _loading = false;
       });
       return _isTechnicalOnboardingError(message)
-          ? _t('Could not save password.', 'Password save झाला नाही.')
+          ? appText.couldNotSavePassword
           : message;
     }
   }
@@ -2228,43 +2192,40 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   String _profileDetailsTitle() {
     switch (_profileForWhomKey?.toLowerCase()) {
       case 'self':
-        return _t('Your details', 'तुमची माहिती');
+        return appText.yourDetails;
       case 'son':
-        return _t('Son’s details', 'मुलाची माहिती');
+        return appText.sonSDetails;
       case 'daughter':
-        return _t('Daughter’s details', 'मुलीची माहिती');
+        return appText.daughterSDetails;
       case 'brother':
-        return _t('Brother’s details', 'भावाची माहिती');
+        return appText.brotherSDetails;
       case 'sister':
-        return _t('Sister’s details', 'बहिणीची माहिती');
+        return appText.sisterSDetails;
       case 'relative':
         switch (_effectiveProfileGenderKey()) {
           case 'female':
-            return _t('Bride relative’s details', 'नातेवाईक वधूची माहिती');
+            return appText.brideRelativeSDetails;
           case 'male':
-            return _t('Groom relative’s details', 'नातेवाईक वराची माहिती');
+            return appText.groomRelativeSDetails;
         }
-        return _t('Relative’s details', 'नातेवाईकाची माहिती');
+        return appText.relativeSDetails;
       case 'friend':
         switch (_effectiveProfileGenderKey()) {
           case 'female':
-            return _t('Friend’s details', 'मैत्रिणीची माहिती');
+            return appText.friendSDetails;
           case 'male':
-            return _t('Friend’s details', 'मित्राची माहिती');
+            return appText.friendSDetails2;
         }
-        return _t('Friend’s details', 'मित्र/मैत्रिणीची माहिती');
+        return appText.friendSDetails3;
     }
 
-    return _t('Basic details', 'मूलभूत माहिती');
+    return appText.basicDetails;
   }
 
   Future<void> _continueFromProfileForWhom() async {
     if (_profileForWhom == null) {
       setState(() {
-        final message = _t(
-          'Choose who this profile is for.',
-          'ही प्रोफाइल कोणासाठी आहे ते निवडा.',
-        );
+        final message = appText.chooseWhoThisProfileIsFor2;
         _profileForWhomError = message;
         _warmupGenderError = null;
         _fieldErrorPulseToken++;
@@ -2290,7 +2251,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
     if (resolvedGender == null) {
       setState(() {
-        final message = _t('Select gender again.', 'लिंग पुन्हा निवडा.');
+        final message = appText.selectGenderAgain;
         _profileForWhomError = null;
         _warmupGenderError = message;
         _fieldErrorPulseToken++;
@@ -2395,19 +2356,19 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   String _relationLabelForKey(String key) {
     switch (key.toLowerCase()) {
       case 'self':
-        return _t('Myself', 'स्वतःसाठी');
+        return appText.myself;
       case 'son':
-        return _t('Son', 'मुलगा');
+        return appText.son;
       case 'daughter':
-        return _t('Daughter', 'मुलगी');
+        return appText.daughter;
       case 'brother':
-        return _t('Brother', 'भाऊ');
+        return appText.brother;
       case 'sister':
-        return _t('Sister', 'बहीण');
+        return appText.sister;
       case 'relative':
-        return _t('Relative', 'नातेवाईक');
+        return appText.relative;
       case 'friend':
-        return _t('Friend', 'मित्र / मैत्रीण');
+        return appText.friend;
     }
 
     return key;
@@ -2429,8 +2390,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
 
     return <OnboardingOption>[
-      male ?? OnboardingOption(key: 'male', label: _t('Male', 'पुरुष')),
-      female ?? OnboardingOption(key: 'female', label: _t('Female', 'स्त्री')),
+      male ?? OnboardingOption(key: 'male', label: appText.male),
+      female ?? OnboardingOption(key: 'female', label: appText.female),
     ];
   }
 
@@ -2459,37 +2420,37 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   String _genderPromptLabel() {
     switch (_profileForWhomKey?.toLowerCase()) {
       case 'self':
-        return _t('Select your gender', 'तुमचे लिंग निवडा');
+        return appText.selectYourGender;
       case 'relative':
-        return _t("Select relative's gender", 'नातेवाईकाचे लिंग निवडा');
+        return appText.selectRelativeSGender;
       case 'friend':
-        return _t("Select friend's gender", 'मित्र/मैत्रिणीचे लिंग निवडा');
+        return appText.selectFriendSGender;
     }
 
-    return _t('Select gender', 'लिंग निवडा');
+    return appText.selectGender;
   }
 
   String _motherTongueLabel() {
     switch (_profileForWhomKey?.toLowerCase()) {
       case 'self':
-        return _t('Your mother tongue', 'तुमची मातृभाषा');
+        return appText.yourMotherTongue;
       case 'son':
       case 'brother':
-        return _t('His mother tongue', 'त्याची मातृभाषा');
+        return appText.hisMotherTongue;
       case 'daughter':
       case 'sister':
-        return _t('Her mother tongue', 'तिची मातृभाषा');
+        return appText.herMotherTongue;
       case 'relative':
       case 'friend':
         switch (_genderOptionKey(_warmupGender)) {
           case 'male':
-            return _t('His mother tongue', 'त्याची मातृभाषा');
+            return appText.hisMotherTongue;
           case 'female':
-            return _t('Her mother tongue', 'तिची मातृभाषा');
+            return appText.herMotherTongue;
         }
     }
 
-    return _t('Select mother tongue', 'मातृभाषा निवडा');
+    return appText.selectMotherTongue;
   }
 
   List<OnboardingOption> _motherTongueOptions() {
@@ -2622,7 +2583,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                 automaticallyImplyLeading: false,
                 titleSpacing: 0,
                 title: _CreateProfileTopBar(
-                  title: _t('Create Profile', 'प्रोफाइल तयार करा'),
+                  title: appText.dashboardCreateProfile,
                   showBack: showBack,
                   onBack: _handleAppBarBack,
                   backTooltip: MaterialLocalizations.of(
@@ -2675,10 +2636,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   right: 16,
                   bottom: 10,
                   child: _AlreadyRegisteredLink(
-                    text: _t(
-                      'Already registered? Verify mobile to continue',
-                      'आधीच नोंदणी केली आहे? मोबाइल पडताळून पुढे जा',
-                    ),
+                    text: appText.alreadyRegisteredVerifyMobileToContinue,
                     onPressed: _loading ? null : _startExistingMobileFlow,
                   ),
                 ),
@@ -2703,7 +2661,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         key: 'error:$error',
         icon: Icons.error_outline,
         color: Colors.red.shade700,
-        title: _t('Please check this information.', 'कृपया ही माहिती तपासा.'),
+        title: appText.pleaseCheckThisInformation,
         subline: error,
       );
     }
@@ -2766,35 +2724,35 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   String _guidanceTitleForStep() {
     switch (_step) {
       case _SmartOnboardingStep.profileForWhom:
-        return _t('Start with profile owner', 'प्रोफाइल कोणासाठी आहे ते निवडा');
+        return appText.startWithProfileOwner;
       case _SmartOnboardingStep.mobileOtp:
-        return _t('Verify mobile number', 'मोबाइल नंबर verify करा');
+        return appText.verifyMobileNumber;
       case _SmartOnboardingStep.maritalStatus:
-        return _t('Marital status', 'वैवाहिक स्थिती');
+        return appText.maritalStatus;
       case _SmartOnboardingStep.basicInfo:
         return _profileDetailsTitle();
       case _SmartOnboardingStep.religionCaste:
-        return _t('Choose community details', 'समुदायाची माहिती निवडा');
+        return appText.chooseCommunityDetails;
       case _SmartOnboardingStep.location:
-        return _t('Location details', 'राहण्याचे ठिकाण');
+        return appText.locationDetails;
       case _SmartOnboardingStep.education:
-        return _t('Education & Career', 'शिक्षण आणि करिअर');
+        return appText.educationCareer;
       case _SmartOnboardingStep.motherTongue:
         return _motherTongueLabel();
       case _SmartOnboardingStep.lifestyle:
-        return _t('Lifestyle details', 'Lifestyle माहिती');
+        return appText.lifestyleDetails;
       case _SmartOnboardingStep.family:
-        return _t('Family details', 'कुटुंबाची माहिती');
+        return appText.familyDetails;
       case _SmartOnboardingStep.astro:
-        return _t('Astro details', 'ज्योतिष माहिती');
+        return appText.astroDetails;
       case _SmartOnboardingStep.registrationComplete:
-        return _t('Registration complete', 'नोंदणी पूर्ण');
+        return appText.registrationComplete;
       case _SmartOnboardingStep.partnerPreference:
-        return _t('Partner preference', 'जोडीदार पसंती');
+        return appText.partnerPreference;
       case _SmartOnboardingStep.setPassword:
-        return _t('Set password', 'Password तयार करा');
+        return appText.setPassword;
       case _SmartOnboardingStep.photo:
-        return _t('Profile photo', 'Profile photo');
+        return appText.profilePhoto;
     }
   }
 
@@ -2804,10 +2762,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     switch (_step) {
       case _SmartOnboardingStep.profileForWhom:
-        return _t(
-          'This keeps every next question relevant to the right person.',
-          'या निवडीवरून पुढचे प्रश्न योग्य नात्यानुसार दिसतील.',
-        );
+        return appText.thisKeepsEveryNextQuestionRelevant;
       case _SmartOnboardingStep.mobileOtp:
         return _t(
           'Verification keeps $subjectEn profile safe and recoverable.',
@@ -2824,10 +2779,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           '$subjectMr अचूक माहिती योग्य matches सुचवायला मदत करते.',
         );
       case _SmartOnboardingStep.religionCaste:
-        return _t(
-          'Community preferences help keep suggestions relevant.',
-          'समुदायाची माहिती suggestions अधिक relevant ठेवते.',
-        );
+        return appText.communityPreferencesHelpKeepSuggestionsRelevant;
       case _SmartOnboardingStep.location:
         return _t(
           'Location helps us show nearby and practical matches.',
@@ -2859,25 +2811,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           '$subjectMr ज्योतिष माहिती horoscope matching साठी उपयोगी ठरते.',
         );
       case _SmartOnboardingStep.registrationComplete:
-        return _t(
-          'Registration is complete. Next settings improve match suggestions.',
-          'नोंदणी पूर्ण झाली आहे. पुढील settings योग्य स्थळे सुचवायला मदत करतात.',
-        );
+        return appText.registrationIsCompleteNextSettingsImprove;
       case _SmartOnboardingStep.partnerPreference:
-        return _t(
-          'We prepared this from the information you filled. You can keep it strict or make it normal.',
-          'तुम्ही भरलेल्या माहितीवरून ही पसंती तयार केली आहे. ती strict ठेवू शकता किंवा normal करू शकता.',
-        );
+        return appText.wePreparedThisFromTheInformation;
       case _SmartOnboardingStep.setPassword:
-        return _t(
-          'Create a password now if you want password login later.',
-          'नंतर password ने login करायचे असल्यास आत्ता password तयार करा.',
-        );
+        return appText.createAPasswordNowIfYou;
       case _SmartOnboardingStep.photo:
-        return _t(
-          'A clear photo usually improves response quality.',
-          'स्पष्ट profile photo response quality वाढवू शकतो.',
-        );
+        return appText.aClearPhotoUsuallyImprovesResponse;
     }
   }
 
@@ -3150,7 +3090,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           ),
           const SizedBox(height: 26),
           Text(
-            _t('Verify mobile number', 'मोबाइल नंबर verify करा'),
+            appText.verifyMobileNumber,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w900,
@@ -3160,10 +3100,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            _t(
-              'Enter your mobile number to receive a secure 6 digit code.',
-              'सुरक्षित ६ अंकी code मिळण्यासाठी मोबाइल नंबर भरा.',
-            ),
+            appText.enterYourMobileNumberToReceive,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: colors.onSurfaceVariant,
@@ -3182,10 +3119,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                 : (value) =>
                       setState(() => _whatsappAlertsOptIn = value ?? false),
             title: Text(
-              _t(
-                'Send profile alerts on WhatsApp',
-                'WhatsApp वर profile alerts पाठवा',
-              ),
+              appText.sendProfileAlertsOnWhatsapp,
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
@@ -3207,8 +3141,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   : const Icon(Icons.arrow_forward_rounded),
               label: Text(
                 _loading
-                    ? _t('Sending OTP', 'OTP पाठवत आहे')
-                    : _t('Get OTP', 'OTP मिळवा'),
+                    ? appText.sendingOtp
+                    : appText.getOtp,
               ),
             ),
           ),
@@ -3225,7 +3159,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _t('Mobile number *', 'मोबाइल नंबर *'),
+          appText.mobileNumber,
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -3267,7 +3201,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     focusedBorder: InputBorder.none,
-                    hintText: _t('Mobile number', 'मोबाइल नंबर'),
+                    hintText: appText.mobileNumber2,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 14),
                   ),
                 ),
@@ -3306,7 +3240,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                     ? null
                     : _editMobileNumber,
                 icon: const Icon(Icons.edit_outlined, size: 18),
-                label: Text(_t('Edit', 'Edit')),
+                label: Text(appText.edit),
               ),
             ],
           ),
@@ -3329,7 +3263,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            _t('Verify Mobile Number', 'मोबाइल नंबर verify करा'),
+            appText.verifyMobileNumber2,
             textAlign: TextAlign.center,
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w900,
@@ -3339,10 +3273,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            _t(
-              'We’ve sent a verification code to',
-              'verification code पाठवला आहे',
-            ),
+            appText.weVeSentAVerificationCode,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyLarge?.copyWith(
               color: colors.onSurfaceVariant,
@@ -3408,10 +3339,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   : const Icon(Icons.verified_rounded),
               label: Text(
                 _otpAutoAdvancePending
-                    ? _t('Continuing...', 'पुढे जात आहे...')
+                    ? appText.continuing
                     : _loading
-                    ? _t('Verifying...', 'पडताळत आहे...')
-                    : _t('Verify and continue', 'पडताळून पुढे जा'),
+                    ? appText.verifying
+                    : appText.verifyAndContinue,
               ),
             ),
           ),
@@ -3528,10 +3459,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        Text(_t('Didn’t get the code yet?', 'Code मिळाला नाही?')),
+        Text(appText.didnTGetTheCodeYet),
         TextButton(
           onPressed: (_loading || _otpAutoAdvancePending) ? null : _sendOtp,
-          child: Text(_t('Resend code', 'पुन्हा पाठवा')),
+          child: Text(appText.resendCode),
         ),
       ],
     );
@@ -3546,9 +3477,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         final selected = _warmupGender?.identity == option.identity;
         final key = _genderOptionKey(option);
         final label = key == 'male'
-            ? _t('Male', 'पुरुष')
+            ? appText.male
             : key == 'female'
-            ? _t('Female', 'स्त्री')
+            ? appText.female
             : option.label;
 
         return Expanded(
@@ -3597,10 +3528,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     return _StepContent(
       key: const ValueKey('profile_for_whom'),
-      title: _t(
-        'I am creating this profile for',
-        'कोणासाठी प्रोफाइल तयार करत आहात',
-      ),
+      title: appText.iAmCreatingThisProfileFor,
       titleStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
         color: Colors.grey.shade800,
         fontWeight: FontWeight.w800,
@@ -3662,7 +3590,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         ),
         const SizedBox(height: 16),
         OnboardingContinueButton(
-          label: _t('Continue', 'पुढे जा'),
+          label: appText.continueLabel,
           loading: _loading,
           onPressed: _continueFromProfileForWhom,
         ),
@@ -3682,12 +3610,12 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           hasError: _motherTongueError != null,
           pulseKey: 'mother_tongue:$_fieldErrorPulseToken:$_motherTongueError',
           child: OnboardingPickerField(
-            label: _t('Mother tongue *', 'मातृभाषा *'),
+            label: appText.motherTongue,
             selectedItems: _motherTongue?.intId == null
                 ? const []
                 : [_motherTongue!],
-            placeholder: _t('Select mother tongue', 'मातृभाषा निवडा'),
-            searchHint: _t('Search mother tongue', 'मातृभाषा शोधा'),
+            placeholder: appText.selectMotherTongue,
+            searchHint: appText.searchMotherTongue,
             errorText: _motherTongueError,
             loadPage: (query, page, limit) =>
                 _staticOptionsPage(_motherTongueOptions(), query, page, limit),
@@ -3711,7 +3639,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         ),
         const SizedBox(height: 16),
         OnboardingContinueButton(
-          label: _t('Continue', 'पुढे जा'),
+          label: appText.continueLabel,
           loading: _loading,
           onPressed: _continueFromMotherTongue,
         ),
@@ -3840,16 +3768,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final email = credential.email.trim();
     final idToken = credential.idToken?.trim() ?? '';
     if (email.isEmpty) {
-      return _t(
-        'Could not read email from Google.',
-        'Google कडून email मिळाला नाही.',
-      );
+      return appText.couldNotReadEmailFromGoogle;
     }
     if (idToken.isEmpty) {
-      return _t(
-        'Google verification is not ready. We will verify this email with OTP.',
-        'Google verification तयार नाही. हा email OTP ने verify करूया.',
-      );
+      return appText.googleVerificationIsNotReadyWe;
     }
 
     final response = await ApiClient.verifyGoogleEmail(
@@ -3859,10 +3781,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     if (response['success'] != true) {
       return readableApiError(
         response,
-        _t(
-          'Google verification failed. We will verify this email with OTP.',
-          'Google verification झाले नाही. हा email OTP ने verify करूया.',
-        ),
+        appText.googleVerificationFailedWeWillVerify,
       );
     }
 
@@ -3877,10 +3796,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     if (trimmed.isEmpty) {
       return {
         'success': false,
-        'message': _t(
-          'Enter a valid email address.',
-          'कृपया योग्य email address भरा.',
-        ),
+        'message': appText.enterAValidEmailAddress,
       };
     }
 
@@ -3894,10 +3810,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }) async {
     final trimmed = email.trim();
     if (trimmed.isEmpty) {
-      return _t(
-        'Enter a valid email address.',
-        'कृपया योग्य email address भरा.',
-      );
+      return appText.enterAValidEmailAddress;
     }
 
     final response = await ApiClient.verifyEmailOtp(
@@ -3908,7 +3821,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     if (response['success'] != true) {
       return readableApiError(
         response,
-        _t('Could not verify email.', 'Email verify झाला नाही.'),
+        appText.couldNotVerifyEmail,
       );
     }
 
@@ -3954,19 +3867,19 @@ class _TermsPrivacyFooter extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                _t('By registering, I agree to the ', 'नोंदणी करून मी '),
+                appText.byRegisteringIAgreeToThe,
                 style: textStyle,
               ),
               _FooterLink(
                 label: 'T & C',
                 onTap: () => _showUnavailable(context, 'T & C'),
               ),
-              Text(_t(' and ', ' आणि '), style: textStyle),
+              Text(appText.and, style: textStyle),
               _FooterLink(
                 label: 'Privacy Policy',
                 onTap: () => _showUnavailable(context, 'Privacy Policy'),
               ),
-              Text(_t('.', ' मान्य करतो/करते.'), style: textStyle),
+              Text(appText.str, style: textStyle),
             ],
           ),
         ),

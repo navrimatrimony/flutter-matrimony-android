@@ -4,6 +4,7 @@ import '../../../core/api_client.dart';
 import '../models/onboarding_status.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
+import '../../../core/app_language.dart';
 
 enum PreferenceReviewMode { strict, normal }
 
@@ -86,10 +87,7 @@ class _PartnerPreferenceReviewStepState
         throw Exception(
           readableApiError(
             preview,
-            _t(
-              'Partner preference preview is not ready.',
-              'जोडीदार पसंती preview तयार नाही.',
-            ),
+            appText.partnerPreferencePreviewIsNotReady,
           ),
         );
       }
@@ -322,14 +320,8 @@ class _PartnerPreferenceReviewStepState
       _mode = mode;
       _draft = _baseForMode(mode);
       _message = mode == PreferenceReviewMode.normal
-          ? _t(
-              'Normal mode selected. Some preferences are wider for more matches.',
-              'Normal mode निवडला. जास्त matches साठी काही पसंती wide केली आहे.',
-            )
-          : _t(
-              'Strict mode selected. Preferences are focused from your profile.',
-              'Strict mode निवडला. पसंती तुमच्या प्रोफाइलनुसार focused आहे.',
-            );
+          ? appText.normalModeSelectedSomePreferencesAre
+          : appText.strictModeSelectedPreferencesAreFocused;
     });
   }
 
@@ -356,7 +348,7 @@ class _PartnerPreferenceReviewStepState
         fillMissingLists: false,
       );
       _draft = _baseForMode(_mode);
-      _message = _t('Section updated.', 'Section update झाले.');
+      _message = appText.sectionUpdated;
     });
   }
 
@@ -378,10 +370,7 @@ class _PartnerPreferenceReviewStepState
           _saving = false;
           _error = readableApiError(
             response,
-            _t(
-              'Partner preference save failed.',
-              'जोडीदार पसंती save झाली नाही.',
-            ),
+            appText.partnerPreferenceSaveFailed,
           );
         });
         return;
@@ -392,10 +381,7 @@ class _PartnerPreferenceReviewStepState
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _error = _t(
-          'Partner preference save करताना problem आला.',
-          'Partner preference save करताना problem आला.',
-        );
+        _error = appText.partnerPreferenceSaveProblem;
       });
     }
   }
@@ -449,28 +435,19 @@ class _PartnerPreferenceReviewStepState
   Widget build(BuildContext context) {
     final changes = _changedCount;
     return OnboardingStepScaffold(
-      title: _t('Partner Preference', 'जोडीदार पसंती'),
-      subtitle: _t(
-        'Review the preference prepared from your profile. You can widen it for more matches.',
-        'तुमच्या माहितीवरून तयार केलेली पसंती तपासा. जास्त matches साठी ती wide करू शकता.',
-      ),
+      title: appText.partnerPreference2,
+      subtitle: appText.reviewThePreferencePreparedFromYour,
       loading: _busy,
       onBack: widget.onBack,
       onContinue: _save,
       continueEnabled: !_loading && _error == null,
       continueLabel: _mode == PreferenceReviewMode.normal
-          ? _t(
-              'Save normal preference and finish setup',
-              'Normal पसंती save करून setup पूर्ण करा',
-            )
-          : _t(
-              'Save strict preference and finish setup',
-              'Strict पसंती save करून setup पूर्ण करा',
-            ),
+          ? appText.saveNormalPreferenceAndFinishSetup
+          : appText.saveStrictPreferenceAndFinishSetup,
       secondary: TextButton.icon(
         onPressed: _busy ? null : _load,
         icon: const Icon(Icons.refresh),
-        label: Text(_t('Refresh preference', 'Preference refresh करा')),
+        label: Text(appText.refreshPreference),
       ),
       children: [
         _noticePanel(context, changes),
@@ -514,10 +491,7 @@ class _PartnerPreferenceReviewStepState
                         '$changes saved values differ from this preference. Old and new values are highlighted below.',
                         '$changes आधीच्या values या preference पेक्षा वेगळ्या आहेत. खाली आधीची आणि नवीन value वेगळ्या रंगात दाखवली आहे.',
                       )
-                    : _t(
-                        'This preference is based on the information you filled. You can edit any section now or change it later.',
-                        'तुम्ही भरलेल्या माहितीनुसार ही partner preference दाखवत आहोत. हवे असल्यास section edit करू शकता किंवा नंतर बदलू शकता.',
-                      ),
+                    : appText.thisPreferenceIsBasedOnThe,
                 style: TextStyle(color: colors.onSurfaceVariant, height: 1.35),
               ),
             ),
@@ -547,12 +521,12 @@ class _PartnerPreferenceReviewStepState
         ButtonSegment(
           value: PreferenceReviewMode.strict,
           icon: const Icon(Icons.center_focus_strong_outlined),
-          label: Text(_t('Strict', 'Strict')),
+          label: Text(appText.strict),
         ),
         ButtonSegment(
           value: PreferenceReviewMode.normal,
           icon: const Icon(Icons.open_in_full_outlined),
-          label: Text(_t('Normal', 'Normal')),
+          label: Text(appText.normal),
         ),
       ],
       selected: {_mode},
@@ -595,7 +569,7 @@ class _PartnerPreferenceReviewStepState
                   TextButton.icon(
                     onPressed: _busy ? null : () => _editSection(section),
                     icon: const Icon(Icons.edit_outlined, size: 18),
-                    label: Text(_t('Edit', 'Edit')),
+                    label: Text(appText.edit),
                   ),
                 ],
               ),
@@ -637,12 +611,12 @@ class _PartnerPreferenceReviewStepState
                     spacing: 6,
                     children: [
                       _valueChip(
-                        _t('Before', 'आधी'),
+                        appText.before,
                         saved,
                         Colors.amber.shade800,
                       ),
                       _valueChip(
-                        _t('New', 'नवीन'),
+                        appText.matchesTabNew,
                         current,
                         Colors.green.shade700,
                       ),
@@ -691,7 +665,7 @@ class _PartnerPreferenceReviewStepState
         return _rangeLabel(
           source['preferred_age_min'],
           source['preferred_age_max'],
-          suffix: _t(' years', ' वर्षे'),
+          suffix: appText.years,
         );
       case 'preferred_height_min_cm':
         return _heightRangeLabel(
@@ -714,11 +688,11 @@ class _PartnerPreferenceReviewStepState
         return _singleOptionLabel('preferred_profile_managed_by', source[key]);
       case 'preferred_intercaste':
         final value = onboardingBool(source[key]);
-        if (value == true) return _t('Yes', 'होय');
-        return _t('No', 'नाही');
+        if (value == true) return appText.yes;
+        return appText.no;
       case 'willing_to_relocate':
         final value = onboardingBool(source[key]);
-        if (value == true) return _t('Yes', 'होय');
+        if (value == true) return appText.yes;
         return _openLabel;
       case 'preferred_marital_status_ids':
         return _multiOptionLabel('marital_statuses', source[key]);
@@ -740,7 +714,7 @@ class _PartnerPreferenceReviewStepState
     return _openLabel;
   }
 
-  String get _openLabel => _t('Open', 'Open');
+  String get _openLabel => appText.open;
 
   String _rangeLabel(dynamic min, dynamic max, {String suffix = ''}) {
     final minValue = onboardingInt(min);
@@ -848,12 +822,9 @@ class _PartnerPreferenceReviewStepState
 
   String _childrenPreferenceLabel(String? value) {
     return switch (value) {
-      'no' => _t('No children', 'मुले नसलेली profile'),
-      'yes_if_live_separate' => _t(
-        'Accepted if children live separately',
-        'मुले वेगळी राहत असतील तर चालेल',
-      ),
-      'yes' => _t('Accepted', 'चालेल'),
+      'no' => appText.noChildren,
+      'yes_if_live_separate' => appText.acceptedIfChildrenLiveSeparately,
+      'yes' => appText.accepted2,
       _ => _openLabel,
     };
   }
@@ -870,12 +841,12 @@ class _PartnerPreferenceReviewStepState
 
   String _sectionTitle(_PreferenceSection section) {
     return switch (section) {
-      _PreferenceSection.basics => _t('Basics', 'Basic'),
-      _PreferenceSection.community => _t('Community', 'समुदाय'),
-      _PreferenceSection.location => _t('Location', 'ठिकाण'),
-      _PreferenceSection.career => _t('Education & Career', 'शिक्षण आणि करिअर'),
-      _PreferenceSection.lifestyle => _t('Lifestyle', 'Lifestyle'),
-      _PreferenceSection.other => _t('Other', 'इतर'),
+      _PreferenceSection.basics => appText.basics,
+      _PreferenceSection.community => appText.community,
+      _PreferenceSection.location => appText.location,
+      _PreferenceSection.career => appText.educationCareer,
+      _PreferenceSection.lifestyle => appText.lifestyle,
+      _PreferenceSection.other => appText.other,
     };
   }
 
@@ -1026,7 +997,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
               FilledButton.icon(
                 onPressed: _save,
                 icon: const Icon(Icons.check),
-                label: Text(_t('Save section', 'Section save करा')),
+                label: Text(appText.saveSection),
               ),
             ],
           ),
@@ -1041,17 +1012,17 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
         _numberPair(
           'preferred_age_min',
           'preferred_age_max',
-          _t('Age range', 'वय range'),
+          appText.ageRange,
         ),
         _numberPair(
           'preferred_height_min_cm',
           'preferred_height_max_cm',
-          _t('Height range cm', 'उंची range cm'),
+          appText.heightRangeCm,
         ),
         _choiceWrap(
           'preferred_marital_status_ids',
           'marital_statuses',
-          _t('Marital status', 'वैवाहिक स्थिती'),
+          appText.maritalStatus,
         ),
         if (!widget.hideChildrenPreference) _childrenChoices(),
       ],
@@ -1059,12 +1030,12 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
         _choiceWrap(
           'preferred_religion_ids',
           'religions',
-          _t('Religion', 'धर्म'),
+          appText.religion,
         ),
-        _choiceWrap('preferred_caste_ids', 'castes', _t('Caste', 'जात')),
+        _choiceWrap('preferred_caste_ids', 'castes', appText.caste),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(_t('Open to intercaste', 'आंतरजातीय चालेल')),
+          title: Text(appText.openToIntercaste),
           value: onboardingBool(_values['preferred_intercaste']) == true,
           onChanged: (value) =>
               setState(() => _values['preferred_intercaste'] = value),
@@ -1072,7 +1043,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
         _choiceWrap(
           'preferred_mother_tongue_ids',
           'mother_tongues',
-          _t('Mother tongue', 'मातृभाषा'),
+          appText.motherTongue2,
         ),
       ],
       _PreferenceSection.location => [_locationChoices()],
@@ -1080,37 +1051,37 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
         _choiceWrap(
           'preferred_education_degree_ids',
           'education_degrees',
-          _t('Education', 'शिक्षण'),
+          appText.education,
         ),
         _choiceWrap(
           'preferred_occupation_master_ids',
           'occupations',
-          _t('Occupation', 'व्यवसाय'),
+          appText.occupation,
         ),
         _numberPair(
           'preferred_income_min',
           'preferred_income_max',
-          _t('Income range', 'उत्पन्न range'),
+          appText.incomeRange2,
         ),
       ],
       _PreferenceSection.lifestyle => [
-        _choiceWrap('preferred_diet_ids', 'diets', _t('Diet', 'आहार')),
+        _choiceWrap('preferred_diet_ids', 'diets', appText.diet),
       ],
       _PreferenceSection.other => [
         _singleChoice(
           'marriage_type_preference_id',
           'marriage_type_preferences',
-          _t('Marriage type', 'विवाह प्रकार'),
+          appText.marriageType,
         ),
         _singleChoice(
           'preferred_profile_managed_by',
           'preferred_profile_managed_by',
-          _t('Profile managed by', 'Profile कोणाद्वारे'),
+          appText.profileManagedBy,
           byKey: true,
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text(_t('Willing to relocate', 'स्थलांतर चालेल')),
+          title: Text(appText.willingToRelocate),
           value: onboardingBool(_values['willing_to_relocate']) == true,
           onChanged: (value) => setState(
             () => _values['willing_to_relocate'] = value ? true : null,
@@ -1134,7 +1105,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
                 child: TextField(
                   controller: _controllers[minKey],
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: _t('Min', 'Min')),
+                  decoration: InputDecoration(labelText: appText.min),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1142,7 +1113,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
                 child: TextField(
                   controller: _controllers[maxKey],
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: _t('Max', 'Max')),
+                  decoration: InputDecoration(labelText: appText.max),
                 ),
               ),
             ],
@@ -1166,7 +1137,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
           Text(label, style: const TextStyle(fontWeight: FontWeight.w800)),
           const SizedBox(height: 8),
           if (options.isEmpty)
-            Text(_t('Options not loaded.', 'Options load झाले नाहीत.'))
+            Text(appText.optionsNotLoaded)
           else
             Wrap(
               spacing: 8,
@@ -1174,7 +1145,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
               children: [
                 ActionChip(
                   avatar: const Icon(Icons.clear, size: 16),
-                  label: Text(_t('Open', 'Open')),
+                  label: Text(appText.open),
                   onPressed: () => setState(() => _values[key] = <int>[]),
                 ),
                 for (final option in options)
@@ -1214,7 +1185,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
             runSpacing: 8,
             children: [
               ChoiceChip(
-                label: Text(_t('Open', 'Open')),
+                label: Text(appText.open),
                 selected: current == null,
                 onSelected: (_) => _setSingle(key, null),
               ),
@@ -1243,12 +1214,12 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
   Widget _childrenChoices() {
     final current = onboardingText(_values['partner_profile_with_children']);
     final rows = [
-      ['no', _t('No children', 'मुले नसलेली profile')],
+      ['no', appText.noChildren],
       [
         'yes_if_live_separate',
-        _t('Children separate', 'मुले वेगळी राहत असतील तर'),
+        appText.childrenSeparate,
       ],
-      ['yes', _t('Accepted', 'चालेल')],
+      ['yes', appText.accepted2],
     ];
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -1256,7 +1227,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _t('Partner profile with children', 'मुले असलेली profile'),
+            appText.partnerProfileWithChildren,
             style: const TextStyle(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
@@ -1265,7 +1236,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
             runSpacing: 8,
             children: [
               ChoiceChip(
-                label: Text(_t('Open', 'Open')),
+                label: Text(appText.open),
                 selected: current == null,
                 onSelected: (_) =>
                     _setSingle('partner_profile_with_children', null),
@@ -1291,15 +1262,12 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _t('Location preference', 'ठिकाण पसंती'),
+            appText.locationPreference,
             style: const TextStyle(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
-            _t(
-              'Use nearby keeps backend suggested country/state/district. Open removes location filters.',
-              'Nearby मध्ये backend suggested country/state/district राहते. Open केल्यास location filter काढला जाईल.',
-            ),
+            appText.useNearbyKeepsBackendSuggestedCountry,
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -1308,7 +1276,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
             children: [
               ActionChip(
                 avatar: const Icon(Icons.restore, size: 16),
-                label: Text(_t('Use nearby', 'Nearby वापरा')),
+                label: Text(appText.useNearby),
                 onPressed: () {
                   setState(() {
                     for (final key in _locationKeys) {
@@ -1319,7 +1287,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
               ),
               ActionChip(
                 avatar: const Icon(Icons.public, size: 16),
-                label: Text(_t('Open location', 'Location open ठेवा')),
+                label: Text(appText.openLocation),
                 onPressed: () {
                   setState(() {
                     for (final key in _locationKeys) {
@@ -1337,12 +1305,12 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
 
   String _sectionTitle(_PreferenceSection section) {
     return switch (section) {
-      _PreferenceSection.basics => _t('Basics', 'Basic'),
-      _PreferenceSection.community => _t('Community', 'समुदाय'),
-      _PreferenceSection.location => _t('Location', 'ठिकाण'),
-      _PreferenceSection.career => _t('Education & Career', 'शिक्षण आणि करिअर'),
-      _PreferenceSection.lifestyle => _t('Lifestyle', 'Lifestyle'),
-      _PreferenceSection.other => _t('Other', 'इतर'),
+      _PreferenceSection.basics => appText.basics,
+      _PreferenceSection.community => appText.community,
+      _PreferenceSection.location => appText.location,
+      _PreferenceSection.career => appText.educationCareer,
+      _PreferenceSection.lifestyle => appText.lifestyle,
+      _PreferenceSection.other => appText.other,
     };
   }
 
