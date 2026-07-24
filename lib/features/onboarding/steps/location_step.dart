@@ -154,7 +154,7 @@ class _LocationStepState extends State<LocationStep>
     if (text.isNotEmpty) {
       return _t(
         '$text not found. Add new location.',
-        '$text सापडले नाही. नवीन location entry करा.',
+        '$text सापडले नाही. नवीन ठिकाण जोडा.',
       );
     }
 

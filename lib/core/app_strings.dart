@@ -110,7 +110,7 @@ class AppStrings {
   static String get dashboardChangePlan => appText.dashboardChangePlan;
 
   static String dashboardContactCreditsRemaining(int count) =>
-      _mr ? 'Contact credits: $count शिल्लक' : 'Contact credits: $count left';
+      _mr ? 'संपर्क क्रेडिट: $count शिल्लक' : 'Contact credits: $count left';
 
   static String get dashboardNextBestAction =>
       appText.dashboardNextBestAction;
@@ -882,7 +882,7 @@ class AppStrings {
   static String get photoUploadHelp => appText.photoUploadHelp;
 
   static String photoSlotsRemaining(int count) =>
-      _mr ? '$count photo slots बाकी आहेत' : '$count photo slots remaining';
+      _mr ? '$count फोटो जागा शिल्लक' : '$count photo slots remaining';
 
   static String get camera => appText.camera;
 

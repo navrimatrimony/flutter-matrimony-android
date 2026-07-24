@@ -987,7 +987,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final headline = _mentionsProfileView(cleaned)
         ? cleaned
         : (AppStrings.isMarathi
-              ? '${_marathiViewerSubject(cleaned)} तुमचे profile पाहिले.'
+              ? '${_marathiViewerSubject(cleaned)} तुमचे प्रोफाइल पाहिले.'
               : '$cleaned viewed your profile.');
 
     return _lockedHeadlineWithRepeat(headline, teaser);

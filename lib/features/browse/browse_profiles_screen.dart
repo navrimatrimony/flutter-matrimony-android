@@ -1748,7 +1748,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         );
         _nearbyLocationBusy = false;
         _nearbyLocationMessage = AppStrings.isMarathi
-            ? '$label apply केले.'
+            ? '$label लागू केले.'
             : '$label applied.';
       });
       await _fetchProfileListForCurrentTab();

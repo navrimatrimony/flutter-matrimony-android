@@ -2766,29 +2766,29 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.mobileOtp:
         return _t(
           'Verification keeps $subjectEn profile safe and recoverable.',
-          'Mobile verify केल्याने $subjectMr profile सुरक्षित राहते.',
+          'मोबाइल पडताळणीमुळे $subjectMr प्रोफाइल सुरक्षित आणि परत मिळवता येण्याजोगे राहते.',
         );
       case _SmartOnboardingStep.maritalStatus:
         return _t(
           'This helps avoid irrelevant questions and match filters.',
-          '$subjectMr वैवाहिक स्थिती योग्य matches filter करायला मदत करते.',
+          '$subjectMr वैवाहिक स्थिती अप्रासंगिक प्रश्न आणि जुळणी टाळायला मदत करते.',
         );
       case _SmartOnboardingStep.basicInfo:
         return _t(
           'Accurate basics improve $subjectEn match recommendations.',
-          '$subjectMr अचूक माहिती योग्य matches सुचवायला मदत करते.',
+          '$subjectMr अचूक माहिती योग्य स्थळे सुचवायला मदत करते.',
         );
       case _SmartOnboardingStep.religionCaste:
         return appText.communityPreferencesHelpKeepSuggestionsRelevant;
       case _SmartOnboardingStep.location:
         return _t(
           'Location helps us show nearby and practical matches.',
-          '$subjectMr राहण्याचे ठिकाण nearby matches दाखवायला मदत करते.',
+          '$subjectMr राहण्याचे ठिकाण जवळची आणि व्यवहार्य स्थळे दाखवायला मदत करते.',
         );
       case _SmartOnboardingStep.education:
         return _t(
           'Education and career details improve match quality.',
-          '$subjectMr शिक्षण आणि कामाची माहिती match quality वाढवते.',
+          '$subjectMr शिक्षण आणि कामाची माहिती जुळणीचा दर्जा वाढवते.',
         );
       case _SmartOnboardingStep.motherTongue:
         return _t(
@@ -2798,7 +2798,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.lifestyle:
         return _t(
           'Lifestyle choices help compare day-to-day compatibility.',
-          '$subjectMr सवयी आणि lifestyle जुळवायला मदत करतात.',
+          '$subjectMr सवयी आणि जीवनशैली रोजची सुसंगती तपासायला मदत करतात.',
         );
       case _SmartOnboardingStep.family:
         return _t(
@@ -2808,7 +2808,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       case _SmartOnboardingStep.astro:
         return _t(
           'Astro details can help families who prefer horoscope matching.',
-          '$subjectMr ज्योतिष माहिती horoscope matching साठी उपयोगी ठरते.',
+          '$subjectMr ज्योतिष माहिती पत्रिका जुळवणीला प्राधान्य देणाऱ्या कुटुंबांसाठी उपयोगी ठरते.',
         );
       case _SmartOnboardingStep.registrationComplete:
         return appText.registrationIsCompleteNextSettingsImprove;
@@ -3311,7 +3311,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      _t('Test OTP: $debugOtp', 'Test OTP: $debugOtp'),
+                      _t('चाचणी OTP: $debugOtp', 'चाचणी OTP: $debugOtp'),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.green.shade800,
@@ -3448,7 +3448,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return Text(
         _t(
           'Didn’t get the code yet? Resend in ${_resendSecondsRemaining}s',
-          'Code मिळाला नाही? ${_resendSecondsRemaining}s नंतर पुन्हा पाठवा',
+          'कोड मिळाला नाही? ${_resendSecondsRemaining}s नंतर पुन्हा पाठवा',
         ),
         textAlign: TextAlign.center,
         style: Theme.of(context).textTheme.bodyMedium,
@@ -3843,7 +3843,7 @@ class _TermsPrivacyFooter extends StatelessWidget {
         content: Text(
           _t(
             '$label link is not available yet.',
-            '$label link अजून उपलब्ध नाही.',
+            '$label दुवा अजून उपलब्ध नाही.',
           ),
         ),
       ),

@@ -489,7 +489,7 @@ class _PartnerPreferenceReviewStepState
                 changes > 0
                     ? _t(
                         '$changes saved values differ from this preference. Old and new values are highlighted below.',
-                        '$changes आधीच्या values या preference पेक्षा वेगळ्या आहेत. खाली आधीची आणि नवीन value वेगळ्या रंगात दाखवली आहे.',
+                        '$changes आधीची मूल्ये या पसंतीपेक्षा वेगळी आहेत. खाली आधीची आणि नवीन मूल्ये वेगळ्या रंगात दाखवली आहेत.',
                       )
                     : appText.thisPreferenceIsBasedOnThe,
                 style: TextStyle(color: colors.onSurfaceVariant, height: 1.35),
@@ -765,7 +765,7 @@ class _PartnerPreferenceReviewStepState
           : lakhs.toStringAsFixed(1);
       return _t('Rs $text L', '$text लाख');
     }
-    return _t('Rs $value', 'Rs $value');
+    return _t('₹$value', '₹$value');
   }
 
   String _singleOptionLabel(String optionKey, dynamic idOrKey) {
@@ -804,18 +804,18 @@ class _PartnerPreferenceReviewStepState
     final countries = _readIntList(source['preferred_country_ids']);
     if (talukas.isNotEmpty) {
       return _t(
-        '${talukas.length} nearby taluka',
-        '${talukas.length} nearby taluka',
+        '${talukas.length} जवळचे तालुके',
+        '${talukas.length} जवळचे तालुके',
       );
     }
     if (districts.isNotEmpty) {
-      return _t('${districts.length} district', '${districts.length} district');
+      return _t('${districts.length} जिल्हे', '${districts.length} जिल्हे');
     }
     if (states.isNotEmpty) {
-      return _t('${states.length} state', '${states.length} state');
+      return _t('${states.length} राज्ये', '${states.length} राज्ये');
     }
     if (countries.isNotEmpty) {
-      return _t('${countries.length} country', '${countries.length} country');
+      return _t('${countries.length} देश', '${countries.length} देश');
     }
     return _openLabel;
   }
