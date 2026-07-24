@@ -235,7 +235,10 @@ class ApiClient {
   static Map<String, String> _jsonHeaders({bool authenticated = false}) {
     final headers = <String, String>{
       'Accept': 'application/json',
+      'Accept-Language': appLanguageCode(currentAppLanguage),
       'Content-Type': 'application/json',
+      // See _acceptHeaders — the server labels its responses in this language.
+      'Accept-Language': appLanguageCode(currentAppLanguage),
     };
 
     if (authenticated) {
@@ -246,7 +249,15 @@ class ApiClient {
   }
 
   static Map<String, String> _acceptHeaders({bool authenticated = false}) {
-    final headers = <String, String>{'Accept': 'application/json'};
+    final headers = <String, String>{
+      'Accept': 'application/json',
+      'Accept-Language': appLanguageCode(currentAppLanguage),
+      // Master-data labels come back in whatever language this header names.
+      // Without it the backend reads the phone's OS language, which is not the
+      // language the member chose in the app — a member who picked Marathi on
+      // an English phone would get English caste/education/location labels.
+      'Accept-Language': appLanguageCode(currentAppLanguage),
+    };
 
     if (authenticated) {
       headers['Authorization'] = 'Bearer ${_requireAuthToken()}';
@@ -1073,6 +1084,7 @@ class ApiClient {
           url,
           headers: {
             'Accept': 'application/json',
+            'Accept-Language': appLanguageCode(currentAppLanguage),
             'Authorization': 'Bearer $authToken',
           },
         );
@@ -1166,6 +1178,7 @@ class ApiClient {
           url,
           headers: {
             'Accept': 'application/json',
+            'Accept-Language': appLanguageCode(currentAppLanguage),
             'Authorization': 'Bearer $authToken',
           },
         );
@@ -1246,6 +1259,7 @@ class ApiClient {
           url,
           headers: {
             'Accept': 'application/json',
+            'Accept-Language': appLanguageCode(currentAppLanguage),
             'Authorization': 'Bearer $authToken',
           },
         );
@@ -1324,6 +1338,7 @@ class ApiClient {
           url,
           headers: {
             'Accept': 'application/json',
+            'Accept-Language': appLanguageCode(currentAppLanguage),
             'Authorization': 'Bearer $authToken',
           },
         );
@@ -1397,6 +1412,7 @@ class ApiClient {
           url,
           headers: {
             'Accept': 'application/json',
+            'Accept-Language': appLanguageCode(currentAppLanguage),
             'Authorization': 'Bearer $authToken',
           },
         );
@@ -1504,6 +1520,7 @@ class ApiClient {
           url,
           headers: {
             'Accept': 'application/json',
+            'Accept-Language': appLanguageCode(currentAppLanguage),
             'Authorization': 'Bearer $authToken',
           },
         );
@@ -1602,6 +1619,7 @@ class ApiClient {
           url,
           headers: {
             'Accept': 'application/json',
+            'Accept-Language': appLanguageCode(currentAppLanguage),
             'Authorization': 'Bearer $authToken',
           },
         );
@@ -1650,6 +1668,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
@@ -2218,6 +2237,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Content-Type': 'application/json',
       },
       body: jsonEncode({'login': loginValue, 'password': password}),
@@ -2256,6 +2276,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Content-Type': 'application/json',
       },
       body: jsonEncode({
@@ -2300,6 +2321,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $authToken',
       },
@@ -2329,6 +2351,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $authToken',
       },
@@ -2566,6 +2589,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
@@ -2589,6 +2613,7 @@ class ApiClient {
         ),
         headers: {
           'Accept': 'application/json',
+          'Accept-Language': appLanguageCode(currentAppLanguage),
           'Authorization': 'Bearer $authToken',
         },
       );
@@ -2616,6 +2641,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
@@ -2652,6 +2678,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $authToken',
       },
@@ -2683,6 +2710,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $authToken',
       },
@@ -3008,6 +3036,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $authToken',
       },
@@ -3027,6 +3056,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
@@ -3045,6 +3075,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
@@ -3084,6 +3115,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
@@ -3104,6 +3136,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
@@ -3124,6 +3157,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
@@ -3144,6 +3178,7 @@ class ApiClient {
       url,
       headers: {
         'Accept': 'application/json',
+        'Accept-Language': appLanguageCode(currentAppLanguage),
         'Authorization': 'Bearer $authToken',
       },
     );
