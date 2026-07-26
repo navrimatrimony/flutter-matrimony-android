@@ -779,7 +779,7 @@ abstract class AppLocalizations {
   /// No description provided for @cameraGalleryProfilePhotoAdd.
   ///
   /// In en, this message translates to:
-  /// **'Camera किंवा gallery मधून profile photo add करा.'**
+  /// **'Add a profile photo from the camera or gallery.'**
   String get cameraGalleryProfilePhotoAdd;
 
   /// No description provided for @canSendContactRequestForProfile.
@@ -2384,6 +2384,18 @@ abstract class AppLocalizations {
   /// **'Horoscope data is incomplete.'**
   String get gunamilanIncomplete;
 
+  /// No description provided for @gunamilanRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Gunamilan match required'**
+  String get gunamilanRequired;
+
+  /// No description provided for @gunamilanRequiredHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'When on, only matches scoring at least 18 of 36 are shown. If either side has no patrika details filled in, the match is not excluded — gunamilan simply cannot be checked.'**
+  String get gunamilanRequiredHelp;
+
   /// No description provided for @gunamilanScore.
   ///
   /// In en, this message translates to:
@@ -3485,7 +3497,7 @@ abstract class AppLocalizations {
   /// No description provided for @partnerPreferenceSaveProblem.
   ///
   /// In en, this message translates to:
-  /// **'Partner preference save करताना problem आला.'**
+  /// **'A problem occurred while saving the partner preference.'**
   String get partnerPreferenceSaveProblem;
 
   /// No description provided for @partnerProfileWithChildren.
@@ -3551,7 +3563,7 @@ abstract class AppLocalizations {
   /// No description provided for @photoCropPhoto.
   ///
   /// In en, this message translates to:
-  /// **'Photo crop करता आला नाही. कृपया दुसरा photo निवडा.'**
+  /// **'Could not crop the photo. Please select a different photo.'**
   String get photoCropPhoto;
 
   /// No description provided for @photoDeleteConfirm.
@@ -3713,7 +3725,7 @@ abstract class AppLocalizations {
   /// No description provided for @photoUploadedBackendQualitySafetyCheck.
   ///
   /// In en, this message translates to:
-  /// **'Photo uploaded आहे. Backend quality आणि safety check नंतर तो visible होईल.'**
+  /// **'The photo is uploaded. It will become visible after the server quality and safety check.'**
   String get photoUploadedBackendQualitySafetyCheck;
 
   /// No description provided for @photoUploadedPleaseCheckTheStatus.
@@ -5483,7 +5495,7 @@ abstract class AppLocalizations {
   /// No description provided for @uploadCompleteScreen.
   ///
   /// In en, this message translates to:
-  /// **'Upload complete होईपर्यंत screen बंद करू नका.'**
+  /// **'Do not close the screen until the upload is complete.'**
   String get uploadCompleteScreen;
 
   /// No description provided for @uploadNeedsAttention.
@@ -6217,6 +6229,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Profile ID: {id}'**
   String profileIdLabel(String id);
+
+  /// No description provided for @profileNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile not found.'**
+  String get profileNotFound;
+
+  /// No description provided for @profilePreview.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile preview'**
+  String get profilePreview;
+
+  /// No description provided for @profileInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile information'**
+  String get profileInformation;
+
+  /// No description provided for @photoNotAddedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No photo added yet'**
+  String get photoNotAddedYet;
+
+  /// No description provided for @nameNotAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Name not available'**
+  String get nameNotAvailable;
+
+  /// No description provided for @pleaseTryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Please try again.'**
+  String get pleaseTryAgain;
+
+  /// No description provided for @signUpWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Up with Google'**
+  String get signUpWithGoogle;
+
+  /// No description provided for @signUpWithMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Up with Mobile'**
+  String get signUpWithMobile;
+
+  /// No description provided for @unexpectedErrorOccurred.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred: {error}'**
+  String unexpectedErrorOccurred(String error);
+
+  /// No description provided for @sectionSavedNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'{section} saved.'**
+  String sectionSavedNamed(String section);
+
+  /// No description provided for @testOtpLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Test OTP: {otp}'**
+  String testOtpLabel(String otp);
+
+  /// No description provided for @nearbyTalukasCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} nearby talukas'**
+  String nearbyTalukasCount(int count);
+
+  /// No description provided for @districtsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} districts'**
+  String districtsCount(int count);
+
+  /// No description provided for @statesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} states'**
+  String statesCount(int count);
+
+  /// No description provided for @countriesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} countries'**
+  String countriesCount(int count);
 }
 
 class _AppLocalizationsDelegate

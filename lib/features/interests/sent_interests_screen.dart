@@ -72,7 +72,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'एक अनपेक्षित एरर आली: ${e.toString()}';
+        _errorMessage = appText.unexpectedErrorOccurred(e.toString());
         _isLoading = false;
       });
     }
@@ -110,7 +110,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('❌ एक अनपेक्षित एरर आली: ${e.toString()}'),
+          content: Text('❌ ${appText.unexpectedErrorOccurred(e.toString())}'),
           backgroundColor: Colors.red,
           duration: const Duration(seconds: 3),
         ),
@@ -176,7 +176,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _fetchSentInterests,
-                child: const Text('पुन्हा प्रयत्न करा'),
+                child: Text(AppStrings.retry),
               ),
             ],
           ),

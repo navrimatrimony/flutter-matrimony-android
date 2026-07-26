@@ -57,7 +57,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'एक अनपेक्षित एरर आली: ${e.toString()}';
+        _errorMessage = appText.unexpectedErrorOccurred(e.toString());
         _isLoading = false;
       });
     }
@@ -567,7 +567,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar('एक अनपेक्षित एरर आली: ${e.toString()}', error: true);
+      _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), error: true);
     } finally {
       if (mounted) {
         setState(() {
@@ -620,7 +620,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      _showSnackBar('एक अनपेक्षित एरर आली: ${e.toString()}', error: true);
+      _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), error: true);
     } finally {
       if (mounted) {
         setState(() {

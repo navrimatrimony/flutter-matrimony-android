@@ -1238,6 +1238,13 @@ class AppLocalizationsMr extends AppLocalizations {
   String get gunamilanIncomplete => 'पत्रिका माहिती अपूर्ण आहे.';
 
   @override
+  String get gunamilanRequired => 'गुणमिलन जुळणे आवश्यक';
+
+  @override
+  String get gunamilanRequiredHelp =>
+      'हे चालू केल्यास 36 पैकी किमान 18 गुण जुळणारी स्थळेच दाखवली जातील. दोघांपैकी कोणाचीही पत्रिका माहिती भरलेली नसेल, तर स्थळ वगळले जात नाही — फक्त गुणमिलन तपासता येत नाही एवढेच.';
+
+  @override
   String get gunamilanScore => 'गुणमिलन स्कोअर';
 
   @override
@@ -3301,5 +3308,64 @@ class AppLocalizationsMr extends AppLocalizations {
   @override
   String profileIdLabel(String id) {
     return 'प्रोफाइल ID: $id';
+  }
+
+  @override
+  String get profileNotFound => 'प्रोफाइल सापडली नाही.';
+
+  @override
+  String get profilePreview => 'प्रोफाइल झलक';
+
+  @override
+  String get profileInformation => 'प्रोफाइल माहिती';
+
+  @override
+  String get photoNotAddedYet => 'फोटो अजून जोडलेला नाही';
+
+  @override
+  String get nameNotAvailable => 'नाव उपलब्ध नाही';
+
+  @override
+  String get pleaseTryAgain => 'कृपया पुन्हा प्रयत्न करा.';
+
+  @override
+  String get signUpWithGoogle => 'Google ने सुरू करा';
+
+  @override
+  String get signUpWithMobile => 'मोबाइल नंबरने सुरू करा';
+
+  @override
+  String unexpectedErrorOccurred(String error) {
+    return 'एक अनपेक्षित एरर आली: $error';
+  }
+
+  @override
+  String sectionSavedNamed(String section) {
+    return '$section जतन झाले.';
+  }
+
+  @override
+  String testOtpLabel(String otp) {
+    return 'चाचणी OTP: $otp';
+  }
+
+  @override
+  String nearbyTalukasCount(int count) {
+    return '$count जवळचे तालुके';
+  }
+
+  @override
+  String districtsCount(int count) {
+    return '$count जिल्हे';
+  }
+
+  @override
+  String statesCount(int count) {
+    return '$count राज्ये';
+  }
+
+  @override
+  String countriesCount(int count) {
+    return '$count देश';
   }
 }

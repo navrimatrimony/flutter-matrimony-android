@@ -701,7 +701,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         appText.photoInReviewShownWhenApproved,
       _PhotoUploadStage.rejected =>
         appText.uploadClearSafeSinglePersonPhoto,
-      _PhotoUploadStage.error => 'कृपया पुन्हा प्रयत्न करा.',
+      _PhotoUploadStage.error => appText.pleaseTryAgain,
     };
   }
 

@@ -220,7 +220,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'एक अनपेक्षित एरर आली: ${e.toString()}';
+        _errorMessage = appText.unexpectedErrorOccurred(e.toString());
         _isLoading = false;
       });
     }
@@ -1437,7 +1437,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _fetchProfileListForCurrentTab,
-                child: const Text('पुन्हा प्रयत्न करा'),
+                child: Text(AppStrings.retry),
               ),
             ],
           ),
@@ -3653,7 +3653,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         _displayString(card?['name']) ??
         ApiClient.safeDisplayLabel(profile['full_name']) ??
         ApiClient.safeDisplayLabel(profile['name']) ??
-        'नाव उपलब्ध नाही';
+        appText.nameNotAvailable;
     final primaryPhotoUrl = ApiClient.normalizeProfilePhotoUrl(
       _displayString(card?['primary_photo_url']),
     );

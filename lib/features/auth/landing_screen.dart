@@ -180,10 +180,7 @@ class LandingScreen extends StatelessWidget {
                         const SizedBox(height: 18),
                         _AuthChoiceButton(
                           icon: const _GoogleMark(),
-                          label: _copy(
-                            'Sign Up with Google',
-                            'Google ने सुरू करा',
-                          ),
+                          label: appText.signUpWithGoogle,
                           onPressed: () => _captureEmailAndStartMobile(
                             context,
                           ),
@@ -194,10 +191,7 @@ class LandingScreen extends StatelessWidget {
                             Icons.phone_android_rounded,
                             color: Color(0xFF8A8A8A),
                           ),
-                          label: _copy(
-                            'Sign Up with Mobile',
-                            'मोबाइल नंबरने सुरू करा',
-                          ),
+                          label: appText.signUpWithMobile,
                           onPressed: () => _startMobileSignup(context),
                         ),
                         const SizedBox(height: 12),

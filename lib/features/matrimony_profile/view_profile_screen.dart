@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/app_language.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
@@ -49,14 +50,14 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
         });
       } else {
         setState(() {
-          _errorMessage = response['message'] ?? 'प्रोफाइल लोड होऊ शकले नाही.';
+          _errorMessage = response['message'] ?? appText.couldNotLoadProfile;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'एक अनपेक्षित एरर आली: ${e.toString()}';
+        _errorMessage = appText.unexpectedErrorOccurred(e.toString());
         _isLoading = false;
       });
     }

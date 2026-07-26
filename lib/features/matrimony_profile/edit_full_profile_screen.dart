@@ -5397,7 +5397,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     final saved = await _saveProfile(
       navigateOnSuccess: false,
-      successMessage: ( '${_sectionTitle(section)} जतन झाले.' ),
+      successMessage: appText.sectionSavedNamed(_sectionTitle(section)),
       section: section,
     );
     if (!mounted || !saved) return;

@@ -803,19 +803,16 @@ class _PartnerPreferenceReviewStepState
     final states = _readIntList(source['preferred_state_ids']);
     final countries = _readIntList(source['preferred_country_ids']);
     if (talukas.isNotEmpty) {
-      return _t(
-        '${talukas.length} जवळचे तालुके',
-        '${talukas.length} जवळचे तालुके',
-      );
+      return appText.nearbyTalukasCount(talukas.length);
     }
     if (districts.isNotEmpty) {
-      return _t('${districts.length} जिल्हे', '${districts.length} जिल्हे');
+      return appText.districtsCount(districts.length);
     }
     if (states.isNotEmpty) {
-      return _t('${states.length} राज्ये', '${states.length} राज्ये');
+      return appText.statesCount(states.length);
     }
     if (countries.isNotEmpty) {
-      return _t('${countries.length} देश', '${countries.length} देश');
+      return appText.countriesCount(countries.length);
     }
     return _openLabel;
   }
@@ -916,8 +913,6 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
     }
     super.dispose();
   }
-
-  String _t(String en, String mr) => _mr ? mr : en;
 
   void _syncNumericFields() {
     for (final entry in _controllers.entries) {

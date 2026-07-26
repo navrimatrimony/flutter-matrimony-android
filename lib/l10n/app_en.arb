@@ -113,7 +113,7 @@
   "byRegisteringIAgreeToThe": "By registering, I agree to the ",
   "calmSteady": "Calm & steady",
   "camera": "Camera",
-  "cameraGalleryProfilePhotoAdd": "Camera किंवा gallery मधून profile photo add करा.",
+  "cameraGalleryProfilePhotoAdd": "Add a profile photo from the camera or gallery.",
   "canSendContactRequestForProfile": "You can send a contact request for this profile.",
   "cancel": "Cancel",
   "cancel2": "Cancel",
@@ -381,6 +381,8 @@
   "gunamilanDisclaimer": "Gunamilan is only a compatibility reference. Families should make the final decision after discussion.",
   "gunamilanHideDetails": "Hide details",
   "gunamilanIncomplete": "Horoscope data is incomplete.",
+  "gunamilanRequired": "Gunamilan match required",
+  "gunamilanRequiredHelp": "When on, only matches scoring at least 18 of 36 are shown. If either side has no patrika details filled in, the match is not excluded — gunamilan simply cannot be checked.",
   "gunamilanScore": "Gunamilan score",
   "gunamilanTitle": "Gunamilan / Horoscope Match",
   "gunamilanViewDetails": "View details",
@@ -564,7 +566,7 @@
   "partnerPreference2": "Partner Preference",
   "partnerPreferencePreviewIsNotReady": "Partner preference preview is not ready.",
   "partnerPreferenceSaveFailed": "Partner preference save failed.",
-  "partnerPreferenceSaveProblem": "Partner preference save करताना problem आला.",
+  "partnerPreferenceSaveProblem": "A problem occurred while saving the partner preference.",
   "partnerProfileWithChildren": "Partner profile with children",
   "passwordAndConfirmPasswordDoNot": "Password and confirm password do not match.",
   "pending": "Pending",
@@ -575,7 +577,7 @@
   "photoApproved": "Photo approved",
   "photoApprovedMovingToPartnerPreference": "Photo approved. Moving to partner preference.",
   "photoAvailable": "Photo available",
-  "photoCropPhoto": "Photo crop करता आला नाही. कृपया दुसरा photo निवडा.",
+  "photoCropPhoto": "Could not crop the photo. Please select a different photo.",
   "photoDeleteConfirm": "Remove this photo from your profile?",
   "photoGalleryEmpty": "No photos uploaded yet.",
   "photoInReviewShownWhenApproved": "The photo is under review. It will be shown on your profile once approved.",
@@ -602,7 +604,7 @@
   "photoUploadProblem": "A problem occurred while uploading the photo. Please try again.",
   "photoUploaded": "Photo uploaded.",
   "photoUploadedApprovalPending": "The photo is uploaded. Approval or safety check is pending.",
-  "photoUploadedBackendQualitySafetyCheck": "Photo uploaded आहे. Backend quality आणि safety check नंतर तो visible होईल.",
+  "photoUploadedBackendQualitySafetyCheck": "The photo is uploaded. It will become visible after the server quality and safety check.",
   "photoUploadedPleaseCheckTheStatus": "Photo uploaded. Please check the status before continuing.",
   "photoUploadedReviewIsPendingSo": "Photo uploaded. Review is pending, so we will continue.",
   "photoUploadedStatusWillUpdate": "Photo uploaded. Status will update here.",
@@ -897,7 +899,7 @@
   "uploadAProfilePhotoBeforeContinuing": "Upload a profile photo before continuing.",
   "uploadClearProfilePhoto": "Upload a clear profile photo. The approved status will appear only after backend approval.",
   "uploadClearSafeSinglePersonPhoto": "Please upload a clear, safe and single-person photo.",
-  "uploadCompleteScreen": "Upload complete होईपर्यंत screen बंद करू नका.",
+  "uploadCompleteScreen": "Do not close the screen until the upload is complete.",
   "uploadNeedsAttention": "Upload needs attention",
   "uploadPhoto": "Upload Photo",
   "uploadPhotoSubtitle": "Update your profile photo",
@@ -1039,6 +1041,56 @@
   "@profileIdLabel": {
     "placeholders": {
       "id": { "type": "String" }
+    }
+  },
+  "profileNotFound": "Profile not found.",
+  "profilePreview": "Profile preview",
+  "profileInformation": "Profile information",
+  "photoNotAddedYet": "No photo added yet",
+  "nameNotAvailable": "Name not available",
+  "pleaseTryAgain": "Please try again.",
+  "signUpWithGoogle": "Sign Up with Google",
+  "signUpWithMobile": "Sign Up with Mobile",
+  "unexpectedErrorOccurred": "An unexpected error occurred: {error}",
+  "@unexpectedErrorOccurred": {
+    "placeholders": {
+      "error": { "type": "String" }
+    }
+  },
+  "sectionSavedNamed": "{section} saved.",
+  "@sectionSavedNamed": {
+    "placeholders": {
+      "section": { "type": "String" }
+    }
+  },
+  "testOtpLabel": "Test OTP: {otp}",
+  "@testOtpLabel": {
+    "placeholders": {
+      "otp": { "type": "String" }
+    }
+  },
+  "nearbyTalukasCount": "{count} nearby talukas",
+  "@nearbyTalukasCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "districtsCount": "{count} districts",
+  "@districtsCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "statesCount": "{count} states",
+  "@statesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "countriesCount": "{count} countries",
+  "@countriesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
     }
   }
 }

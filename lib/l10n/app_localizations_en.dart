@@ -382,7 +382,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cameraGalleryProfilePhotoAdd =>
-      'Camera किंवा gallery मधून profile photo add करा.';
+      'Add a profile photo from the camera or gallery.';
 
   @override
   String get canSendContactRequestForProfile =>
@@ -1245,6 +1245,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gunamilanIncomplete => 'Horoscope data is incomplete.';
 
   @override
+  String get gunamilanRequired => 'Gunamilan match required';
+
+  @override
+  String get gunamilanRequiredHelp =>
+      'When on, only matches scoring at least 18 of 36 are shown. If either side has no patrika details filled in, the match is not excluded — gunamilan simply cannot be checked.';
+
+  @override
   String get gunamilanScore => 'Gunamilan score';
 
   @override
@@ -1828,7 +1835,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get partnerPreferenceSaveProblem =>
-      'Partner preference save करताना problem आला.';
+      'A problem occurred while saving the partner preference.';
 
   @override
   String get partnerProfileWithChildren => 'Partner profile with children';
@@ -1866,7 +1873,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photoCropPhoto =>
-      'Photo crop करता आला नाही. कृपया दुसरा photo निवडा.';
+      'Could not crop the photo. Please select a different photo.';
 
   @override
   String get photoDeleteConfirm => 'Remove this photo from your profile?';
@@ -1963,7 +1970,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get photoUploadedBackendQualitySafetyCheck =>
-      'Photo uploaded आहे. Backend quality आणि safety check नंतर तो visible होईल.';
+      'The photo is uploaded. It will become visible after the server quality and safety check.';
 
   @override
   String get photoUploadedPleaseCheckTheStatus =>
@@ -2925,7 +2932,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get uploadCompleteScreen =>
-      'Upload complete होईपर्यंत screen बंद करू नका.';
+      'Do not close the screen until the upload is complete.';
 
   @override
   String get uploadNeedsAttention => 'Upload needs attention';
@@ -3316,5 +3323,64 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String profileIdLabel(String id) {
     return 'Profile ID: $id';
+  }
+
+  @override
+  String get profileNotFound => 'Profile not found.';
+
+  @override
+  String get profilePreview => 'Profile preview';
+
+  @override
+  String get profileInformation => 'Profile information';
+
+  @override
+  String get photoNotAddedYet => 'No photo added yet';
+
+  @override
+  String get nameNotAvailable => 'Name not available';
+
+  @override
+  String get pleaseTryAgain => 'Please try again.';
+
+  @override
+  String get signUpWithGoogle => 'Sign Up with Google';
+
+  @override
+  String get signUpWithMobile => 'Sign Up with Mobile';
+
+  @override
+  String unexpectedErrorOccurred(String error) {
+    return 'An unexpected error occurred: $error';
+  }
+
+  @override
+  String sectionSavedNamed(String section) {
+    return '$section saved.';
+  }
+
+  @override
+  String testOtpLabel(String otp) {
+    return 'Test OTP: $otp';
+  }
+
+  @override
+  String nearbyTalukasCount(int count) {
+    return '$count nearby talukas';
+  }
+
+  @override
+  String districtsCount(int count) {
+    return '$count districts';
+  }
+
+  @override
+  String statesCount(int count) {
+    return '$count states';
+  }
+
+  @override
+  String countriesCount(int count) {
+    return '$count countries';
   }
 }

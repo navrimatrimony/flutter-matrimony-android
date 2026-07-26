@@ -199,7 +199,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
       if (statusCode == 404) {
         setState(() {
-          _errorMessage = 'प्रोफाइल सापडली नाही.';
+          _errorMessage = appText.profileNotFound;
           _isLoading = false;
         });
         return;
@@ -235,7 +235,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         }
 
         setState(() {
-          _errorMessage = response['message'] ?? 'प्रोफाइल लोड होऊ शकले नाही.';
+          _errorMessage = response['message'] ?? appText.couldNotLoadProfile;
           _isLoading = false;
         });
       }
@@ -250,7 +250,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       }
 
       setState(() {
-        _errorMessage = 'एक अनपेक्षित एरर आली: ${e.toString()}';
+        _errorMessage = appText.unexpectedErrorOccurred(e.toString());
         _isLoading = false;
       });
     }
@@ -422,7 +422,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       setState(() {
         _isSendingInterest = false;
       });
-      _showSnackBar('एक अनपेक्षित एरर आली: ${e.toString()}', Colors.red);
+      _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), Colors.red);
     }
   }
 
@@ -1187,7 +1187,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
             right: 16,
             top: 122,
             child: Text(
-              'फोटो अजून जोडलेला नाही',
+              appText.photoNotAddedYet,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.white.withValues(alpha: 0.72),
@@ -1374,7 +1374,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final photoAlbum = _photoAlbumMap();
     final photos = _profileGalleryPhotos(profile, _displayHero(), photoAlbum);
     if (photos.isEmpty) {
-      _showSnackBar('फोटो उपलब्ध नाही.', Colors.black87);
+      _showSnackBar(AppStrings.photoUnavailable, Colors.black87);
       return;
     }
 
@@ -1665,7 +1665,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       'height',
     );
     addItem(
-      'समुदाय',
+      appText.community,
       _displayString(hero?['community_label']) ?? _communityText(profile),
       'community',
     );
@@ -1688,7 +1688,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     return [
       ProfileDisplaySectionData(
         key: 'initial_profile_preview',
-        title: 'प्रोफाइल झलक',
+        title: appText.profilePreview,
         items: items.take(5).toList(growable: false),
       ),
     ];
@@ -1725,12 +1725,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     final education = ApiClient.profileEducationLabel(profile);
 
     return [
-      _buildSectionTitle('प्रोफाइल माहिती'),
+      _buildSectionTitle(appText.profileInformation),
       const SizedBox(height: 10),
       _buildProfileDetail(AppStrings.name, profile['full_name']),
       _buildProfileDetail(AppStrings.age, _ageText(age)),
       _buildProfileDetail(AppStrings.dateOfBirth, profile['date_of_birth']),
-      _buildProfileDetail('समुदाय', _communityText(profile)),
+      _buildProfileDetail(appText.community, _communityText(profile)),
       _buildProfileDetail(AppStrings.education, education),
       _buildProfileDetail(AppStrings.location, location),
     ];
@@ -2684,7 +2684,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       setState(() {
         _isContactRevealInFlight = false;
       });
-      _showSnackBar('एक अनपेक्षित एरर आली: ${e.toString()}', Colors.red);
+      _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), Colors.red);
     }
   }
 
@@ -2760,7 +2760,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       setState(() {
         _isContactRequestInFlight = false;
       });
-      _showSnackBar('एक अनपेक्षित एरर आली: ${e.toString()}', Colors.red);
+      _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), Colors.red);
     }
   }
 
@@ -3361,7 +3361,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _displayString(hero?['community_label']) ?? _communityText(profile);
     final parts = <String>[
       _displayString(hero?['name']) ?? _nameText(profile),
-      if (ageLabel != null) ageLabel else if (age != null) '$age वर्षे',
+      if (ageLabel != null) ageLabel else if (age != null) AppStrings.years(age),
       if (communityLabel != null) communityLabel,
       if (location != null) location,
       appText.profileIdLabel(_currentProfileId.toString()),

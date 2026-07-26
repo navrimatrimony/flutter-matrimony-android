@@ -3311,7 +3311,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      _t('चाचणी OTP: $debugOtp', 'चाचणी OTP: $debugOtp'),
+                      appText.testOtpLabel(debugOtp),
                       textAlign: TextAlign.center,
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: Colors.green.shade800,
