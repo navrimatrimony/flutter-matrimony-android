@@ -637,6 +637,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   int? _preferredStateId;
   bool? _selectedWillingToRelocate;
   bool? _selectedPreferredIntercaste;
+  // Asked in the Horoscope section (that is where the user is already looking
+  // at their patrika) but stored server-side as a partner criterion on
+  // profile_preference_criteria.gunamilan_required. Default OFF.
+  bool? _selectedGunamilanRequired;
   bool _incomePrivate = false;
   bool _familyIncomePrivate = false;
 
@@ -2130,6 +2134,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _navrasNameController.text =
         ApiClient.safeDisplayLabel(profile['navras_name']) ?? '';
     _selectedBirthWeekday = _readText(profile['birth_weekday']);
+    // Flat on the profile payload beside the other partner criteria; the API
+    // always sends a definite boolean, so a profile with no criteria row yet
+    // still lands on OFF rather than an indeterminate toggle.
+    _selectedGunamilanRequired =
+        _readBool(profile['gunamilan_required']) ?? false;
     _aboutMeController.text =
         ApiClient.safeDisplayLabel(profile['narrative_about_me']) ?? '';
     final partnerPreferenceSuggestions = _readMap(
@@ -4144,6 +4153,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       'gotra': _nullableText(_gotraController),
       'navras_name': _nullableText(_navrasNameController),
       'birth_weekday': _selectedBirthWeekday,
+      // Collected in the Horoscope section, stored server-side as a partner
+      // criterion. Always sent (this screen posts one flat payload), and always
+      // the prefilled value unless the user moved the switch — so a save from
+      // any other section re-sends what is already stored rather than clearing
+      // it. `_sectionPayloadKeys(horoscope)` lists it so flipping the switch
+      // registers as an unsaved change.
+      'gunamilan_required': _selectedGunamilanRequired ?? false,
       'narrative_about_me': _nullableText(_aboutMeController),
     };
 
@@ -5165,6 +5181,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           'gotra',
           'navras_name',
           'birth_weekday',
+          'gunamilan_required',
         ];
       case _EditProfileSection.aboutMe:
         return const ['narrative_about_me'];
@@ -8572,6 +8589,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           fallbackPrefix: 'Birth weekday',
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedBirthWeekday = value),
+        ),
+        const SizedBox(height: 14),
+        // A requirement about the PARTNER, asked here because this is the
+        // screen where the user is already thinking about their patrika.
+        // Default OFF — the gate is opt-in.
+        _compactSwitchRow(
+          title: appText.gunamilanRequired,
+          subtitle: appText.gunamilanRequiredHelp,
+          icon: Icons.auto_awesome_outlined,
+          value: _selectedGunamilanRequired == true,
+          onChanged: (value) =>
+              setState(() => _selectedGunamilanRequired = value),
         ),
         if (_remainingProfileOptionsLoading)
           const Padding(

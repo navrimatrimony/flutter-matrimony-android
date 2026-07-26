@@ -132,6 +132,7 @@ Sources inspected:
 | `rashi_lord_id` | yes | yes | yes | yes | complete |
 | `mangal_dosh_type_id` | yes | yes | yes | yes | complete |
 | `devak`, `kul`, `gotra`, `navras_name`, `birth_weekday` | yes | yes | yes | yes | complete |
+| `gunamilan_required` | yes | yes | yes | yes | complete — asked here, stored as a partner criterion (`profile_preference_criteria.gunamilan_required`), not on the horoscope row |
 
 ### `about-me`
 
