@@ -3566,6 +3566,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suchakRequestTheirMessage => 'Message';
 
   @override
+  String get notificationSettingsTitle => 'Notification settings';
+
+  @override
+  String get notificationSettingsIntro =>
+      'Choose which notifications reach your phone.';
+
+  @override
+  String get notificationSettingsManage => 'Push notifications';
+
+  @override
+  String get notificationSettingsEmpty =>
+      'No notification types are available right now.';
+
+  @override
+  String get notificationSettingsSaveFailed =>
+      'This change could not be saved.';
+
+  @override
+  String get quietHours => 'Quiet hours';
+
+  @override
   String get pushChannelName => 'Notifications';
 
   @override

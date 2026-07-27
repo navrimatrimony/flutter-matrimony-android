@@ -271,6 +271,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             label: Text(AppStrings.notificationsMarkAllRead),
             style: TextButton.styleFrom(foregroundColor: Colors.white),
           ),
+          IconButton(
+            tooltip: appText.notificationSettingsTitle,
+            onPressed: () =>
+                Navigator.pushNamed(context, '/notification-settings'),
+            icon: const Icon(Icons.tune),
+          ),
         ],
       ),
       body: _buildBody(),

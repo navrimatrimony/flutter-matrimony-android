@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../features/interests/received_interests_screen.dart';
+import '../features/interests/sent_interests_screen.dart';
 import '../features/matrimony_profile/profile_detail_screen.dart';
 import '../main.dart';
 import 'api_client.dart';
@@ -240,7 +241,12 @@ class PushNotificationService {
 
   /// Opens the screen a push points at.
   ///
-  /// Deliberately forgiving: an unknown or missing type just opens the home
+  /// The server's push registry sends a stable `target` (plus `type`, the push
+  /// key) in the data block and leaves navigation to the app. `route_hint` is
+  /// accepted too because that is the vocabulary the in-app notification list
+  /// already speaks.
+  ///
+  /// Deliberately forgiving: an unknown or missing target just opens the home
   /// screen, and a push that arrives while nobody is signed in only opens the
   /// app. The server owns the vocabulary, so this must never throw on one it
   /// has not seen.
@@ -250,15 +256,71 @@ class PushNotificationService {
       if (navigator == null) return;
       if (ApiClient.authToken == null) return;
 
-      var type = _stringValue(data['type']).toLowerCase();
-      if (type.isEmpty) {
-        type = _stringValue(data['route_hint']).toLowerCase();
+      var target = _stringValue(data['target']).toLowerCase();
+      if (target.isEmpty) target = _stringValue(data['type']).toLowerCase();
+      if (target.isEmpty) {
+        target = _stringValue(data['route_hint']).toLowerCase();
       }
 
-      switch (type) {
+      switch (target) {
+        case 'interests_received':
+        case 'received_interests':
+        case 'interest':
+          navigator.push(
+            MaterialPageRoute<void>(
+              builder: (_) => const ReceivedInterestsScreen(),
+            ),
+          );
+          return;
+        case 'interests_sent':
+        case 'sent_interests':
+          navigator.push(
+            MaterialPageRoute<void>(
+              builder: (_) => const SentInterestsScreen(),
+            ),
+          );
+          return;
+        case 'chat_thread':
+        case 'chat':
+        case 'message':
+          navigator.pushNamed('/chats');
+          return;
+        case 'contact_inbox':
+        case 'contact_request':
+          navigator.pushNamed('/contact-inbox');
+          return;
+        case 'suchak_requests':
+        case 'suchak_request':
+          navigator.pushNamed('/suchak-requests');
+          return;
+        case 'my_photos':
+          navigator.pushNamed('/photo-gallery');
+          return;
+        case 'my_profile':
+          navigator.pushNamed('/view-profile');
+          return;
+        case 'who_viewed_me':
+        case 'who_viewed':
+          navigator.pushNamed(
+            '/matches',
+            arguments: const <String, dynamic>{'initialTab': 'more'},
+          );
+          return;
+        case 'plans':
+        case 'plan':
+        case 'payment':
+          navigator.pushNamed('/plans');
+          return;
+        case 'matches':
+        case 'match':
+          navigator.pushNamed('/matches');
+          return;
+        case 'notifications':
+        case 'notification':
+          navigator.pushNamed('/notifications');
+          return;
         case 'profile':
         case 'profile_view':
-        case 'who_viewed':
           final profileId =
               _intValue(data['profile_id']) ?? _intValue(data['id']);
           if (profileId == null) {
@@ -270,40 +332,6 @@ class PushNotificationService {
               builder: (_) => ProfileDetailScreen(profileId: profileId),
             ),
           );
-          return;
-        case 'interest':
-        case 'received_interest':
-        case 'received_interests':
-          navigator.push(
-            MaterialPageRoute<void>(
-              builder: (_) => const ReceivedInterestsScreen(),
-            ),
-          );
-          return;
-        case 'contact_request':
-        case 'contact_inbox':
-          navigator.pushNamed('/contact-inbox');
-          return;
-        case 'suchak_request':
-        case 'suchak_requests':
-          navigator.pushNamed('/suchak-requests');
-          return;
-        case 'chat':
-        case 'message':
-          navigator.pushNamed('/chats');
-          return;
-        case 'plan':
-        case 'plans':
-        case 'payment':
-          navigator.pushNamed('/plans');
-          return;
-        case 'match':
-        case 'matches':
-          navigator.pushNamed('/matches');
-          return;
-        case 'notification':
-        case 'notifications':
-          navigator.pushNamed('/notifications');
           return;
         default:
           navigator.pushNamed('/home');

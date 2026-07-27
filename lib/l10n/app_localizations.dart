@@ -6644,6 +6644,42 @@ abstract class AppLocalizations {
   /// **'Message'**
   String get suchakRequestTheirMessage;
 
+  /// No description provided for @notificationSettingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification settings'**
+  String get notificationSettingsTitle;
+
+  /// No description provided for @notificationSettingsIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which notifications reach your phone.'**
+  String get notificationSettingsIntro;
+
+  /// No description provided for @notificationSettingsManage.
+  ///
+  /// In en, this message translates to:
+  /// **'Push notifications'**
+  String get notificationSettingsManage;
+
+  /// No description provided for @notificationSettingsEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No notification types are available right now.'**
+  String get notificationSettingsEmpty;
+
+  /// No description provided for @notificationSettingsSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'This change could not be saved.'**
+  String get notificationSettingsSaveFailed;
+
+  /// No description provided for @quietHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Quiet hours'**
+  String get quietHours;
+
   /// No description provided for @pushChannelName.
   ///
   /// In en, this message translates to:

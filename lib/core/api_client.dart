@@ -2699,6 +2699,22 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  /// The member's push categories and quiet hours, as the server defines them.
+  static Future<Map<String, dynamic>> getNotificationPreferences() {
+    return _getJson(ApiRoutes.notificationPreferences, authenticated: true);
+  }
+
+  /// Saves one or more category switches and/or the quiet-hours switch.
+  static Future<Map<String, dynamic>> updateNotificationPreferences({
+    Map<String, bool>? categories,
+    bool? quietHoursEnabled,
+  }) {
+    return _putJson(ApiRoutes.notificationPreferences, {
+      if (categories != null && categories.isNotEmpty) 'categories': categories,
+      if (quietHoursEnabled != null) 'quiet_hours_enabled': quietHoursEnabled,
+    }, authenticated: true);
+  }
+
   /// Drops this device's FCM token so the member stops receiving pushes here.
   static Future<Map<String, dynamic>> deleteDeviceToken({
     required String token,

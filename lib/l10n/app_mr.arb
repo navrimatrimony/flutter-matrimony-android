@@ -1091,6 +1091,12 @@
   "suchakRequestSentOnDate": "{date} रोजी पाठवली",
   "suchakRequestYourMessage": "तुमचा संदेश",
   "suchakRequestTheirMessage": "संदेश",
+  "notificationSettingsTitle": "सूचना सेटिंग्ज",
+  "notificationSettingsIntro": "तुमच्या फोनवर कोणत्या सूचना याव्यात ते निवडा.",
+  "notificationSettingsManage": "फोनवरील सूचना",
+  "notificationSettingsEmpty": "सध्या कोणतेही सूचना प्रकार उपलब्ध नाहीत.",
+  "notificationSettingsSaveFailed": "हा बदल जतन करता आला नाही.",
+  "quietHours": "शांत वेळ",
   "pushChannelName": "सूचना",
   "pushChannelDescription": "आवडी, संपर्क विनंत्या आणि जुळण्यांबद्दलच्या सूचना.",
   "pushDefaultTitle": "नवीन सूचना"

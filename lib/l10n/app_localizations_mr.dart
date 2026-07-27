@@ -3551,6 +3551,26 @@ class AppLocalizationsMr extends AppLocalizations {
   String get suchakRequestTheirMessage => 'संदेश';
 
   @override
+  String get notificationSettingsTitle => 'सूचना सेटिंग्ज';
+
+  @override
+  String get notificationSettingsIntro =>
+      'तुमच्या फोनवर कोणत्या सूचना याव्यात ते निवडा.';
+
+  @override
+  String get notificationSettingsManage => 'फोनवरील सूचना';
+
+  @override
+  String get notificationSettingsEmpty =>
+      'सध्या कोणतेही सूचना प्रकार उपलब्ध नाहीत.';
+
+  @override
+  String get notificationSettingsSaveFailed => 'हा बदल जतन करता आला नाही.';
+
+  @override
+  String get quietHours => 'शांत वेळ';
+
+  @override
   String get pushChannelName => 'सूचना';
 
   @override

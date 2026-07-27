@@ -150,6 +150,10 @@ class ApiRoutes {
   // Push (FCM) device token registry. Same route for POST and DELETE.
   static const String deviceTokens = '/device-tokens';
 
+  // Per-member push preferences. The server owns the category list, so the app
+  // renders whatever arrives — a new notification type must not need a release.
+  static const String notificationPreferences = '/notification-preferences';
+
   static const String notifications = '/notifications';
   static const String notificationUnreadCount = '/notifications/unread-count';
   static const String notificationsReadAll = '/notifications/read-all';

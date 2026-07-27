@@ -1172,6 +1172,12 @@
   },
   "suchakRequestYourMessage": "Your message",
   "suchakRequestTheirMessage": "Message",
+  "notificationSettingsTitle": "Notification settings",
+  "notificationSettingsIntro": "Choose which notifications reach your phone.",
+  "notificationSettingsManage": "Push notifications",
+  "notificationSettingsEmpty": "No notification types are available right now.",
+  "notificationSettingsSaveFailed": "This change could not be saved.",
+  "quietHours": "Quiet hours",
   "pushChannelName": "Notifications",
   "pushChannelDescription": "Alerts about interests, contact requests and matches.",
   "pushDefaultTitle": "New notification"

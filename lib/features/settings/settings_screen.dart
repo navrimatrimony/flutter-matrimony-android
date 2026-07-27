@@ -353,37 +353,63 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildNotificationsCard() {
     final section = _section('notifications');
-    final fields = _fields(section);
 
     return _sectionCard(
       title: AppStrings.settingsNotifications,
       icon: Icons.notifications,
       saving: _isSavingNotifications,
       onSave: _sectionAvailable(section) ? _saveNotifications : null,
-      child: _sectionAvailable(section)
-          ? Column(
-              children: [
-                _switchControl(
-                  fields,
-                  'email_alerts',
-                  _notificationValues,
-                  _updateNotificationValue,
-                ),
-                _switchControl(
-                  fields,
-                  'engagement_inactive_reminder',
-                  _notificationValues,
-                  _updateNotificationValue,
-                ),
-                _switchControl(
-                  fields,
-                  'engagement_new_matches_digest',
-                  _notificationValues,
-                  _updateNotificationValue,
-                ),
-              ],
-            )
-          : _unavailableText(section),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Per-notification-type push switches live on their own screen —
+          // that list is server-driven and too long to sit inside this card.
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.phone_android),
+            title: Text(appText.notificationSettingsManage),
+            subtitle: Text(appText.notificationSettingsIntro),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () =>
+                Navigator.pushNamed(context, '/notification-settings'),
+          ),
+          const Divider(height: 20),
+          _buildNotificationFields(section),
+        ],
+      ),
+    );
+  }
+
+  /// The e-mail and engagement switches this card has always carried. The push
+  /// switches are a different list and live on the notification settings screen.
+  Widget _buildNotificationFields(Map<String, dynamic> section) {
+    final fields = _fields(section);
+
+    if (!_sectionAvailable(section)) {
+      return _unavailableText(section);
+    }
+
+    return Column(
+      children: [
+        _switchControl(
+          fields,
+          'email_alerts',
+          _notificationValues,
+          _updateNotificationValue,
+        ),
+        _switchControl(
+          fields,
+          'engagement_inactive_reminder',
+          _notificationValues,
+          _updateNotificationValue,
+        ),
+        _switchControl(
+          fields,
+          'engagement_new_matches_digest',
+          _notificationValues,
+          _updateNotificationValue,
+        ),
+      ],
     );
   }
 
