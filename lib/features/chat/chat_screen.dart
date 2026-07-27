@@ -76,6 +76,12 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _appResumed = state == AppLifecycleState.resumed;
     if (!_appResumed) return;
 
+    // Plan changes happen while the app is backgrounded: checkout completes in
+    // an external browser. The read gate (chat_can_read) is decided server-side
+    // per response, so a stale inbox keeps rendering read-locked previews after
+    // the member has already paid. Re-read it silently on every resume.
+    _loadConversations(silent: true);
+
     // Coming back to a thread that is still on screen is a genuine second
     // read — the sender's ✓✓ must not wait for the reader to re-open the chat.
     // A thread sitting under a pushed screen is not on screen, so it is not.
@@ -86,9 +92,11 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     _loadThread(conversationId, scrollToBottom: false);
   }
 
-  Future<void> _loadConversations() async {
+  Future<void> _loadConversations({bool silent = false}) async {
     setState(() {
-      _loadingList = true;
+      if (!silent) {
+        _loadingList = true;
+      }
       _listError = null;
     });
 

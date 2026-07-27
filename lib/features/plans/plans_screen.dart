@@ -14,7 +14,7 @@ class PlansScreen extends StatefulWidget {
   State<PlansScreen> createState() => _PlansScreenState();
 }
 
-class _PlansScreenState extends State<PlansScreen> {
+class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   static const Color _brandColor = Color(0xFFDC2626);
   static const Color _brandDark = Color(0xFF9F1239);
   static const Color _gold = Color(0xFFC79A3B);
@@ -31,7 +31,24 @@ class _PlansScreenState extends State<PlansScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadPlans();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+
+    // Checkout completes in an external browser, so the only signal that a
+    // payment finished is the member returning to the app. Re-read the plan
+    // instead of leaving the pre-payment card on screen until a manual refresh.
+    _loadPlans(silent: true);
   }
 
   Future<void> _loadPlans({bool silent = false}) async {
