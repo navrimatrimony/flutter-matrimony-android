@@ -1171,5 +1171,8 @@
     }
   },
   "suchakRequestYourMessage": "Your message",
-  "suchakRequestTheirMessage": "Message"
+  "suchakRequestTheirMessage": "Message",
+  "pushChannelName": "Notifications",
+  "pushChannelDescription": "Alerts about interests, contact requests and matches.",
+  "pushDefaultTitle": "New notification"
 }

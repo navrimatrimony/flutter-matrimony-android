@@ -6643,6 +6643,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Message'**
   String get suchakRequestTheirMessage;
+
+  /// No description provided for @pushChannelName.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications'**
+  String get pushChannelName;
+
+  /// No description provided for @pushChannelDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts about interests, contact requests and matches.'**
+  String get pushChannelDescription;
+
+  /// No description provided for @pushDefaultTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'New notification'**
+  String get pushDefaultTitle;
 }
 
 class _AppLocalizationsDelegate

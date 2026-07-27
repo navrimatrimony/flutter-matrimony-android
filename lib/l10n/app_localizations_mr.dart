@@ -3549,4 +3549,14 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get suchakRequestTheirMessage => 'संदेश';
+
+  @override
+  String get pushChannelName => 'सूचना';
+
+  @override
+  String get pushChannelDescription =>
+      'आवडी, संपर्क विनंत्या आणि जुळण्यांबद्दलच्या सूचना.';
+
+  @override
+  String get pushDefaultTitle => 'नवीन सूचना';
 }

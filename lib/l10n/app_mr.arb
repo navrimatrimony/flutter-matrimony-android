@@ -1090,5 +1090,8 @@
   "suchakRequestAskedOnDate": "{date} रोजी विचारले",
   "suchakRequestSentOnDate": "{date} रोजी पाठवली",
   "suchakRequestYourMessage": "तुमचा संदेश",
-  "suchakRequestTheirMessage": "संदेश"
+  "suchakRequestTheirMessage": "संदेश",
+  "pushChannelName": "सूचना",
+  "pushChannelDescription": "आवडी, संपर्क विनंत्या आणि जुळण्यांबद्दलच्या सूचना.",
+  "pushDefaultTitle": "नवीन सूचना"
 }

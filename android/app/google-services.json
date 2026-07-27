@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "349388638490",
+    "project_id": "navri-mile-navryala-c1456",
+    "storage_bucket": "navri-mile-navryala-c1456.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:349388638490:android:225423879478ed3b6ec4a3",
+        "android_client_info": {
+          "package_name": "com.navrimilenavryala.member"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARu-9VqF7b37O5sINlTH-EKv9X0Dm66tk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

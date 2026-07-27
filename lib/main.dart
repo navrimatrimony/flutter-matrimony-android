@@ -5,6 +5,7 @@ import 'core/app_storage.dart';
 import 'core/api_client.dart';
 import 'core/app_strings.dart';
 import 'core/notification_permission_service.dart';
+import 'core/push_notification_service.dart';
 import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
 import 'features/auth/login_screen.dart';
@@ -27,14 +28,21 @@ import 'features/suchak/suchak_requests_screen.dart';
 // RouteObserver for RouteAware lifecycle management
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
+/// Lets code outside the widget tree navigate — currently the push
+/// notification service, which opens a screen when a notification is tapped.
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 const Color _brandMaroon = Color(0xFFDC2626);
 const Color _brandGold = Color(0xFFC79A3B);
 const Color _screenBackground = Color(0xFFF8F4EF);
 const String _brandLogoAsset = 'assets/images/navri_logo.png';
 const String _startupHeroAsset = 'assets/images/landing_hero.jpg';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Never blocks startup: the service swallows its own failures, so the app
+  // still runs (without push) when Firebase is unreachable.
+  await PushNotificationService.instance.initialize();
   runApp(const MyApp());
 }
 
@@ -67,6 +75,7 @@ class _MyAppState extends State<MyApp> {
 
       initialRoute: '/bootstrap',
 
+      navigatorKey: appNavigatorKey,
       navigatorObservers: [routeObserver],
 
       theme: ThemeData(
@@ -242,6 +251,9 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     }
     if (!mounted) return;
     Navigator.pushReplacementNamed(context, route);
+    // Only now — this replaces the whole stack, so a notification-tap screen
+    // opened any earlier would be thrown away.
+    PushNotificationService.instance.handlePendingLaunchMessage();
   }
 
   Future<String> _routeForAuthenticatedUser() async {

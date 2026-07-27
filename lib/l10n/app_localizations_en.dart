@@ -3564,4 +3564,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get suchakRequestTheirMessage => 'Message';
+
+  @override
+  String get pushChannelName => 'Notifications';
+
+  @override
+  String get pushChannelDescription =>
+      'Alerts about interests, contact requests and matches.';
+
+  @override
+  String get pushDefaultTitle => 'New notification';
 }

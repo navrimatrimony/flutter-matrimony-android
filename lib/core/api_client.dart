@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -7,6 +8,7 @@ import 'app_language.dart';
 import 'app_storage.dart';
 import 'api_cache.dart';
 import 'api_routes.dart';
+import 'push_notification_service.dart';
 
 class _CachedJsonFetch {
   const _CachedJsonFetch({required this.data, required this.metadata});
@@ -1757,6 +1759,7 @@ class ApiClient {
       sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
+      unawaited(PushNotificationService.instance.registerToken());
     }
 
     return data;
@@ -2266,6 +2269,7 @@ class ApiClient {
       sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
+      unawaited(PushNotificationService.instance.registerToken());
       return data;
     }
 
@@ -2310,6 +2314,7 @@ class ApiClient {
       sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
+      unawaited(PushNotificationService.instance.registerToken());
       return data;
     }
 
@@ -2664,14 +2669,47 @@ class ApiClient {
     authToken = token != null && token.isNotEmpty ? token : null;
     currentUserProfile = null;
     sentInterestProfileIds.clear();
+
+    if (authToken != null) {
+      unawaited(PushNotificationService.instance.registerToken());
+    }
   }
 
   static Future<void> logout() async {
+    // The server drops the device token while the session is still valid — the
+    // DELETE is an authenticated call, so it cannot run after the clear below.
+    await PushNotificationService.instance.unregisterToken();
     ApiCache.instance.clear();
     authToken = null;
     currentUserProfile = null;
     sentInterestProfileIds.clear();
     await AppStorage.instance.clearSessionButKeepLanguage();
+  }
+
+  /// Registers this device's FCM token against the signed-in member.
+  static Future<Map<String, dynamic>> registerDeviceToken({
+    required String token,
+    String platform = 'android',
+    String app = 'member',
+  }) {
+    return _postJson(ApiRoutes.deviceTokens, {
+      'token': token,
+      'platform': platform,
+      'app': app,
+    }, authenticated: true);
+  }
+
+  /// Drops this device's FCM token so the member stops receiving pushes here.
+  static Future<Map<String, dynamic>> deleteDeviceToken({
+    required String token,
+  }) async {
+    final response = await http.delete(
+      _apiUri(ApiRoutes.deviceTokens),
+      headers: _jsonHeaders(authenticated: true),
+      body: jsonEncode({'token': token}),
+    );
+
+    return _decodeResponse(response);
   }
 
   static Future<Map<String, dynamic>> sendInterest(

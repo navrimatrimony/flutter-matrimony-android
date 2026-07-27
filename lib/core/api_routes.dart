@@ -147,6 +147,9 @@ class ApiRoutes {
   static String biodataIntakeReviewSnapshot(int intakeId) =>
       '${biodataIntake(intakeId)}/review-snapshot';
 
+  // Push (FCM) device token registry. Same route for POST and DELETE.
+  static const String deviceTokens = '/device-tokens';
+
   static const String notifications = '/notifications';
   static const String notificationUnreadCount = '/notifications/unread-count';
   static const String notificationsReadAll = '/notifications/read-all';
