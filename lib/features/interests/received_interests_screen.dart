@@ -17,13 +17,13 @@ import '../../core/app_language.dart';
 /// reconstructs the hidden identity — no name, no photo, and no route into the
 /// sender's profile.
 ///
-/// The endpoint does not yet carry the rich teaser block that
-/// `ReceivedInterestTeaserPolicy` is configured for (blurred photo, courtesy
-/// headline, taluka, age, marital status, match hint) — the web page builds it
-/// through `WhoViewedTeaserPresenter`, the mobile controller does not. When the
-/// API starts sending that block under `teaser`, [LockedTeaser] picks it up
-/// here and the shared widgets render it; until then these rows show the plain
-/// locked state rather than an imitation of the teaser.
+/// A locked row carries the rich teaser block under `teaser` — the blurred
+/// photo, courtesy headline, taluka, age, marital status and match hint that
+/// `ReceivedInterestTeaserPolicy` allows. It is present only while the row is
+/// locked, so [LockedTeaser] reads it here and the shared teaser widgets draw
+/// it. A row that arrives without one keeps the same card and the same call to
+/// action, just with the person stand-in and the plain locked copy: the screen
+/// never invents an attribute to fill the gap.
 class ReceivedInterestsScreen extends StatefulWidget {
   const ReceivedInterestsScreen({super.key});
 
@@ -429,8 +429,13 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
     );
   }
 
-  /// The locked presentation. The teaser block is rendered when the API sends
-  /// one; otherwise the card stays anonymous rather than guessing.
+  /// The locked presentation, drawn with the same shared teaser chrome as the
+  /// who-viewed tiles and the locked notification rows: one photo frame, one
+  /// headline, one attribute line, the curiosity pills, one call to action.
+  ///
+  /// The teaser block is rendered the moment the API sends one; until then the
+  /// same card degrades to the silhouette, the courtesy headline and the plain
+  /// locked copy rather than imitating attributes it was not given.
   Widget _buildLockedCard(Map<String, dynamic> interest, int interestId) {
     final teaser = LockedTeaser.fromJson(interest['teaser']);
     final status = interest['status']?.toString();
@@ -443,62 +448,28 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: 88,
-                  height: 96,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        LockedTeaserPhoto(
-                          teaser: teaser ?? const LockedTeaser(),
-                          placeholderIconSize: 40,
-                        ),
-                        const DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Colors.transparent, Color(0x66000000)],
-                            ),
-                          ),
-                        ),
-                        const Positioned(
-                          right: 6,
-                          top: 6,
-                          child: LockedTeaserLockBadge(size: 26),
-                        ),
-                      ],
-                    ),
-                  ),
+                LockedTeaserPhotoFrame(
+                  teaser: teaser ?? const LockedTeaser(),
+                  width: 96,
+                  height: 118,
+                  cornerRadius: 14,
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        headline,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                          height: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
+                      LockedTeaserHeadline(text: headline, fontSize: 16.5),
+                      const SizedBox(height: 7),
                       if (teaser != null)
                         LockedTeaserLines(
                           teaser: teaser,
-                          maxAttributeLines: 3,
-                          accentColor: _brandDark,
+                          attributeMaxLines: 2,
                           showInterestHint: true,
                         )
                       else
@@ -511,32 +482,18 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 9),
                       _buildStatusRow(status),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: ElevatedButton.icon(
-                onPressed: _openPlans,
-                icon: const Icon(Icons.lock_open_outlined, size: 16),
-                label: Text(appText.unlock),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _brandColor,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(horizontal: 14),
-                  minimumSize: const Size(0, 36),
-                  textStyle: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
+            const SizedBox(height: 12),
+            LockedTeaserUnlockButton(
+              label: appText.unlock,
+              expand: true,
+              onPressed: _openPlans,
             ),
             if (status == 'pending') ...[
               const SizedBox(height: 10),

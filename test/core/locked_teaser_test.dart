@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_matrimony_android/core/locked_teaser.dart';
@@ -189,6 +190,75 @@ void main() {
       expect(teaser.hasPhoto, isFalse);
       expect(teaser.wantsBlurredPhoto, isFalse);
       expect(teaser.headline, isNull);
+    });
+  });
+
+  group('what the shared card actually paints', () {
+    Widget host(Widget child) {
+      return MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: SizedBox(width: 180, height: 260, child: child),
+          ),
+        ),
+      );
+    }
+
+    testWidgets('a withheld photo draws the person stand-in and the lock, '
+        'never an image', (tester) async {
+      const teaser = LockedTeaser(headline: 'A girl from Khanapur');
+
+      await tester.pumpWidget(host(const LockedTeaserPhotoFrame(teaser: teaser)));
+
+      expect(find.byType(LockedTeaserSilhouette), findsOneWidget);
+      expect(find.byType(LockedTeaserLockBadge), findsOneWidget);
+      expect(find.byType(Image), findsNothing);
+    });
+
+    testWidgets('an unknown avatar style still refuses to draw the photo',
+        (tester) async {
+      final teaser = LockedTeaser.fromJson(<String, dynamic>{
+        'headline': 'A girl from Khanapur',
+        'avatar_style': 'sneaky',
+        'photo_url': 'https://example.test/photos/a.jpg',
+      })!;
+
+      await tester.pumpWidget(host(LockedTeaserPhotoFrame(teaser: teaser)));
+
+      expect(find.byType(Image), findsNothing);
+      expect(find.byType(LockedTeaserSilhouette), findsOneWidget);
+    });
+
+    testWidgets('attributes read as one scannable line and the curiosity '
+        'lines are drawn apart from it', (tester) async {
+      final teaser = LockedTeaser.fromJson(<String, dynamic>{
+        'lines': <String>['Khanapur', '22 years', 'Never married'],
+        'accent_line': 'Viewed your profile 4 times',
+        'match_line': '82% match',
+        'avatar_style': 'silhouette',
+      })!;
+
+      await tester.pumpWidget(host(LockedTeaserLines(teaser: teaser)));
+
+      expect(find.text('Khanapur · 22 years · Never married'), findsOneWidget);
+      expect(find.text('Viewed your profile 4 times'), findsOneWidget);
+      expect(find.text('82% match'), findsOneWidget);
+    });
+
+    testWidgets('a surface whose headline already carries the repeat count '
+        'can drop the accent without losing the match line', (tester) async {
+      final teaser = LockedTeaser.fromJson(<String, dynamic>{
+        'accent_line': 'Viewed your profile 4 times',
+        'match_line': '82% match',
+        'avatar_style': 'silhouette',
+      })!;
+
+      await tester.pumpWidget(
+        host(LockedTeaserLines(teaser: teaser, showAccent: false)),
+      );
+
+      expect(find.text('Viewed your profile 4 times'), findsNothing);
+      expect(find.text('82% match'), findsOneWidget);
     });
   });
 }

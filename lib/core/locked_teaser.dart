@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -15,6 +16,12 @@ import 'package:flutter/material.dart';
 /// Every surface that draws a locked/teaser card goes through this class, so a
 /// blur strength or a withheld photo can never be honoured on one screen and
 /// ignored on another.
+///
+/// The widgets below the model are the other half of that promise: the photo
+/// frame, headline, attribute/summary stack, curiosity pills and unlock button
+/// are shared, so who-viewed tiles, locked notification rows and locked
+/// received-interest cards read as the same object in three sizes rather than
+/// three different-looking cards.
 @immutable
 class LockedTeaser {
   const LockedTeaser({
@@ -270,6 +277,144 @@ class LockedTeaser {
   }
 }
 
+/// The colours every locked surface shares.
+///
+/// These are the app's own tokens, not a new palette: [brand] is the brand red
+/// used by the matches, notifications and interests screens, [brandSoft] is the
+/// tint those screens already use behind brand icons, [accent] is the deep rose
+/// the teaser text has always used, and [match] is the trust green the match
+/// card already spends on "verified". Keeping them in one place is what stops
+/// a locked card on one screen drifting away from the same card on another.
+abstract final class LockedTeaserTheme {
+  static const Color brand = Color(0xFFDC2626);
+  static const Color brandSoft = Color(0xFFFEE2E2);
+  static const Color accent = Color(0xFF9F1239);
+  static const Color match = Color(0xFF157F5B);
+  static const Color ink = Color(0xFF2E2220);
+  static const Color muted = Color(0xFF746966);
+
+  /// Warm neutral drawn under a teaser photo so a slow image never shows as a
+  /// hole in the card.
+  static const Color photoBase = Color(0xFFF1E7E3);
+}
+
+/// Photo, scrim, lock badge and any overlay chrome — the one frame every
+/// locked surface draws, so a teaser looks the same everywhere.
+///
+/// [width]/[height] are optional: inside an `Expanded` or a `Stack` the frame
+/// fills what it is given and sizes the lock badge and silhouette from the
+/// resulting box.
+class LockedTeaserPhotoFrame extends StatelessWidget {
+  const LockedTeaserPhotoFrame({
+    super.key,
+    required this.teaser,
+    this.width,
+    this.height,
+    this.circle = false,
+    this.cornerRadius = 16,
+    this.showLock = true,
+    this.lockAlignment = Alignment.bottomRight,
+    this.scrim = false,
+    this.bottomOverlay,
+    this.topStartOverlay,
+  });
+
+  final LockedTeaser teaser;
+  final double? width;
+  final double? height;
+  final bool circle;
+  final double cornerRadius;
+  final bool showLock;
+  final Alignment lockAlignment;
+
+  /// Dark bottom gradient. Only needed when text is drawn over the photo.
+  final bool scrim;
+
+  /// Drawn along the bottom edge, above the scrim — the headline on card-style
+  /// teasers.
+  final Widget? bottomOverlay;
+
+  /// Drawn in the top-left corner — the time chip on card-style teasers.
+  final Widget? topStartOverlay;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget frame = LayoutBuilder(
+      builder: (context, constraints) {
+        final boxWidth = width ??
+            (constraints.hasBoundedWidth ? constraints.maxWidth : 96.0);
+        final boxHeight = height ??
+            (constraints.hasBoundedHeight ? constraints.maxHeight : 96.0);
+        final shortSide = math.max(24.0, math.min(boxWidth, boxHeight));
+        final lockSize = (shortSide * 0.30).clamp(19.0, 34.0).toDouble();
+        final inset = (shortSide * 0.05).clamp(3.0, 9.0).toDouble();
+        final iconSize = (shortSide * 0.42).clamp(18.0, 58.0).toDouble();
+
+        return Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            const ColoredBox(color: LockedTeaserTheme.photoBase),
+            LockedTeaserPhoto(teaser: teaser, placeholderIconSize: iconSize),
+            if (scrim)
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: <Color>[
+                      Color(0x1A000000),
+                      Color(0x00000000),
+                      Color(0xD9000000),
+                    ],
+                    stops: <double>[0, 0.42, 1],
+                  ),
+                ),
+              ),
+            if (topStartOverlay != null)
+              Positioned(
+                top: inset,
+                left: inset,
+                right: inset + lockSize,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: topStartOverlay,
+                ),
+              ),
+            if (bottomOverlay != null)
+              Positioned(
+                left: inset + 2,
+                right: inset + 2,
+                bottom: inset + 1,
+                child: bottomOverlay!,
+              ),
+            if (showLock)
+              Align(
+                alignment: lockAlignment,
+                child: Padding(
+                  padding: EdgeInsets.all(inset),
+                  child: LockedTeaserLockBadge(size: lockSize),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+
+    frame = circle
+        ? ClipOval(child: frame)
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(cornerRadius),
+            child: frame,
+          );
+
+    if (width != null || height != null) {
+      frame = SizedBox(width: width, height: height, child: frame);
+    }
+
+    return frame;
+  }
+}
+
 /// The one widget that paints a teaser photo.
 ///
 /// Honours the admin's avatar style, blur strength, upscale and opacity, and
@@ -314,7 +459,11 @@ class LockedTeaserPhoto extends StatelessWidget {
   }
 }
 
-/// Icon-only stand-in used whenever no photo may be drawn.
+/// Stand-in used whenever no photo may be drawn.
+///
+/// Deliberately the same warm brand wash and white person medallion the match
+/// cards already use for a missing photo: a locked row has to read as "there is
+/// a person here you cannot see yet", never as a broken image.
 class LockedTeaserSilhouette extends StatelessWidget {
   const LockedTeaserSilhouette({super.key, this.iconSize = 42});
 
@@ -322,26 +471,45 @@ class LockedTeaserSilhouette extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final medallion = iconSize * 1.62;
+
+    return DecoratedBox(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFFF8D9D3), Color(0xFFEAF3F8)],
+          colors: <Color>[
+            LockedTeaserTheme.brandSoft,
+            LockedTeaserTheme.brand,
+          ],
         ),
       ),
-      child: Icon(
-        Icons.person_outline,
-        color: const Color(0xFF9F1239),
-        size: iconSize,
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Container(
+            width: medallion,
+            height: medallion,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.20),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white54, width: 1.4),
+            ),
+            child: Icon(Icons.person, color: Colors.white, size: iconSize),
+          ),
+        ),
       ),
     );
   }
 }
 
 /// Round lock badge drawn over a teaser photo.
+///
+/// Brand-filled with a white ring so it reads as a deliberate status pip on the
+/// person — the way a verified tick does — rather than a grey "unavailable"
+/// stamp.
 class LockedTeaserLockBadge extends StatelessWidget {
-  const LockedTeaserLockBadge({super.key, this.size = 30});
+  const LockedTeaserLockBadge({super.key, this.size = 28});
 
   final double size;
 
@@ -351,96 +519,361 @@ class LockedTeaserLockBadge extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.50),
+        color: LockedTeaserTheme.brand,
         shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white,
+          width: (size * 0.07).clamp(1.2, 2.2).toDouble(),
+        ),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.26),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Icon(
-        Icons.lock_outline,
+        Icons.lock_rounded,
         color: Colors.white,
-        size: size * 0.56,
+        size: size * 0.50,
       ),
     );
   }
 }
 
-/// The one text stack for a teaser: the attribute lines, the time summary and
-/// the emphasised accent/match row, all rendered exactly as the server sent
-/// them. Strings arrive already localized, so nothing here rewrites copy.
+/// The teaser's loudest line. [onPhoto] draws it white over the scrim; without
+/// it the headline is ink on the card surface.
+class LockedTeaserHeadline extends StatelessWidget {
+  const LockedTeaserHeadline({
+    super.key,
+    required this.text,
+    this.onPhoto = false,
+    this.fontSize = 16,
+    this.maxLines = 2,
+  });
+
+  final String text;
+  final bool onPhoto;
+  final double fontSize;
+  final int maxLines;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      maxLines: maxLines,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(
+        color: onPhoto ? Colors.white : LockedTeaserTheme.ink,
+        fontSize: fontSize,
+        fontWeight: FontWeight.w900,
+        height: 1.16,
+        shadows: onPhoto
+            ? const <Shadow>[
+                Shadow(
+                  color: Color(0x99000000),
+                  blurRadius: 6,
+                  offset: Offset(0, 1),
+                ),
+              ]
+            : null,
+      ),
+    );
+  }
+}
+
+/// Dark translucent chip drawn over a teaser photo — the same glass badge the
+/// match cards use for their photo-count and premium markers.
+class LockedTeaserGlassChip extends StatelessWidget {
+  const LockedTeaserGlassChip({
+    super.key,
+    required this.label,
+    this.icon = Icons.schedule_rounded,
+  });
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.46),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, color: Colors.white, size: 12),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The curiosity row: the server's repeat-view accent line and its match line,
+/// drawn as tinted pills so they cannot be mistaken for ordinary body text.
+///
+/// [compact] joins them into a single pill for narrow grid cards; wide surfaces
+/// get one pill each. Both forms use the same shape, icons and colours, so the
+/// two readings stay recognisably the same thing.
+class LockedTeaserAccentRow extends StatelessWidget {
+  const LockedTeaserAccentRow({
+    super.key,
+    required this.teaser,
+    this.compact = false,
+    this.showAccent = true,
+    this.showMatch = true,
+  });
+
+  final LockedTeaser teaser;
+  final bool compact;
+
+  /// Suppressed where the surface already says the same thing in its headline.
+  final bool showAccent;
+  final bool showMatch;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = showAccent ? teaser.accentLine : null;
+    final match = showMatch ? teaser.matchLine : null;
+    if (accent == null && match == null) return const SizedBox.shrink();
+
+    if (compact) {
+      final joined = <String>[
+        if (accent != null) accent,
+        if (match != null) match,
+      ].join(' · ');
+
+      return _LockedTeaserPill(
+        icon: accent != null
+            ? Icons.visibility_rounded
+            : Icons.favorite_rounded,
+        label: joined,
+        foreground: accent != null
+            ? LockedTeaserTheme.accent
+            : LockedTeaserTheme.match,
+        background: accent != null
+            ? LockedTeaserTheme.brandSoft
+            : LockedTeaserTheme.match.withValues(alpha: 0.10),
+      );
+    }
+
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: <Widget>[
+        if (accent != null)
+          _LockedTeaserPill(
+            icon: Icons.visibility_rounded,
+            label: accent,
+            foreground: LockedTeaserTheme.accent,
+            background: LockedTeaserTheme.brandSoft,
+          ),
+        if (match != null)
+          _LockedTeaserPill(
+            icon: Icons.favorite_rounded,
+            label: match,
+            foreground: LockedTeaserTheme.match,
+            background: LockedTeaserTheme.match.withValues(alpha: 0.10),
+          ),
+      ],
+    );
+  }
+}
+
+class _LockedTeaserPill extends StatelessWidget {
+  const _LockedTeaserPill({
+    required this.icon,
+    required this.label,
+    required this.foreground,
+    required this.background,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color foreground;
+  final Color background;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: foreground.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 12.5, color: foreground),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: foreground,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The one call to action on a locked card.
+class LockedTeaserUnlockButton extends StatelessWidget {
+  const LockedTeaserUnlockButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.expand = false,
+    this.dense = false,
+  });
+
+  final String label;
+  final VoidCallback? onPressed;
+  final bool expand;
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(Icons.lock_open_rounded, size: dense ? 14 : 17),
+      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: LockedTeaserTheme.brand,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: EdgeInsets.symmetric(horizontal: dense ? 10 : 18),
+        minimumSize: Size(expand ? double.infinity : 0, dense ? 32 : 42),
+        tapTargetSize: dense
+            ? MaterialTapTargetSize.shrinkWrap
+            : MaterialTapTargetSize.padded,
+        shape: const StadiumBorder(),
+        textStyle: TextStyle(
+          fontSize: dense ? 12 : 14,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+/// The one text stack for a teaser: the attribute line, the time summary, the
+/// emphasised accent/match pills and the interest nudge — all rendered exactly
+/// as the server sent them. Strings arrive already localized, so nothing here
+/// rewrites copy, and no attribute is ever invented or reordered.
 class LockedTeaserLines extends StatelessWidget {
   const LockedTeaserLines({
     super.key,
     required this.teaser,
-    this.maxAttributeLines = 3,
-    this.accentColor = const Color(0xFF9F1239),
+    this.attributeMaxLines = 2,
+    this.showSummary = true,
+    this.showAccent = true,
+    this.showMatch = true,
+    this.compactAccent = false,
     this.showInterestHint = false,
+    this.attributeFontSize = 12.5,
   });
 
   final LockedTeaser teaser;
-  final int maxAttributeLines;
-  final Color accentColor;
+
+  /// The server's attribute strings are joined into one scannable row; this
+  /// caps how tall that row may grow before it ellipsises. Nothing is dropped
+  /// before joining, so a short card shows a truncated line rather than
+  /// silently hiding an attribute.
+  final int attributeMaxLines;
+
+  final bool showSummary;
+  final bool showAccent;
+  final bool showMatch;
+  final bool compactAccent;
+  final double attributeFontSize;
 
   /// The server's nudge line ("She may be waiting for your interest").
   final bool showInterestHint;
 
   @override
   Widget build(BuildContext context) {
-    final lines = teaser.lines.take(maxAttributeLines).toList(growable: false);
-    final summary = teaser.viewedSummary;
-    final accent = teaser.accentAndMatchLine;
+    final attributes = teaser.lines.isEmpty ? null : teaser.lines.join(' · ');
+    final summary = showSummary ? teaser.viewedSummary : null;
     final hint = showInterestHint ? teaser.interestHint : null;
+    final hasAccentRow =
+        (showAccent && teaser.accentLine != null) ||
+        (showMatch && teaser.matchLine != null);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        for (final line in lines) ...<Widget>[
+        if (attributes != null)
           Text(
-            line,
-            maxLines: 1,
+            attributes,
+            maxLines: attributeMaxLines,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: Colors.grey.shade800,
-              fontSize: 11.5,
+              color: LockedTeaserTheme.ink,
+              fontSize: attributeFontSize,
               fontWeight: FontWeight.w700,
+              height: 1.25,
             ),
           ),
-          const SizedBox(height: 3),
-        ],
-        if (summary != null)
+        if (summary != null) ...<Widget>[
+          if (attributes != null) const SizedBox(height: 3),
           Text(
             summary,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontSize: 10.5,
+            style: const TextStyle(
+              color: LockedTeaserTheme.muted,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
           ),
-        if (accent != null) ...<Widget>[
-          const SizedBox(height: 5),
-          Text(
-            accent,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: accentColor,
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-            ),
+        ],
+        if (hasAccentRow) ...<Widget>[
+          if (attributes != null || summary != null) const SizedBox(height: 7),
+          LockedTeaserAccentRow(
+            teaser: teaser,
+            compact: compactAccent,
+            showAccent: showAccent,
+            showMatch: showMatch,
           ),
         ],
         if (hint != null) ...<Widget>[
-          const SizedBox(height: 5),
+          const SizedBox(height: 6),
           Text(
             hint,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontSize: 11,
+            style: const TextStyle(
+              color: LockedTeaserTheme.muted,
+              fontSize: 11.5,
               fontWeight: FontWeight.w600,
-              height: 1.2,
+              height: 1.25,
             ),
           ),
         ],

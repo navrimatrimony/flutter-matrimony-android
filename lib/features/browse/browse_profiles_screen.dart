@@ -2212,89 +2212,62 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
+  /// A recent visitor the plan has not revealed. The photo fills the top of the
+  /// tile so the blurred person reads as a person, the server's headline sits
+  /// on the scrim as the loudest thing on the card, and the curiosity pills and
+  /// the single call to action stack underneath. Nothing here is invented — the
+  /// tile only ever draws keys the server sent, and it never routes into the
+  /// hidden profile.
   Widget _buildRecentVisitorTeaserCard(Map<String, dynamic> rawTeaser) {
     final teaser = LockedTeaser.fromJson(rawTeaser) ?? const LockedTeaser();
     final headline = teaser.headline ?? appText.lockedVisitor;
+    final summary = teaser.viewedSummary;
+    void openUpgrade() => _showSnackBar(AppStrings.upgradeToSeeVisitors);
 
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => _showSnackBar(AppStrings.upgradeToSeeVisitors),
+        onTap: openUpgrade,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  LockedTeaserPhoto(teaser: teaser, placeholderIconSize: 48),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, Color(0x99000000)],
-                      ),
-                    ),
-                  ),
-                  const Positioned(
-                    top: 9,
-                    right: 9,
-                    child: LockedTeaserLockBadge(),
-                  ),
-                  Positioned(
-                    left: 10,
-                    right: 10,
-                    bottom: 9,
-                    child: Text(
-                      headline,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 14,
-                        height: 1.12,
-                      ),
-                    ),
-                  ),
-                ],
+              child: LockedTeaserPhotoFrame(
+                teaser: teaser,
+                cornerRadius: 0,
+                scrim: true,
+                lockAlignment: Alignment.topRight,
+                topStartOverlay: summary == null
+                    ? null
+                    : LockedTeaserGlassChip(label: summary),
+                bottomOverlay: LockedTeaserHeadline(
+                  text: headline,
+                  onPhoto: true,
+                  fontSize: 14.5,
+                ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   LockedTeaserLines(
                     teaser: teaser,
-                    maxAttributeLines: 2,
-                    accentColor: _brandDark,
+                    attributeMaxLines: 1,
+                    attributeFontSize: 11.5,
+                    showSummary: false,
+                    compactAccent: true,
                   ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: OutlinedButton.icon(
-                      onPressed: () =>
-                          _showSnackBar(AppStrings.upgradeToSeeVisitors),
-                      icon: const Icon(Icons.lock_open_outlined, size: 13),
-                      label: Text(AppStrings.upgrade),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _brandColor,
-                        side: BorderSide(
-                          color: _brandColor.withValues(alpha: 0.45),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        minimumSize: const Size(0, 28),
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        textStyle: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
+                  const SizedBox(height: 9),
+                  LockedTeaserUnlockButton(
+                    label: AppStrings.upgrade,
+                    dense: true,
+                    expand: true,
+                    onPressed: openUpgrade,
                   ),
                 ],
               ),

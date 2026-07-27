@@ -492,59 +492,79 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _buildLockedTeaserAvatar(teaser),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        headline,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: _textDark,
-                          fontSize: 14.4,
-                          fontWeight: isUnread
-                              ? FontWeight.w900
-                              : FontWeight.w800,
-                          height: 1.22,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                      if (timeText.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          timeText,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: _mutedText,
-                            fontSize: 11.8,
-                            fontWeight: FontWeight.w700,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildLockedTeaserAvatar(teaser),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            headline,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: _textDark,
+                              fontSize: 14.4,
+                              fontWeight: isUnread
+                                  ? FontWeight.w900
+                                  : FontWeight.w800,
+                              height: 1.22,
+                              letterSpacing: 0,
+                            ),
                           ),
-                        ),
-                      ],
-                      if (isBusy) ...[
-                        const SizedBox(height: 7),
-                        const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      ],
-                    ],
+                          const SizedBox(height: 6),
+                          // The repeat count is folded into the headline above,
+                          // so the accent pill is suppressed whenever that
+                          // happened — the same fact must not be stated twice.
+                          LockedTeaserLines(
+                            teaser: teaser,
+                            attributeMaxLines: 2,
+                            attributeFontSize: 12,
+                            showSummary: false,
+                            showAccent: _lockedRepeatCount(teaser) == null,
+                          ),
+                          if (timeText.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              timeText,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: _mutedText,
+                                fontSize: 11.8,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                          if (isBusy) ...[
+                            const SizedBox(height: 7),
+                            const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                if (primaryAction != null) ...[
+                  const SizedBox(height: 10),
+                  Divider(height: 1, color: _line.withValues(alpha: 0.85)),
+                  const SizedBox(height: 10),
+                  _buildLockedTeaserUnlockAction(
+                    action: primaryAction,
+                    disabled: isBusy,
                   ),
-                ),
-                const SizedBox(width: 10),
-                _buildLockedTeaserUnlockAction(
-                  action: primaryAction,
-                  disabled: isBusy,
-                ),
+                ],
               ],
             ),
           ),
@@ -553,40 +573,16 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  /// The blurred visitor, drawn through the shared frame so a locked row here
+  /// looks like a locked row anywhere else. The lock sits on the rim instead of
+  /// across the face: the point of the card is that there is a person behind
+  /// the blur, and covering the middle of them hid exactly that.
   Widget _buildLockedTeaserAvatar(LockedTeaser teaser) {
-    return SizedBox(
-      width: 58,
-      height: 58,
-      child: Stack(
-        fit: StackFit.expand,
-        clipBehavior: Clip.antiAlias,
-        children: [
-          ClipOval(
-            child: SizedBox.expand(
-              child: LockedTeaserPhoto(teaser: teaser),
-            ),
-          ),
-          Center(
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                color: _brandDark.withValues(alpha: 0.9),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.92),
-                  width: 1.5,
-                ),
-              ),
-              child: const Icon(
-                Icons.lock_outline,
-                color: Colors.white,
-                size: 13,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return LockedTeaserPhotoFrame(
+      teaser: teaser,
+      width: 64,
+      height: 64,
+      circle: true,
     );
   }
 
@@ -602,26 +598,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     // our own would ignore the CTA mode the admin picked.
     final label = _stringValue(action['label'], fallback: appText.unlock);
 
-    return ConstrainedBox(
-      constraints: const BoxConstraints(minWidth: 76, maxWidth: 92),
-      child: ElevatedButton(
-        onPressed: disabled ? null : () => _openAction(action),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _brandColor,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-          minimumSize: const Size(0, 36),
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          textStyle: const TextStyle(
-            fontSize: 12.5,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 0,
-          ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-      ),
+    return LockedTeaserUnlockButton(
+      label: label,
+      expand: true,
+      onPressed: disabled ? null : () => _openAction(action),
     );
   }
 
