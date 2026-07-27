@@ -4,6 +4,7 @@ import '../../core/api_client.dart';
 import '../../core/app_language.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/notification_permission_service.dart';
 
 /// Lets a member switch off the notifications they do not want.
 ///
@@ -20,8 +21,8 @@ class NotificationSettingsScreen extends StatefulWidget {
       _NotificationSettingsScreenState();
 }
 
-class _NotificationSettingsScreenState
-    extends State<NotificationSettingsScreen> {
+class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
+    with WidgetsBindingObserver {
   bool _loading = true;
   String? _errorMessage;
   List<_PushCategory> _categories = <_PushCategory>[];
@@ -29,10 +30,48 @@ class _NotificationSettingsScreenState
   final Set<String> _busyKeys = <String>{};
   bool _savingQuietHours = false;
 
+  /// The OS-level permission, which sits above every switch on this screen: if
+  /// Android is blocking notifications, none of these categories can arrive no
+  /// matter what the server has stored.
+  NotificationPermissionState _permission =
+      NotificationPermissionState.unknown;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
+    _refreshPermission();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// The member can only fix a blocked permission outside the app, so the
+  /// banner has to re-check itself when they come back from phone settings.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _refreshPermission();
+  }
+
+  Future<void> _refreshPermission() async {
+    final state = await NotificationPermissionService.currentState();
+    if (!mounted) return;
+    setState(() => _permission = state);
+  }
+
+  Future<void> _enableNotifications() async {
+    if (_permission.canRequestInApp) {
+      // The in-app dialog while Android still offers it; the settings screen
+      // once it does not.
+      await NotificationPermissionService.ensureRequested(force: true);
+    } else {
+      await NotificationPermissionService.openSystemSettings();
+    }
+    await _refreshPermission();
   }
 
   Future<void> _load() async {
@@ -202,7 +241,81 @@ class _NotificationSettingsScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(appText.notificationSettingsTitle)),
-      body: _buildBody(),
+      // The banner sits outside `_buildBody` on purpose: a blocked permission
+      // is true whether the preferences loaded, failed or came back empty, and
+      // it outranks all three.
+      body: Column(
+        children: [
+          if (!_permission.granted) _buildPermissionBanner(),
+          Expanded(child: _buildBody()),
+        ],
+      ),
+    );
+  }
+
+  /// Says plainly that the phone is switched off rather than showing a column
+  /// of switches that cannot do anything.
+  Widget _buildPermissionBanner() {
+    final scheme = Theme.of(context).colorScheme;
+    final canAsk = _permission.canRequestInApp;
+
+    return Material(
+      color: scheme.errorContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  Icons.notifications_off_outlined,
+                  color: scheme.onErrorContainer,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    appText.notificationPermissionOffTitle,
+                    style: TextStyle(
+                      color: scheme.onErrorContainer,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              canAsk
+                  ? appText.notificationPermissionOffBody
+                  : appText.notificationPermissionBlockedBody,
+              style: TextStyle(color: scheme.onErrorContainer, height: 1.3),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _enableNotifications,
+                icon: Icon(
+                  canAsk
+                      ? Icons.notifications_active_outlined
+                      : Icons.open_in_new_rounded,
+                  color: scheme.onErrorContainer,
+                ),
+                label: Text(
+                  canAsk
+                      ? appText.notificationPermissionEnable
+                      : appText.notificationPermissionOpenSettings,
+                  style: TextStyle(
+                    color: scheme.onErrorContainer,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

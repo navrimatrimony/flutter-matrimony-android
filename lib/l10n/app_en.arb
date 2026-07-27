@@ -1177,6 +1177,14 @@
   "notificationSettingsManage": "Push notifications",
   "notificationSettingsEmpty": "No notification types are available right now.",
   "notificationSettingsSaveFailed": "This change could not be saved.",
+  "notificationPermissionOffTitle": "Notifications are switched off",
+  "@notificationPermissionOffTitle": {
+    "description": "Banner heading shown when Android is blocking notifications for this app."
+  },
+  "notificationPermissionOffBody": "Your phone is not letting this app send notifications, so nothing below can reach you.",
+  "notificationPermissionBlockedBody": "Your phone is blocking notifications for this app. The app can no longer ask for this — switch notifications on in phone settings.",
+  "notificationPermissionEnable": "Turn on notifications",
+  "notificationPermissionOpenSettings": "Open phone settings",
   "quietHours": "Quiet hours",
   "pushChannelName": "Notifications",
   "pushChannelDescription": "Alerts about interests, contact requests and matches.",

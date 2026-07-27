@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'l10n/app_localizations.dart';
 import 'core/app_language.dart';
@@ -228,7 +230,6 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
 
   Future<void> _startBootstrap() async {
     await Future<void>.delayed(const Duration(milliseconds: 300));
-    await NotificationPermissionService.requestOnStartup();
     if (!mounted) return;
     await _restoreAndRoute();
   }
@@ -257,6 +258,16 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     // Only now — this replaces the whole stack, so a notification-tap screen
     // opened any earlier would be thrown away.
     PushNotificationService.instance.handlePendingLaunchMessage();
+
+    // Ask on app open, but only for a member whose session was restored: they
+    // never pass through login again, so this was the one path where nobody was
+    // ever asked and Android silently dropped every push. A signed-out start
+    // deliberately asks nothing — a dialog on the language picker or the
+    // landing screen has no context, and a denial there is close to permanent.
+    // The device token is registered by `restoreSessionFromStorage` either way.
+    if (ApiClient.authToken != null) {
+      unawaited(NotificationPermissionService.ensureRequested());
+    }
   }
 
   Future<String> _routeForAuthenticatedUser() async {

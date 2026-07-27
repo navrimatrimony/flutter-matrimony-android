@@ -6674,6 +6674,36 @@ abstract class AppLocalizations {
   /// **'This change could not be saved.'**
   String get notificationSettingsSaveFailed;
 
+  /// Banner heading shown when Android is blocking notifications for this app.
+  ///
+  /// In en, this message translates to:
+  /// **'Notifications are switched off'**
+  String get notificationPermissionOffTitle;
+
+  /// No description provided for @notificationPermissionOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone is not letting this app send notifications, so nothing below can reach you.'**
+  String get notificationPermissionOffBody;
+
+  /// No description provided for @notificationPermissionBlockedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone is blocking notifications for this app. The app can no longer ask for this — switch notifications on in phone settings.'**
+  String get notificationPermissionBlockedBody;
+
+  /// No description provided for @notificationPermissionEnable.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on notifications'**
+  String get notificationPermissionEnable;
+
+  /// No description provided for @notificationPermissionOpenSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open phone settings'**
+  String get notificationPermissionOpenSettings;
+
   /// No description provided for @quietHours.
   ///
   /// In en, this message translates to:

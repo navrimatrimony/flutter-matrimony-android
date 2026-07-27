@@ -8,6 +8,7 @@ import 'app_language.dart';
 import 'app_storage.dart';
 import 'api_cache.dart';
 import 'api_routes.dart';
+import 'notification_permission_service.dart';
 import 'push_notification_service.dart';
 
 class _CachedJsonFetch {
@@ -1759,7 +1760,12 @@ class ApiClient {
       sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
+      // Two independent calls on purpose. The device token must reach the
+      // server even when the member denies the notification dialog — a device
+      // the server does not know can never be reached, not even after
+      // notifications are switched on later.
       unawaited(PushNotificationService.instance.registerToken());
+      unawaited(NotificationPermissionService.ensureRequested(force: true));
     }
 
     return data;
@@ -2269,7 +2275,12 @@ class ApiClient {
       sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
+      // Two independent calls on purpose. The device token must reach the
+      // server even when the member denies the notification dialog — a device
+      // the server does not know can never be reached, not even after
+      // notifications are switched on later.
       unawaited(PushNotificationService.instance.registerToken());
+      unawaited(NotificationPermissionService.ensureRequested(force: true));
       return data;
     }
 
@@ -2314,7 +2325,12 @@ class ApiClient {
       sentInterestProfileIds.clear();
       authToken = token;
       await AppStorage.instance.saveAuthToken(token);
+      // Two independent calls on purpose. The device token must reach the
+      // server even when the member denies the notification dialog — a device
+      // the server does not know can never be reached, not even after
+      // notifications are switched on later.
       unawaited(PushNotificationService.instance.registerToken());
+      unawaited(NotificationPermissionService.ensureRequested(force: true));
       return data;
     }
 

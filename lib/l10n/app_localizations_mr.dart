@@ -3568,6 +3568,23 @@ class AppLocalizationsMr extends AppLocalizations {
   String get notificationSettingsSaveFailed => 'हा बदल जतन करता आला नाही.';
 
   @override
+  String get notificationPermissionOffTitle => 'सूचना बंद आहेत';
+
+  @override
+  String get notificationPermissionOffBody =>
+      'तुमचा फोन या अ‍ॅपला सूचना पाठवू देत नाही, त्यामुळे खालीलपैकी कोणतीही सूचना तुमच्यापर्यंत पोहोचणार नाही.';
+
+  @override
+  String get notificationPermissionBlockedBody =>
+      'तुमचा फोन या अ‍ॅपच्या सूचना अडवत आहे. अ‍ॅप आता याची परवानगी मागू शकत नाही — फोन सेटिंग्जमध्ये जाऊन सूचना सुरू करा.';
+
+  @override
+  String get notificationPermissionEnable => 'सूचना सुरू करा';
+
+  @override
+  String get notificationPermissionOpenSettings => 'फोन सेटिंग्ज उघडा';
+
+  @override
   String get quietHours => 'शांत वेळ';
 
   @override

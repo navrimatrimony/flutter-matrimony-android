@@ -12,6 +12,7 @@ import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CancellationSignal
@@ -64,6 +65,8 @@ class MainActivity : FlutterActivity() {
         ).setMethodCallHandler { call, result ->
             when (call.method) {
                 "request" -> requestNotificationPermission(result)
+                "status" -> result.success(notificationPermissionStatus())
+                "openSettings" -> openAppNotificationSettings(result)
                 else -> result.notImplemented()
             }
         }
@@ -122,6 +125,55 @@ class MainActivity : FlutterActivity() {
             arrayOf(Manifest.permission.POST_NOTIFICATIONS),
             notificationPermissionRequestCode
         )
+    }
+
+    // Reports the permission without asking for it, so the app can tell the
+    // member the truth ("notifications are off at the phone level") instead of
+    // drawing switches that cannot do anything.
+    private fun notificationPermissionStatus(): Map<String, Any?> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+            return mapOf("status" to "not_required", "shows_rationale" to false)
+        }
+
+        val granted = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        return mapOf(
+            "status" to if (granted) "granted" else "denied",
+            // False once Android has stopped offering the dialog. Combined with
+            // the app's own "already asked" record that is how the Dart side
+            // separates "never asked yet" from "can never ask again".
+            "shows_rationale" to (
+                !granted &&
+                    shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)
+                )
+        )
+    }
+
+    // The only remaining path once POST_NOTIFICATIONS is permanently denied.
+    private fun openAppNotificationSettings(result: MethodChannel.Result) {
+        val notificationSettings = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                .putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        } else {
+            null
+        }
+        val appDetails = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+            .setData(Uri.fromParts("package", packageName, null))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        // OEM skins (ColorOS among them) do not all honour the notification
+        // deep link, so fall back to the plain app info screen before failing.
+        for (intent in listOfNotNull(notificationSettings, appDetails)) {
+            try {
+                startActivity(intent)
+                result.success(true)
+                return
+            } catch (_: Exception) {
+                // Try the next intent.
+            }
+        }
+        result.success(false)
     }
 
     private fun requestPhoneNumberHint(result: MethodChannel.Result) {
@@ -595,7 +647,19 @@ class MainActivity : FlutterActivity() {
             notificationPermissionRequestCode -> {
                 val granted = grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED
-                pendingNotificationResult?.success(if (granted) "granted" else "denied")
+                // Android keeps asking for a rationale only while it is still
+                // willing to show the dialog. Once it stops, the app can never
+                // ask again and the system settings screen is the only way
+                // back — the app has to say so instead of silently retrying.
+                val outcome = when {
+                    granted -> "granted"
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        !shouldShowRequestPermissionRationale(
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) -> "permanently_denied"
+                    else -> "denied"
+                }
+                pendingNotificationResult?.success(outcome)
                 pendingNotificationResult = null
             }
             locationPermissionRequestCode -> {

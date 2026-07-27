@@ -118,12 +118,27 @@ class AppStorage {
     return _write(_dailyRecommendationShownDateKey, value);
   }
 
-  Future<bool> hasPromptedNotificationPermission() async {
-    return await _read(_notificationPermissionPromptedKey) == 'true';
+  /// When the Android notification permission dialog was last answered, or null
+  /// if this install has never asked. This is the single record of "we already
+  /// asked", and it is what stops the app from prompting on every launch.
+  ///
+  /// Older installs stored a plain `'true'` here. Those are treated as answered
+  /// long ago, so they fall into the normal re-ask rule instead of being asked
+  /// again on the next launch.
+  Future<DateTime?> readNotificationPromptAt() async {
+    final value = await _read(_notificationPermissionPromptedKey);
+    if (value == null || value.isEmpty) return null;
+
+    final millis = int.tryParse(value);
+    if (millis != null) return DateTime.fromMillisecondsSinceEpoch(millis);
+    return value == 'true' ? DateTime.fromMillisecondsSinceEpoch(0) : null;
   }
 
-  Future<void> markNotificationPermissionPrompted() {
-    return _write(_notificationPermissionPromptedKey, 'true');
+  Future<void> markNotificationPromptNow() {
+    return _write(
+      _notificationPermissionPromptedKey,
+      DateTime.now().millisecondsSinceEpoch.toString(),
+    );
   }
 
   Future<void> clearSessionButKeepLanguage() {

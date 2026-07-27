@@ -3584,6 +3584,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'This change could not be saved.';
 
   @override
+  String get notificationPermissionOffTitle => 'Notifications are switched off';
+
+  @override
+  String get notificationPermissionOffBody =>
+      'Your phone is not letting this app send notifications, so nothing below can reach you.';
+
+  @override
+  String get notificationPermissionBlockedBody =>
+      'Your phone is blocking notifications for this app. The app can no longer ask for this — switch notifications on in phone settings.';
+
+  @override
+  String get notificationPermissionEnable => 'Turn on notifications';
+
+  @override
+  String get notificationPermissionOpenSettings => 'Open phone settings';
+
+  @override
   String get quietHours => 'Quiet hours';
 
   @override
