@@ -2762,6 +2762,44 @@ class ApiClient {
     return _getJson(ApiRoutes.contactInbox, authenticated: true);
   }
 
+  static Future<Map<String, dynamic>> sendSuchakRequest({
+    required int profileId,
+    int? representationId,
+    String? requestReason,
+    String? message,
+  }) {
+    return _postJson(
+      ApiRoutes.profileSuchakRequests(profileId),
+      <String, dynamic>{
+        'representation_id': representationId,
+        'request_reason': requestReason,
+        'message': message,
+      },
+      authenticated: true,
+    );
+  }
+
+  /// Both halves for this member: requests they sent, and — when a Suchak
+  /// represents them — requests waiting on their own answer.
+  static Future<Map<String, dynamic>> getSuchakRequests() {
+    return _getJson(ApiRoutes.suchakRequests, authenticated: true);
+  }
+
+  /// The candidate answering for themselves. The Suchak may answer the same
+  /// request, so a 200 can still come back as `already_answered` — that is the
+  /// race being settled server-side, not a failure.
+  static Future<Map<String, dynamic>> decideSuchakRequest({
+    required int requestId,
+    required String decision,
+    String? note,
+  }) {
+    return _postJson(
+      ApiRoutes.suchakRequestDecision(requestId),
+      <String, dynamic>{'decision': decision, 'note': note},
+      authenticated: true,
+    );
+  }
+
   static Future<Map<String, dynamic>> approveContactRequest({
     required int requestId,
     required List<String> grantedScopes,

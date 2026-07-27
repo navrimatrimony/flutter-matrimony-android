@@ -3383,4 +3383,179 @@ class AppLocalizationsEn extends AppLocalizations {
   String countriesCount(int count) {
     return '$count countries';
   }
+
+  @override
+  String get contactMobileNumberLabel => 'Mobile Number';
+
+  @override
+  String get contactEmailLabel => 'Email';
+
+  @override
+  String get copy => 'Copy';
+
+  @override
+  String get soon => 'Soon';
+
+  @override
+  String get contactStateAvailableBadge => 'Available';
+
+  @override
+  String get contactStateLockedBadge => 'Locked';
+
+  @override
+  String get contactStateResponseBadge => 'Response';
+
+  @override
+  String get contactStateRequestBadge => 'Request';
+
+  @override
+  String get contactStateInfoBadge => 'Info';
+
+  @override
+  String get suchakManagedProfileTitle => 'Profile added by a Suchak';
+
+  @override
+  String get suchakContactSubtitleFallback =>
+      'Experienced marriage facilitator';
+
+  @override
+  String get suchakContactPrivacyNote =>
+      'The candidate\'s own number is never shown. Everything goes through the Suchak.';
+
+  @override
+  String get suchakContactNumberLabel => 'Suchak\'s number';
+
+  @override
+  String get suchakLabel => 'Suchak';
+
+  @override
+  String get suchakStateAvailableBadge => 'Suchak';
+
+  @override
+  String get suchakStateAnsweredBadge => 'Answered';
+
+  @override
+  String get suchakStateClosedBadge => 'Closed';
+
+  @override
+  String get suchakRequestAvailableMessage =>
+      'A Suchak manages this profile. Send a request and they will take it ahead.';
+
+  @override
+  String get suchakRequestPendingMessage =>
+      'Your request is with the Suchak. Their reply arrives here.';
+
+  @override
+  String get suchakRequestAnsweredMessage =>
+      'The Suchak has answered. Continue in chat.';
+
+  @override
+  String get suchakRequestClosedMessage =>
+      'This request is closed. You can send a new one.';
+
+  @override
+  String get suchakRequestSendButton => 'Request through Suchak';
+
+  @override
+  String get suchakRequestResendButton => 'Send a new request';
+
+  @override
+  String get suchakRequestOpenChatButton => 'Open chat';
+
+  @override
+  String get suchakRequestPendingBadge => 'Request pending';
+
+  @override
+  String get suchakRequestDialogTitle => 'Request through Suchak';
+
+  @override
+  String suchakRequestDialogBody(String name) {
+    return 'Your request goes to $name, who will take it to the candidate and their family.';
+  }
+
+  @override
+  String get suchakRequestMessageLabel => 'Message for the Suchak';
+
+  @override
+  String get suchakRequestMessageHint => 'Share brief context for the Suchak.';
+
+  @override
+  String get suchakRequestSent => 'Suchak request sent.';
+
+  @override
+  String get couldNotSendSuchakRequest => 'Could not send the Suchak request.';
+
+  @override
+  String get suchakChatNotOpenYet => 'The Suchak has not opened the chat yet.';
+
+  @override
+  String get suchakRequestsTitle => 'Suchak Requests';
+
+  @override
+  String get tabReceived => 'Received';
+
+  @override
+  String get tabSent => 'Sent';
+
+  @override
+  String get loadingSuchakRequests => 'Loading Suchak requests';
+
+  @override
+  String get suchakRequestsDidNotLoad => 'Suchak requests did not load.';
+
+  @override
+  String get noReceivedSuchakRequests =>
+      'Nobody has asked your Suchak about you yet.';
+
+  @override
+  String get noSentSuchakRequests => 'You have not sent a Suchak request yet.';
+
+  @override
+  String get suchakRequestInterested => 'Interested';
+
+  @override
+  String get suchakRequestNotInterested => 'Not interested';
+
+  @override
+  String get suchakRequestConfirmTitle => 'Send this answer?';
+
+  @override
+  String get suchakRequestConfirmBody =>
+      'Your Suchak can answer this request too. Whichever answer arrives first is the one that counts.';
+
+  @override
+  String get suchakRequestDecisionRecorded => 'Your answer has been recorded.';
+
+  @override
+  String get couldNotAnswerSuchakRequest => 'Could not record your answer.';
+
+  @override
+  String get suchakRequestAlreadyAnswered =>
+      'This request was already answered.';
+
+  @override
+  String suchakRequestAlreadyAnsweredBy(String by) {
+    return 'This request was already answered by $by.';
+  }
+
+  @override
+  String suchakRequestAnsweredByName(String by) {
+    return 'Answered by $by';
+  }
+
+  @override
+  String suchakRequestAskedOnDate(String date) {
+    return 'Asked on $date';
+  }
+
+  @override
+  String suchakRequestSentOnDate(String date) {
+    return 'Sent on $date';
+  }
+
+  @override
+  String get suchakRequestYourMessage => 'Your message';
+
+  @override
+  String get suchakRequestTheirMessage => 'Message';
 }

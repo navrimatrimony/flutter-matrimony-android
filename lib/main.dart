@@ -22,6 +22,7 @@ import 'features/photo/photo_gallery_screen.dart';
 import 'features/plans/plans_screen.dart';
 import 'features/profile_lists/profile_lists_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/suchak/suchak_requests_screen.dart';
 
 // RouteObserver for RouteAware lifecycle management
 final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
@@ -143,6 +144,8 @@ class _MyAppState extends State<MyApp> {
         '/chats': (context) => _authenticatedScreen(const ChatScreen()),
         '/contact-inbox': (context) =>
             _authenticatedScreen(const ContactInboxScreen()),
+        '/suchak-requests': (context) =>
+            _authenticatedScreen(const SuchakRequestsScreen()),
         '/plans': (context) => _authenticatedScreen(const PlansScreen()),
         '/biodata-export': (context) =>
             _authenticatedScreen(const BiodataExportScreen()),

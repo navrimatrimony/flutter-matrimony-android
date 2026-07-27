@@ -1092,5 +1092,82 @@
     "placeholders": {
       "count": { "type": "int" }
     }
-  }
+  },
+  "contactMobileNumberLabel": "Mobile Number",
+  "contactEmailLabel": "Email",
+  "copy": "Copy",
+  "soon": "Soon",
+  "contactStateAvailableBadge": "Available",
+  "contactStateLockedBadge": "Locked",
+  "contactStateResponseBadge": "Response",
+  "contactStateRequestBadge": "Request",
+  "contactStateInfoBadge": "Info",
+  "suchakManagedProfileTitle": "Profile added by a Suchak",
+  "suchakContactSubtitleFallback": "Experienced marriage facilitator",
+  "suchakContactPrivacyNote": "The candidate's own number is never shown. Everything goes through the Suchak.",
+  "suchakContactNumberLabel": "Suchak's number",
+  "suchakLabel": "Suchak",
+  "suchakStateAvailableBadge": "Suchak",
+  "suchakStateAnsweredBadge": "Answered",
+  "suchakStateClosedBadge": "Closed",
+  "suchakRequestAvailableMessage": "A Suchak manages this profile. Send a request and they will take it ahead.",
+  "suchakRequestPendingMessage": "Your request is with the Suchak. Their reply arrives here.",
+  "suchakRequestAnsweredMessage": "The Suchak has answered. Continue in chat.",
+  "suchakRequestClosedMessage": "This request is closed. You can send a new one.",
+  "suchakRequestSendButton": "Request through Suchak",
+  "suchakRequestResendButton": "Send a new request",
+  "suchakRequestOpenChatButton": "Open chat",
+  "suchakRequestPendingBadge": "Request pending",
+  "suchakRequestDialogTitle": "Request through Suchak",
+  "suchakRequestDialogBody": "Your request goes to {name}, who will take it to the candidate and their family.",
+  "@suchakRequestDialogBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "suchakRequestMessageLabel": "Message for the Suchak",
+  "suchakRequestMessageHint": "Share brief context for the Suchak.",
+  "suchakRequestSent": "Suchak request sent.",
+  "couldNotSendSuchakRequest": "Could not send the Suchak request.",
+  "suchakChatNotOpenYet": "The Suchak has not opened the chat yet.",
+  "suchakRequestsTitle": "Suchak Requests",
+  "tabReceived": "Received",
+  "tabSent": "Sent",
+  "loadingSuchakRequests": "Loading Suchak requests",
+  "suchakRequestsDidNotLoad": "Suchak requests did not load.",
+  "noReceivedSuchakRequests": "Nobody has asked your Suchak about you yet.",
+  "noSentSuchakRequests": "You have not sent a Suchak request yet.",
+  "suchakRequestInterested": "Interested",
+  "suchakRequestNotInterested": "Not interested",
+  "suchakRequestConfirmTitle": "Send this answer?",
+  "suchakRequestConfirmBody": "Your Suchak can answer this request too. Whichever answer arrives first is the one that counts.",
+  "suchakRequestDecisionRecorded": "Your answer has been recorded.",
+  "couldNotAnswerSuchakRequest": "Could not record your answer.",
+  "suchakRequestAlreadyAnswered": "This request was already answered.",
+  "suchakRequestAlreadyAnsweredBy": "This request was already answered by {by}.",
+  "@suchakRequestAlreadyAnsweredBy": {
+    "placeholders": {
+      "by": { "type": "String" }
+    }
+  },
+  "suchakRequestAnsweredByName": "Answered by {by}",
+  "@suchakRequestAnsweredByName": {
+    "placeholders": {
+      "by": { "type": "String" }
+    }
+  },
+  "suchakRequestAskedOnDate": "Asked on {date}",
+  "@suchakRequestAskedOnDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "suchakRequestSentOnDate": "Sent on {date}",
+  "@suchakRequestSentOnDate": {
+    "placeholders": {
+      "date": { "type": "String" }
+    }
+  },
+  "suchakRequestYourMessage": "Your message",
+  "suchakRequestTheirMessage": "Message"
 }

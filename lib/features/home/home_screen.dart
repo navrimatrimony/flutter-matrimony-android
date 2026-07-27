@@ -978,6 +978,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                 onTap: () => _safePushNamed('/contact-inbox'),
               ),
               _quickChip(
+                icon: Icons.support_agent,
+                label: appText.suchakRequestsTitle,
+                onTap: () => _safePushNamed('/suchak-requests'),
+              ),
+              _quickChip(
                 icon: Icons.workspace_premium,
                 label: AppStrings.plansUpgradeMenu,
                 onTap: () => _safePushNamed('/plans'),

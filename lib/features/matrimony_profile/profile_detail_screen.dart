@@ -56,6 +56,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool _isChatStartInFlight = false;
   bool _isContactRevealInFlight = false;
   bool _isContactRequestInFlight = false;
+  bool _isSuchakRequestInFlight = false;
   bool _showGunamilanDetails = false;
   bool _showScrolledStatusStrip = false;
   final ScrollController _scrollController = ScrollController();
@@ -171,6 +172,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       _isChatStartInFlight = false;
       _isContactRevealInFlight = false;
       _isContactRequestInFlight = false;
+      _isSuchakRequestInFlight = false;
       _showScrolledStatusStrip = false;
     });
 
@@ -1830,7 +1832,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       onPrimaryAction: _handleContactPrimaryAction,
       onWhatsAppResponse: _handleWhatsAppResponseAction,
       primaryActionLoading:
-          _isContactRevealInFlight || _isContactRequestInFlight,
+          _isContactRevealInFlight ||
+          _isContactRequestInFlight ||
+          _isSuchakRequestInFlight,
     );
   }
 
@@ -2622,6 +2626,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       return;
     }
 
+    if (action == 'send_suchak_request') {
+      await _handleSendSuchakRequest(cta);
+      return;
+    }
+
+    if (action == 'open_suchak_chat') {
+      _handleOpenSuchakChat();
+      return;
+    }
+
     if (action != 'view_contact') {
       _showSnackBar(appText.contactUnlockComingSoon, Colors.black87);
       return;
@@ -2762,6 +2776,119 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       });
       _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), Colors.red);
     }
+  }
+
+  /// Suchak-routed profiles: the member never gets the candidate's number, they
+  /// ask the Suchak who manages the profile. Goes through the same pipeline the
+  /// website already uses, so a request sent here is identical to a web one.
+  Future<void> _handleSendSuchakRequest(ProfileContactCtaData cta) async {
+    if (_isSuchakRequestInFlight) return;
+
+    final suchak = _contactData()?.suchak;
+    if (suchak == null) {
+      _showSnackBar(appText.contactInformationNotAvailable, Colors.black87);
+      return;
+    }
+
+    if (!cta.enabled || !suchak.canRequest) {
+      _showSnackBar(appText.suchakRequestPendingMessage, Colors.black87);
+      return;
+    }
+
+    final message = await _showSuchakRequestDialog(suchak);
+    if (message == null) return;
+
+    final requestedProfileId = _currentProfileId;
+    setState(() {
+      _isSuchakRequestInFlight = true;
+    });
+
+    try {
+      final response = await ApiClient.sendSuchakRequest(
+        profileId: requestedProfileId,
+        representationId: suchak.representationId,
+        message: message.isEmpty ? null : message,
+      );
+      if (!mounted) return;
+      if (requestedProfileId != _currentProfileId) return;
+
+      if (_responseSuccess(response)) {
+        _applyRefreshedContact(response);
+        setState(() {
+          _isSuchakRequestInFlight = false;
+        });
+        if (_safeMap(_safeMap(response['display'])?['contact']) == null) {
+          await _fetchProfile();
+        }
+
+        if (!mounted) return;
+        _showSnackBar(
+          _backendMessage(response, appText.suchakRequestSent),
+          Colors.green,
+        );
+        return;
+      }
+
+      setState(() {
+        _isSuchakRequestInFlight = false;
+      });
+      _showSnackBar(
+        _responseErrorMessage(response, appText.couldNotSendSuchakRequest),
+        Colors.red,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSuchakRequestInFlight = false;
+      });
+      _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), Colors.red);
+    }
+  }
+
+  /// The Suchak replied, so the conversation already exists — open the one chat
+  /// screen this app has rather than building a Suchak-only variant of it.
+  void _handleOpenSuchakChat() {
+    final conversationId = _contactData()?.suchak?.request?.chatConversationId;
+    if (conversationId == null || conversationId <= 0) {
+      _showSnackBar(appText.suchakChatNotOpenYet, Colors.black87);
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ChatScreen(initialConversationId: conversationId),
+      ),
+    );
+  }
+
+  /// Copies the fresh `display.contact` a Suchak write returns straight onto
+  /// the screen, so the card moves to its next state without a second fetch.
+  void _applyRefreshedContact(Map<String, dynamic> response) {
+    final refreshedContact = _safeMap(
+      _safeMap(response['display'])?['contact'],
+    );
+    if (refreshedContact == null) return;
+
+    final currentDisplay = Map<String, dynamic>.from(
+      _display ?? <String, dynamic>{},
+    );
+    currentDisplay['contact'] = refreshedContact;
+    _display = currentDisplay;
+  }
+
+  /// Optional note for the Suchak. Returns null when the member backs out, and
+  /// an empty string when they send without writing anything.
+  Future<String?> _showSuchakRequestDialog(ProfileContactSuchakData suchak) {
+    return showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (_) => _SuchakRequestSheet(suchakName: suchak.name),
+    );
   }
 
   Future<_ContactRequestDraft?> _showContactRequestDialog(
@@ -3476,6 +3603,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         ? _lockedContactPhoneMask(contact, state)
         : null;
     final email = _displayString(contact['email']);
+    final suchak = _contactSuchak(contact['suchak']);
     final message =
         _displayString(contact['message']) ?? _fallbackContactMessage(state);
 
@@ -3485,6 +3613,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         email != null ||
         message != null ||
         primaryCta != null ||
+        suchak != null ||
         whatsapp.visible;
     if (!hasVisibleData) return null;
 
@@ -3498,6 +3627,53 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       primaryCta: primaryCta,
       requestOptions: requestOptions,
       whatsAppResponse: whatsapp,
+      suchak: suchak,
+    );
+  }
+
+  /// `display.contact.suchak` — who manages a Suchak-routed profile. Absent on
+  /// every other profile, so a null here simply means "not Suchak-routed".
+  ProfileContactSuchakData? _contactSuchak(dynamic value) {
+    final map = _safeMap(value);
+    if (map == null) return null;
+
+    final name = _displayString(map['name']);
+    if (name == null) return null;
+
+    return ProfileContactSuchakData(
+      representationId: _displayInt(map['representation_id']),
+      suchakAccountId: _displayInt(map['suchak_account_id']),
+      name: name,
+      subtitle: _displayString(map['subtitle']),
+      initial: _displayString(map['initial']),
+      photoUrl: ApiClient.normalizeProfilePhotoUrl(map['photo_url']),
+      maskedPhone: _suchakMaskedPhone(map['masked_phone']),
+      canRequest: _displaySafeBool(map['can_request']) ?? false,
+      request: _contactSuchakRequest(map['request']),
+    );
+  }
+
+  /// The Suchak's OWN number, masked by the server as `1234XXXXXX`. Anything
+  /// that is not that shape is rejected rather than shown — a real number must
+  /// never reach this card through a payload change.
+  String? _suchakMaskedPhone(dynamic value) {
+    final masked = _displayString(value);
+    if (masked == null) return null;
+
+    return RegExp(r'^\d{0,4}X{4,}$').hasMatch(masked) ? masked : null;
+  }
+
+  ProfileContactSuchakRequestData? _contactSuchakRequest(dynamic value) {
+    final map = _safeMap(value);
+    if (map == null) return null;
+
+    return ProfileContactSuchakRequestData(
+      id: _displayInt(map['id']),
+      status: _displayString(map['status']),
+      statusLabel: _displayString(map['status_label']),
+      message: _displayString(map['message']),
+      answeredByLabel: _displayString(map['answered_by_label']),
+      chatConversationId: _displayInt(map['chat_conversation_id']),
     );
   }
 
@@ -3511,6 +3687,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       'contact_request_rejected',
       'contact_request_unavailable',
       'whatsapp_response_available',
+      // Suchak-routed: the candidate's number stays locked forever by design.
+      // The server sends null here anyway; listing the states keeps the two
+      // sides honest if that ever changes.
+      'suchak_request_available',
+      'suchak_request_pending',
+      'suchak_request_answered',
+      'suchak_request_closed',
       'unavailable',
     };
     if (!lockedStates.contains(state)) return null;
@@ -3532,6 +3715,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         state == 'contact_request_pending' ||
         state == 'contact_request_rejected' ||
         state == 'contact_request_unavailable' ||
+        // Suchak-routed profiles. Without these four the card would fall
+        // through to 'unavailable' and read as a failure instead of as the
+        // request flow it actually is.
+        state == 'suchak_request_available' ||
+        state == 'suchak_request_pending' ||
+        state == 'suchak_request_answered' ||
+        state == 'suchak_request_closed' ||
         state == 'unavailable') {
       return state!;
     }
@@ -3620,6 +3810,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         return appText.contactRequestRejected;
       case 'contact_request_unavailable':
         return appText.contactRequestNotAvailable;
+      case 'suchak_request_available':
+        return appText.suchakRequestAvailableMessage;
+      case 'suchak_request_pending':
+        return appText.suchakRequestPendingMessage;
+      case 'suchak_request_answered':
+        return appText.suchakRequestAnsweredMessage;
+      case 'suchak_request_closed':
+        return appText.suchakRequestClosedMessage;
       case 'unavailable':
         return appText.contactInformationNotAvailable;
       default:
@@ -3635,6 +3833,14 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         return appText.upgradeToViewContact;
       case 'contact_request_available':
         return appText.requestContact;
+      case 'suchak_request_available':
+        return appText.suchakRequestSendButton;
+      case 'suchak_request_pending':
+        return appText.suchakRequestPendingBadge;
+      case 'suchak_request_answered':
+        return appText.suchakRequestOpenChatButton;
+      case 'suchak_request_closed':
+        return appText.suchakRequestResendButton;
       default:
         return null;
     }
@@ -4120,6 +4326,99 @@ class _ProfilePhotoItem {
 
   final String url;
   final bool blur;
+}
+
+/// The optional note a member sends with a Suchak request.
+///
+/// It owns its own controller instead of letting the caller dispose one in a
+/// `finally`: the sheet is still animating out when `showModalBottomSheet`
+/// returns, and a controller disposed at that point is used again by the
+/// exiting TextField.
+class _SuchakRequestSheet extends StatefulWidget {
+  const _SuchakRequestSheet({required this.suchakName});
+
+  final String suchakName;
+
+  @override
+  State<_SuchakRequestSheet> createState() => _SuchakRequestSheetState();
+}
+
+class _SuchakRequestSheetState extends State<_SuchakRequestSheet> {
+  final TextEditingController _messageController = TextEditingController();
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          18,
+          18,
+          18,
+          MediaQuery.of(context).viewInsets.bottom + 18,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    appText.suchakRequestDialogTitle,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      color: Color(0xFF2E2220),
+                    ),
+                  ),
+                ),
+                IconButton(
+                  tooltip: appText.close,
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              appText.suchakRequestDialogBody(widget.suchakName),
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                fontSize: 13,
+                height: 1.35,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _messageController,
+              minLines: 3,
+              maxLines: 5,
+              maxLength: 2000,
+              decoration: InputDecoration(
+                labelText: appText.suchakRequestMessageLabel,
+                hintText: appText.suchakRequestMessageHint,
+                alignLabelWithHint: true,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton.icon(
+              onPressed: () =>
+                  Navigator.pop(context, _messageController.text.trim()),
+              icon: const Icon(Icons.support_agent),
+              label: Text(appText.suchakRequestSendButton),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 class _ContactRequestDraft {

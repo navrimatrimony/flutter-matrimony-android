@@ -3368,4 +3368,179 @@ class AppLocalizationsMr extends AppLocalizations {
   String countriesCount(int count) {
     return '$count देश';
   }
+
+  @override
+  String get contactMobileNumberLabel => 'मोबाइल नंबर';
+
+  @override
+  String get contactEmailLabel => 'ईमेल';
+
+  @override
+  String get copy => 'कॉपी करा';
+
+  @override
+  String get soon => 'लवकरच';
+
+  @override
+  String get contactStateAvailableBadge => 'उपलब्ध';
+
+  @override
+  String get contactStateLockedBadge => 'बंद';
+
+  @override
+  String get contactStateResponseBadge => 'प्रतिसाद';
+
+  @override
+  String get contactStateRequestBadge => 'विनंती';
+
+  @override
+  String get contactStateInfoBadge => 'माहिती';
+
+  @override
+  String get suchakManagedProfileTitle => 'सूचकांकडून जोडलेले स्थळ';
+
+  @override
+  String get suchakContactSubtitleFallback => 'अनुभवी विवाह-सूचक';
+
+  @override
+  String get suchakContactPrivacyNote =>
+      'उमेदवाराचा स्वतःचा नंबर कधीही दाखवला जात नाही. सर्व संपर्क सूचकांमार्फतच होतो.';
+
+  @override
+  String get suchakContactNumberLabel => 'सूचकांचा नंबर';
+
+  @override
+  String get suchakLabel => 'सूचक';
+
+  @override
+  String get suchakStateAvailableBadge => 'सूचक';
+
+  @override
+  String get suchakStateAnsweredBadge => 'उत्तर आले';
+
+  @override
+  String get suchakStateClosedBadge => 'बंद';
+
+  @override
+  String get suchakRequestAvailableMessage =>
+      'हे स्थळ सूचक सांभाळतात. विनंती पाठवा, ते पुढे नेतील.';
+
+  @override
+  String get suchakRequestPendingMessage =>
+      'तुमची विनंती सूचकांकडे आहे. त्यांचे उत्तर इथेच येईल.';
+
+  @override
+  String get suchakRequestAnsweredMessage =>
+      'सूचकांनी उत्तर दिले आहे. पुढील चर्चा चॅटमध्ये करा.';
+
+  @override
+  String get suchakRequestClosedMessage =>
+      'ही विनंती बंद झाली आहे. तुम्ही नवीन विनंती पाठवू शकता.';
+
+  @override
+  String get suchakRequestSendButton => 'सूचक मार्फत विनंती करा';
+
+  @override
+  String get suchakRequestResendButton => 'नवीन विनंती पाठवा';
+
+  @override
+  String get suchakRequestOpenChatButton => 'चॅट उघडा';
+
+  @override
+  String get suchakRequestPendingBadge => 'विनंती प्रलंबित';
+
+  @override
+  String get suchakRequestDialogTitle => 'सूचक मार्फत विनंती';
+
+  @override
+  String suchakRequestDialogBody(String name) {
+    return 'तुमची विनंती $name यांच्याकडे जाईल. ते ती उमेदवार आणि त्यांच्या कुटुंबापर्यंत पोहोचवतील.';
+  }
+
+  @override
+  String get suchakRequestMessageLabel => 'सूचकांसाठी संदेश';
+
+  @override
+  String get suchakRequestMessageHint => 'सूचकांसाठी थोडक्यात संदर्भ लिहा.';
+
+  @override
+  String get suchakRequestSent => 'सूचक विनंती पाठवली आहे.';
+
+  @override
+  String get couldNotSendSuchakRequest => 'सूचक विनंती पाठवता आली नाही.';
+
+  @override
+  String get suchakChatNotOpenYet => 'सूचकांनी अजून चॅट उघडलेले नाही.';
+
+  @override
+  String get suchakRequestsTitle => 'सूचक विनंत्या';
+
+  @override
+  String get tabReceived => 'आलेल्या';
+
+  @override
+  String get tabSent => 'पाठवलेल्या';
+
+  @override
+  String get loadingSuchakRequests => 'सूचक विनंत्या उघडत आहेत';
+
+  @override
+  String get suchakRequestsDidNotLoad => 'सूचक विनंत्या उघडता आल्या नाहीत.';
+
+  @override
+  String get noReceivedSuchakRequests =>
+      'तुमच्याबद्दल अजून कोणीही सूचकांना विचारलेले नाही.';
+
+  @override
+  String get noSentSuchakRequests =>
+      'तुम्ही अजून कोणतीही सूचक विनंती पाठवलेली नाही.';
+
+  @override
+  String get suchakRequestInterested => 'इच्छुक आहे';
+
+  @override
+  String get suchakRequestNotInterested => 'इच्छुक नाही';
+
+  @override
+  String get suchakRequestConfirmTitle => 'हे उत्तर पाठवायचे?';
+
+  @override
+  String get suchakRequestConfirmBody =>
+      'या विनंतीला तुमचे सूचकही उत्तर देऊ शकतात. आधी आलेले उत्तर ग्राह्य धरले जाते.';
+
+  @override
+  String get suchakRequestDecisionRecorded => 'तुमचे उत्तर नोंदवले आहे.';
+
+  @override
+  String get couldNotAnswerSuchakRequest => 'तुमचे उत्तर नोंदवता आले नाही.';
+
+  @override
+  String get suchakRequestAlreadyAnswered =>
+      'या विनंतीला आधीच उत्तर दिले गेले आहे.';
+
+  @override
+  String suchakRequestAlreadyAnsweredBy(String by) {
+    return 'या विनंतीला $by यांनी आधीच उत्तर दिले आहे.';
+  }
+
+  @override
+  String suchakRequestAnsweredByName(String by) {
+    return '$by यांनी उत्तर दिले';
+  }
+
+  @override
+  String suchakRequestAskedOnDate(String date) {
+    return '$date रोजी विचारले';
+  }
+
+  @override
+  String suchakRequestSentOnDate(String date) {
+    return '$date रोजी पाठवली';
+  }
+
+  @override
+  String get suchakRequestYourMessage => 'तुमचा संदेश';
+
+  @override
+  String get suchakRequestTheirMessage => 'संदेश';
 }

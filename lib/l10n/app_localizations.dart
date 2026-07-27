@@ -6319,6 +6319,318 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} countries'**
   String countriesCount(int count);
+
+  /// No description provided for @contactMobileNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile Number'**
+  String get contactMobileNumberLabel;
+
+  /// No description provided for @contactEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get contactEmailLabel;
+
+  /// No description provided for @copy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get copy;
+
+  /// No description provided for @soon.
+  ///
+  /// In en, this message translates to:
+  /// **'Soon'**
+  String get soon;
+
+  /// No description provided for @contactStateAvailableBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Available'**
+  String get contactStateAvailableBadge;
+
+  /// No description provided for @contactStateLockedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked'**
+  String get contactStateLockedBadge;
+
+  /// No description provided for @contactStateResponseBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Response'**
+  String get contactStateResponseBadge;
+
+  /// No description provided for @contactStateRequestBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Request'**
+  String get contactStateRequestBadge;
+
+  /// No description provided for @contactStateInfoBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get contactStateInfoBadge;
+
+  /// No description provided for @suchakManagedProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile added by a Suchak'**
+  String get suchakManagedProfileTitle;
+
+  /// No description provided for @suchakContactSubtitleFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Experienced marriage facilitator'**
+  String get suchakContactSubtitleFallback;
+
+  /// No description provided for @suchakContactPrivacyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The candidate\'s own number is never shown. Everything goes through the Suchak.'**
+  String get suchakContactPrivacyNote;
+
+  /// No description provided for @suchakContactNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Suchak\'s number'**
+  String get suchakContactNumberLabel;
+
+  /// No description provided for @suchakLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Suchak'**
+  String get suchakLabel;
+
+  /// No description provided for @suchakStateAvailableBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Suchak'**
+  String get suchakStateAvailableBadge;
+
+  /// No description provided for @suchakStateAnsweredBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered'**
+  String get suchakStateAnsweredBadge;
+
+  /// No description provided for @suchakStateClosedBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Closed'**
+  String get suchakStateClosedBadge;
+
+  /// No description provided for @suchakRequestAvailableMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'A Suchak manages this profile. Send a request and they will take it ahead.'**
+  String get suchakRequestAvailableMessage;
+
+  /// No description provided for @suchakRequestPendingMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request is with the Suchak. Their reply arrives here.'**
+  String get suchakRequestPendingMessage;
+
+  /// No description provided for @suchakRequestAnsweredMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The Suchak has answered. Continue in chat.'**
+  String get suchakRequestAnsweredMessage;
+
+  /// No description provided for @suchakRequestClosedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This request is closed. You can send a new one.'**
+  String get suchakRequestClosedMessage;
+
+  /// No description provided for @suchakRequestSendButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Request through Suchak'**
+  String get suchakRequestSendButton;
+
+  /// No description provided for @suchakRequestResendButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a new request'**
+  String get suchakRequestResendButton;
+
+  /// No description provided for @suchakRequestOpenChatButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Open chat'**
+  String get suchakRequestOpenChatButton;
+
+  /// No description provided for @suchakRequestPendingBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Request pending'**
+  String get suchakRequestPendingBadge;
+
+  /// No description provided for @suchakRequestDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Request through Suchak'**
+  String get suchakRequestDialogTitle;
+
+  /// No description provided for @suchakRequestDialogBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your request goes to {name}, who will take it to the candidate and their family.'**
+  String suchakRequestDialogBody(String name);
+
+  /// No description provided for @suchakRequestMessageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Message for the Suchak'**
+  String get suchakRequestMessageLabel;
+
+  /// No description provided for @suchakRequestMessageHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Share brief context for the Suchak.'**
+  String get suchakRequestMessageHint;
+
+  /// No description provided for @suchakRequestSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Suchak request sent.'**
+  String get suchakRequestSent;
+
+  /// No description provided for @couldNotSendSuchakRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the Suchak request.'**
+  String get couldNotSendSuchakRequest;
+
+  /// No description provided for @suchakChatNotOpenYet.
+  ///
+  /// In en, this message translates to:
+  /// **'The Suchak has not opened the chat yet.'**
+  String get suchakChatNotOpenYet;
+
+  /// No description provided for @suchakRequestsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suchak Requests'**
+  String get suchakRequestsTitle;
+
+  /// No description provided for @tabReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get tabReceived;
+
+  /// No description provided for @tabSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get tabSent;
+
+  /// No description provided for @loadingSuchakRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading Suchak requests'**
+  String get loadingSuchakRequests;
+
+  /// No description provided for @suchakRequestsDidNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Suchak requests did not load.'**
+  String get suchakRequestsDidNotLoad;
+
+  /// No description provided for @noReceivedSuchakRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has asked your Suchak about you yet.'**
+  String get noReceivedSuchakRequests;
+
+  /// No description provided for @noSentSuchakRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not sent a Suchak request yet.'**
+  String get noSentSuchakRequests;
+
+  /// No description provided for @suchakRequestInterested.
+  ///
+  /// In en, this message translates to:
+  /// **'Interested'**
+  String get suchakRequestInterested;
+
+  /// No description provided for @suchakRequestNotInterested.
+  ///
+  /// In en, this message translates to:
+  /// **'Not interested'**
+  String get suchakRequestNotInterested;
+
+  /// No description provided for @suchakRequestConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Send this answer?'**
+  String get suchakRequestConfirmTitle;
+
+  /// No description provided for @suchakRequestConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Suchak can answer this request too. Whichever answer arrives first is the one that counts.'**
+  String get suchakRequestConfirmBody;
+
+  /// No description provided for @suchakRequestDecisionRecorded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your answer has been recorded.'**
+  String get suchakRequestDecisionRecorded;
+
+  /// No description provided for @couldNotAnswerSuchakRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not record your answer.'**
+  String get couldNotAnswerSuchakRequest;
+
+  /// No description provided for @suchakRequestAlreadyAnswered.
+  ///
+  /// In en, this message translates to:
+  /// **'This request was already answered.'**
+  String get suchakRequestAlreadyAnswered;
+
+  /// No description provided for @suchakRequestAlreadyAnsweredBy.
+  ///
+  /// In en, this message translates to:
+  /// **'This request was already answered by {by}.'**
+  String suchakRequestAlreadyAnsweredBy(String by);
+
+  /// No description provided for @suchakRequestAnsweredByName.
+  ///
+  /// In en, this message translates to:
+  /// **'Answered by {by}'**
+  String suchakRequestAnsweredByName(String by);
+
+  /// No description provided for @suchakRequestAskedOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Asked on {date}'**
+  String suchakRequestAskedOnDate(String date);
+
+  /// No description provided for @suchakRequestSentOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent on {date}'**
+  String suchakRequestSentOnDate(String date);
+
+  /// No description provided for @suchakRequestYourMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Your message'**
+  String get suchakRequestYourMessage;
+
+  /// No description provided for @suchakRequestTheirMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get suchakRequestTheirMessage;
 }
 
 class _AppLocalizationsDelegate

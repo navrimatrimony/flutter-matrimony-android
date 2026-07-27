@@ -104,6 +104,16 @@ class ApiRoutes {
   static String profileContactRequests(int profileId) =>
       '$matrimonyProfiles/$profileId/contact-requests';
 
+  // Suchak-routed profiles: the candidate's own number is never shown, so
+  // contact runs through the Suchak request pipeline instead.
+  static String profileSuchakRequests(int profileId) =>
+      '$matrimonyProfiles/$profileId/suchak-requests';
+
+  static const String suchakRequests = '/suchak-requests';
+
+  static String suchakRequestDecision(int requestId) =>
+      '$suchakRequests/$requestId/decision';
+
   static String profilePhotoPrimary(int photoId) =>
       '$profilePhotos/$photoId/primary';
 
