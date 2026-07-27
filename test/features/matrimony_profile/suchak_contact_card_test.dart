@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_matrimony_android/core/api_client.dart';
 import 'package:flutter_matrimony_android/core/app_language.dart';
 import 'package:flutter_matrimony_android/core/app_storage.dart';
 import 'package:flutter_matrimony_android/features/matrimony_profile/profile_detail_screen.dart';
+import 'package:flutter_matrimony_android/main.dart';
 
 import '../../support/fake_http.dart';
 
@@ -110,7 +112,12 @@ void main() {
     http.onJson('/matrimony-profiles/$profileId', profileResponse(contact));
 
     await tester.pumpWidget(
-      const MaterialApp(home: ProfileDetailScreen(profileId: profileId)),
+      MaterialApp(
+        // The app registers this observer, and the screen re-reads the profile
+        // through it; a host without it cannot observe that.
+        navigatorObservers: [routeObserver],
+        home: const ProfileDetailScreen(profileId: profileId),
+      ),
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
@@ -332,6 +339,104 @@ void main() {
       reason: 'A closed request is the moment the member may ask again.',
     );
   });
+
+  testWidgets(
+    'coming back to the screen re-reads the contact state instead of holding '
+    'the one it opened with',
+    (WidgetTester tester) async {
+      // Opened while nobody had asked yet.
+      await pumpProfile(
+        tester,
+        contactPayload(
+          state: 'suchak_request_available',
+          ctaLabel: 'Request through Suchak',
+          ctaAction: 'send_suchak_request',
+          ctaEnabled: true,
+          message: 'A Suchak manages this profile.',
+        ),
+      );
+
+      expect(find.text('Request through Suchak'), findsOneWidget);
+
+      // Meanwhile the Suchak answers. The server now returns a different
+      // contact state for the same profile.
+      http.onJson(
+        '/matrimony-profiles/$profileId',
+        profileResponse(
+          contactPayload(
+            state: 'suchak_request_answered',
+            ctaLabel: 'Open chat',
+            ctaAction: 'open_suchak_chat',
+            ctaEnabled: true,
+            message: 'The Suchak has answered.',
+            canRequest: false,
+            request: <String, dynamic>{
+              'id': 501,
+              'status': 'accepted_by_suchak',
+              'status_label': 'Reply received from Suchak',
+              'chat_conversation_id': 88,
+            },
+          ),
+        ),
+      );
+
+      // The member walks off to another screen and comes back — the exact
+      // sequence that used to leave the stale CTA on screen forever.
+      final navigator = Navigator.of(
+        tester.element(find.byType(ProfileDetailScreen)),
+      );
+      unawaited(
+        navigator.push(
+          MaterialPageRoute<void>(
+            builder: (_) => const Scaffold(body: Text('somewhere else')),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      navigator.pop();
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Open chat'),
+        findsOneWidget,
+        reason:
+            'The route became visible again, so the contact block must come '
+            'from a fresh read — not from the response the route opened with.',
+      );
+      expect(
+        find.text('Request through Suchak'),
+        findsNothing,
+        reason: 'The stale CTA is the defect: it must be gone.',
+      );
+
+      // Same guarantee for the other way back onto the screen: resume from
+      // background.
+      http.onJson(
+        '/matrimony-profiles/$profileId',
+        profileResponse(
+          contactPayload(
+            state: 'suchak_request_closed',
+            ctaLabel: 'Send a new request',
+            ctaAction: 'send_suchak_request',
+            ctaEnabled: true,
+            message: 'This request is closed.',
+            request: <String, dynamic>{
+              'id': 501,
+              'status': 'expired',
+              'status_label': 'Expired',
+            },
+          ),
+        ),
+      );
+
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Send a new request'), findsOneWidget);
+      expect(find.text('Open chat'), findsNothing);
+    },
+  );
 
   testWidgets('a Marathi member sees no Devanagari digits on the card', (
     WidgetTester tester,

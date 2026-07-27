@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import '../../main.dart';
 import '../chat/chat_screen.dart';
 import 'widgets/profile_comparison_card.dart';
 import 'widgets/profile_contact_card.dart';
@@ -31,7 +32,8 @@ class ProfileDetailScreen extends StatefulWidget {
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
 }
 
-class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
+class _ProfileDetailScreenState extends State<ProfileDetailScreen>
+    with RouteAware, WidgetsBindingObserver {
   static final Set<int> _openedProfileIds = <int>{};
   static final Set<int> _knownViewedProfileIds = <int>{};
   late int _currentProfileId;
@@ -57,6 +59,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
   bool _isContactRevealInFlight = false;
   bool _isContactRequestInFlight = false;
   bool _isSuchakRequestInFlight = false;
+  bool _isFetchingProfile = false;
   bool _showGunamilanDetails = false;
   bool _showScrolledStatusStrip = false;
   final ScrollController _scrollController = ScrollController();
@@ -72,14 +75,51 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     _seedInitialProfile(widget.initialProfile);
     _openedProfileIds.add(_currentProfileId);
     _scrollController.addListener(_handleHeroScroll);
+    WidgetsBinding.instance.addObserver(this);
     _fetchProfile();
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (route is PageRoute) {
+      routeObserver.subscribe(this, route);
+    }
+  }
+
+  @override
   void dispose() {
+    routeObserver.unsubscribe(this);
+    WidgetsBinding.instance.removeObserver(this);
     _scrollController.removeListener(_handleHeroScroll);
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// The contact block is a *server* state — a Suchak can answer, a member can
+  /// be blocked, a request can expire while this route sits on the stack. So
+  /// the screen re-reads the profile every time it becomes visible again
+  /// instead of holding the response it opened with. No timer, no cache: the
+  /// server stays the only source of truth.
+  @override
+  void didPopNext() {
+    super.didPopNext();
+    _refreshOnBecomingVisible();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state != AppLifecycleState.resumed) return;
+    final route = ModalRoute.of(context);
+    if (route != null && !route.isCurrent) return;
+    _refreshOnBecomingVisible();
+  }
+
+  void _refreshOnBecomingVisible() {
+    if (!mounted || _isFetchingProfile) return;
+    _fetchProfile(refreshOnly: true);
   }
 
   void _handleHeroScroll() {
@@ -182,8 +222,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
     _fetchProfile();
   }
 
-  Future<void> _fetchProfile() async {
+  /// [refreshOnly] is the "screen became visible again" path: same request,
+  /// same single source of truth, but it does not re-pull the suggestion rail
+  /// and it stays quiet when the network is unavailable.
+  Future<void> _fetchProfile({bool refreshOnly = false}) async {
     final requestedProfileId = _currentProfileId;
+    _isFetchingProfile = true;
     try {
       final response = await ApiClient.getProfileDetail(requestedProfileId);
       if (!mounted) return;
@@ -224,7 +268,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           _canBlock = _displaySafeBool(actions?['can_block']);
           _isLoading = false;
         });
-        _fetchSuggestedProfiles();
+        if (!refreshOnly) _fetchSuggestedProfiles();
       } else {
         if (_profile != null) {
           final message =
@@ -232,7 +276,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
           setState(() {
             _isLoading = false;
           });
-          _showSnackBar(message.toString(), Colors.orange);
+          if (!refreshOnly) _showSnackBar(message.toString(), Colors.orange);
           return;
         }
 
@@ -247,7 +291,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         setState(() {
           _isLoading = false;
         });
-        _showSnackBar(appText.couldNotRefreshProfile, Colors.orange);
+        if (!refreshOnly) {
+          _showSnackBar(appText.couldNotRefreshProfile, Colors.orange);
+        }
         return;
       }
 
@@ -255,6 +301,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
         _errorMessage = appText.unexpectedErrorOccurred(e.toString());
         _isLoading = false;
       });
+    } finally {
+      _isFetchingProfile = false;
     }
   }
 
@@ -2813,12 +2861,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
       if (requestedProfileId != _currentProfileId) return;
 
       if (_responseSuccess(response)) {
-        _applyRefreshedContact(response);
+        final applied = _applyRefreshedContact(response);
         setState(() {
           _isSuchakRequestInFlight = false;
         });
-        if (_safeMap(_safeMap(response['display'])?['contact']) == null) {
-          await _fetchProfile();
+        if (!applied) {
+          await _fetchProfile(refreshOnly: true);
         }
 
         if (!mounted) return;
@@ -2864,17 +2912,36 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen> {
 
   /// Copies the fresh `display.contact` a Suchak write returns straight onto
   /// the screen, so the card moves to its next state without a second fetch.
-  void _applyRefreshedContact(Map<String, dynamic> response) {
+  ///
+  /// Returns false when the write answered without a USABLE contact block — no
+  /// `display.contact`, no `state`, or no `primary_cta`. The caller then falls
+  /// back to a full `_fetchProfile()`, because a half-applied contact would
+  /// leave the old CTA on screen and look exactly like nothing happened.
+  ///
+  /// The assignment goes through `setState`: writing `_display` outside it left
+  /// the new state depending on some *other* `setState` happening to run
+  /// afterwards.
+  bool _applyRefreshedContact(Map<String, dynamic> response) {
     final refreshedContact = _safeMap(
       _safeMap(response['display'])?['contact'],
     );
-    if (refreshedContact == null) return;
+    if (refreshedContact == null) return false;
+
+    final state = refreshedContact['state'];
+    final primaryCta = _safeMap(refreshedContact['primary_cta']);
+    if (state is! String || state.trim().isEmpty || primaryCta == null) {
+      return false;
+    }
 
     final currentDisplay = Map<String, dynamic>.from(
       _display ?? <String, dynamic>{},
     );
     currentDisplay['contact'] = refreshedContact;
-    _display = currentDisplay;
+    setState(() {
+      _display = currentDisplay;
+    });
+
+    return true;
   }
 
   /// Optional note for the Suchak. Returns null when the member backs out, and
