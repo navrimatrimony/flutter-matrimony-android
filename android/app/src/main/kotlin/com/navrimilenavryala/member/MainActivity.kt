@@ -1,4 +1,4 @@
-package com.example.flutter_matrimony_android
+package com.navrimilenavryala.member
 
 import android.Manifest
 import android.accounts.AccountManager
