@@ -1,0 +1,194 @@
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:flutter_matrimony_android/core/locked_teaser.dart';
+
+/// The teaser payload is a privacy instruction from the admin, so the two rules
+/// worth pinning are: every strength the server can emit resolves to its own
+/// blur, and nothing the server can emit ever resolves to "no blur".
+void main() {
+  /// `WhoViewedTeaserPresenter::blurTailwindClasses` — who viewed me and
+  /// received interests.
+  const whoViewedClasses = <String, String>{
+    'light': 'blur-sm scale-105 opacity-95',
+    'soft': 'blur-[3px] scale-105 opacity-95',
+    'gentle': 'blur-[6px] scale-110 opacity-93',
+    'medium': 'blur-md scale-110 opacity-90',
+    'strong': 'blur-2xl scale-125 opacity-[0.88]',
+  };
+
+  /// `ChatTeaserPolicy::blurClass` — locked chat rows.
+  const chatClasses = <String, String>{
+    'light': 'blur-[1px]',
+    'soft': 'blur-[2px]',
+    'gentle': 'blur-[3px]',
+    'medium': 'blur-[4px]',
+    'strong': 'blur-[6px]',
+  };
+
+  group('blur strength', () {
+    test('each who-viewed strength gets its own sigma', () {
+      final sigmas = whoViewedClasses.map(
+        (strength, css) => MapEntry(strength, LockedTeaser.blurSigmaForClass(css)),
+      );
+
+      expect(sigmas['light'], 4);
+      expect(sigmas['soft'], 3);
+      expect(sigmas['gentle'], 6);
+      expect(sigmas['medium'], 10);
+      expect(sigmas['strong'], 18);
+    });
+
+    test('each chat strength gets its own sigma', () {
+      // These four used to fall through to the medium default, so light and
+      // strong rendered identically.
+      expect(LockedTeaser.blurSigmaForClass(chatClasses['light']!), 1);
+      expect(LockedTeaser.blurSigmaForClass(chatClasses['soft']!), 2);
+      expect(LockedTeaser.blurSigmaForClass(chatClasses['gentle']!), 3);
+      expect(LockedTeaser.blurSigmaForClass(chatClasses['medium']!), 4);
+      expect(LockedTeaser.blurSigmaForClass(chatClasses['strong']!), 6);
+    });
+
+    test('stronger admin settings never blur less', () {
+      for (final classes in <Map<String, String>>[whoViewedClasses, chatClasses]) {
+        final ordered = <String>['light', 'soft', 'gentle', 'medium', 'strong']
+            .map((strength) => LockedTeaser.blurSigmaForClass(classes[strength]!))
+            .toList();
+
+        // `soft` is the one inversion the server itself ships (who-viewed
+        // light is blur-sm = 4px, soft is 3px), so compare the rest.
+        expect(ordered[2], lessThanOrEqualTo(ordered[3]));
+        expect(ordered[3], lessThanOrEqualTo(ordered[4]));
+      }
+    });
+
+    test('an unreadable class fails safe to blurred, never clear', () {
+      for (final unknown in <String>[
+        '',
+        'scale-110 opacity-90',
+        'blur-none',
+        'blur-[0px]',
+        'totally-unexpected',
+      ]) {
+        expect(
+          LockedTeaser.blurSigmaForClass(unknown),
+          LockedTeaser.defaultBlurSigma,
+          reason: 'class "$unknown" must not render the photo unblurred',
+        );
+      }
+    });
+
+    test('named Tailwind utilities outside the current five still resolve', () {
+      expect(LockedTeaser.blurSigmaForClass('blur'), greaterThan(6));
+      expect(LockedTeaser.blurSigmaForClass('blur-lg'), greaterThan(10));
+      expect(LockedTeaser.blurSigmaForClass('blur-xl'), greaterThan(11));
+      expect(LockedTeaser.blurSigmaForClass('blur-3xl'), greaterThan(18));
+    });
+  });
+
+  group('scale and opacity', () {
+    test('scale and opacity tokens are honoured', () {
+      expect(LockedTeaser.photoScaleForClass('blur-2xl scale-125'), 1.25);
+      expect(LockedTeaser.photoScaleForClass('blur-md scale-110'), 1.10);
+      expect(LockedTeaser.photoScaleForClass('blur-sm scale-105'), 1.05);
+      expect(
+        LockedTeaser.photoOpacityForClass('blur-2xl scale-125 opacity-[0.88]'),
+        closeTo(0.88, 0.001),
+      );
+      expect(
+        LockedTeaser.photoOpacityForClass('blur-[6px] scale-110 opacity-93'),
+        closeTo(0.93, 0.001),
+      );
+    });
+
+    test('a class without those tokens keeps the defaults', () {
+      expect(
+        LockedTeaser.photoScaleForClass('blur-[4px]'),
+        LockedTeaser.defaultPhotoScale,
+      );
+      expect(LockedTeaser.photoOpacityForClass('blur-[4px]'), 1);
+    });
+  });
+
+  group('what the server withholds stays withheld', () {
+    Map<String, dynamic> payload({
+      String avatarStyle = 'blur',
+      String? photoUrl = 'https://example.test/photos/a.jpg',
+    }) {
+      return <String, dynamic>{
+        'headline': 'A girl from Khanapur',
+        'lines': <String>['Khanapur / Sangli', '26 years', 'Never married'],
+        'viewed_summary': 'Interest received 2 hours ago',
+        'photo_url': photoUrl,
+        'avatar_style': avatarStyle,
+        'blur_photo_class': 'blur-2xl scale-125 opacity-[0.88]',
+        'accent_line': null,
+        'match_line': '82% match',
+        'interest_hint': 'She may be waiting for your interest',
+      };
+    }
+
+    test('a blur teaser with a photo renders it', () {
+      final teaser = LockedTeaser.fromJson(payload())!;
+
+      expect(teaser.hasPhoto, isTrue);
+      expect(teaser.blurSigma, 18);
+    });
+
+    test('avatar_style silhouette hides the photo even when a url is sent', () {
+      final teaser =
+          LockedTeaser.fromJson(payload(avatarStyle: 'silhouette'))!;
+
+      expect(teaser.hasPhoto, isFalse);
+    });
+
+    test('an unknown avatar style is treated as silhouette', () {
+      final teaser = LockedTeaser.fromJson(payload(avatarStyle: 'sneaky'))!;
+
+      expect(teaser.hasPhoto, isFalse);
+    });
+
+    test('a withheld photo_url renders nothing', () {
+      final teaser = LockedTeaser.fromJson(payload(photoUrl: null))!;
+
+      expect(teaser.hasPhoto, isFalse);
+    });
+
+    test("the server's own svg placeholder is not treated as a photo", () {
+      final teaser = LockedTeaser.fromJson(
+        payload(
+          photoUrl: 'https://example.test/images/placeholders/female-profile.svg',
+        ),
+      )!;
+
+      expect(teaser.hasPhoto, isFalse);
+    });
+
+    test('omitted lines stay omitted', () {
+      final teaser = LockedTeaser.fromJson(<String, dynamic>{
+        'headline': 'A girl from Khanapur',
+        'lines': <String>[],
+        'avatar_style': 'silhouette',
+      })!;
+
+      expect(teaser.lines, isEmpty);
+      expect(teaser.accentLine, isNull);
+      expect(teaser.matchLine, isNull);
+      expect(teaser.accentAndMatchLine, isNull);
+      expect(teaser.viewedSummary, isNull);
+    });
+
+    test('no teaser block means no teaser', () {
+      expect(LockedTeaser.fromJson(null), isNull);
+      expect(LockedTeaser.fromJson(<String, dynamic>{}), isNull);
+      expect(LockedTeaser.fromJson('nonsense'), isNull);
+    });
+
+    test('a default teaser shows nothing at all', () {
+      const teaser = LockedTeaser();
+
+      expect(teaser.hasPhoto, isFalse);
+      expect(teaser.wantsBlurredPhoto, isFalse);
+      expect(teaser.headline, isNull);
+    });
+  });
+}

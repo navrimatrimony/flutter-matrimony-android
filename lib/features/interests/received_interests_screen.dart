@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/locked_teaser.dart';
 import '../../core/profile_photo_view.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 import '../../core/app_language.dart';
@@ -9,6 +10,20 @@ import '../../core/app_language.dart';
 /// ===============================
 /// RECEIVED INTERESTS SCREEN
 /// ===============================
+///
+/// Rows the member's plan has not revealed are drawn locked, exactly as
+/// `GET /interests/received` describes them: `incoming_reveal_unlocked: false`
+/// and a `sender_profile` reduced to `{id, revealed: false}`. The screen never
+/// reconstructs the hidden identity — no name, no photo, and no route into the
+/// sender's profile.
+///
+/// The endpoint does not yet carry the rich teaser block that
+/// `ReceivedInterestTeaserPolicy` is configured for (blurred photo, courtesy
+/// headline, taluka, age, marital status, match hint) — the web page builds it
+/// through `WhoViewedTeaserPresenter`, the mobile controller does not. When the
+/// API starts sending that block under `teaser`, [LockedTeaser] picks it up
+/// here and the shared widgets render it; until then these rows show the plain
+/// locked state rather than an imitation of the teaser.
 class ReceivedInterestsScreen extends StatefulWidget {
   const ReceivedInterestsScreen({super.key});
 
@@ -18,9 +33,16 @@ class ReceivedInterestsScreen extends StatefulWidget {
 }
 
 class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
+  static const Color _brandColor = Color(0xFFDC2626);
+  static const Color _brandDark = Color(0xFF9F1239);
+
   List<dynamic> _interests = [];
   bool _isLoading = true;
   String? _errorMessage;
+
+  /// -1 = unlimited, 0 = none, > 0 = reveals per window.
+  int _revealLimit = -1;
+  String _revealResetPeriod = 'monthly';
 
   @override
   void initState() {
@@ -61,6 +83,10 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
         final receivedList = data['received'] as List?;
         setState(() {
           _interests = receivedList ?? [];
+          _revealLimit = _asInt(data['interest_view_limit']) ?? -1;
+          _revealResetPeriod =
+              data['interest_view_reset_period']?.toString().trim() ??
+              'monthly';
           _isLoading = false;
         });
       } else {
@@ -87,35 +113,17 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
       final statusCode = response['statusCode'];
 
       if (statusCode == 200 && response['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Interest accepted.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-        // Refresh the list
+        _showSnackBar(appText.interestAccepted, Colors.green);
         _fetchReceivedInterests();
       } else {
-        final errorMessage =
-            response['message'] ?? appText.couldNotAcceptInterest;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ $errorMessage'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
+        _showSnackBar(
+          response['message']?.toString() ?? appText.couldNotAcceptInterest,
+          Colors.red,
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ ${appText.unexpectedErrorOccurred(e.toString())}'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), Colors.red);
     }
   }
 
@@ -127,69 +135,80 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
       final statusCode = response['statusCode'];
 
       if (statusCode == 200 && response['success'] == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Interest rejected.'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-        // Refresh the list
+        _showSnackBar(appText.interestRejected, Colors.green);
         _fetchReceivedInterests();
       } else {
-        final errorMessage =
-            response['message'] ?? appText.couldNotRejectInterest;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('❌ $errorMessage'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
+        _showSnackBar(
+          response['message']?.toString() ?? appText.couldNotRejectInterest,
+          Colors.red,
         );
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('❌ ${appText.unexpectedErrorOccurred(e.toString())}'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      _showSnackBar(appText.unexpectedErrorOccurred(e.toString()), Colors.red);
     }
   }
 
-  // Get status text and color
+  void _showSnackBar(String message, Color background) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: background,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _openPlans() {
+    Navigator.pushNamed(context, '/plans');
+  }
+
   String _getStatusText(String? status) {
-    switch (status) {
-      case 'pending':
-        return 'Pending';
-      case 'accepted':
-        return 'Accepted';
-      case 'rejected':
-        return 'Rejected';
-      default:
-        return 'Unknown';
-    }
+    return switch (status) {
+      'pending' => appText.pending,
+      'accepted' => appText.accepted,
+      'rejected' => appText.rejected,
+      _ => '',
+    };
   }
 
   Color _getStatusColor(String? status) {
-    switch (status) {
-      case 'pending':
-        return Colors.orange;
-      case 'accepted':
-        return Colors.green;
-      case 'rejected':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
+    return switch (status) {
+      'pending' => Colors.orange,
+      'accepted' => Colors.green,
+      'rejected' => Colors.red,
+      _ => Colors.grey,
+    };
+  }
+
+  /// `interest_view_reset_period` is a raw key from the API
+  /// (`daily`|`weekly`|`monthly`|`quarterly`|`lifetime`).
+  String _revealIntervalLabel(String period) {
+    return switch (period) {
+      'daily' => appText.intervalEachDay,
+      'weekly' => appText.intervalEachWeek,
+      'quarterly' => appText.intervalEachQuarter,
+      'lifetime' => appText.intervalInTotal,
+      _ => appText.intervalEachMonth,
+    };
+  }
+
+  /// A row the member's plan has not revealed. Both the row flag and the
+  /// reduced `sender_profile` say so; either is enough.
+  bool _isRevealed(Map<String, dynamic> interest) {
+    final flag = interest['incoming_reveal_unlocked'];
+    if (flag is bool) return flag;
+
+    final sender = _safeMap(interest['sender_profile']);
+    if (sender != null && sender['revealed'] == false) return false;
+
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Received Interests')),
+      appBar: AppBar(title: Text(appText.receivedInterests)),
       body: _buildBody(),
     );
   }
@@ -225,9 +244,25 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
       );
     }
 
+    final banner = _buildRevealLimitBanner();
+
     if (_interests.isEmpty) {
-      return const Center(
-        child: Text('No received interests.', style: TextStyle(fontSize: 16)),
+      return RefreshIndicator(
+        onRefresh: _fetchReceivedInterests,
+        child: ListView(
+          padding: const EdgeInsets.all(16.0),
+          children: [
+            if (banner != null) ...[banner, const SizedBox(height: 16)],
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 40),
+              child: Text(
+                appText.noReceivedInterests,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -235,152 +270,368 @@ class _ReceivedInterestsScreenState extends State<ReceivedInterestsScreen> {
       onRefresh: _fetchReceivedInterests,
       child: ListView.builder(
         padding: const EdgeInsets.all(16.0),
-        itemCount: _interests.length,
+        itemCount: _interests.length + (banner == null ? 0 : 1),
         itemBuilder: (context, index) {
-          final interest = _interests[index] as Map<String, dynamic>;
-          final senderProfile =
-              interest['sender_profile'] as Map<String, dynamic>?;
-          final status = interest['status']?.toString();
-          final interestId = interest['id'] as int?;
-
-          if (senderProfile == null || interestId == null) {
-            return const SizedBox.shrink();
+          if (banner != null) {
+            if (index == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: banner,
+              );
+            }
+            index -= 1;
           }
 
-          final photoUrl = ApiClient.resolveProfilePhotoUrl(senderProfile);
-          final senderName =
-              senderProfile['full_name']?.toString() ?? 'Unknown';
-          final senderProfileId = senderProfile['id'] as int?;
+          final raw = _safeMap(_interests[index]);
+          if (raw == null) return const SizedBox.shrink();
 
-          return Card(
-            margin: const EdgeInsets.only(bottom: 12),
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile Photo
-                  GestureDetector(
-                    onTap: senderProfileId != null
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ProfileDetailScreen(
-                                  profileId: senderProfileId,
-                                  initialProfile: senderProfile,
-                                ),
-                              ),
-                            );
-                          }
-                        : null,
-                    child: ProfilePhotoView(
-                      photoUrl: photoUrl,
-                      width: 80,
-                      height: 80,
-                      circle: true,
-                      backgroundColor: Colors.grey.shade300,
-                      placeholderColor: Colors.grey,
-                      placeholderIcon: Icons.person,
-                      placeholderSize: 40,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // Profile Info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        GestureDetector(
-                          onTap: senderProfileId != null
-                              ? () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => ProfileDetailScreen(
-                                        profileId: senderProfileId,
-                                        initialProfile: senderProfile,
-                                      ),
-                                    ),
-                                  );
-                                }
-                              : null,
-                          child: Text(
-                            senderName,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Text(
-                              'Status: ',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            Text(
-                              _getStatusText(status),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                color: _getStatusColor(status),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        // Accept/Reject buttons for pending interests
-                        if (status == 'pending')
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    _acceptInterest(interestId);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                  ),
-                                  child: const Text('Accept'),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    _rejectInterest(interestId);
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.red,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                  ),
-                                  child: const Text('Reject'),
-                                ),
-                              ),
-                            ],
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
+          final interestId = _asInt(raw['id']);
+          if (interestId == null) return const SizedBox.shrink();
+
+          return _isRevealed(raw)
+              ? _buildRevealedCard(raw, interestId)
+              : _buildLockedCard(raw, interestId);
         },
       ),
     );
+  }
+
+  /// Explains why some rows below are locked. Built only from what the API
+  /// already returns alongside the rows.
+  Widget? _buildRevealLimitBanner() {
+    if (_revealLimit < 0) return null;
+
+    final message = _revealLimit == 0
+        ? appText.interestRevealNone
+        : appText.interestRevealLimitBanner(
+            _revealLimit,
+            _revealIntervalLabel(_revealResetPeriod),
+          );
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF7ED),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFFDE1C8)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.lock_outline, size: 20, color: _brandDark),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 13,
+                height: 1.3,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF5B4636),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          TextButton(
+            onPressed: _openPlans,
+            style: TextButton.styleFrom(
+              foregroundColor: _brandColor,
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              minimumSize: const Size(0, 34),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            child: Text(appText.unlock),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRevealedCard(Map<String, dynamic> interest, int interestId) {
+    final senderProfile = _safeMap(interest['sender_profile']);
+    if (senderProfile == null) return const SizedBox.shrink();
+
+    final status = interest['status']?.toString();
+    final photoUrl = ApiClient.resolveProfilePhotoUrl(senderProfile);
+    final senderName =
+        senderProfile['full_name']?.toString().trim().isNotEmpty == true
+        ? senderProfile['full_name'].toString()
+        : appText.nameNotAvailable;
+    final senderProfileId = _asInt(senderProfile['id']);
+
+    void openProfile() {
+      if (senderProfileId == null) return;
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProfileDetailScreen(
+            profileId: senderProfileId,
+            initialProfile: senderProfile,
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            GestureDetector(
+              onTap: senderProfileId != null ? openProfile : null,
+              child: ProfilePhotoView(
+                photoUrl: photoUrl,
+                width: 80,
+                height: 80,
+                circle: true,
+                backgroundColor: Colors.grey.shade300,
+                placeholderColor: Colors.grey,
+                placeholderIcon: Icons.person,
+                placeholderSize: 40,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  GestureDetector(
+                    onTap: senderProfileId != null ? openProfile : null,
+                    child: Text(
+                      senderName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  _buildStatusRow(status),
+                  const SizedBox(height: 8),
+                  if (status == 'pending')
+                    _buildPendingActions(
+                      interestId: interestId,
+                      acceptLocked: false,
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The locked presentation. The teaser block is rendered when the API sends
+  /// one; otherwise the card stays anonymous rather than guessing.
+  Widget _buildLockedCard(Map<String, dynamic> interest, int interestId) {
+    final teaser = LockedTeaser.fromJson(interest['teaser']);
+    final status = interest['status']?.toString();
+    final headline = teaser?.headline ?? appText.lockedInterestTitle;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 88,
+                  height: 96,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        LockedTeaserPhoto(
+                          teaser: teaser ?? const LockedTeaser(),
+                          placeholderIconSize: 40,
+                        ),
+                        const DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Colors.transparent, Color(0x66000000)],
+                            ),
+                          ),
+                        ),
+                        const Positioned(
+                          right: 6,
+                          top: 6,
+                          child: LockedTeaserLockBadge(size: 26),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        headline,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      if (teaser != null)
+                        LockedTeaserLines(
+                          teaser: teaser,
+                          maxAttributeLines: 3,
+                          accentColor: _brandDark,
+                          showInterestHint: true,
+                        )
+                      else
+                        Text(
+                          appText.lockedInterestBody,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            height: 1.3,
+                            color: Colors.grey.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      _buildStatusRow(status),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ElevatedButton.icon(
+                onPressed: _openPlans,
+                icon: const Icon(Icons.lock_open_outlined, size: 16),
+                label: Text(appText.unlock),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _brandColor,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  minimumSize: const Size(0, 36),
+                  textStyle: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+            ),
+            if (status == 'pending') ...[
+              const SizedBox(height: 10),
+              // Mirrors the server: accepting an unrevealed interest is denied
+              // (`INTEREST_ACCEPT_REQUIRES_REVEAL`), declining is allowed.
+              _buildPendingActions(interestId: interestId, acceptLocked: true),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusRow(String? status) {
+    final label = _getStatusText(status);
+    if (label.isEmpty) return const SizedBox.shrink();
+
+    return Row(
+      children: [
+        Text(
+          '${appText.statusLabel}: ',
+          style: const TextStyle(fontSize: 14, color: Colors.grey),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: _getStatusColor(status),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPendingActions({
+    required int interestId,
+    required bool acceptLocked,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: acceptLocked
+                    ? null
+                    : () => _acceptInterest(interestId),
+                icon: acceptLocked
+                    ? const Icon(Icons.lock_outline, size: 15)
+                    : const SizedBox.shrink(),
+                label: Text(appText.accept),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _rejectInterest(interestId),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                ),
+                child: Text(appText.reject),
+              ),
+            ),
+          ],
+        ),
+        if (acceptLocked) ...[
+          const SizedBox(height: 6),
+          Text(
+            appText.lockedInterestAcceptHint,
+            style: TextStyle(fontSize: 11.5, color: Colors.grey.shade700),
+          ),
+        ],
+      ],
+    );
+  }
+
+  static Map<String, dynamic>? _safeMap(dynamic value) {
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
+  static int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value.trim());
+    return null;
   }
 }

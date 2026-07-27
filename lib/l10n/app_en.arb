@@ -1188,5 +1188,27 @@
   "quietHours": "Quiet hours",
   "pushChannelName": "Notifications",
   "pushChannelDescription": "Alerts about interests, contact requests and matches.",
-  "pushDefaultTitle": "New notification"
+  "pushDefaultTitle": "New notification",
+  "accept": "Accept",
+  "reject": "Reject",
+  "statusLabel": "Status",
+  "interestAccepted": "Interest accepted.",
+  "interestRejected": "Interest declined.",
+  "noReceivedInterests": "No received interests yet.",
+  "lockedInterestTitle": "Locked interest",
+  "lockedInterestBody": "Unlock with a plan to see who sent this interest.",
+  "lockedInterestAcceptHint": "Accept becomes available once this interest is unlocked.",
+  "interestRevealLimitBanner": "Your plan reveals {count} received interests {interval}.",
+  "@interestRevealLimitBanner": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "interval": { "type": "String" }
+    }
+  },
+  "interestRevealNone": "Your current plan does not reveal any received interest.",
+  "intervalEachDay": "each day",
+  "intervalEachWeek": "each week",
+  "intervalEachMonth": "each month",
+  "intervalEachQuarter": "each quarter",
+  "intervalInTotal": "in total"
 }

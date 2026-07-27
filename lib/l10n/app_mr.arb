@@ -1104,5 +1104,21 @@
   "quietHours": "शांत वेळ",
   "pushChannelName": "सूचना",
   "pushChannelDescription": "आवडी, संपर्क विनंत्या आणि जुळण्यांबद्दलच्या सूचना.",
-  "pushDefaultTitle": "नवीन सूचना"
+  "pushDefaultTitle": "नवीन सूचना",
+  "accept": "स्वीकारा",
+  "reject": "नाकारा",
+  "statusLabel": "स्थिती",
+  "interestAccepted": "इंटरेस्ट स्वीकारला.",
+  "interestRejected": "इंटरेस्ट नाकारला.",
+  "noReceivedInterests": "अजून कोणताही आलेला इंटरेस्ट नाही.",
+  "lockedInterestTitle": "लॉक केलेला इंटरेस्ट",
+  "lockedInterestBody": "हा इंटरेस्ट कोणी पाठवला हे पाहण्यासाठी प्लॅन घेऊन अनलॉक करा.",
+  "lockedInterestAcceptHint": "हा इंटरेस्ट अनलॉक झाल्यावरच स्वीकारता येईल.",
+  "interestRevealLimitBanner": "तुमचा प्लॅन {interval} {count} आलेले इंटरेस्ट उघड करतो.",
+  "interestRevealNone": "तुमचा सध्याचा प्लॅन कोणताही आलेला इंटरेस्ट उघड करत नाही.",
+  "intervalEachDay": "दररोज",
+  "intervalEachWeek": "दर आठवड्याला",
+  "intervalEachMonth": "दर महिन्याला",
+  "intervalEachQuarter": "दर तिमाहीला",
+  "intervalInTotal": "एकूण"
 }

@@ -3596,4 +3596,57 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get pushDefaultTitle => 'नवीन सूचना';
+
+  @override
+  String get accept => 'स्वीकारा';
+
+  @override
+  String get reject => 'नाकारा';
+
+  @override
+  String get statusLabel => 'स्थिती';
+
+  @override
+  String get interestAccepted => 'इंटरेस्ट स्वीकारला.';
+
+  @override
+  String get interestRejected => 'इंटरेस्ट नाकारला.';
+
+  @override
+  String get noReceivedInterests => 'अजून कोणताही आलेला इंटरेस्ट नाही.';
+
+  @override
+  String get lockedInterestTitle => 'लॉक केलेला इंटरेस्ट';
+
+  @override
+  String get lockedInterestBody =>
+      'हा इंटरेस्ट कोणी पाठवला हे पाहण्यासाठी प्लॅन घेऊन अनलॉक करा.';
+
+  @override
+  String get lockedInterestAcceptHint =>
+      'हा इंटरेस्ट अनलॉक झाल्यावरच स्वीकारता येईल.';
+
+  @override
+  String interestRevealLimitBanner(int count, String interval) {
+    return 'तुमचा प्लॅन $interval $count आलेले इंटरेस्ट उघड करतो.';
+  }
+
+  @override
+  String get interestRevealNone =>
+      'तुमचा सध्याचा प्लॅन कोणताही आलेला इंटरेस्ट उघड करत नाही.';
+
+  @override
+  String get intervalEachDay => 'दररोज';
+
+  @override
+  String get intervalEachWeek => 'दर आठवड्याला';
+
+  @override
+  String get intervalEachMonth => 'दर महिन्याला';
+
+  @override
+  String get intervalEachQuarter => 'दर तिमाहीला';
+
+  @override
+  String get intervalInTotal => 'एकूण';
 }

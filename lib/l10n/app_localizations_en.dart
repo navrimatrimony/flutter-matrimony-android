@@ -3612,4 +3612,57 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pushDefaultTitle => 'New notification';
+
+  @override
+  String get accept => 'Accept';
+
+  @override
+  String get reject => 'Reject';
+
+  @override
+  String get statusLabel => 'Status';
+
+  @override
+  String get interestAccepted => 'Interest accepted.';
+
+  @override
+  String get interestRejected => 'Interest declined.';
+
+  @override
+  String get noReceivedInterests => 'No received interests yet.';
+
+  @override
+  String get lockedInterestTitle => 'Locked interest';
+
+  @override
+  String get lockedInterestBody =>
+      'Unlock with a plan to see who sent this interest.';
+
+  @override
+  String get lockedInterestAcceptHint =>
+      'Accept becomes available once this interest is unlocked.';
+
+  @override
+  String interestRevealLimitBanner(int count, String interval) {
+    return 'Your plan reveals $count received interests $interval.';
+  }
+
+  @override
+  String get interestRevealNone =>
+      'Your current plan does not reveal any received interest.';
+
+  @override
+  String get intervalEachDay => 'each day';
+
+  @override
+  String get intervalEachWeek => 'each week';
+
+  @override
+  String get intervalEachMonth => 'each month';
+
+  @override
+  String get intervalEachQuarter => 'each quarter';
+
+  @override
+  String get intervalInTotal => 'in total';
 }

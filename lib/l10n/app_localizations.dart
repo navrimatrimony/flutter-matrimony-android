@@ -6727,6 +6727,102 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'New notification'**
   String get pushDefaultTitle;
+
+  /// No description provided for @accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept'**
+  String get accept;
+
+  /// No description provided for @reject.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject'**
+  String get reject;
+
+  /// No description provided for @statusLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get statusLabel;
+
+  /// No description provided for @interestAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest accepted.'**
+  String get interestAccepted;
+
+  /// No description provided for @interestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest declined.'**
+  String get interestRejected;
+
+  /// No description provided for @noReceivedInterests.
+  ///
+  /// In en, this message translates to:
+  /// **'No received interests yet.'**
+  String get noReceivedInterests;
+
+  /// No description provided for @lockedInterestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked interest'**
+  String get lockedInterestTitle;
+
+  /// No description provided for @lockedInterestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with a plan to see who sent this interest.'**
+  String get lockedInterestBody;
+
+  /// No description provided for @lockedInterestAcceptHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Accept becomes available once this interest is unlocked.'**
+  String get lockedInterestAcceptHint;
+
+  /// No description provided for @interestRevealLimitBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Your plan reveals {count} received interests {interval}.'**
+  String interestRevealLimitBanner(int count, String interval);
+
+  /// No description provided for @interestRevealNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current plan does not reveal any received interest.'**
+  String get interestRevealNone;
+
+  /// No description provided for @intervalEachDay.
+  ///
+  /// In en, this message translates to:
+  /// **'each day'**
+  String get intervalEachDay;
+
+  /// No description provided for @intervalEachWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'each week'**
+  String get intervalEachWeek;
+
+  /// No description provided for @intervalEachMonth.
+  ///
+  /// In en, this message translates to:
+  /// **'each month'**
+  String get intervalEachMonth;
+
+  /// No description provided for @intervalEachQuarter.
+  ///
+  /// In en, this message translates to:
+  /// **'each quarter'**
+  String get intervalEachQuarter;
+
+  /// No description provided for @intervalInTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'in total'**
+  String get intervalInTotal;
 }
 
 class _AppLocalizationsDelegate
