@@ -520,15 +520,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          // The repeat count is folded into the headline above,
-                          // so the accent pill is suppressed whenever that
-                          // happened — the same fact must not be stated twice.
+                          // The headline no longer absorbs the repeat count, so
+                          // the accent line is shown where it belongs: as its
+                          // own pill. `viewed_summary` is drawn below as the
+                          // time line, which is why it is suppressed here.
                           LockedTeaserLines(
                             teaser: teaser,
                             attributeMaxLines: 2,
                             attributeFontSize: 12,
                             showSummary: false,
-                            showAccent: _lockedRepeatCount(teaser) == null,
                           ),
                           if (timeText.isNotEmpty) ...[
                             const SizedBox(height: 6),
@@ -605,19 +605,21 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  /// The teaser's own time line, exactly as the server sent it.
+  ///
+  /// `teaser_viewed_time` is an admin setting, and on production it is `human`
+  /// so this arrives as relative time. This card used to prefer its own
+  /// formatted `created_at` instead, which threw that setting away and put a
+  /// raw "27/07/2026 22:00" on a card whose whole job is to feel personal. The
+  /// notification's timestamp is now only the fallback, for a payload that
+  /// carries no summary at all.
   String _lockedTeaserMetaText({
     required LockedTeaser teaser,
     required String createdAt,
   }) {
-    if (createdAt.isNotEmpty) {
-      return createdAt;
-    }
+    final summary = _stringValue(teaser.viewedSummary);
 
-    if (_lockedRepeatCount(teaser) != null) {
-      return '';
-    }
-
-    return teaser.viewedSummary ?? '';
+    return summary.isNotEmpty ? summary : createdAt;
   }
 
   Widget _buildNotificationVisual({
@@ -821,162 +823,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  /// The server's headline, rendered exactly as it arrived.
+  ///
+  /// `name_display` is an admin setting with five modes (`hidden`, `masked`,
+  /// `courtesy_from_place`, `first_only`, `full`) and the server has already
+  /// resolved whichever one is configured into this one string. This card used
+  /// to rebuild the sentence instead — swapping nouns, stripping "तालुका",
+  /// re-inflecting the subject, appending the repeat count — which silently
+  /// overrode the admin's choice and made the phone disagree with both the
+  /// payload and the web inbox. Nothing here rewrites the copy any more.
+  ///
+  /// The notification's own message is the only fallback, for a payload that
+  /// carries no headline at all.
   String _lockedTeaserHeadline({
     required LockedTeaser teaser,
     required String fallbackMessage,
   }) {
-    final raw = _stringValue(
-      teaser.headline,
-      fallback: fallbackMessage.isEmpty
-          ? (appText.profileViewed)
-          : fallbackMessage,
-    );
-    final cleaned = _sanitizeLockedHeadline(raw);
-    if (cleaned.isEmpty) {
-      return appText.yourProfileWasViewed;
-    }
+    final headline = _stringValue(teaser.headline, fallback: fallbackMessage);
 
-    final headline = _mentionsProfileView(cleaned)
-        ? cleaned
-        : (AppStrings.isMarathi
-              ? '${_marathiViewerSubject(cleaned)} तुमचे प्रोफाइल पाहिले.'
-              : '$cleaned viewed your profile.');
-
-    return _lockedHeadlineWithRepeat(headline, teaser);
-  }
-
-  String _sanitizeLockedHeadline(String value) {
-    var text = value.trim();
-    if (text.isEmpty) return '';
-
-    final lower = text.toLowerCase();
-    if (lower.contains('someone') || text.contains('कोणीतरी')) {
-      return '';
-    }
-
-    text = _stripLocationTypeLabels(text.replaceAll(RegExp(r',$'), '').trim());
-
-    if (AppStrings.isMarathi) {
-      return text
-          .replaceFirst('एक मुलगी', 'वधू')
-          .replaceFirst('एक स्त्री', 'वधू')
-          .replaceFirst('एक मुलगा', 'वर')
-          .replaceFirst('एक पुरुष', 'वर')
-          .replaceAll(' हून ', ' मधील ');
-    }
-
-    return text
-        .replaceFirst(RegExp(r'\bA girl\b', caseSensitive: false), 'A bride')
-        .replaceFirst(RegExp(r'\bA woman\b', caseSensitive: false), 'A bride')
-        .replaceFirst(RegExp(r'\bA boy\b', caseSensitive: false), 'A groom')
-        .replaceFirst(RegExp(r'\bA man\b', caseSensitive: false), 'A groom');
-  }
-
-  String _stripLocationTypeLabels(String value) {
-    return value
-        .replaceAll(RegExp(r'\s+district\b', caseSensitive: false), '')
-        .replaceAll(RegExp(r'\s+taluka\b', caseSensitive: false), '')
-        .replaceAll(' जिल्ह्यातील', ' मधील')
-        .replaceAll(' तालुक्यातील', ' मधील')
-        .replaceAll(' जिल्हा', '')
-        .replaceAll(' तालुका', '');
-  }
-
-  String _marathiViewerSubject(String subject) {
-    final cleaned = subject.trim();
-    if (cleaned.endsWith('वधू')) {
-      return '$cleanedने';
-    }
-    if (cleaned.endsWith('वर')) {
-      return '$cleanedाने';
-    }
-    if (cleaned.endsWith('मुलगी') || cleaned.endsWith('महिला')) {
-      return '$cleanedने';
-    }
-    if (cleaned.endsWith('मुलगा') || cleaned.endsWith('पुरुष')) {
-      return '$cleanedाने';
-    }
-
-    return '$cleaned यांनी';
-  }
-
-  String _lockedHeadlineWithRepeat(String headline, LockedTeaser teaser) {
-    final count = _lockedRepeatCount(teaser);
-    if (count == null) {
-      return _withSentencePeriod(headline);
-    }
-
-    final base = headline.replaceAll(RegExp(r'[.।]\s*$'), '');
-    if (RegExp(r'\b\d+\s+times\b', caseSensitive: false).hasMatch(base) ||
-        base.contains(' वेळा')) {
-      return _withSentencePeriod(base);
-    }
-
-    final window = _lockedRepeatWindow(teaser);
-    if (AppStrings.isMarathi) {
-      final profilePhrase = base.contains('तुमचे प्रोफाइल पाहिले')
-          ? 'तुमचे प्रोफाइल पाहिले'
-          : appText.viewedYourProfile;
-      final replacement = window.isEmpty
-          ? appText.yourProfileViewedTimes
-          : appText.yourProfileViewedTimesInWindow;
-
-      return _withSentencePeriod(base.replaceFirst(profilePhrase, replacement));
-    }
-
-    final suffix = window.isEmpty ? '$count times' : '$count times $window';
-    return _withSentencePeriod(
-      base.replaceFirst(
-        RegExp(r'viewed your profile', caseSensitive: false),
-        'viewed your profile $suffix',
-      ),
-    );
-  }
-
-  int? _lockedRepeatCount(LockedTeaser teaser) {
-    final accentLine = _stringValue(teaser.accentLine);
-    final match = RegExp(r'(\d+)').firstMatch(accentLine);
-    if (match == null) {
-      return null;
-    }
-
-    final count = int.tryParse(match.group(1) ?? '');
-    if (count == null || count <= 1) {
-      return null;
-    }
-
-    return count;
-  }
-
-  String _lockedRepeatWindow(LockedTeaser teaser) {
-    final summary = _stringValue(teaser.viewedSummary).toLowerCase();
-    if (summary.contains('today') || summary.contains('आज')) {
-      return appText.today;
-    }
-    if (summary.contains('this week') || summary.contains('या आठवड')) {
-      return appText.thisWeek;
-    }
-    if (summary.contains('this month') || summary.contains('या महिन')) {
-      return appText.thisMonth;
-    }
-
-    return '';
-  }
-
-  String _withSentencePeriod(String value) {
-    final text = value.trim();
-    if (text.endsWith('.') || text.endsWith('।')) {
-      return text;
-    }
-
-    return '$text.';
-  }
-
-  bool _mentionsProfileView(String text) {
-    final lower = text.toLowerCase();
-    return lower.contains('viewed your profile') ||
-        lower.contains(appText.profileViewed) ||
-        lower.contains('प्रोफाइल पाहिले');
+    return headline.isEmpty ? appText.yourProfileWasViewed : headline;
   }
 
   _NotificationVisual _visualForLayout(String layout) {

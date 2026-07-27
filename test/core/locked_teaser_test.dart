@@ -194,16 +194,6 @@ void main() {
   });
 
   group('what the shared card actually paints', () {
-    Widget host(Widget child) {
-      return MaterialApp(
-        home: Scaffold(
-          body: Center(
-            child: SizedBox(width: 180, height: 260, child: child),
-          ),
-        ),
-      );
-    }
-
     testWidgets('a withheld photo draws the person stand-in and the lock, '
         'never an image', (tester) async {
       const teaser = LockedTeaser(headline: 'A girl from Khanapur');
@@ -261,4 +251,126 @@ void main() {
       expect(find.text('82% match'), findsOneWidget);
     });
   });
+
+  group('a real production payload is rendered as sent', () {
+    /// The teaser blob read straight off a production notification row, kept
+    /// verbatim — trailing comma, SVG placeholder and all. The phone used to
+    /// rebuild this headline into a sentence of its own ("Kurhani मधील वधूने
+    /// तुमचे प्रोफाइल पाहिले.") and to show a formatted `created_at` instead of
+    /// `viewed_summary`, which threw away both `name_display` and
+    /// `teaser_viewed_time`.
+    Map<String, dynamic> productionRow() {
+      return <String, dynamic>{
+        'headline': 'Kurhani तालुका हून एक स्त्री,',
+        'lines': <String>['Kurhani / Muzaffarpur / Bihar', '27 वर्षे'],
+        'viewed_summary': 'पाहिले: 2 तासांपूर्वी',
+        'photo_url':
+            'https://navrimilenavryala.com/images/placeholders/female-profile.svg',
+        'avatar_style': 'blur',
+        'blur_photo_class': 'blur-md scale-110 opacity-90',
+        'accent_line': null,
+        'match_line': null,
+        'interest_hint': 'ही महिला तुमच्या प्रोफाइलमध्ये interested असू शकते.',
+      };
+    }
+
+    test("the server's own SVG placeholder is ruled out before any request", () {
+      final teaser = LockedTeaser.fromJson(productionRow())!;
+
+      // The admin did ask for a blurred photo — there just is not one to blur.
+      expect(teaser.wantsBlurredPhoto, isTrue);
+      expect(teaser.renderablePhotoUrl, isNull);
+      expect(teaser.hasPhoto, isFalse);
+      // And the strength is still read, so a real photo on the next row blurs.
+      expect(teaser.blurSigma, 10);
+    });
+
+    testWidgets('so the card draws the stand-in rather than attempting the '
+        'placeholder and failing', (tester) async {
+      final teaser = LockedTeaser.fromJson(productionRow())!;
+
+      await tester.pumpWidget(host(LockedTeaserPhotoFrame(teaser: teaser)));
+
+      // No Image widget means no network round trip and no error flash.
+      expect(find.byType(Image), findsNothing);
+      expect(find.byType(LockedTeaserSilhouette), findsOneWidget);
+    });
+
+    testWidgets('the headline is drawn exactly as sent, trailing comma and all',
+        (tester) async {
+      final teaser = LockedTeaser.fromJson(productionRow())!;
+
+      await tester.pumpWidget(
+        host(LockedTeaserHeadline(text: teaser.headline!)),
+      );
+
+      expect(find.text('Kurhani तालुका हून एक स्त्री,'), findsOneWidget);
+    });
+
+    testWidgets('the attribute lines keep the location string the server '
+        'resolved', (tester) async {
+      final teaser = LockedTeaser.fromJson(productionRow())!;
+
+      await tester.pumpWidget(
+        host(LockedTeaserLines(teaser: teaser, showInterestHint: true)),
+      );
+
+      expect(
+        find.text('Kurhani / Muzaffarpur / Bihar · 27 वर्षे'),
+        findsOneWidget,
+      );
+      expect(find.text('पाहिले: 2 तासांपूर्वी'), findsOneWidget);
+      expect(
+        find.text('ही महिला तुमच्या प्रोफाइलमध्ये interested असू शकते.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('once the same row carries repeat views and a match, both '
+        'become their own pills', (tester) async {
+      final teaser = LockedTeaser.fromJson(<String, dynamic>{
+        ...productionRow(),
+        'accent_line': 'तुमची प्रोफाइल 4 वेळा पाहिली',
+        'match_line': '82% जुळणी',
+      })!;
+
+      await tester.pumpWidget(host(LockedTeaserLines(teaser: teaser)));
+
+      expect(find.byType(LockedTeaserAccentRow), findsOneWidget);
+      expect(find.text('तुमची प्रोफाइल 4 वेळा पाहिली'), findsOneWidget);
+      expect(find.text('82% जुळणी'), findsOneWidget);
+      // The curiosity lines are their own pills, never folded into the
+      // attribute row or the headline.
+      expect(
+        find.text('Kurhani / Muzaffarpur / Bihar · 27 वर्षे'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('the compact pill used by the narrow tile still says both',
+        (tester) async {
+      final teaser = LockedTeaser.fromJson(<String, dynamic>{
+        ...productionRow(),
+        'accent_line': 'तुमची प्रोफाइल 4 वेळा पाहिली',
+        'match_line': '82% जुळणी',
+      })!;
+
+      await tester.pumpWidget(
+        host(LockedTeaserAccentRow(teaser: teaser, compact: true)),
+      );
+
+      expect(
+        find.text('तुमची प्रोफाइल 4 वेळा पाहिली · 82% जुळणी'),
+        findsOneWidget,
+      );
+    });
+  });
+}
+
+Widget host(Widget child) {
+  return MaterialApp(
+    home: Scaffold(
+      body: Center(child: SizedBox(width: 180, height: 260, child: child)),
+    ),
+  );
 }
