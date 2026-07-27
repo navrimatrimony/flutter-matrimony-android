@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +6,7 @@ import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../../core/app_storage.dart';
+import '../../core/locked_teaser.dart';
 import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../contact/contact_inbox_screen.dart';
@@ -2212,14 +2212,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildRecentVisitorTeaserCard(Map<String, dynamic> teaser) {
-    final headline =
-        _displayString(teaser['headline']) ??
-        (appText.lockedVisitor);
-    final lines = _teaserLines(teaser).take(2).toList();
-    final viewedSummary = _displayString(teaser['viewed_summary']);
-    final accentLine = _displayString(teaser['accent_line']);
-    final matchLine = _displayString(teaser['match_line']);
+  Widget _buildRecentVisitorTeaserCard(Map<String, dynamic> rawTeaser) {
+    final teaser = LockedTeaser.fromJson(rawTeaser) ?? const LockedTeaser();
+    final headline = teaser.headline ?? appText.lockedVisitor;
 
     return Material(
       color: Colors.white,
@@ -2234,7 +2229,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _buildTeaserPhoto(teaser),
+                  LockedTeaserPhoto(teaser: teaser, placeholderIconSize: 48),
                   const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -2244,22 +2239,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                       ),
                     ),
                   ),
-                  Positioned(
+                  const Positioned(
                     top: 9,
                     right: 9,
-                    child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.50),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.lock_outline,
-                        color: Colors.white,
-                        size: 17,
-                      ),
-                    ),
+                    child: LockedTeaserLockBadge(),
                   ),
                   Positioned(
                     left: 10,
@@ -2285,43 +2268,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  for (final line in lines) ...[
-                    Text(
-                      line,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.grey.shade800,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                  ],
-                  if (viewedSummary != null)
-                    Text(
-                      viewedSummary,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  if (accentLine != null || matchLine != null) ...[
-                    const SizedBox(height: 5),
-                    Text(
-                      _joinNonEmpty([accentLine, matchLine])!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _brandDark,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
+                  LockedTeaserLines(
+                    teaser: teaser,
+                    maxAttributeLines: 2,
+                    accentColor: _brandDark,
+                  ),
                   const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerLeft,
@@ -2350,42 +2301,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTeaserPhoto(Map<String, dynamic> teaser) {
-    final avatarStyle = _displayString(teaser['avatar_style'])?.toLowerCase();
-    final photoUrl = _displayString(teaser['photo_url']);
-
-    if (avatarStyle == 'blur' && photoUrl != null) {
-      return ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Image.network(
-          Uri.encodeFull(photoUrl),
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          errorBuilder: (_, _, _) => _buildTeaserPlaceholder(),
-        ),
-      );
-    }
-
-    return _buildTeaserPlaceholder();
-  }
-
-  Widget _buildTeaserPlaceholder() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF5E7E3), Color(0xFFFEE2E2)],
-        ),
-      ),
-      child: const Icon(
-        Icons.person,
-        color: _BrowseProfilesScreenState._brandColor,
-        size: 48,
       ),
     );
   }
@@ -3766,20 +3681,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   String _emptyProfilesMessage({bool prefixIcon = false}) {
     final message = appText.noProfilesFoundTryReducingFilters;
     return prefixIcon ? '❌ $message' : message;
-  }
-
-  List<String> _teaserLines(Map<String, dynamic> teaser) {
-    final lines = teaser['lines'];
-    if (lines is List) {
-      return lines
-          .map(_displayString)
-          .whereType<String>()
-          .where((line) => line.isNotEmpty)
-          .toList();
-    }
-
-    final singleLine = _displayString(lines);
-    return singleLine == null ? <String>[] : <String>[singleLine];
   }
 
   String? _targetGender() {

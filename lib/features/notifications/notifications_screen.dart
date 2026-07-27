@@ -1,10 +1,9 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/locked_teaser.dart';
 import '../../core/profile_photo_view.dart';
 import '../interests/received_interests_screen.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
@@ -361,7 +360,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final id = _stringValue(notification['id']);
     final display = _safeMap(notification['display']);
     final actor = _safeMap(display?['actor']);
-    final teaser = _safeMap(display?['teaser']);
+    final teaser = LockedTeaser.fromJson(display?['teaser']);
     final layout = _stringValue(display?['layout'], fallback: 'system');
     final title = _stringValue(
       notification['title'],
@@ -419,16 +418,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     _buildNotificationVisual(
                       layout: layout,
                       actor: actor,
-                      teaser: teaser,
                       isUnread: isUnread,
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildNotificationBody(
-                        layout: layout,
                         title: title,
                         message: message,
-                        teaser: teaser,
                         createdAt: createdAt,
                         isUnread: isUnread,
                         isBusy: isBusy,
@@ -457,7 +453,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildLockedTeaserNotificationCard({
     required Map<String, dynamic> notification,
     required String message,
-    required Map<String, dynamic> teaser,
+    required LockedTeaser teaser,
     required String createdAt,
     required bool isUnread,
     required bool isBusy,
@@ -557,7 +553,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  Widget _buildLockedTeaserAvatar(Map<String, dynamic> teaser) {
+  Widget _buildLockedTeaserAvatar(LockedTeaser teaser) {
     return SizedBox(
       width: 58,
       height: 58,
@@ -565,7 +561,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         fit: StackFit.expand,
         clipBehavior: Clip.antiAlias,
         children: [
-          ClipOval(child: SizedBox.expand(child: _buildTeaserPhoto(teaser))),
+          ClipOval(
+            child: SizedBox.expand(
+              child: LockedTeaserPhoto(teaser: teaser),
+            ),
+          ),
           Center(
             child: Container(
               width: 24,
@@ -598,6 +598,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return const SizedBox.shrink();
     }
 
+    // The server already localized this label (`display.cta.label`); rendering
+    // our own would ignore the CTA mode the admin picked.
+    final label = _stringValue(action['label'], fallback: appText.unlock);
+
     return ConstrainedBox(
       constraints: const BoxConstraints(minWidth: 76, maxWidth: 92),
       child: ElevatedButton(
@@ -616,17 +620,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
-        child: const Text(
-          'Unlock',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
+        child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
     );
   }
 
   String _lockedTeaserMetaText({
-    required Map<String, dynamic> teaser,
+    required LockedTeaser teaser,
     required String createdAt,
   }) {
     if (createdAt.isNotEmpty) {
@@ -637,57 +637,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       return '';
     }
 
-    return _stringValue(teaser['viewed_summary']);
+    return teaser.viewedSummary ?? '';
   }
 
   Widget _buildNotificationVisual({
     required String layout,
     required Map<String, dynamic>? actor,
-    required Map<String, dynamic>? teaser,
     required bool isUnread,
   }) {
-    if (layout == 'locked_teaser' && teaser != null) {
-      return SizedBox(
-        width: 82,
-        height: 108,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(8),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              _buildTeaserPhoto(teaser),
-              const DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Color(0xAA000000)],
-                  ),
-                ),
-              ),
-              Positioned(
-                right: 7,
-                top: 7,
-                child: Container(
-                  width: 27,
-                  height: 27,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.48),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.lock_outline,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
+    // Locked teasers never reach here: `_buildNotificationCard` routes them to
+    // `_buildLockedTeaserNotificationCard`, which draws the photo through the
+    // shared `LockedTeaserPhoto`.
     if (actor != null) {
       return ProfilePhotoView(
         photoUrl: ApiClient.normalizeProfilePhotoUrl(actor['photo_url']),
@@ -719,10 +679,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildNotificationBody({
-    required String layout,
     required String title,
     required String message,
-    required Map<String, dynamic>? teaser,
     required String createdAt,
     required bool isUnread,
     required bool isBusy,
@@ -757,9 +715,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ],
         ),
         const SizedBox(height: 6),
-        if (layout == 'locked_teaser' && teaser != null)
-          _buildLockedTeaserBody(teaser: teaser, fallbackMessage: message)
-        else if (message.isNotEmpty)
+        if (message.isNotEmpty)
           Text(
             message,
             maxLines: 3,
@@ -772,96 +728,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         const SizedBox(height: 9),
         _buildMetaRow(createdAt: createdAt, isUnread: isUnread),
-      ],
-    );
-  }
-
-  Widget _buildLockedTeaserBody({
-    required Map<String, dynamic> teaser,
-    required String fallbackMessage,
-  }) {
-    final headline = _stringValue(
-      teaser['headline'],
-      fallback: fallbackMessage.isEmpty
-          ? (appText.lockedProfile)
-          : fallbackMessage,
-    );
-    final lines = _stringList(teaser['lines']).take(3).toList();
-    final viewedSummary = _stringValue(teaser['viewed_summary']);
-    final accentLine = _stringValue(teaser['accent_line']);
-    final matchLine = _stringValue(teaser['match_line']);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          headline,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: _textDark,
-            fontSize: 14.2,
-            fontWeight: FontWeight.w900,
-            height: 1.20,
-          ),
-        ),
-        if (accentLine.isNotEmpty || matchLine.isNotEmpty) ...[
-          const SizedBox(height: 5),
-          Text(
-            _joinNonEmpty([accentLine, matchLine]),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: _trustGreen,
-              fontSize: 12.4,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-        if (lines.isNotEmpty) ...[
-          const SizedBox(height: 5),
-          Wrap(
-            spacing: 5,
-            runSpacing: 5,
-            children: [
-              for (final line in lines)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 7,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(7),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Text(
-                    line,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Color(0xFF45515E),
-                      fontSize: 11.8,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
-        if (viewedSummary.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Text(
-            viewedSummary,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: _mutedText,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
       ],
     );
   }
@@ -976,11 +842,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   String _lockedTeaserHeadline({
-    required Map<String, dynamic> teaser,
+    required LockedTeaser teaser,
     required String fallbackMessage,
   }) {
     final raw = _stringValue(
-      teaser['headline'],
+      teaser.headline,
       fallback: fallbackMessage.isEmpty
           ? (appText.profileViewed)
           : fallbackMessage,
@@ -1054,10 +920,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return '$cleaned यांनी';
   }
 
-  String _lockedHeadlineWithRepeat(
-    String headline,
-    Map<String, dynamic> teaser,
-  ) {
+  String _lockedHeadlineWithRepeat(String headline, LockedTeaser teaser) {
     final count = _lockedRepeatCount(teaser);
     if (count == null) {
       return _withSentencePeriod(headline);
@@ -1090,8 +953,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
-  int? _lockedRepeatCount(Map<String, dynamic> teaser) {
-    final accentLine = _stringValue(teaser['accent_line']);
+  int? _lockedRepeatCount(LockedTeaser teaser) {
+    final accentLine = _stringValue(teaser.accentLine);
     final match = RegExp(r'(\d+)').firstMatch(accentLine);
     if (match == null) {
       return null;
@@ -1105,8 +968,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return count;
   }
 
-  String _lockedRepeatWindow(Map<String, dynamic> teaser) {
-    final summary = _stringValue(teaser['viewed_summary']).toLowerCase();
+  String _lockedRepeatWindow(LockedTeaser teaser) {
+    final summary = _stringValue(teaser.viewedSummary).toLowerCase();
     if (summary.contains('today') || summary.contains('आज')) {
       return appText.today;
     }
@@ -1134,72 +997,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return lower.contains('viewed your profile') ||
         lower.contains(appText.profileViewed) ||
         lower.contains('प्रोफाइल पाहिले');
-  }
-
-  Widget _buildTeaserPhoto(Map<String, dynamic> teaser) {
-    final avatarStyle = _stringValue(teaser['avatar_style']).toLowerCase();
-    final photoUrl = _stringValue(teaser['photo_url']);
-
-    if (avatarStyle == 'blur' &&
-        photoUrl.isNotEmpty &&
-        !_isPlaceholderPhotoUrl(photoUrl)) {
-      return Transform.scale(
-        scale: _teaserPhotoScale(teaser),
-        child: ImageFiltered(
-          imageFilter: ImageFilter.blur(
-            sigmaX: _teaserBlurSigma(teaser),
-            sigmaY: _teaserBlurSigma(teaser),
-          ),
-          child: Image.network(
-            Uri.encodeFull(photoUrl),
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
-            errorBuilder: (_, _, _) => _buildTeaserPlaceholder(),
-          ),
-        ),
-      );
-    }
-
-    return _buildTeaserPlaceholder();
-  }
-
-  bool _isPlaceholderPhotoUrl(String photoUrl) {
-    final lower = photoUrl.toLowerCase();
-    return lower.contains('/images/placeholders/') ||
-        lower.contains('default-profile.svg') ||
-        lower.contains('male-profile.svg') ||
-        lower.contains('female-profile.svg');
-  }
-
-  double _teaserBlurSigma(Map<String, dynamic> teaser) {
-    final blurClass = _stringValue(teaser['blur_photo_class']).toLowerCase();
-    if (blurClass.contains('blur-sm')) return 4;
-    if (blurClass.contains('blur-[3px]')) return 3;
-    if (blurClass.contains('blur-[6px]')) return 6;
-    if (blurClass.contains('blur-2xl')) return 18;
-    if (blurClass.contains('blur-md')) return 10;
-    return 10;
-  }
-
-  double _teaserPhotoScale(Map<String, dynamic> teaser) {
-    final blurClass = _stringValue(teaser['blur_photo_class']).toLowerCase();
-    if (blurClass.contains('scale-125')) return 1.25;
-    if (blurClass.contains('scale-110')) return 1.10;
-    if (blurClass.contains('scale-105')) return 1.05;
-    return 1.08;
-  }
-
-  Widget _buildTeaserPlaceholder() {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFFF8D9D3), Color(0xFFEAF3F8)],
-        ),
-      ),
-      child: const Icon(Icons.person_outline, color: _brandDark, size: 42),
-    );
   }
 
   _NotificationVisual _visualForLayout(String layout) {
@@ -1323,19 +1120,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (value is Map<String, dynamic>) return value;
     if (value is Map) return Map<String, dynamic>.from(value);
     return null;
-  }
-
-  static List<String> _stringList(dynamic value) {
-    if (value is! List) return <String>[];
-
-    return value
-        .map((item) => item?.toString().trim() ?? '')
-        .where((item) => item.isNotEmpty)
-        .toList();
-  }
-
-  static String _joinNonEmpty(List<String> values) {
-    return values.where((value) => value.trim().isNotEmpty).join(' • ');
   }
 
   static int? _asInt(dynamic value) {
