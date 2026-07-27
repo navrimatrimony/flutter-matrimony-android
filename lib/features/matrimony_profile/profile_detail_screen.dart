@@ -8,6 +8,7 @@ import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
 import '../../main.dart';
 import '../chat/chat_screen.dart';
+import 'profile_album_blur.dart';
 import 'widgets/profile_comparison_card.dart';
 import 'widgets/profile_contact_card.dart';
 import 'widgets/profile_display_section.dart';
@@ -1097,16 +1098,34 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     );
   }
 
+  /// Softness of the fill drawn behind the hero photo. Decorative — it exists so
+  /// the edges of the cover image never read as a hard cut — and applies whether
+  /// or not the photo is locked, so it is the app's own look rather than an
+  /// admin instruction.
+  static const double _heroBackdropSigma = 14;
+
   Widget _buildHeroImage(String? photoUrl, {bool blur = false}) {
     if (photoUrl == null) {
       return _buildHeroFallback();
     }
 
+    // The admin's blur-strength dial. It sets how strongly a locked photo is
+    // hidden; the decision that this photo *is* locked came from the server as
+    // the slot's `blur` flag and is never re-made here.
+    final albumBlur = _photoAlbumBlur();
+    final backdropSigma = albumBlur.backdropSigma(
+      blur: blur,
+      decorative: _heroBackdropSigma,
+    );
+
     return Stack(
       fit: StackFit.expand,
       children: [
         ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+          imageFilter: ImageFilter.blur(
+            sigmaX: backdropSigma,
+            sigmaY: backdropSigma,
+          ),
           child: Image.network(
             photoUrl,
             fit: BoxFit.cover,
@@ -1116,9 +1135,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
           ),
         ),
         ImageFiltered(
-          imageFilter: blur
-              ? ImageFilter.blur(sigmaX: 18, sigmaY: 18)
-              : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
+          imageFilter:
+              albumBlur.slotFilter(blur: blur) ??
+              ImageFilter.blur(sigmaX: 0, sigmaY: 0),
           child: Transform.scale(
             scale: blur ? 1.04 : 1.0,
             child: Image.network(
@@ -1446,6 +1465,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
             subtitle: _gallerySubtitle(profile),
             lockedMessage: _photoAlbumMessage(photoAlbum),
             lockedCtaRoute: _photoAlbumCtaRoute(photoAlbum),
+            albumBlur: ProfileAlbumBlur.fromAlbum(photoAlbum),
             onMenuAction: (action) async {
               if (action == 'share') {
                 await _shareProfile();
@@ -3933,6 +3953,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     return _safeMap(_display?['photo_album']);
   }
 
+  /// How strongly the admin wants a locked photo of this album blurred.
+  ProfileAlbumBlur _photoAlbumBlur() {
+    return ProfileAlbumBlur.fromAlbum(_photoAlbumMap());
+  }
+
   String _photoAlbumMessage(Map<String, dynamic>? photoAlbum) {
     final message = _displayString(photoAlbum?['message']);
     if (message != null) return message;
@@ -4515,6 +4540,7 @@ class _ProfilePhotoGalleryViewer extends StatefulWidget {
     required this.subtitle,
     required this.lockedMessage,
     required this.lockedCtaRoute,
+    required this.albumBlur,
     required this.onMenuAction,
   });
 
@@ -4523,6 +4549,11 @@ class _ProfilePhotoGalleryViewer extends StatefulWidget {
   final String? subtitle;
   final String lockedMessage;
   final String? lockedCtaRoute;
+
+  /// The admin's blur strength for this album. Which slots it applies to is
+  /// already decided — each photo carries the server's own `blur` flag.
+  final ProfileAlbumBlur albumBlur;
+
   final Future<void> Function(String action) onMenuAction;
 
   @override
@@ -4561,7 +4592,7 @@ class _ProfilePhotoGalleryViewerState
               child: Stack(
                 fit: StackFit.expand,
                 children: [
-                  _buildBlurredBackdrop(current.url),
+                  _buildBlurredBackdrop(current.url, blur: current.blur),
                   PageView.builder(
                     controller: _pageController,
                     itemCount: widget.photos.length,
@@ -4637,12 +4668,22 @@ class _ProfilePhotoGalleryViewerState
     );
   }
 
-  Widget _buildBlurredBackdrop(String photoUrl) {
+  /// Softness of the wash behind the gallery page. Decorative and always drawn,
+  /// so it is the app's own look; [ProfileAlbumBlur.backdropSigma] only raises
+  /// it if the admin ever asks for a stronger lock than this.
+  static const double _galleryBackdropSigma = 22;
+
+  Widget _buildBlurredBackdrop(String photoUrl, {required bool blur}) {
+    final sigma = widget.albumBlur.backdropSigma(
+      blur: blur,
+      decorative: _galleryBackdropSigma,
+    );
+
     return Stack(
       fit: StackFit.expand,
       children: [
         ImageFiltered(
-          imageFilter: ImageFilter.blur(sigmaX: 22, sigmaY: 22),
+          imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
           child: Image.network(
             photoUrl,
             fit: BoxFit.cover,
@@ -4717,11 +4758,12 @@ class _ProfilePhotoGalleryViewerState
       },
     );
 
-    if (!photo.blur) return image;
+    final filter = widget.albumBlur.slotFilter(blur: photo.blur);
+    if (filter == null) return image;
 
     return ClipRect(
       child: ImageFiltered(
-        imageFilter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        imageFilter: filter,
         child: Transform.scale(scale: 1.04, child: image),
       ),
     );
@@ -4824,6 +4866,13 @@ class _ProfilePhotoGalleryViewerState
               separatorBuilder: (context, index) => const SizedBox(width: 9),
               itemBuilder: (context, index) {
                 final selected = index == _index;
+                final photo = widget.photos[index];
+                // The strip used to blur a locked thumbnail at sigma 5 while the
+                // page behind it used 18, so the tile the member scrolls past
+                // showed more of a withheld photo than the photo itself did.
+                // Both now read the same admin strength.
+                final lockFilter = widget.albumBlur.slotFilter(blur: photo.blur);
+
                 return GestureDetector(
                   onTap: () => _pageController.animateToPage(
                     index,
@@ -4850,7 +4899,7 @@ class _ProfilePhotoGalleryViewerState
                         fit: StackFit.expand,
                         children: [
                           Image.network(
-                            widget.photos[index].url,
+                            photo.url,
                             fit: BoxFit.cover,
                             alignment: Alignment.topCenter,
                             errorBuilder: (context, error, stackTrace) {
@@ -4864,17 +4913,14 @@ class _ProfilePhotoGalleryViewerState
                               );
                             },
                           ),
-                          if (widget.photos[index].blur)
+                          if (lockFilter != null)
                             ClipRect(
                               child: ImageFiltered(
-                                imageFilter: ImageFilter.blur(
-                                  sigmaX: 5,
-                                  sigmaY: 5,
-                                ),
+                                imageFilter: lockFilter,
                                 child: Transform.scale(
                                   scale: 1.04,
                                   child: Image.network(
-                                    widget.photos[index].url,
+                                    photo.url,
                                     fit: BoxFit.cover,
                                     alignment: Alignment.topCenter,
                                     errorBuilder: (_, _, _) => const SizedBox(),
@@ -4882,7 +4928,7 @@ class _ProfilePhotoGalleryViewerState
                                 ),
                               ),
                             ),
-                          if (widget.photos[index].blur)
+                          if (photo.blur)
                             const Center(
                               child: Icon(
                                 Icons.lock_outline,
