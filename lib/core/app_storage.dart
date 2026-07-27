@@ -141,7 +141,23 @@ class AppStorage {
     );
   }
 
-  Future<void> clearSessionButKeepLanguage() {
-    return clearAuthToken();
+  /// Wipes everything the departing member left on this phone, except the two
+  /// things that are about the DEVICE rather than the person: the chosen
+  /// language, and the record of whether Android's notification dialog has
+  /// already been answered.
+  ///
+  /// This used to clear the auth token and nothing else, so the onboarding
+  /// draft — which holds the member's email, masked mobile, gender and mother
+  /// tongue — stayed in secure storage after logout and was restored on the
+  /// next visit to the onboarding screen, signed in or not.
+  ///
+  /// `remembered_login_identifier` is deliberately kept: that key IS the
+  /// "prefill my login next time" feature, and clearing it here would quietly
+  /// remove it.
+  Future<void> clearSessionButKeepLanguage() async {
+    await clearAuthToken();
+    await clearOnboardingDraftJson();
+    await _delete(_keepSignedInKey);
+    await _delete(_dailyRecommendationShownDateKey);
   }
 }

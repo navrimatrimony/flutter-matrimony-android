@@ -552,8 +552,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   onTap: () async {
                     final navigator = Navigator.of(context);
                     Navigator.pop(context);
-                    await ApiClient.logout();
-                    navigator.pushReplacementNamed('/login');
+                    await signOutAndReturnToLogin(navigator);
                   },
                 ),
               ],

@@ -17,6 +17,7 @@ import 'features/browse/browse_profiles_screen.dart';
 import 'features/chat/chat_screen.dart';
 import 'features/contact/contact_inbox_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/matrimony_profile/profile_detail_screen.dart';
 import 'features/matrimony_profile/view_profile_screen.dart';
 import 'features/notifications/notifications_screen.dart';
 import 'features/onboarding/models/onboarding_status.dart';
@@ -181,20 +182,78 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-Widget _authenticatedScreen(Widget child) {
-  return _AuthenticatedBackGuard(child: child);
+/// True while a member session exists. The single question every member-only
+/// surface has to ask before it paints anything.
+bool get isSignedIn {
+  final token = ApiClient.authToken;
+  return token != null && token.isNotEmpty;
 }
 
-class _AuthenticatedBackGuard extends StatelessWidget {
-  const _AuthenticatedBackGuard({required this.child});
+/// Signs the member out and throws away every member screen behind them.
+///
+/// The old logout did `pushReplacementNamed('/login')`, which swaps only the
+/// TOP route. A member who reached Home from Matches was dropped back onto a
+/// still-alive Matches screen — with the profiles it had already loaded still
+/// on it — the moment they pressed Back, and could carry on opening screens
+/// from there. Signing out has to take the whole stack down, not just its top.
+Future<void> signOutAndReturnToLogin(NavigatorState navigator) async {
+  await ApiClient.logout();
+  ProfileDetailScreen.clearSessionState();
+  if (!navigator.mounted) return;
+  navigator.pushNamedAndRemoveUntil('/login', (route) => false);
+}
+
+Widget _authenticatedScreen(Widget child) {
+  return AuthenticatedRoute(child: child);
+}
+
+/// Gate in front of every member-only route.
+///
+/// Two jobs:
+///  * a signed-out user must never see a member screen — the gate paints
+///    nothing and sends them to the landing screen, which is also where
+///    [BootstrapScreen] sends a signed-out start;
+///  * a signed-in user sitting at the root of the stack must not back out of
+///    the app by accident — they are told to use Logout instead.
+class AuthenticatedRoute extends StatefulWidget {
+  const AuthenticatedRoute({super.key, required this.child});
 
   final Widget child;
 
   @override
+  State<AuthenticatedRoute> createState() => _AuthenticatedRouteState();
+}
+
+class _AuthenticatedRouteState extends State<AuthenticatedRoute> {
+  bool _redirectScheduled = false;
+
+  void _redirectIfSignedOut() {
+    if (isSignedIn || _redirectScheduled) return;
+    _redirectScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      // A route that is already on its way out — logout tears the stack down
+      // while its screens still rebuild once — must not hijack navigation and
+      // overwrite the destination the sign-out just chose.
+      final route = ModalRoute.of(context);
+      if (route == null || !route.isCurrent) return;
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil('/landing', (route) => false);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (!isSignedIn) {
+      _redirectIfSignedOut();
+      // Deliberately empty: the member surface must not be built at all, so
+      // nothing it had loaded can flash on screen on the way out.
+      return const Scaffold(body: SizedBox.shrink());
+    }
+
     final route = ModalRoute.of(context);
-    final blockRootBack =
-        ApiClient.authToken != null && (route?.isFirst ?? false);
+    final blockRootBack = route?.isFirst ?? false;
 
     return PopScope<Object?>(
       canPop: !blockRootBack,
@@ -207,7 +266,7 @@ class _AuthenticatedBackGuard extends StatelessWidget {
           ),
         );
       },
-      child: child,
+      child: widget.child,
     );
   }
 }

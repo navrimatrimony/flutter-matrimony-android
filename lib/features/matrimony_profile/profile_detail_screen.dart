@@ -30,6 +30,14 @@ class ProfileDetailScreen extends StatefulWidget {
 
   @override
   State<ProfileDetailScreen> createState() => _ProfileDetailScreenState();
+
+  /// Drops the "already seen" bookkeeping below. Session-derived: these sets
+  /// are static, so without this the next member to sign in on the phone
+  /// inherited the previous member's viewed-profile marks.
+  static void clearSessionState() {
+    _ProfileDetailScreenState._openedProfileIds.clear();
+    _ProfileDetailScreenState._knownViewedProfileIds.clear();
+  }
 }
 
 class _ProfileDetailScreenState extends State<ProfileDetailScreen>
