@@ -72,6 +72,10 @@ class SmartOnboardingScreen extends StatefulWidget {
 class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   static const String _consentVersion = '2026-06-24';
 
+  /// How long the post-verification lookups may take before the member is let
+  /// in regardless. See [_prepareAfterVerification].
+  static const Duration _postVerificationBudget = Duration(seconds: 12);
+
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -827,15 +831,32 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     });
     _otpAutoVerifyTimer?.cancel();
 
-    final data = await ApiClient.sendMobileOtp(
-      mobile: mobile,
-      locale: _localeCode,
-      termsAccepted: true,
-      privacyAccepted: true,
-      termsVersion: _consentVersion,
-      privacyVersion: _consentVersion,
-      whatsappAlertsOptIn: _whatsappAlertsOptIn,
-    );
+    final Map<String, dynamic> data;
+    try {
+      data = await ApiClient.sendMobileOtp(
+        mobile: mobile,
+        locale: _localeCode,
+        termsAccepted: true,
+        privacyAccepted: true,
+        termsVersion: _consentVersion,
+        privacyVersion: _consentVersion,
+        whatsappAlertsOptIn: _whatsappAlertsOptIn,
+      );
+    } catch (error) {
+      // This call used to have no catch at all. A dropped connection or a
+      // stalled socket threw past it, so `_loading` was never cleared and the
+      // member was left holding a "Sending OTP…" spinner that never resolved
+      // and never said anything had gone wrong.
+      if (!mounted) return;
+      final message = error.toString();
+      setState(() {
+        _loading = false;
+        _error = _isTechnicalOnboardingError(message)
+            ? appText.couldNotSendOtp
+            : message;
+      });
+      return;
+    }
 
     if (!mounted) return;
     final response = MobileOtpSendResponse.fromJson(data);
@@ -974,12 +995,28 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           _otpAutoAdvancePending = true;
         });
         await Future<void>.delayed(const Duration(milliseconds: 900));
-        if (!mounted || _otpController.text.trim() != otp) return;
+        if (!mounted) return;
+        if (_otpController.text.trim() != otp) {
+          // The code changed under us during the hand-off pause. This used to
+          // `return` with `_loading` and `_otpAutoAdvancePending` both still
+          // true, which disables the OTP field, disables the verify button and
+          // makes `_handleRouteBack` refuse to pop — a dead screen with a
+          // spinner on it, while the token from this very call was already
+          // stored and the member was signed in. Release the screen instead.
+          setState(() {
+            _loading = false;
+            _otpAutoAdvancePending = false;
+          });
+          return;
+        }
       }
 
       final nextAction = response.accountState?.nextAction;
-      await _loadBootstrap();
-      await _loadStatus(goToStatus: false);
+      // The token is stored by now, so the member IS signed in. What follows
+      // only decides WHICH step to land on, so it gets a hard time budget: a
+      // slow lookup must never be the reason a verified member is left staring
+      // at a spinner they cannot back out of.
+      await _prepareAfterVerification();
 
       if (!mounted) return;
       setState(() {
@@ -1016,6 +1053,35 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
             ? appText.otpVerificationFailed
             : message;
       });
+    } finally {
+      // Last line of defence. Whatever route this method took out, it must not
+      // leave the verify spinner turning: that state disables the whole step
+      // and blocks Back, so there is no way for the member to recover from it.
+      if (mounted && (_loading || _otpAutoAdvancePending)) {
+        setState(() {
+          _loading = false;
+          _otpAutoAdvancePending = false;
+        });
+      }
+    }
+  }
+
+  /// Loads what the first post-verification step needs, under a hard ceiling.
+  ///
+  /// Both calls already swallow their own errors, but they are still network
+  /// calls, and until this budget existed they were awaited unbounded while
+  /// `_loading` was true — up to six round trips between a successful verify
+  /// and the screen moving. That is the gap where a member with a perfectly
+  /// good session sat watching a spinner "for a long time".
+  Future<void> _prepareAfterVerification() async {
+    try {
+      await Future<void>(() async {
+        await _loadBootstrap();
+        await _loadStatus(goToStatus: false);
+      }).timeout(_postVerificationBudget);
+    } catch (_) {
+      // Deliberately ignored. The step resolver below copes with a missing or
+      // stale `_status`, and getting in beats getting the perfect first step.
     }
   }
 
@@ -2616,7 +2682,12 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   _step == _SmartOnboardingStep.profileForWhom ? 72 : 16,
                 ),
                 children: [
-                  if (showChrome) ...[
+                  // The header band is the ONLY place any step reports an
+                  // error. The mobile/OTP step hides the chrome on purpose, so
+                  // it was setting `_error` and showing nothing whatsoever: a
+                  // failed send or a rejected code simply re-enabled the button
+                  // with no explanation of what had gone wrong.
+                  if (showChrome || _error != null) ...[
                     _buildHeader(context),
                     const SizedBox(height: 10),
                   ],

@@ -29,6 +29,15 @@ class ApiClient {
 
   static const String _siteBaseUrl = 'https://navrimilenavryala.com';
   static const String _profilePhotoStoragePath = 'storage/matrimony_photos';
+  /// Ceiling on a single request made through the shared JSON helpers below.
+  ///
+  /// Nothing here used to bound a request at all. A stalled socket held
+  /// whatever screen started it on a spinner for as long as the OS took to give
+  /// up, which is minutes — and the OTP screen blocks Back while it is loading,
+  /// so a member whose token had already been stored could sit frozen in front
+  /// of a session that was live the whole time. A request that has not answered
+  /// in this long is a failure the caller should be told about, not waited on.
+  static const Duration _requestTimeout = Duration(seconds: 30);
   static const Duration _locationSearchCacheTtl = Duration(minutes: 2);
   static const Duration _profileCacheTtl = Duration(seconds: 45);
   static const Duration _lookupCacheTtl = Duration(hours: 12);
@@ -316,10 +325,12 @@ class ApiClient {
     bool authenticated = false,
     Map<String, dynamic>? query,
   }) async {
-    final response = await http.get(
-      _apiUri(route, query: query),
-      headers: _acceptHeaders(authenticated: authenticated),
-    );
+    final response = await http
+        .get(
+          _apiUri(route, query: query),
+          headers: _acceptHeaders(authenticated: authenticated),
+        )
+        .timeout(_requestTimeout);
 
     return _decodeResponse(response);
   }
@@ -337,10 +348,9 @@ class ApiClient {
       headers['If-None-Match'] = etag;
     }
 
-    final response = await http.get(
-      _apiUri(route, query: query),
-      headers: headers,
-    );
+    final response = await http
+        .get(_apiUri(route, query: query), headers: headers)
+        .timeout(_requestTimeout);
 
     final responseMetadata = _cacheMetadataFromResponse(response);
     if (response.statusCode == 304) {
@@ -368,10 +378,9 @@ class ApiClient {
     String route, {
     Map<String, dynamic>? query,
   }) async {
-    final response = await http.get(
-      _rootApiUri(route, query: query),
-      headers: _acceptHeaders(),
-    );
+    final response = await http
+        .get(_rootApiUri(route, query: query), headers: _acceptHeaders())
+        .timeout(_requestTimeout);
 
     return _decodeResponse(response);
   }
@@ -382,11 +391,13 @@ class ApiClient {
     bool authenticated = false,
     Map<String, dynamic>? query,
   }) async {
-    final response = await http.post(
-      _apiUri(route, query: query),
-      headers: _jsonHeaders(authenticated: authenticated),
-      body: jsonEncode(_compactBody(body)),
-    );
+    final response = await http
+        .post(
+          _apiUri(route, query: query),
+          headers: _jsonHeaders(authenticated: authenticated),
+          body: jsonEncode(_compactBody(body)),
+        )
+        .timeout(_requestTimeout);
 
     return _decodeResponse(response);
   }
@@ -397,11 +408,13 @@ class ApiClient {
     bool authenticated = false,
     Map<String, dynamic>? query,
   }) async {
-    final response = await http.put(
-      _apiUri(route, query: query),
-      headers: _jsonHeaders(authenticated: authenticated),
-      body: jsonEncode(_compactBody(body)),
-    );
+    final response = await http
+        .put(
+          _apiUri(route, query: query),
+          headers: _jsonHeaders(authenticated: authenticated),
+          body: jsonEncode(_compactBody(body)),
+        )
+        .timeout(_requestTimeout);
 
     return _decodeResponse(response);
   }
@@ -412,11 +425,13 @@ class ApiClient {
     bool authenticated = false,
     Map<String, dynamic>? query,
   }) async {
-    final response = await http.patch(
-      _apiUri(route, query: query),
-      headers: _jsonHeaders(authenticated: authenticated),
-      body: jsonEncode(_compactBody(body)),
-    );
+    final response = await http
+        .patch(
+          _apiUri(route, query: query),
+          headers: _jsonHeaders(authenticated: authenticated),
+          body: jsonEncode(_compactBody(body)),
+        )
+        .timeout(_requestTimeout);
 
     return _decodeResponse(response);
   }
