@@ -15,7 +15,7 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-class _ChatScreenState extends State<ChatScreen> {
+class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
   static const Color _chatHeader = Color(0xFF075E54);
   static const Color _chatAccent = Color(0xFF128C7E);
   static const Color _chatSurface = Color(0xFFECE5DD);
@@ -23,6 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
   static const Color _receivedBubble = Color(0xFFFFFFFF);
   static const Color _messageText = Color(0xFF111B21);
   static const Color _mutedText = Color(0xFF667781);
+  static const Color _readTick = Color(0xFF53BDEB);
 
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _messageScrollController = ScrollController();
@@ -39,9 +40,22 @@ class _ChatScreenState extends State<ChatScreen> {
   Map<String, dynamic>? _canSend;
   List<Map<String, dynamic>> _messages = <Map<String, dynamic>>[];
 
+  /// False while the app is backgrounded. A thread that merely stayed mounted
+  /// behind a backgrounded app has not been read by anybody, so no receipt may
+  /// leave while this is false.
+  bool _appResumed = true;
+
+  /// The (conversation, newest message) pair already reported as read, so an
+  /// unchanged thread is not re-reported on every reload.
+  int? _readMarkedConversationId;
+  int? _readMarkedUpToMessageId;
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _appResumed =
+        WidgetsBinding.instance.lifecycleState != AppLifecycleState.paused;
     _loadConversations();
     final initialId = widget.initialConversationId;
     if (initialId != null && initialId > 0) {
@@ -51,9 +65,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _messageController.dispose();
     _messageScrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appResumed = state == AppLifecycleState.resumed;
+    if (!_appResumed) return;
+
+    // Coming back to a thread that is still on screen is a genuine second
+    // read — the sender's ✓✓ must not wait for the reader to re-open the chat.
+    // A thread sitting under a pushed screen is not on screen, so it is not.
+    final conversationId = _asInt(_selectedConversation?['id']);
+    if (conversationId == null) return;
+    if (ModalRoute.of(context)?.isCurrent == false) return;
+
+    _loadThread(conversationId, scrollToBottom: false);
   }
 
   Future<void> _loadConversations() async {
@@ -100,10 +130,27 @@ class _ChatScreenState extends State<ChatScreen> {
       _threadError = null;
       _loadingThread = true;
     });
+    _forgetReadMark();
 
+    await _loadThread(conversationId, scrollToBottom: true);
+  }
+
+  /// Fetches the whole thread, then reports it read.
+  ///
+  /// Deliberately NOT an incremental `since_id` fetch: the server returns only
+  /// `id > since_id`, so the member's own older messages never come back — and
+  /// those are exactly the bubbles whose ✓ has to become ✓✓ once the other side
+  /// reads them. An incremental refresh would freeze every existing tick.
+  Future<void> _loadThread(
+    int conversationId, {
+    required bool scrollToBottom,
+  }) async {
     try {
       final response = await ApiClient.getChatThread(conversationId);
       if (!mounted) return;
+      // The reader may have walked back to the inbox or into another thread
+      // while this was in flight.
+      if (_asInt(_selectedConversation?['id']) != conversationId) return;
 
       if (_responseSuccess(response)) {
         setState(() {
@@ -111,9 +158,11 @@ class _ChatScreenState extends State<ChatScreen> {
               _safeMap(response['conversation']) ?? _selectedConversation;
           _messages = _safeMapList(response['messages']);
           _canSend = _safeMap(response['can_send']);
+          _threadError = null;
           _loadingThread = false;
         });
-        _scrollMessagesToBottom();
+        if (scrollToBottom) _scrollMessagesToBottom();
+        await _markThreadRead(conversationId);
         _loadConversations();
         return;
       }
@@ -129,6 +178,45 @@ class _ChatScreenState extends State<ChatScreen> {
         _loadingThread = false;
       });
     }
+  }
+
+  /// Tells the server the member has actually looked at this thread. This is
+  /// the only thing that turns the OTHER side's ✓ into ✓✓ — without it the
+  /// sender waits forever on a single tick.
+  Future<void> _markThreadRead(int conversationId) async {
+    if (!_appResumed) return;
+
+    final newestMessageId = _messages.isEmpty
+        ? null
+        : _asInt(_messages.last['id']);
+    if (_readMarkedConversationId == conversationId &&
+        _readMarkedUpToMessageId == newestMessageId) {
+      return;
+    }
+
+    _readMarkedConversationId = conversationId;
+    _readMarkedUpToMessageId = newestMessageId;
+
+    try {
+      final response = await ApiClient.markChatRead(conversationId);
+      if (!mounted || !_responseSuccess(response)) return;
+
+      final unread = _asInt(response['unread_count']);
+      if (unread != null && unread != _unreadCount) {
+        setState(() {
+          _unreadCount = unread;
+        });
+      }
+    } catch (_) {
+      // A receipt that failed to send is not worth interrupting the reader
+      // over; clearing the mark lets the next load retry it.
+      _forgetReadMark();
+    }
+  }
+
+  void _forgetReadMark() {
+    _readMarkedConversationId = null;
+    _readMarkedUpToMessageId = null;
   }
 
   Future<void> _sendMessage() async {
@@ -207,6 +295,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _threadError = null;
       _loadingThread = false;
     });
+    _forgetReadMark();
     _loadConversations();
   }
 
@@ -537,9 +626,36 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  /// The ✓/✓✓ pair, and only for statuses the server actually vouched for.
+  ///
+  /// Anything else — a missing key, a null, a value this build does not know —
+  /// returns null and draws nothing. Telling a member their message was read
+  /// when it was not is worse than telling them nothing.
+  ({IconData icon, Color color, String label})? _deliveryTick(dynamic value) {
+    switch (_stringValue(value).toLowerCase()) {
+      case 'read':
+        return (
+          icon: Icons.done_all,
+          color: _readTick,
+          label: appText.chatMessageRead,
+        );
+      case 'sent':
+        return (
+          icon: Icons.check,
+          color: _mutedText,
+          label: appText.chatMessageSent,
+        );
+    }
+
+    return null;
+  }
+
   Widget _buildMessageBubble(Map<String, dynamic> message) {
     final mine = message['is_mine'] == true;
     final readLocked = message['read_locked'] == true;
+    // Only the author of a message is told whether it was read. On an incoming
+    // bubble a tick would be meaningless at best and a privacy leak at worst.
+    final tick = mine ? _deliveryTick(message['delivery_status']) : null;
     final body = _stringValue(message['body_text']).isNotEmpty
         ? _stringValue(message['body_text'])
         : _stringValue(message['preview_text']);
@@ -601,17 +717,30 @@ class _ChatScreenState extends State<ChatScreen> {
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              if (sentAt.isNotEmpty) ...[
+              if (sentAt.isNotEmpty || tick != null) ...[
                 const SizedBox(height: 3),
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Text(
-                    sentAt,
-                    style: const TextStyle(
-                      color: _mutedText,
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (sentAt.isNotEmpty)
+                        Text(
+                          sentAt,
+                          style: const TextStyle(
+                            color: _mutedText,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      if (tick != null) ...[
+                        const SizedBox(width: 4),
+                        Semantics(
+                          label: tick.label,
+                          child: Icon(tick.icon, size: 15, color: tick.color),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],

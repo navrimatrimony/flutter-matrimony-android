@@ -435,6 +435,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chatMessageHint => 'Type a message...';
 
   @override
+  String get chatMessageRead => 'Read';
+
+  @override
+  String get chatMessageSent => 'Sent';
+
+  @override
   String get chatOpenFailed => 'Chat could not be opened.';
 
   @override

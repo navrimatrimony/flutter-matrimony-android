@@ -130,6 +130,8 @@
   "chatLoadFailed": "संवाद उघडता आला नाही.",
   "chatMenu": "चॅट",
   "chatMessageHint": "संदेश लिहा...",
+  "chatMessageRead": "वाचले",
+  "chatMessageSent": "पाठवले",
   "chatOpenFailed": "संवाद उघडता आला नाही.",
   "chatReadLocked": "हा संदेश वाचण्यासाठी योजना वाढवणे आवश्यक असू शकते.",
   "chatRequests": "रिक्वेस्ट",

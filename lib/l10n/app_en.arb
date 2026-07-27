@@ -130,6 +130,8 @@
   "chatLoadFailed": "Chat could not be loaded.",
   "chatMenu": "Chat",
   "chatMessageHint": "Type a message...",
+  "chatMessageRead": "Read",
+  "chatMessageSent": "Sent",
   "chatOpenFailed": "Chat could not be opened.",
   "chatReadLocked": "Upgrade may be required to read this message.",
   "chatRequests": "Requests",

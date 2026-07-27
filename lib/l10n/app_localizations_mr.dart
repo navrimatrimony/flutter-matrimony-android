@@ -434,6 +434,12 @@ class AppLocalizationsMr extends AppLocalizations {
   String get chatMessageHint => 'संदेश लिहा...';
 
   @override
+  String get chatMessageRead => 'वाचले';
+
+  @override
+  String get chatMessageSent => 'पाठवले';
+
+  @override
   String get chatOpenFailed => 'संवाद उघडता आला नाही.';
 
   @override

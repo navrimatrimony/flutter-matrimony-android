@@ -878,6 +878,18 @@ abstract class AppLocalizations {
   /// **'Type a message...'**
   String get chatMessageHint;
 
+  /// No description provided for @chatMessageRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get chatMessageRead;
+
+  /// No description provided for @chatMessageSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get chatMessageSent;
+
   /// No description provided for @chatOpenFailed.
   ///
   /// In en, this message translates to:
