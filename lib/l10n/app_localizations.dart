@@ -2987,7 +2987,7 @@ abstract class AppLocalizations {
   /// No description provided for @forgotPasswordRequestSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Enter your mobile number, email or username. We will email a reset link to the address on your account.'**
+  /// **'Enter your mobile number, email or username. A mobile number signs you in with a one-time code and no password. An email or username gets a reset link by email.'**
   String get forgotPasswordRequestSubtitle;
 
   /// No description provided for @forgotPasswordIdentifierLabel.
@@ -3001,6 +3001,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Send reset link'**
   String get forgotPasswordSendLink;
+
+  /// No description provided for @forgotPasswordUseOtp.
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP and sign in'**
+  String get forgotPasswordUseOtp;
+
+  /// No description provided for @forgotPasswordMobileNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You typed a mobile number'**
+  String get forgotPasswordMobileNoticeTitle;
+
+  /// No description provided for @forgotPasswordMobileNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You do not need a password. We will send a one-time code to this number and sign you in. A password can be set later from Settings.'**
+  String get forgotPasswordMobileNoticeBody;
+
+  /// No description provided for @forgotPasswordEmailNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You typed an email address'**
+  String get forgotPasswordEmailNoticeTitle;
+
+  /// No description provided for @forgotPasswordEmailNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We will email a password reset link to this address. Open the email, then paste the link back here.'**
+  String get forgotPasswordEmailNoticeBody;
+
+  /// No description provided for @forgotPasswordUsernameNoticeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You typed a username'**
+  String get forgotPasswordUsernameNoticeTitle;
+
+  /// No description provided for @forgotPasswordUsernameNoticeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We will email a password reset link to the address on your account. Open the email, then paste the link back here.'**
+  String get forgotPasswordUsernameNoticeBody;
 
   /// No description provided for @forgotPasswordIdentifierMissing.
   ///

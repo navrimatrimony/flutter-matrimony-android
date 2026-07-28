@@ -61,13 +61,16 @@ void main() {
     ApiCache.instance.clear();
   });
 
-  Future<void> pumpLogin(WidgetTester tester) async {
+  Future<void> pumpLogin(
+    WidgetTester tester, {
+    MobileOtpLoginRequest? otpRequest,
+  }) async {
     await tester.binding.setSurfaceSize(const Size(412, 1200));
     addTearDown(() => tester.binding.setSurfaceSize(null));
 
     await tester.pumpWidget(
       MaterialApp(
-        home: const LoginScreen(),
+        home: LoginScreen(otpRequest: otpRequest),
         routes: <String, WidgetBuilder>{
           '/home': (_) => const Scaffold(body: Text('HOME')),
           '/matches': (_) => const Scaffold(body: Text('MATCHES')),
@@ -199,6 +202,45 @@ void main() {
 
     await pumpLogin(tester);
     await sendOtp(tester);
+
+    expect(
+      find.text(
+        'Could not reach the server. Check your internet and try again.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.widgetWithText(ElevatedButton, 'Get OTP'), findsOneWidget);
+  });
+
+  testWidgets('a number handed over by forgot-password lands one step in', (
+    tester,
+  ) async {
+    // A member sent here from the forgot-password screen already pressed an
+    // action that promised a code, so the code is on its way before she looks
+    // at the screen: the only thing left is typing it.
+    await pumpLogin(
+      tester,
+      otpRequest: const MobileOtpLoginRequest('+91 98765 43210'),
+    );
+
+    final sent = http.requestFor('/auth/mobile-otp/send');
+    expect(sent, isNotNull);
+    expect(sent!.jsonBody['mobile'], '9876543210');
+    expect(tester.widget<TextField>(find.byType(TextField).first).controller
+        ?.text, '9876543210');
+    expect(find.widgetWithText(ElevatedButton, 'Verify OTP'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('a handed-over number that fails to send still leaves a usable '
+      'screen', (tester) async {
+    http.on('/auth/mobile-otp/send', (_) => throw const SocketException('down'));
+
+    await pumpLogin(
+      tester,
+      otpRequest: const MobileOtpLoginRequest('9876543210'),
+    );
 
     expect(
       find.text(

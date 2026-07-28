@@ -1553,13 +1553,38 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get forgotPasswordRequestSubtitle =>
-      'तुमचा मोबाइल नंबर, ईमेल किंवा वापरकर्तानाव टाका. तुमच्या खात्यावरील ईमेल पत्त्यावर आम्ही रीसेट लिंक पाठवू.';
+      'तुमचा मोबाइल नंबर, ईमेल किंवा वापरकर्तानाव टाका. मोबाइल नंबर टाकल्यास पासवर्डशिवाय, एकदाच वापरायच्या OTP ने लॉगिन होईल. ईमेल किंवा वापरकर्तानाव टाकल्यास ईमेलवर रीसेट लिंक येईल.';
 
   @override
   String get forgotPasswordIdentifierLabel => 'मोबाइल, ईमेल किंवा वापरकर्तानाव';
 
   @override
   String get forgotPasswordSendLink => 'रीसेट लिंक पाठवा';
+
+  @override
+  String get forgotPasswordUseOtp => 'OTP पाठवा आणि लॉगिन करा';
+
+  @override
+  String get forgotPasswordMobileNoticeTitle => 'तुम्ही मोबाइल नंबर टाकला आहे';
+
+  @override
+  String get forgotPasswordMobileNoticeBody =>
+      'तुम्हाला पासवर्डची गरज नाही. या नंबरवर आम्ही एकदाच वापरायचा OTP पाठवू आणि तुम्हाला लॉगिन करून देऊ. पासवर्ड हवा असल्यास तो नंतर सेटिंग्जमधून ठेवता येईल.';
+
+  @override
+  String get forgotPasswordEmailNoticeTitle => 'तुम्ही ईमेल पत्ता टाकला आहे';
+
+  @override
+  String get forgotPasswordEmailNoticeBody =>
+      'या पत्त्यावर आम्ही पासवर्ड रीसेट लिंक पाठवू. ईमेल उघडा आणि ती लिंक इथे पेस्ट करा.';
+
+  @override
+  String get forgotPasswordUsernameNoticeTitle =>
+      'तुम्ही वापरकर्तानाव टाकले आहे';
+
+  @override
+  String get forgotPasswordUsernameNoticeBody =>
+      'तुमच्या खात्यावरील ईमेल पत्त्यावर आम्ही पासवर्ड रीसेट लिंक पाठवू. ईमेल उघडा आणि ती लिंक इथे पेस्ट करा.';
 
   @override
   String get forgotPasswordIdentifierMissing =>

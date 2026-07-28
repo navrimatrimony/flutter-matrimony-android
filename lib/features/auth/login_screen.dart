@@ -25,8 +25,25 @@ import '../onboarding/models/mobile_otp_models.dart';
 /// cannot).
 enum _LoginMethod { otp, password }
 
+/// Route argument for `/login` that opens the OTP door on a number the member
+/// already typed somewhere else.
+///
+/// Today that somewhere is the forgot-password screen: a member with no email
+/// cannot be sent a reset link, so her number is carried here instead of being
+/// retyped, and the code is requested on arrival. Anything else pushed at
+/// `/login` without this argument gets the ordinary empty screen.
+class MobileOtpLoginRequest {
+  const MobileOtpLoginRequest(this.mobile);
+
+  /// Normalised by the caller through `MobileNumberInput`; re-normalised here
+  /// anyway, because a route argument can come from anywhere.
+  final String mobile;
+}
+
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.otpRequest});
+
+  final MobileOtpLoginRequest? otpRequest;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -60,8 +77,29 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    _applyOtpRequest();
     _loadSavedLoginPreference();
     otpController.addListener(_onOtpChanged);
+  }
+
+  /// Opens the OTP door on a number handed over by another screen.
+  ///
+  /// The send is deliberately fired here rather than left as a button the
+  /// member has to find: she arrived by pressing an action that said a code
+  /// would be sent, so the screen owes her the code, not another tap. Every
+  /// failure route out of [_sendOtp] paints a message and stops the spinner, so
+  /// an auto-send that fails leaves a screen she can still use.
+  void _applyOtpRequest() {
+    final requested = widget.otpRequest?.mobile ?? '';
+    if (!MobileNumberInput.isComplete(requested)) return;
+
+    _method = _LoginMethod.otp;
+    mobileController.text = MobileNumberInput.normalize(requested);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || isLoading || _otpSent) return;
+      unawaited(_sendOtp());
+    });
   }
 
   @override

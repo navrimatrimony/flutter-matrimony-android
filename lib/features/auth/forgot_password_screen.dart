@@ -6,25 +6,61 @@ import '../../core/api_client.dart';
 import '../../core/api_error_text.dart';
 import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
+import '../../core/mobile_number.dart';
+import 'login_screen.dart';
 
-/// Password recovery, built against what the backend actually does.
+/// Password recovery, built against what the backend actually does — and around
+/// the members it could not serve.
 ///
 /// `POST /api/v1/auth/password/forgot` accepts a mobile number, an email or a
-/// username under one `login` key, resolves it to the account's email, and
-/// emails a **web link** — `…/reset-password/{token}?email=…`, valid 60
-/// minutes. It is not an OTP flow: the reply carries no challenge id, no
-/// correlation key, nothing to carry forward. That is why this screen does not
-/// reuse the OTP widgets or `MobileOtpSendResponse` — there is no challenge to
-/// model, and pretending otherwise would invent a contract the server does not
-/// have.
+/// username under one `login` key, resolves it to the account's **email**, and
+/// emails a web link — `…/reset-password/{token}?email=…`, valid 60 minutes.
+/// It is not an OTP flow: the reply carries no challenge id, no correlation
+/// key, nothing to carry forward. That is why this screen does not reuse the
+/// OTP widgets or `MobileOtpSendResponse` — there is no challenge to model, and
+/// pretending otherwise would invent a contract the server does not have.
 ///
-/// So stage two asks the member to paste the link back in. That is the only
-/// in-app route to the token without registering an Android deep link, and it
-/// keeps the flow completable on one device. `POST /auth/password/reset` needs
-/// `token` + `email` + `password` + `password_confirmation`; the email is read
-/// out of the pasted link, because that endpoint — unlike `forgot` — does not
-/// accept a mobile number.
+/// The dead end that produced this screen's current shape: a member who
+/// registered with a mobile number and no email typed that number here, and the
+/// server dutifully emailed a link to an address she does not have. She was
+/// locked out for good. So the mobile branch no longer calls `forgot` at all —
+/// it hands the number to the mobile-OTP door on the login screen, which signs
+/// her in with a one-time code and no password. A password, if she wants one,
+/// is set afterwards from Settings.
+///
+/// The email / username branch is untouched: `forgot` is still called, and
+/// stage two still asks the member to paste the link back in. That is the only
+/// in-app route to the token without registering an Android deep link.
+/// `POST /auth/password/reset` needs `token` + `email` + `password` +
+/// `password_confirmation`; the email is read out of the pasted link, because
+/// that endpoint — unlike `forgot` — does not accept a mobile number.
 enum _Stage { request, reset }
+
+/// What the member typed, and therefore which door this screen opens.
+///
+/// Nothing here re-implements identifier detection: [MobileNumberInput] is the
+/// one place in the app that knows what counts as a mobile number (the login
+/// screen decides the same way before it seeds its OTP field), and
+/// `_looksLikeEmail` below is the email test this screen already carried for
+/// the reset step.
+enum _IdentifierKind {
+  /// Nothing usable typed yet.
+  empty,
+
+  /// A complete 10-digit mobile number — the OTP door.
+  mobile,
+
+  /// Digits, but not ten of them. Heading for the OTP door once complete;
+  /// saying so beats letting the server answer "no such account".
+  partialMobile,
+
+  /// An email address — the emailed-link door.
+  email,
+
+  /// Anything else, i.e. a username. `forgot` resolves it to the account's
+  /// email, so it takes the emailed-link door too.
+  username,
+}
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -41,6 +77,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController _confirmController = TextEditingController();
 
   _Stage _stage = _Stage.request;
+  _IdentifierKind _kind = _IdentifierKind.empty;
   bool _isLoading = false;
   String _errorMessage = '';
   String _noticeMessage = '';
@@ -50,11 +87,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void initState() {
     super.initState();
     unawaited(_prefillIdentifier());
+    _identifierController.addListener(_onIdentifierChanged);
     _linkController.addListener(_onLinkChanged);
   }
 
   @override
   void dispose() {
+    _identifierController.removeListener(_onIdentifierChanged);
     _linkController.removeListener(_onLinkChanged);
     _identifierController.dispose();
     _linkController.dispose();
@@ -73,12 +112,80 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         '';
     if (!mounted || remembered.isEmpty) return;
     if (_identifierController.text.trim().isNotEmpty) return;
-    setState(() => _identifierController.text = remembered);
+    // Assigning the text fires _onIdentifierChanged, which sets the branch and
+    // repaints — so the member sees which door is open before touching anything.
+    _identifierController.text = remembered;
   }
 
   // ---------------------------------------------------------------------------
-  // Stage 1 — ask for the link
+  // Stage 1 — pick a door, then walk through it
   // ---------------------------------------------------------------------------
+
+  void _onIdentifierChanged() {
+    final kind = _kindOf(_identifierController.text);
+    if (kind == _kind) return;
+    setState(() {
+      _kind = kind;
+      // The old branch's complaint does not belong to the new one.
+      _errorMessage = '';
+    });
+  }
+
+  _IdentifierKind _kindOf(String raw) {
+    final text = raw.trim();
+    if (text.isEmpty) return _IdentifierKind.empty;
+    if (_looksLikeEmail(text)) return _IdentifierKind.email;
+    if (MobileNumberInput.isComplete(text)) return _IdentifierKind.mobile;
+    // Digits and the punctuation people put between them (+91, spaces, dashes,
+    // brackets) — someone typing a phone number, just not finished.
+    if (RegExp(r'^[0-9+\-\s()]+$').hasMatch(text)) {
+      return _IdentifierKind.partialMobile;
+    }
+    return _IdentifierKind.username;
+  }
+
+  /// The one action behind the primary button on the request stage.
+  void _startRequest() {
+    switch (_kind) {
+      case _IdentifierKind.empty:
+        setState(() {
+          _errorMessage = AppStrings.forgotPasswordIdentifierMissing;
+          _noticeMessage = '';
+        });
+        return;
+      case _IdentifierKind.partialMobile:
+        setState(() {
+          _errorMessage = AppStrings.loginMobileInvalid;
+          _noticeMessage = '';
+        });
+        return;
+      case _IdentifierKind.mobile:
+        _continueWithOtpLogin();
+        return;
+      case _IdentifierKind.email:
+      case _IdentifierKind.username:
+        unawaited(_sendResetLink());
+        return;
+    }
+  }
+
+  /// A mobile number never touches `/auth/password/forgot`.
+  ///
+  /// That endpoint can only ever deliver by email, and the members who type a
+  /// mobile number here are precisely the ones with no email on the account.
+  /// Instead the number is handed to the login screen's mobile-OTP door — the
+  /// same door registration and login already use — with the code requested on
+  /// arrival, so the member's next action is typing it. Nothing is reset and
+  /// nothing has to be remembered.
+  void _continueWithOtpLogin() {
+    final mobile = MobileNumberInput.normalize(_identifierController.text);
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      '/login',
+      (route) => false,
+      arguments: MobileOtpLoginRequest(mobile),
+    );
+  }
 
   Future<void> _sendResetLink() async {
     final identifier = _identifierController.text.trim();
@@ -362,7 +469,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  if (isReset) ..._buildResetFields() else ..._buildRequestFields(),
+                  if (isReset)
+                    ..._buildResetFields()
+                  else
+                    ..._buildRequestFields(theme),
                   if (_noticeMessage.isNotEmpty) ...[
                     const SizedBox(height: 14),
                     _Banner(
@@ -393,9 +503,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           ? null
                           : () {
                               FocusScope.of(context).unfocus();
-                              unawaited(
-                                isReset ? _submitReset() : _sendResetLink(),
-                              );
+                              if (isReset) {
+                                unawaited(_submitReset());
+                                return;
+                              }
+                              _startRequest();
                             },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFE65A43),
@@ -417,7 +529,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           : Text(
                               isReset
                                   ? AppStrings.forgotPasswordSubmit
-                                  : AppStrings.forgotPasswordSendLink,
+                                  : _requestActionLabel,
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                               ),
@@ -425,18 +537,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  TextButton(
-                    onPressed: _isLoading
-                        ? null
-                        : (isReset
-                              ? _backToRequest
-                              : () => setState(() => _stage = _Stage.reset)),
-                    child: Text(
-                      isReset
-                          ? AppStrings.forgotPasswordBackToRequest
-                          : AppStrings.forgotPasswordHaveLink,
+                  // A member on the mobile branch has no emailed link to
+                  // already have, so the shortcut into stage two is not offered
+                  // there.
+                  if (isReset || !_isMobileBranch)
+                    TextButton(
+                      onPressed: _isLoading
+                          ? null
+                          : (isReset
+                                ? _backToRequest
+                                : () => setState(() => _stage = _Stage.reset)),
+                      child: Text(
+                        isReset
+                            ? AppStrings.forgotPasswordBackToRequest
+                            : AppStrings.forgotPasswordHaveLink,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -446,7 +562,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     );
   }
 
-  List<Widget> _buildRequestFields() {
+  bool get _isMobileBranch =>
+      _kind == _IdentifierKind.mobile || _kind == _IdentifierKind.partialMobile;
+
+  /// The button says what is about to happen, so the branch is never a surprise.
+  String get _requestActionLabel => _isMobileBranch
+      ? AppStrings.forgotPasswordUseOtp
+      : AppStrings.forgotPasswordSendLink;
+
+  List<Widget> _buildRequestFields(ThemeData theme) {
     return <Widget>[
       TextField(
         controller: _identifierController,
@@ -459,12 +583,53 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           AutofillHints.telephoneNumber,
         ],
         onSubmitted: (_) {
-          if (!_isLoading) unawaited(_sendResetLink());
+          if (!_isLoading) _startRequest();
         },
         decoration: InputDecoration(
           labelText: AppStrings.forgotPasswordIdentifierLabel,
           prefixIcon: const Icon(Icons.person_outline_rounded),
         ),
+      ),
+      ..._buildBranchNotice(theme),
+    ];
+  }
+
+  /// Names the branch the member has landed on, in her own words, before she
+  /// presses anything. Detection is automatic; the consequence is not hidden.
+  List<Widget> _buildBranchNotice(ThemeData theme) {
+    final String title;
+    final String body;
+    final IconData icon;
+
+    switch (_kind) {
+      case _IdentifierKind.empty:
+        return const <Widget>[];
+      case _IdentifierKind.mobile:
+      case _IdentifierKind.partialMobile:
+        title = AppStrings.forgotPasswordMobileNoticeTitle;
+        body = AppStrings.forgotPasswordMobileNoticeBody;
+        icon = Icons.phone_iphone_rounded;
+      case _IdentifierKind.email:
+        title = AppStrings.forgotPasswordEmailNoticeTitle;
+        body = AppStrings.forgotPasswordEmailNoticeBody;
+        icon = Icons.mail_outline_rounded;
+      case _IdentifierKind.username:
+        title = AppStrings.forgotPasswordUsernameNoticeTitle;
+        body = AppStrings.forgotPasswordUsernameNoticeBody;
+        icon = Icons.person_outline_rounded;
+    }
+
+    return <Widget>[
+      const SizedBox(height: 14),
+      _Banner(
+        key: const ValueKey('forgot-password-branch'),
+        title: title,
+        icon: icon,
+        text: body,
+        background: const Color(0xFFEFF6FF),
+        border: const Color(0xFFBFDBFE),
+        foreground: const Color(0xFF1E3A8A),
+        theme: theme,
       ),
     ];
   }
@@ -545,6 +710,8 @@ class _Banner extends StatelessWidget {
     required this.border,
     required this.foreground,
     required this.theme,
+    this.title,
+    this.icon,
   });
 
   final String text;
@@ -553,8 +720,41 @@ class _Banner extends StatelessWidget {
   final Color foreground;
   final ThemeData theme;
 
+  /// Optional headline above [text]. Used by the branch notice, which has to
+  /// name what the member typed before it explains what happens next.
+  final String? title;
+  final IconData? icon;
+
   @override
   Widget build(BuildContext context) {
+    final body = Text(
+      text,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        color: foreground,
+        fontWeight: FontWeight.w600,
+        height: 1.35,
+      ),
+    );
+
+    final headline = title;
+    final content = headline == null
+        ? body
+        : Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                headline,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              body,
+            ],
+          );
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -562,13 +762,16 @@ class _Banner extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: border),
       ),
-      child: Text(
-        text,
-        style: theme.textTheme.bodyMedium?.copyWith(
-          color: foreground,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: icon == null
+          ? content
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(icon, size: 20, color: foreground),
+                const SizedBox(width: 10),
+                Expanded(child: content),
+              ],
+            ),
     );
   }
 }

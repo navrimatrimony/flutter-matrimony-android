@@ -1561,13 +1561,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forgotPasswordRequestSubtitle =>
-      'Enter your mobile number, email or username. We will email a reset link to the address on your account.';
+      'Enter your mobile number, email or username. A mobile number signs you in with a one-time code and no password. An email or username gets a reset link by email.';
 
   @override
   String get forgotPasswordIdentifierLabel => 'Mobile, email or username';
 
   @override
   String get forgotPasswordSendLink => 'Send reset link';
+
+  @override
+  String get forgotPasswordUseOtp => 'Send OTP and sign in';
+
+  @override
+  String get forgotPasswordMobileNoticeTitle => 'You typed a mobile number';
+
+  @override
+  String get forgotPasswordMobileNoticeBody =>
+      'You do not need a password. We will send a one-time code to this number and sign you in. A password can be set later from Settings.';
+
+  @override
+  String get forgotPasswordEmailNoticeTitle => 'You typed an email address';
+
+  @override
+  String get forgotPasswordEmailNoticeBody =>
+      'We will email a password reset link to this address. Open the email, then paste the link back here.';
+
+  @override
+  String get forgotPasswordUsernameNoticeTitle => 'You typed a username';
+
+  @override
+  String get forgotPasswordUsernameNoticeBody =>
+      'We will email a password reset link to the address on your account. Open the email, then paste the link back here.';
 
   @override
   String get forgotPasswordIdentifierMissing =>

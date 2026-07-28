@@ -150,7 +150,15 @@ class _MyAppState extends State<MyApp> {
         '/bootstrap': (context) => const BootstrapScreen(),
         '/language': (context) => const LanguageChoiceScreen(),
         '/landing': (context) => const LandingScreen(),
-        '/login': (context) => const LoginScreen(),
+        // A member sent here from forgot-password carries her mobile number as
+        // a route argument, so the OTP door opens on it instead of an empty
+        // field. Every other push at '/login' passes nothing and is unchanged.
+        '/login': (context) {
+          final arguments = ModalRoute.of(context)?.settings.arguments;
+          return LoginScreen(
+            otpRequest: arguments is MobileOtpLoginRequest ? arguments : null,
+          );
+        },
         '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/register': (context) => const LandingScreen(),
         '/home': (context) => _authenticatedScreen(const HomeScreen()),

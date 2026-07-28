@@ -111,6 +111,28 @@ class AppStrings {
 
   static String get forgotPasswordSendLink => appText.forgotPasswordSendLink;
 
+  // The mobile branch: no reset is asked for and no link is sent — the number
+  // goes to the login screen's OTP door instead.
+  static String get forgotPasswordUseOtp => appText.forgotPasswordUseOtp;
+
+  static String get forgotPasswordMobileNoticeTitle =>
+      appText.forgotPasswordMobileNoticeTitle;
+
+  static String get forgotPasswordMobileNoticeBody =>
+      appText.forgotPasswordMobileNoticeBody;
+
+  static String get forgotPasswordEmailNoticeTitle =>
+      appText.forgotPasswordEmailNoticeTitle;
+
+  static String get forgotPasswordEmailNoticeBody =>
+      appText.forgotPasswordEmailNoticeBody;
+
+  static String get forgotPasswordUsernameNoticeTitle =>
+      appText.forgotPasswordUsernameNoticeTitle;
+
+  static String get forgotPasswordUsernameNoticeBody =>
+      appText.forgotPasswordUsernameNoticeBody;
+
   static String get forgotPasswordIdentifierMissing =>
       appText.forgotPasswordIdentifierMissing;
 

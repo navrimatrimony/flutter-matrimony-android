@@ -8,6 +8,7 @@ import 'package:flutter_matrimony_android/core/api_client.dart';
 import 'package:flutter_matrimony_android/core/app_language.dart';
 import 'package:flutter_matrimony_android/core/app_storage.dart';
 import 'package:flutter_matrimony_android/features/auth/forgot_password_screen.dart';
+import 'package:flutter_matrimony_android/features/auth/login_screen.dart';
 
 import '../../support/fake_http.dart';
 
@@ -20,6 +21,11 @@ import '../../support/fake_http.dart';
 /// arrives as a plain 422 sentence. And every failure must leave a readable
 /// message on screen with the spinner stopped, which is the bug this app
 /// already shipped once on the OTP screen.
+///
+/// They also pin the split that came after: `forgot` can only deliver by email,
+/// so a member who types a **mobile number** must never be sent down it. She
+/// goes to the login screen's OTP door instead, carrying her number. The email
+/// and username branches are unchanged and still call `forgot`.
 Future<void> settle(WidgetTester tester) async {
   for (var i = 0; i < 6; i++) {
     await tester.pump(const Duration(milliseconds: 120));
@@ -55,7 +61,15 @@ void main() {
       MaterialApp(
         home: const ForgotPasswordScreen(),
         routes: <String, WidgetBuilder>{
-          '/login': (_) => const Scaffold(body: Text('LOGIN')),
+          // Mirrors main.dart: '/login' reads the OTP request off the route so
+          // the number the member typed here is what the OTP door opens on.
+          '/login': (context) {
+            final arguments = ModalRoute.of(context)?.settings.arguments;
+            final request = arguments is MobileOtpLoginRequest
+                ? arguments
+                : null;
+            return Scaffold(body: Text('LOGIN ${request?.mobile ?? ''}'.trim()));
+          },
         },
       ),
     );
@@ -77,12 +91,12 @@ void main() {
     });
 
     await pumpScreen(tester);
-    await requestLink(tester, '9876543210');
+    await requestLink(tester, 'asha@example.com');
 
-    // The controller reads one key for mobile, email and username alike.
+    // The controller reads one key for email and username alike.
     final sent = http.requestFor('/auth/password/forgot');
     expect(sent, isNotNull);
-    expect(sent!.jsonBody['login'], '9876543210');
+    expect(sent!.jsonBody['login'], 'asha@example.com');
 
     expect(find.text('Reset password'), findsWidgets);
     expect(
@@ -128,7 +142,7 @@ void main() {
     }, status: 422);
 
     await pumpScreen(tester);
-    await requestLink(tester, '9876543210');
+    await requestLink(tester, 'asha@example.com');
 
     expect(find.text('Please wait before retrying.'), findsOneWidget);
     expect(find.byType(CircularProgressIndicator), findsNothing);
@@ -161,7 +175,7 @@ void main() {
     http.on('/auth/password/forgot', (_) => throw const SocketException('down'));
 
     await pumpScreen(tester);
-    await requestLink(tester, '9876543210');
+    await requestLink(tester, 'asha@example.com');
 
     expect(
       find.text('Could not reach the server. Check your internet and try again.'),
@@ -181,7 +195,7 @@ void main() {
     ApiClient.authToken = 'stale-token-from-the-old-password';
 
     await pumpScreen(tester);
-    await requestLink(tester, '9876543210');
+    await requestLink(tester, 'asha@example.com');
 
     // Exactly the URL Illuminate's ResetPassword notification builds.
     await tester.enterText(
@@ -253,6 +267,66 @@ void main() {
     // Rules\Password::defaults() is an uncustomised min:8 in this project.
     expect(find.text('Use at least 8 characters.'), findsOneWidget);
     expect(http.requestFor('/auth/password/reset'), isNull);
+  });
+
+  testWidgets('a mobile number opens the OTP door, and never asks for a reset', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    await tester.enterText(find.byType(TextField).first, '+91 98765 43210');
+    await settle(tester);
+
+    // The branch is named before anything is pressed, and the button says what
+    // pressing it does.
+    expect(find.text('You typed a mobile number'), findsOneWidget);
+    expect(
+      find.widgetWithText(ElevatedButton, 'Send OTP and sign in'),
+      findsOneWidget,
+    );
+    expect(find.widgetWithText(ElevatedButton, 'Send reset link'), findsNothing);
+
+    await tester.tap(
+      find.widgetWithText(ElevatedButton, 'Send OTP and sign in'),
+    );
+    await settle(tester);
+
+    // The whole point: the emailed-link endpoint is not called for a member who
+    // may have no email, and the number arrives normalised at the OTP door.
+    expect(http.requestFor('/auth/password/forgot'), isNull);
+    expect(find.text('LOGIN 9876543210'), findsOneWidget);
+  });
+
+  testWidgets('an email keeps the emailed-link branch, and says so', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    await tester.enterText(find.byType(TextField).first, 'asha@example.com');
+    await settle(tester);
+
+    expect(find.text('You typed an email address'), findsOneWidget);
+    expect(
+      find.widgetWithText(ElevatedButton, 'Send reset link'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('half a mobile number is named, not quietly emailed', (
+    tester,
+  ) async {
+    await pumpScreen(tester);
+    await tester.enterText(find.byType(TextField).first, '98765');
+    await settle(tester);
+
+    // Still the mobile branch — she is typing a phone number — so pressing it
+    // must not fire the email flow at a number that is not finished.
+    await tester.tap(
+      find.widgetWithText(ElevatedButton, 'Send OTP and sign in'),
+    );
+    await settle(tester);
+
+    expect(find.text('Enter a valid 10 digit mobile number.'), findsOneWidget);
+    expect(http.requestFor('/auth/password/forgot'), isNull);
+    expect(find.text('LOGIN 9876543210'), findsNothing);
   });
 
   testWidgets('mismatched confirmation is caught before the request leaves', (
