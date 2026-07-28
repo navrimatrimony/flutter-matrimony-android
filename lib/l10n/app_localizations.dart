@@ -5420,6 +5420,54 @@ abstract class AppLocalizations {
   /// **'Security'**
   String get settingsSecurity;
 
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change password'**
+  String get changePasswordTitle;
+
+  /// No description provided for @changePasswordSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a new password without the old one.'**
+  String get changePasswordSettingsSubtitle;
+
+  /// No description provided for @changePasswordIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password. You will not be asked for your old one — being signed in here is proof enough.'**
+  String get changePasswordIntro;
+
+  /// No description provided for @changePasswordOtherDevicesNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your other devices will be signed out. This phone stays signed in.'**
+  String get changePasswordOtherDevicesNotice;
+
+  /// No description provided for @changePasswordSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Save new password'**
+  String get changePasswordSubmit;
+
+  /// No description provided for @changePasswordMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a new password.'**
+  String get changePasswordMissing;
+
+  /// No description provided for @changePasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not change the password. Please try again.'**
+  String get changePasswordFailed;
+
+  /// No description provided for @changePasswordSessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been signed out. Sign in again, then change the password.'**
+  String get changePasswordSessionExpired;
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

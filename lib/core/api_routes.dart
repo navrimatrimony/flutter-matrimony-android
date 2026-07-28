@@ -8,6 +8,7 @@ class ApiRoutes {
   static const String passwordForgot = '/auth/password/forgot';
   static const String passwordReset = '/auth/password/reset';
   static const String accountDetails = '/account/details';
+  static const String accountPassword = '/account/password';
   static const String accountEmailGoogle = '/account/email/google';
   static const String accountEmailOtpSend = '/account/email-otp/send';
   static const String accountEmailOtpVerify = '/account/email-otp/verify';

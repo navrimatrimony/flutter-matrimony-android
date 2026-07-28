@@ -26,6 +26,7 @@ import 'features/onboarding/smart_onboarding_screen.dart';
 import 'features/photo/photo_gallery_screen.dart';
 import 'features/plans/plans_screen.dart';
 import 'features/profile_lists/profile_lists_screen.dart';
+import 'features/settings/change_password_screen.dart';
 import 'features/settings/notification_settings_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/suchak/suchak_requests_screen.dart';
@@ -179,6 +180,8 @@ class _MyAppState extends State<MyApp> {
         '/settings': (context) => _authenticatedScreen(const SettingsScreen()),
         '/notification-settings': (context) =>
             _authenticatedScreen(const NotificationSettingsScreen()),
+        '/change-password': (context) =>
+            _authenticatedScreen(const ChangePasswordScreen()),
         '/profile-lists': (context) =>
             _authenticatedScreen(const ProfileListsScreen()),
         '/photo-gallery': (context) =>

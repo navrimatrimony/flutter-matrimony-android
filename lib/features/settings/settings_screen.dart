@@ -431,6 +431,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _labelFor('mobile_verified'),
             _displayValue(_fieldValue(fields, 'mobile_verified')),
           ),
+          const Divider(height: 20),
+          // The only change-password path a member has. It lives in the card
+          // that already holds account security rather than becoming a second
+          // settings entry point, and it does not depend on `_section('security')`
+          // being available — a member who has not finished her profile still
+          // needs to be able to set a password.
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.password_rounded),
+            title: Text(AppStrings.changePasswordTitle),
+            subtitle: Text(AppStrings.changePasswordSettingsSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.pushNamed(context, '/change-password'),
+          ),
         ],
       ),
     );

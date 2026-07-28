@@ -2894,6 +2894,35 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSecurity => 'Security';
 
   @override
+  String get changePasswordTitle => 'Change password';
+
+  @override
+  String get changePasswordSettingsSubtitle =>
+      'Set a new password without the old one.';
+
+  @override
+  String get changePasswordIntro =>
+      'Choose a new password. You will not be asked for your old one — being signed in here is proof enough.';
+
+  @override
+  String get changePasswordOtherDevicesNotice =>
+      'Your other devices will be signed out. This phone stays signed in.';
+
+  @override
+  String get changePasswordSubmit => 'Save new password';
+
+  @override
+  String get changePasswordMissing => 'Enter a new password.';
+
+  @override
+  String get changePasswordFailed =>
+      'Could not change the password. Please try again.';
+
+  @override
+  String get changePasswordSessionExpired =>
+      'You have been signed out. Sign in again, then change the password.';
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

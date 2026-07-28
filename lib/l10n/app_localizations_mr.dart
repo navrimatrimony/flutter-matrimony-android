@@ -2878,6 +2878,35 @@ class AppLocalizationsMr extends AppLocalizations {
   String get settingsSecurity => 'सुरक्षा';
 
   @override
+  String get changePasswordTitle => 'पासवर्ड बदला';
+
+  @override
+  String get changePasswordSettingsSubtitle =>
+      'जुन्या पासवर्डशिवाय नवीन पासवर्ड ठेवा.';
+
+  @override
+  String get changePasswordIntro =>
+      'नवीन पासवर्ड निवडा. जुना पासवर्ड विचारला जाणार नाही — तुम्ही इथे लॉगिन आहात हाच पुरावा पुरेसा आहे.';
+
+  @override
+  String get changePasswordOtherDevicesNotice =>
+      'तुमच्या इतर डिव्हाइसमधून लॉगआउट होईल. हा फोन मात्र लॉगिनच राहील.';
+
+  @override
+  String get changePasswordSubmit => 'नवीन पासवर्ड जतन करा';
+
+  @override
+  String get changePasswordMissing => 'नवीन पासवर्ड टाका.';
+
+  @override
+  String get changePasswordFailed =>
+      'पासवर्ड बदलता आला नाही. कृपया पुन्हा प्रयत्न करा.';
+
+  @override
+  String get changePasswordSessionExpired =>
+      'तुम्ही लॉगआउट झाला आहात. पुन्हा लॉगिन करा आणि मग पासवर्ड बदला.';
+
+  @override
   String get settingsTitle => 'सेटिंग्ज';
 
   @override

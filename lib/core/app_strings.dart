@@ -189,6 +189,28 @@ class AppStrings {
   static String get forgotPasswordBackToRequest =>
       appText.forgotPasswordBackToRequest;
 
+  // Change password, from inside Settings. The counterpart to the OTP branch
+  // above: a member signs in with a code, then sets a password here if she
+  // wants one. The server asks for no current password, so neither does this.
+  static String get changePasswordTitle => appText.changePasswordTitle;
+
+  static String get changePasswordSettingsSubtitle =>
+      appText.changePasswordSettingsSubtitle;
+
+  static String get changePasswordIntro => appText.changePasswordIntro;
+
+  static String get changePasswordOtherDevicesNotice =>
+      appText.changePasswordOtherDevicesNotice;
+
+  static String get changePasswordSubmit => appText.changePasswordSubmit;
+
+  static String get changePasswordMissing => appText.changePasswordMissing;
+
+  static String get changePasswordFailed => appText.changePasswordFailed;
+
+  static String get changePasswordSessionExpired =>
+      appText.changePasswordSessionExpired;
+
   static String get loginMobileLabel => appText.mobileNumber2;
 
   static String get loginOtpLabel => appText.enterThe6DigitOtp2;

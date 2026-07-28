@@ -2337,6 +2337,31 @@ class ApiClient {
     });
   }
 
+  /// Sets a new password for the signed-in member.
+  ///
+  /// `POST /api/v1/account/password` (`auth:sanctum`, declared in
+  /// `routes/api/member.php`). `MemberPasswordApiController::update` validates
+  /// `['password' => ['required', 'confirmed', Rules\Password::defaults()]]`
+  /// and returns `{success, message}`; a rejected password comes back as a
+  /// stock 422 with `errors.password`.
+  ///
+  /// **No `current_password` field, deliberately.** A member reaches this
+  /// screen because she could not remember the old one — see the decision
+  /// recorded on `App\Services\Account\MemberPasswordService`.
+  ///
+  /// [authToken] is left alone on purpose: the server revokes every OTHER
+  /// Sanctum token but keeps the caller's own, so this device stays signed in
+  /// and must not throw its still-valid token away.
+  static Future<Map<String, dynamic>> changeAccountPassword({
+    required String password,
+    required String passwordConfirmation,
+  }) {
+    return _postJson(ApiRoutes.accountPassword, {
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    }, authenticated: true);
+  }
+
   static Future<Map<String, dynamic>> register({
     required String name,
     required String email,
