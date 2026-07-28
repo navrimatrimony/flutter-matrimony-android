@@ -1111,6 +1111,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
                   icon: Icons.workspace_premium,
                   label: appText.biodataTemplatePremium,
                   color: const Color(0xFFFFB84D),
+                  onTap: () => Navigator.pushNamed(context, '/plans'),
                 ),
                 const SizedBox(width: 8),
               ],
@@ -1672,30 +1673,44 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     Color? iconColor,
     VoidCallback? onTap,
   }) {
+    final content = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: iconColor ?? Colors.white),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    // Without a destination the chip is a status label, not a control, so it
+    // is drawn flat — no Material, no ripple, no button affordance.
+    if (onTap == null) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.32),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: content,
+      );
+    }
+
     return Material(
       color: Colors.black.withValues(alpha: 0.42),
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         borderRadius: BorderRadius.circular(999),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 16, color: iconColor ?? Colors.white),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-        ),
+        child: content,
       ),
     );
   }
@@ -2096,22 +2111,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
                 ),
               ),
               if (summary != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 7,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAF7F0),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    summary,
-                    style: const TextStyle(
-                      color: Color(0xFF1D7A4D),
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
+                _buildGunamilanScorePill(
+                  summary,
+                  // In the card the pill opens the full breakdown; inside that
+                  // sheet it is already expanded, so it stays a plain label.
+                  onTap: forceExpanded
+                      ? null
+                      : () => _openGunamilanDetails(gunamilan),
                 ),
             ],
           ),
@@ -2182,6 +2188,39 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGunamilanScorePill(String summary, {VoidCallback? onTap}) {
+    const padding = EdgeInsets.symmetric(horizontal: 10, vertical: 7);
+    const label = TextStyle(
+      color: Color(0xFF1D7A4D),
+      fontWeight: FontWeight.w900,
+    );
+    final radius = BorderRadius.circular(999);
+
+    if (onTap == null) {
+      return Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: const Color(0xFFEAF7F0),
+          borderRadius: radius,
+        ),
+        child: Text(summary, style: label),
+      );
+    }
+
+    return Material(
+      color: const Color(0xFFEAF7F0),
+      borderRadius: radius,
+      child: InkWell(
+        borderRadius: radius,
+        onTap: onTap,
+        child: Padding(
+          padding: padding,
+          child: Text(summary, style: label),
+        ),
       ),
     );
   }
@@ -4185,6 +4224,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     final widgets = <Widget>[];
     final rows = _safeMapList(_display?['chips']);
     final comparisonTitle = _comparisonData()?.title;
+    final gunamilan = _gunamilanMap();
     final shouldShowComparisonChip = hasComparisonCard;
     var hasComparisonChip = false;
 
@@ -4192,24 +4232,28 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
       final label = _displayString(row['label']);
       if (label == null) continue;
 
-      final normalized = label.trim().toLowerCase();
-      final iconKey = _displayString(row['icon']);
-      final isComparisonChip = normalized.startsWith('you &');
-      if (isComparisonChip && !hasComparisonCard) continue;
-      if (isComparisonChip) hasComparisonChip = true;
-      if (normalized == 'premium' ||
-          normalized == 'verified' ||
-          normalized.contains('photo') ||
-          iconKey == 'photo') {
+      // Chip labels arrive already translated by the server, so matching on
+      // their text only ever works in one language. The `icon` key is the
+      // stable, locale-independent identifier — always identify chips by it.
+      final iconKey = _displayString(row['icon'])?.trim().toLowerCase();
+
+      // Verified, premium and photo count are already shown in the hero (the
+      // tick beside the name, the premium pill, the photo pill), so repeating
+      // them as chips is duplicate noise.
+      if (iconKey == 'verified' || iconKey == 'premium' || iconKey == 'photo') {
         continue;
       }
+
+      final isComparisonChip = iconKey == 'compare';
+      if (isComparisonChip && !hasComparisonCard) continue;
+      if (isComparisonChip) hasComparisonChip = true;
 
       widgets.add(
         _buildHeroChip(
           icon: _chipIcon(iconKey),
           label: label,
           iconColor: _chipColor(iconKey, _displayString(row['tone'])),
-          onTap: isComparisonChip ? _scrollToComparisonCard : null,
+          onTap: _chipAction(iconKey, gunamilan),
         ),
       );
 
@@ -4357,6 +4401,22 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
         return Icons.photo_library_outlined;
       default:
         return Icons.circle;
+    }
+  }
+
+  /// Destination behind a hero chip, keyed off the server's stable `icon` key.
+  /// A chip with no destination returns null and is rendered as a flat label
+  /// instead of a tappable pill, so it never promises an action it cannot do.
+  VoidCallback? _chipAction(String? icon, Map<String, dynamic>? gunamilan) {
+    switch (icon?.trim().toLowerCase()) {
+      case 'compare':
+        return _scrollToComparisonCard;
+      case 'astro':
+        return gunamilan == null
+            ? null
+            : () => _openGunamilanDetails(gunamilan);
+      default:
+        return null;
     }
   }
 

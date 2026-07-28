@@ -3183,9 +3183,6 @@ class AppLocalizationsMr extends AppLocalizations {
   String get verificationStatus => 'पडताळणी स्थिती';
 
   @override
-  String get verified => 'पडताळणी झालेले';
-
-  @override
   String get verifiedEmail => 'पडताळणी झालेला ईमेल';
 
   @override

@@ -592,7 +592,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         filters.maritalStatusLabel!.trim(),
       if (filters.photoAvailable)
         appText.photoAvailable,
-      if (filters.verifiedPhoto) appText.verified,
       if (filters.recentlyActive)
         appText.recentlyActive,
       if (filters.hasLocationFilter) _locationSummary(filters),
@@ -3011,15 +3010,19 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (data.premium)
-          _buildGlassBadge('Premium', Icons.workspace_premium, _premiumGold),
+          _buildGlassBadge(
+            appText.biodataTemplatePremium,
+            Icons.workspace_premium,
+            _premiumGold,
+          ),
         const Spacer(),
         if (data.verified) _buildGlassIcon(Icons.verified, _trustGreen),
         if (data.photoUrl != null && data.photoCount > 0) ...[
           const SizedBox(width: 8),
           _buildGlassBadge('${data.photoCount}', Icons.photo_library, null),
         ],
-        const SizedBox(width: 8),
-        _buildGlassIcon(Icons.more_vert, Colors.white),
+        // No overflow-menu icon here: there is no card-level menu to open, and
+        // a kebab that does nothing promises an action the card cannot deliver.
       ],
     );
   }
@@ -3144,12 +3147,16 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           Icons.compare_arrows,
           _brandColor,
         ),
+      // Verified is not repeated here — the tick badge at the top of the card
+      // already carries it.
       if (data.hasAstro)
-        _buildStatusChip('Astro', Icons.auto_awesome, _premiumGold),
-      if (data.verified)
-        _buildStatusChip('Verified', Icons.verified, _trustGreen),
+        _buildStatusChip(appText.astro, Icons.auto_awesome, _premiumGold),
       if (data.premium)
-        _buildStatusChip('Premium', Icons.workspace_premium, _premiumGold),
+        _buildStatusChip(
+          appText.biodataTemplatePremium,
+          Icons.workspace_premium,
+          _premiumGold,
+        ),
     ];
   }
 

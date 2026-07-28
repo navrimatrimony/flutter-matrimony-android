@@ -5978,12 +5978,6 @@ abstract class AppLocalizations {
   /// **'Verification status'**
   String get verificationStatus;
 
-  /// No description provided for @verified.
-  ///
-  /// In en, this message translates to:
-  /// **'Verified'**
-  String get verified;
-
   /// No description provided for @verifiedEmail.
   ///
   /// In en, this message translates to:

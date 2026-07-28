@@ -3201,9 +3201,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get verificationStatus => 'Verification status';
 
   @override
-  String get verified => 'Verified';
-
-  @override
   String get verifiedEmail => 'Verified email';
 
   @override
