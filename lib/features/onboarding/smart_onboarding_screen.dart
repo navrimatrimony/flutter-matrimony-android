@@ -6,9 +6,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/api_client.dart';
+import '../../core/app_consent.dart';
 import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
 import '../../core/email_hint_service.dart';
+import '../../core/mobile_number.dart';
 import 'models/mobile_otp_models.dart';
 import 'models/onboarding_field_error_map.dart';
 import 'models/onboarding_bootstrap.dart';
@@ -70,8 +72,6 @@ class SmartOnboardingScreen extends StatefulWidget {
 }
 
 class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
-  static const String _consentVersion = '2026-06-24';
-
   /// How long the post-verification lookups may take before the member is let
   /// in regardless. See [_prepareAfterVerification].
   static const Duration _postVerificationBudget = Duration(seconds: 12);
@@ -122,7 +122,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _step = _SmartOnboardingStep.mobileOtp;
       final mobile = widget.initialMobile?.trim();
       if (mobile != null && mobile.isNotEmpty) {
-        _mobileController.text = _displayMobileDigits(mobile);
+        _mobileController.text = MobileNumberInput.normalize(mobile);
       }
     }
     _initialize();
@@ -731,24 +731,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
   }
 
-  String _normalizeMobile(String value) {
-    final digits = _displayMobileDigits(value);
-    return digits;
-  }
-
-  String _displayMobileDigits(String value) {
-    var digits = value.replaceAll(RegExp(r'\D'), '');
-    if (digits.length == 12 && digits.startsWith('91')) {
-      digits = digits.substring(2);
-    }
-    if (digits.length > 10) {
-      digits = digits.substring(digits.length - 10);
-    }
-    return digits;
-  }
-
   String _maskedMobile() {
-    final mobile = _normalizeMobile(_mobileController.text);
+    final mobile = MobileNumberInput.normalize(_mobileController.text);
     if (mobile.length < 4) return '';
     return '******${mobile.substring(mobile.length - 4)}';
   }
@@ -813,7 +797,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   }
 
   Future<void> _sendOtp() async {
-    final mobile = _normalizeMobile(_mobileController.text);
+    final mobile = MobileNumberInput.normalize(_mobileController.text);
     if (mobile.length != 10) {
       setState(() {
         _error = appText.enterAValid10DigitMobile;
@@ -838,8 +822,8 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         locale: _localeCode,
         termsAccepted: true,
         privacyAccepted: true,
-        termsVersion: _consentVersion,
-        privacyVersion: _consentVersion,
+        termsVersion: AppConsent.version,
+        privacyVersion: AppConsent.version,
         whatsappAlertsOptIn: _whatsappAlertsOptIn,
       );
     } catch (error) {
@@ -946,7 +930,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   Future<void> _verifyOtp({bool autoTriggered = false}) async {
     if (_loading || _otpAutoAdvancePending) return;
     _otpAutoVerifyTimer?.cancel();
-    final mobile = _normalizeMobile(_mobileController.text);
+    final mobile = MobileNumberInput.normalize(_mobileController.text);
     final challengeId = _otpChallenge?.challengeId;
     final otp = _otpController.text.trim();
 
@@ -3318,7 +3302,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   Widget _buildOtpVerificationStep(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    final mobile = _normalizeMobile(_mobileController.text);
+    final mobile = MobileNumberInput.normalize(_mobileController.text);
     final debugOtp = _otpChallenge?.debugOtp;
     final debugOtpAvailable = debugOtp != null && debugOtp.length == 6;
 
