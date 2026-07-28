@@ -2972,6 +2972,162 @@ abstract class AppLocalizations {
   /// **'Use password instead'**
   String get loginUsePasswordInstead;
 
+  /// No description provided for @forgotPasswordLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgotPasswordLink;
+
+  /// No description provided for @forgotPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get forgotPasswordTitle;
+
+  /// No description provided for @forgotPasswordRequestSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your mobile number, email or username. We will email a reset link to the address on your account.'**
+  String get forgotPasswordRequestSubtitle;
+
+  /// No description provided for @forgotPasswordIdentifierLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile, email or username'**
+  String get forgotPasswordIdentifierLabel;
+
+  /// No description provided for @forgotPasswordSendLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get forgotPasswordSendLink;
+
+  /// No description provided for @forgotPasswordIdentifierMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your mobile number, email or username.'**
+  String get forgotPasswordIdentifierMissing;
+
+  /// No description provided for @forgotPasswordSendFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send the reset link. Please try again.'**
+  String get forgotPasswordSendFailed;
+
+  /// No description provided for @forgotPasswordRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Please wait a minute and try again.'**
+  String get forgotPasswordRateLimited;
+
+  /// No description provided for @forgotPasswordLinkSentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get forgotPasswordLinkSentTitle;
+
+  /// No description provided for @forgotPasswordLinkSentSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the reset link we emailed you, copy the full link and paste it below. The link stops working after 60 minutes.'**
+  String get forgotPasswordLinkSentSubtitle;
+
+  /// No description provided for @forgotPasswordResetStepSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the reset link from your email, then choose a new password.'**
+  String get forgotPasswordResetStepSubtitle;
+
+  /// No description provided for @forgotPasswordLinkLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste reset link'**
+  String get forgotPasswordLinkLabel;
+
+  /// No description provided for @forgotPasswordLinkHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Or paste only the token if you have it'**
+  String get forgotPasswordLinkHint;
+
+  /// No description provided for @forgotPasswordEmailLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Email on your account'**
+  String get forgotPasswordEmailLabel;
+
+  /// No description provided for @forgotPasswordNewPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'New password'**
+  String get forgotPasswordNewPasswordLabel;
+
+  /// No description provided for @forgotPasswordConfirmPasswordLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm new password'**
+  String get forgotPasswordConfirmPasswordLabel;
+
+  /// No description provided for @forgotPasswordSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get forgotPasswordSubmit;
+
+  /// No description provided for @forgotPasswordTokenMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste the reset link from your email.'**
+  String get forgotPasswordTokenMissing;
+
+  /// No description provided for @forgotPasswordEmailMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the email address on your account.'**
+  String get forgotPasswordEmailMissing;
+
+  /// No description provided for @forgotPasswordEmailInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address.'**
+  String get forgotPasswordEmailInvalid;
+
+  /// No description provided for @forgotPasswordTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters.'**
+  String get forgotPasswordTooShort;
+
+  /// No description provided for @forgotPasswordMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Both passwords must match.'**
+  String get forgotPasswordMismatch;
+
+  /// No description provided for @forgotPasswordResetFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reset the password. The link may have expired.'**
+  String get forgotPasswordResetFailed;
+
+  /// No description provided for @forgotPasswordResetDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Password changed. Sign in with your new password.'**
+  String get forgotPasswordResetDone;
+
+  /// No description provided for @forgotPasswordHaveLink.
+  ///
+  /// In en, this message translates to:
+  /// **'I already have the reset link'**
+  String get forgotPasswordHaveLink;
+
+  /// No description provided for @forgotPasswordBackToRequest.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the link again'**
+  String get forgotPasswordBackToRequest;
+
   /// No description provided for @loginWelcomeSubtitle.
   ///
   /// In en, this message translates to:

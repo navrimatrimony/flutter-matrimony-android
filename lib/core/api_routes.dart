@@ -5,6 +5,8 @@ class ApiRoutes {
   static const String register = '/register';
   static const String mobileOtpSend = '/auth/mobile-otp/send';
   static const String mobileOtpVerify = '/auth/mobile-otp/verify';
+  static const String passwordForgot = '/auth/password/forgot';
+  static const String passwordReset = '/auth/password/reset';
   static const String accountDetails = '/account/details';
   static const String accountEmailGoogle = '/account/email/google';
   static const String accountEmailOtpSend = '/account/email-otp/send';

@@ -2303,6 +2303,40 @@ class ApiClient {
     return data;
   }
 
+  /// Asks the server to email a password reset link.
+  ///
+  /// `login` takes a mobile number, an email address or a username —
+  /// `PasswordResetApiController::forgot` resolves all three down to the
+  /// account's email, and the link is always delivered by email. There is no
+  /// SMS path and no OTP: the reply carries no challenge id or correlation
+  /// key, only `success` and `message`.
+  static Future<Map<String, dynamic>> sendPasswordResetLink({
+    required String login,
+  }) {
+    return _postJson(ApiRoutes.passwordForgot, {'login': login.trim()});
+  }
+
+  /// Consumes the emailed reset token and sets a new password.
+  ///
+  /// Deliberately does not touch [authToken]: the server issues no session
+  /// here (`reset` returns only `success` and `message`), so a member always
+  /// signs in again afterwards. `email` must be the real email address — this
+  /// endpoint does not accept a mobile number, which is why the flow reads it
+  /// back out of the emailed link.
+  static Future<Map<String, dynamic>> resetPassword({
+    required String token,
+    required String email,
+    required String password,
+    required String passwordConfirmation,
+  }) {
+    return _postJson(ApiRoutes.passwordReset, {
+      'token': token.trim(),
+      'email': email.trim(),
+      'password': password,
+      'password_confirmation': passwordConfirmation,
+    });
+  }
+
   static Future<Map<String, dynamic>> register({
     required String name,
     required String email,

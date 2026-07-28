@@ -95,6 +95,78 @@ class AppStrings {
 
   static String get loginUsePasswordInstead => appText.loginUsePasswordInstead;
 
+  // Forgot / reset password. The backend has carried
+  // /auth/password/{forgot,reset} all along; these are the strings that finally
+  // give the member a way in. The flow is email-link based, not OTP — the
+  // server issues no challenge id, so nothing here mirrors the OTP screen.
+  static String get forgotPasswordLink => appText.forgotPasswordLink;
+
+  static String get forgotPasswordTitle => appText.forgotPasswordTitle;
+
+  static String get forgotPasswordRequestSubtitle =>
+      appText.forgotPasswordRequestSubtitle;
+
+  static String get forgotPasswordIdentifierLabel =>
+      appText.forgotPasswordIdentifierLabel;
+
+  static String get forgotPasswordSendLink => appText.forgotPasswordSendLink;
+
+  static String get forgotPasswordIdentifierMissing =>
+      appText.forgotPasswordIdentifierMissing;
+
+  static String get forgotPasswordSendFailed =>
+      appText.forgotPasswordSendFailed;
+
+  static String get forgotPasswordRateLimited =>
+      appText.forgotPasswordRateLimited;
+
+  static String get forgotPasswordLinkSentTitle =>
+      appText.forgotPasswordLinkSentTitle;
+
+  static String get forgotPasswordLinkSentSubtitle =>
+      appText.forgotPasswordLinkSentSubtitle;
+
+  static String get forgotPasswordResetStepSubtitle =>
+      appText.forgotPasswordResetStepSubtitle;
+
+  static String get forgotPasswordLinkLabel => appText.forgotPasswordLinkLabel;
+
+  static String get forgotPasswordLinkHint => appText.forgotPasswordLinkHint;
+
+  static String get forgotPasswordEmailLabel =>
+      appText.forgotPasswordEmailLabel;
+
+  static String get forgotPasswordNewPasswordLabel =>
+      appText.forgotPasswordNewPasswordLabel;
+
+  static String get forgotPasswordConfirmPasswordLabel =>
+      appText.forgotPasswordConfirmPasswordLabel;
+
+  static String get forgotPasswordSubmit => appText.forgotPasswordSubmit;
+
+  static String get forgotPasswordTokenMissing =>
+      appText.forgotPasswordTokenMissing;
+
+  static String get forgotPasswordEmailMissing =>
+      appText.forgotPasswordEmailMissing;
+
+  static String get forgotPasswordEmailInvalid =>
+      appText.forgotPasswordEmailInvalid;
+
+  static String get forgotPasswordTooShort => appText.forgotPasswordTooShort;
+
+  static String get forgotPasswordMismatch => appText.forgotPasswordMismatch;
+
+  static String get forgotPasswordResetFailed =>
+      appText.forgotPasswordResetFailed;
+
+  static String get forgotPasswordResetDone => appText.forgotPasswordResetDone;
+
+  static String get forgotPasswordHaveLink => appText.forgotPasswordHaveLink;
+
+  static String get forgotPasswordBackToRequest =>
+      appText.forgotPasswordBackToRequest;
+
   static String get loginMobileLabel => appText.mobileNumber2;
 
   static String get loginOtpLabel => appText.enterThe6DigitOtp2;

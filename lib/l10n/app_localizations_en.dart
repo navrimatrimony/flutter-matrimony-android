@@ -1554,6 +1554,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginUsePasswordInstead => 'Use password instead';
 
   @override
+  String get forgotPasswordLink => 'Forgot password?';
+
+  @override
+  String get forgotPasswordTitle => 'Reset password';
+
+  @override
+  String get forgotPasswordRequestSubtitle =>
+      'Enter your mobile number, email or username. We will email a reset link to the address on your account.';
+
+  @override
+  String get forgotPasswordIdentifierLabel => 'Mobile, email or username';
+
+  @override
+  String get forgotPasswordSendLink => 'Send reset link';
+
+  @override
+  String get forgotPasswordIdentifierMissing =>
+      'Enter your mobile number, email or username.';
+
+  @override
+  String get forgotPasswordSendFailed =>
+      'Could not send the reset link. Please try again.';
+
+  @override
+  String get forgotPasswordRateLimited =>
+      'Too many attempts. Please wait a minute and try again.';
+
+  @override
+  String get forgotPasswordLinkSentTitle => 'Check your email';
+
+  @override
+  String get forgotPasswordLinkSentSubtitle =>
+      'Open the reset link we emailed you, copy the full link and paste it below. The link stops working after 60 minutes.';
+
+  @override
+  String get forgotPasswordResetStepSubtitle =>
+      'Paste the reset link from your email, then choose a new password.';
+
+  @override
+  String get forgotPasswordLinkLabel => 'Paste reset link';
+
+  @override
+  String get forgotPasswordLinkHint => 'Or paste only the token if you have it';
+
+  @override
+  String get forgotPasswordEmailLabel => 'Email on your account';
+
+  @override
+  String get forgotPasswordNewPasswordLabel => 'New password';
+
+  @override
+  String get forgotPasswordConfirmPasswordLabel => 'Confirm new password';
+
+  @override
+  String get forgotPasswordSubmit => 'Reset password';
+
+  @override
+  String get forgotPasswordTokenMissing =>
+      'Paste the reset link from your email.';
+
+  @override
+  String get forgotPasswordEmailMissing =>
+      'Enter the email address on your account.';
+
+  @override
+  String get forgotPasswordEmailInvalid => 'Enter a valid email address.';
+
+  @override
+  String get forgotPasswordTooShort => 'Use at least 8 characters.';
+
+  @override
+  String get forgotPasswordMismatch => 'Both passwords must match.';
+
+  @override
+  String get forgotPasswordResetFailed =>
+      'Could not reset the password. The link may have expired.';
+
+  @override
+  String get forgotPasswordResetDone =>
+      'Password changed. Sign in with your new password.';
+
+  @override
+  String get forgotPasswordHaveLink => 'I already have the reset link';
+
+  @override
+  String get forgotPasswordBackToRequest => 'Send the link again';
+
+  @override
   String get loginWelcomeSubtitle =>
       'Continue your matrimony journey securely.';
 

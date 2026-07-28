@@ -10,6 +10,7 @@ import 'core/notification_permission_service.dart';
 import 'core/push_notification_service.dart';
 import 'features/auth/language_choice_screen.dart';
 import 'features/auth/landing_screen.dart';
+import 'features/auth/forgot_password_screen.dart';
 import 'features/auth/login_screen.dart';
 import 'features/biodata/biodata_intake_lab_screen.dart';
 import 'features/biodata/biodata_export_screen.dart';
@@ -150,6 +151,7 @@ class _MyAppState extends State<MyApp> {
         '/language': (context) => const LanguageChoiceScreen(),
         '/landing': (context) => const LandingScreen(),
         '/login': (context) => const LoginScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
         '/register': (context) => const LandingScreen(),
         '/home': (context) => _authenticatedScreen(const HomeScreen()),
         '/matches': (context) =>

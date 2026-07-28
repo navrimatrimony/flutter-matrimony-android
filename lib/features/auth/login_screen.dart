@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/api_client.dart';
+import '../../core/api_error_text.dart';
 import '../../core/app_consent.dart';
 import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
@@ -427,33 +428,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
   /// The server words its own failures (wrong OTP, expired challenge, attempt
   /// limit, rate limit). Prefer that wording; fall back only when it sends none.
-  String _messageOf(Map<String, dynamic> data, String fallback) {
-    final message = data['message']?.toString().trim();
-    if (message != null && message.isNotEmpty) return message;
+  /// Shared with the forgot-password flow, which reads the same envelopes.
+  String _messageOf(Map<String, dynamic> data, String fallback) =>
+      apiErrorText(data, fallback);
 
-    final errors = data['errors'];
-    if (errors is Map) {
-      for (final value in errors.values) {
-        if (value is List && value.isNotEmpty) {
-          final first = value.first?.toString().trim();
-          if (first != null && first.isNotEmpty) return first;
-        }
-        final text = value?.toString().trim();
-        if (text != null && text.isNotEmpty) return text;
-      }
-    }
-
-    return fallback;
-  }
-
-  /// A thrown request means the server was never reached — a dropped socket, a
-  /// timeout, no signal. The member gets told that in their own language; the
-  /// raw exception (`SocketException: Failed host lookup…`) is never useful to
-  /// a rural family and is not shown.
-  String _networkMessage(Object error) {
-    debugPrint('Login request failed: $error');
-    return AppStrings.loginNetworkError;
-  }
+  String _networkMessage(Object error) =>
+      networkErrorText(error, label: 'Login request');
 
   // ---------------------------------------------------------------------------
   // UI
@@ -642,6 +622,21 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : AppStrings.loginUseOtpInstead,
                             ),
                           ),
+                          // Only offered beside the password door. An OTP
+                          // member has no password to have forgotten, and
+                          // pointing them at an email reset would be a dead end
+                          // — the reset link only ever goes to an email
+                          // address, which an OTP-only account may not have.
+                          if (_method == _LoginMethod.password)
+                            TextButton(
+                              onPressed: isLoading
+                                  ? null
+                                  : () => Navigator.pushNamed(
+                                      context,
+                                      '/forgot-password',
+                                    ),
+                              child: Text(AppStrings.forgotPasswordLink),
+                            ),
                           if (_method == _LoginMethod.otp)
                             _ConsentFooter(theme: theme),
                           TextButton(

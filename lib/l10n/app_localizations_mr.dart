@@ -1546,6 +1546,93 @@ class AppLocalizationsMr extends AppLocalizations {
   String get loginUsePasswordInstead => 'त्याऐवजी पासवर्ड वापरा';
 
   @override
+  String get forgotPasswordLink => 'पासवर्ड विसरलात?';
+
+  @override
+  String get forgotPasswordTitle => 'पासवर्ड रीसेट करा';
+
+  @override
+  String get forgotPasswordRequestSubtitle =>
+      'तुमचा मोबाइल नंबर, ईमेल किंवा वापरकर्तानाव टाका. तुमच्या खात्यावरील ईमेल पत्त्यावर आम्ही रीसेट लिंक पाठवू.';
+
+  @override
+  String get forgotPasswordIdentifierLabel => 'मोबाइल, ईमेल किंवा वापरकर्तानाव';
+
+  @override
+  String get forgotPasswordSendLink => 'रीसेट लिंक पाठवा';
+
+  @override
+  String get forgotPasswordIdentifierMissing =>
+      'तुमचा मोबाइल नंबर, ईमेल किंवा वापरकर्तानाव टाका.';
+
+  @override
+  String get forgotPasswordSendFailed =>
+      'रीसेट लिंक पाठवता आली नाही. कृपया पुन्हा प्रयत्न करा.';
+
+  @override
+  String get forgotPasswordRateLimited =>
+      'खूप वेळा प्रयत्न झाले. कृपया एक मिनिट थांबून पुन्हा प्रयत्न करा.';
+
+  @override
+  String get forgotPasswordLinkSentTitle => 'तुमचा ईमेल तपासा';
+
+  @override
+  String get forgotPasswordLinkSentSubtitle =>
+      'आम्ही पाठवलेली रीसेट लिंक उघडा, ती पूर्ण लिंक कॉपी करा आणि खाली पेस्ट करा. ही लिंक 60 मिनिटांनंतर चालणार नाही.';
+
+  @override
+  String get forgotPasswordResetStepSubtitle =>
+      'ईमेलमधील रीसेट लिंक पेस्ट करा आणि नवीन पासवर्ड निवडा.';
+
+  @override
+  String get forgotPasswordLinkLabel => 'रीसेट लिंक पेस्ट करा';
+
+  @override
+  String get forgotPasswordLinkHint => 'किंवा फक्त टोकन असल्यास तेच पेस्ट करा';
+
+  @override
+  String get forgotPasswordEmailLabel => 'तुमच्या खात्यावरील ईमेल';
+
+  @override
+  String get forgotPasswordNewPasswordLabel => 'नवीन पासवर्ड';
+
+  @override
+  String get forgotPasswordConfirmPasswordLabel => 'नवीन पासवर्ड पुन्हा टाका';
+
+  @override
+  String get forgotPasswordSubmit => 'पासवर्ड रीसेट करा';
+
+  @override
+  String get forgotPasswordTokenMissing => 'ईमेलमधील रीसेट लिंक पेस्ट करा.';
+
+  @override
+  String get forgotPasswordEmailMissing =>
+      'तुमच्या खात्यावरील ईमेल पत्ता टाका.';
+
+  @override
+  String get forgotPasswordEmailInvalid => 'योग्य ईमेल पत्ता टाका.';
+
+  @override
+  String get forgotPasswordTooShort => 'किमान 8 अक्षरे वापरा.';
+
+  @override
+  String get forgotPasswordMismatch => 'दोन्ही पासवर्ड सारखे असावेत.';
+
+  @override
+  String get forgotPasswordResetFailed =>
+      'पासवर्ड रीसेट करता आला नाही. लिंकची मुदत संपली असावी.';
+
+  @override
+  String get forgotPasswordResetDone =>
+      'पासवर्ड बदलला. नवीन पासवर्डने लॉगिन करा.';
+
+  @override
+  String get forgotPasswordHaveLink => 'माझ्याकडे रीसेट लिंक आधीच आहे';
+
+  @override
+  String get forgotPasswordBackToRequest => 'लिंक पुन्हा पाठवा';
+
+  @override
   String get loginWelcomeSubtitle =>
       'तुमच्या स्थळांचा प्रवास सुरक्षितपणे पुढे सुरू करा.';
 
