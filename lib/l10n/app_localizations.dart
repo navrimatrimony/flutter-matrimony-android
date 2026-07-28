@@ -9217,6 +9217,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Height up to {max}'**
   String heightPreferenceMax(String max);
+
+  /// No description provided for @biodataSourceFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Biodata'**
+  String get biodataSourceFallback;
+
+  /// No description provided for @fieldFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Field'**
+  String get fieldFallback;
+
+  /// No description provided for @parsingFailedDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Parsing failed: {detail}'**
+  String parsingFailedDetail(String detail);
+
+  /// No description provided for @normalizedBiodataDraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Normalized Biodata Draft'**
+  String get normalizedBiodataDraft;
+
+  /// No description provided for @rawNormalizedDraftJson.
+  ///
+  /// In en, this message translates to:
+  /// **'Raw normalized draft JSON'**
+  String get rawNormalizedDraftJson;
+
+  /// No description provided for @missingOrReviewNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing / review needed'**
+  String get missingOrReviewNeeded;
+
+  /// No description provided for @parsedJsonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Parsed JSON'**
+  String get parsedJsonTitle;
+
+  /// No description provided for @ocrDiagnostics.
+  ///
+  /// In en, this message translates to:
+  /// **'OCR preprocessing diagnostics'**
+  String get ocrDiagnostics;
 }
 
 class _AppLocalizationsDelegate

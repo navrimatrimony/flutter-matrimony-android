@@ -8,6 +8,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
+import '../../core/api_error_text.dart';
 import '../../core/app_strings.dart';
 import '../../core/app_language.dart';
 
@@ -219,7 +220,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       });
     } catch (error) {
       _setProcessingError(
-        '${AppStrings.biodataIntakeProcessFailed} ${error.toString()}',
+        failureText(AppStrings.biodataIntakeProcessFailed, error),
       );
     } finally {
       _stopProcessing();
@@ -287,7 +288,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       });
     } catch (error) {
       _setProcessingError(
-        '${AppStrings.biodataIntakeProcessFailed} ${error.toString()}',
+        failureText(AppStrings.biodataIntakeProcessFailed, error),
       );
     } finally {
       _stopProcessing();
@@ -592,7 +593,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     } catch (error) {
       _showSnackBar(
-        '${AppStrings.biodataIntakeSaveFailed} ${error.toString()}',
+        failureText(AppStrings.biodataIntakeSaveFailed, error),
       );
     } finally {
       if (mounted) {
@@ -654,7 +655,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       _showSnackBar(AppStrings.biodataIntakeReviewSaveSuccess);
     } catch (error) {
       _showSnackBar(
-        '${AppStrings.biodataIntakeReviewSaveFailed} ${error.toString()}',
+        failureText(AppStrings.biodataIntakeReviewSaveFailed, error),
       );
     } finally {
       if (mounted) {
@@ -2199,7 +2200,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : IconButton(
-              tooltip: _text('Refresh', 'Refresh'),
+              tooltip: appText.plansRefresh,
               onPressed: _loadIntakes,
               icon: const Icon(Icons.refresh),
             ),
@@ -2220,7 +2221,8 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     final id = _intValue(row['id']);
     final parseStatus = _stringValue(row['parse_status']) ?? '-';
     final approved = _boolValue(row['approved_by_user']);
-    final source = _stringValue(row['source_label']) ?? 'Biodata';
+    final source =
+        _stringValue(row['source_label']) ?? appText.biodataSourceFallback;
     final parsedAt = _stringValue(row['parsed_at']);
     return InkWell(
       onTap: id == null ? null : () => _openExistingIntake(row),
@@ -2260,7 +2262,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
                   const SizedBox(height: 2),
                   Text(
                     approved
-                        ? _text('Approved', 'Approved')
+                        ? appText.approved
                         : '$parseStatus${parsedAt == null ? '' : ' · $parsedAt'}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -2706,7 +2708,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
     final sourceLeaf = _lastNonIndexedPathPart(sourcePath);
     final labelKey = key ?? sourceLeaf;
     final score = _doubleValue(signal['score']);
-    final label = _fieldLabelFromKey(labelKey) ?? labelKey ?? 'Field';
+    final label = _fieldLabelFromKey(labelKey) ?? labelKey ?? appText.fieldFallback;
     return score == null ? label : '$label ${(score * 100).round()}%';
   }
 
@@ -2762,7 +2764,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
       return AppStrings.biodataIntakeProcessFailed;
     }
 
-    return _text('Parsing failed: $detail', 'Parsing failed: $detail');
+    return appText.parsingFailedDetail(detail);
   }
 
   Widget _rawTextPanel() {
@@ -2846,7 +2848,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
         .toList();
 
     return _panel(
-      title: _text('Normalized Biodata Draft', 'Normalized Biodata Draft'),
+      title: appText.normalizedBiodataDraft,
       icon: Icons.fact_check_outlined,
       collapseKey: 'normalized_draft',
       child: Column(
@@ -2891,7 +2893,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
               tilePadding: EdgeInsets.zero,
               childrenPadding: const EdgeInsets.only(bottom: 8),
               title: Text(
-                _text('Raw normalized draft JSON', 'Raw normalized draft JSON'),
+                appText.rawNormalizedDraftJson,
                 style: const TextStyle(fontWeight: FontWeight.w900),
               ),
               children: [
@@ -2920,7 +2922,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
 
   Widget _normalizedSection(String key, List<Map<String, dynamic>> rows) {
     final title = key == 'review_needed'
-        ? _text('Missing / review needed', 'Missing / review needed')
+        ? appText.missingOrReviewNeeded
         : _sectionLabelFromKey(key) ?? _fieldLabelFromKey(key) ?? key;
     return ExpansionTile(
       initiallyExpanded: true,
@@ -2943,7 +2945,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
 
   Widget _parsedJsonPanel() {
     return _panel(
-      title: _text('Parsed JSON', 'Parsed JSON'),
+      title: appText.parsedJsonTitle,
       icon: Icons.data_object_outlined,
       collapseKey: 'parsed_json',
       child: Column(
@@ -2979,7 +2981,7 @@ class _BiodataIntakeScreenState extends State<BiodataIntakeScreen> {
 
   Widget _debugPanel() {
     return _panel(
-      title: _text('OCR preprocessing diagnostics', 'OCR diagnostics'),
+      title: appText.ocrDiagnostics,
       icon: Icons.bug_report_outlined,
       collapseKey: 'debug',
       child: Column(

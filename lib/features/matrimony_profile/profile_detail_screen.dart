@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/api_client.dart';
+import '../../core/api_error_text.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_network_image.dart';
 import '../../core/profile_photo_hero.dart';
@@ -2774,7 +2775,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
       setState(() {
         _isChatStartInFlight = false;
       });
-      _showSnackBar('${AppStrings.chatOpenFailed} ${e.toString()}', Colors.red);
+      _showSnackBar(failureText(AppStrings.chatOpenFailed, e), Colors.red);
     }
   }
 

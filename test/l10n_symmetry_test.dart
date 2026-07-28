@@ -4,10 +4,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:flutter_matrimony_android/core/api_client.dart';
 import 'package:flutter_matrimony_android/core/app_language.dart';
 import 'package:flutter_matrimony_android/core/app_storage.dart';
 import 'package:flutter_matrimony_android/l10n/app_localizations.dart';
 import 'package:flutter_matrimony_android/features/matrimony_profile/profile_detail_screen.dart';
+import 'package:flutter_matrimony_android/features/matrimony_profile/view_profile_screen.dart';
 
 /// Guards the symmetry rule: a Marathi user sees only Marathi, an English user
 /// sees only English. `l10n_source_test.dart` already guards the Marathi side
@@ -185,4 +187,114 @@ void main() {
           '\n${offenders.join('\n')}',
     );
   });
+
+  testWidgets('own profile renders no English labels in Marathi', (
+    WidgetTester tester,
+  ) async {
+    // The mirror of the test above, and the one that was missing: until it
+    // existed, `Text('Family Details')` written today shipped untested and a
+    // Marathi member read her own profile in English.
+    //
+    // Every seeded value is Marathi or a number on purpose, so any Latin word
+    // left on screen can only have come from a hardcoded label.
+    AppStorage.instance = AppStorage.memory();
+    setAppLanguage(AppLanguage.marathi);
+    ApiClient.currentUserProfile = <String, dynamic>{
+      'id': 4242,
+      'full_name': 'आशा पाटील',
+      'gender_label': 'स्त्री',
+      'marital_status_key': 'unmarried',
+      'marital_status_label': 'अविवाहित',
+      'mother_tongue_label': 'मराठी',
+      'complexion_label': 'गोरा',
+      'blood_group_label': 'ओ पॉझिटिव्ह',
+      'diet_label': 'शाकाहारी',
+      'occupation_master_label': 'शिक्षिका',
+      'company_name': 'जिल्हा परिषद',
+      'father_name': 'रामराव पाटील',
+      'mother_name': 'सुनीता पाटील',
+      'family_type_label': 'एकत्र कुटुंब',
+      'family_status': 'मध्यमवर्गीय',
+      'rashi_label': 'मेष',
+      'nakshatra_label': 'अश्विनी',
+      'gotra': 'कश्यप',
+      'property_details': 'शेती',
+      'other_relatives_text': 'काका',
+      'narrative_about_me': 'माझ्याबद्दल थोडक्यात.',
+      'siblings': const <dynamic>[],
+      'preferred_age_min': 24,
+      'preferred_age_max': 30,
+    };
+    addTearDown(() {
+      ApiClient.currentUserProfile = null;
+      setAppLanguage(AppLanguage.english);
+    });
+
+    await tester.pumpWidget(const MaterialApp(home: ViewProfileScreen()));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    final latinWord = RegExp('[A-Za-z]{2,}');
+    final offenders = <String>[];
+    for (final text in tester.widgetList<Text>(find.byType(Text))) {
+      final value = text.data;
+      if (value == null) continue;
+      final words = latinWord
+          .allMatches(value)
+          .map((m) => m.group(0)!)
+          .where((word) => !latinAllowed.contains(word))
+          .toList();
+      if (words.isNotEmpty) offenders.add('$value  ->  ${words.join(', ')}');
+    }
+
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'English left on the Marathi My Profile screen:'
+          '\n${offenders.join('\n')}',
+    );
+  });
+
+  test('bilingual helpers are never handed the same string twice', () {
+    // `_readinessCopy('Family Details', 'Family Details')` type-checks, reads
+    // as translated, and returns English forever. Eight dashboard rows and
+    // seven filter labels shipped that way, so the shape is worth a guard of
+    // its own — the helper cannot detect it, only the source can.
+    final call = RegExp(
+      r"_(?:t|text|copy|readinessCopy)\(\s*'([^'\\]*)'\s*,\s*'([^'\\]*)'\s*\)",
+    );
+    final latinWord = RegExp('[A-Za-z]{2,}');
+
+    final offenders = <String>[];
+    for (final entity in Directory('lib').listSync(recursive: true)) {
+      if (entity is! File || !entity.path.endsWith('.dart')) continue;
+      final source = entity.readAsStringSync();
+      for (final match in call.allMatches(source)) {
+        // `$interpolations` are variable names, not copy — '₹$value' says
+        // nothing in either language and must not count as English.
+        final marathi = match
+            .group(2)!
+            .replaceAll(RegExp(r'\$\{[^}]*\}|\$\w+'), '');
+        if (devanagari.hasMatch(marathi)) continue;
+        if (!latinWord.hasMatch(marathi)) continue; // '₹1200', '5/7' and such
+        final line = '\n'.allMatches(source.substring(0, match.start)).length + 1;
+        offenders.add('${entity.path}:$line  ${match.group(0)}');
+      }
+    }
+
+    expect(
+      offenders,
+      isEmpty,
+      reason: 'English passed as the Marathi argument:\n${offenders.join('\n')}',
+    );
+  });
 }
+
+/// Latin runs a Marathi screen may legitimately show: brands and initialisms
+/// that name themselves, plus the unit tokens the height/weight formatters
+/// emit. Everything else is untranslated copy.
+const latinAllowed = <String>{
+  'UPI', 'QR', 'PayU', 'PayUMoney', 'OTP', 'SMS', 'WhatsApp', 'Google',
+  'PDF', 'JPG', 'SIM', 'CRM', 'KYC', 'EN', 'ID', 'OK', 'JSON', 'OCR',
+  'cm', 'kg', 'ft', 'in',
+};

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api_error_text.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
@@ -58,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = '${AppStrings.settingsLoadFailed} ${e.toString()}';
+        _errorMessage = failureText(AppStrings.settingsLoadFailed, e);
         _isLoading = false;
       });
     }

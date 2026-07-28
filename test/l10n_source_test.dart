@@ -15,7 +15,7 @@ void main() {
   /// writes in Latin. Anything outside this list is untranslated copy.
   const properNouns = {
     'UPI', 'QR', 'PayU', 'PayUMoney', 'OTP', 'SMS', 'WhatsApp', 'Google',
-    'PDF', 'JPG', 'SIM', 'CRM', 'KYC', 'EN', 'ID', 'App', 'OK',
+    'PDF', 'JPG', 'SIM', 'CRM', 'KYC', 'EN', 'ID', 'OK', 'JSON', 'OCR',
   };
 
   final entries = (jsonDecode(File('lib/l10n/app_mr.arb').readAsStringSync())

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
+import '../../core/api_error_text.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/app_language.dart';
@@ -91,7 +92,7 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _error = '${AppStrings.plansLoadFailed} $error';
+        _error = failureText(AppStrings.plansLoadFailed, error);
       });
     } finally {
       if (mounted) {
@@ -142,7 +143,7 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
       }
     } catch (error) {
       if (!mounted) return;
-      _showSnackBar('${AppStrings.plansLoadFailed} $error');
+      _showSnackBar(failureText(AppStrings.plansLoadFailed, error));
     } finally {
       if (mounted) {
         setState(() {

@@ -241,7 +241,7 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get biodataIntakeIntroSubtitle =>
-      'स्पष्ट फोटो किंवा स्क्रीनशॉट वापरा. App मजकूर वाचून पुढच्या स्क्रीनवर बदलता येणारी माहिती दाखवेल.';
+      'स्पष्ट फोटो किंवा स्क्रीनशॉट वापरा. अ‍ॅप मजकूर वाचून पुढच्या स्क्रीनवर बदलता येणारी माहिती दाखवेल.';
 
   @override
   String get biodataIntakeIntroTitle => 'बायोडाटा फोटो निवडा';
@@ -419,7 +419,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get chatAll => 'सर्व';
 
   @override
-  String get chatComingSoon => 'संवाद सुविधा लवकरच App मध्ये येईल.';
+  String get chatComingSoon => 'संवाद सुविधा लवकरच अ‍ॅपमध्ये येईल.';
 
   @override
   String get chatEmpty => 'अजून कोणताही संवाद नाही.';
@@ -1361,7 +1361,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get languageMenu => 'भाषा';
 
   @override
-  String get languageSwitchSubtitle => 'App भाषा बदला';
+  String get languageSwitchSubtitle => 'अ‍ॅपची भाषा बदला';
 
   @override
   String get leftRight => 'डावी / उजवी';
@@ -4996,4 +4996,30 @@ class AppLocalizationsMr extends AppLocalizations {
   String heightPreferenceMax(String max) {
     return 'उंची $max पर्यंत';
   }
+
+  @override
+  String get biodataSourceFallback => 'बायोडाटा';
+
+  @override
+  String get fieldFallback => 'माहितीचा भाग';
+
+  @override
+  String parsingFailedDetail(String detail) {
+    return 'वाचता आले नाही: $detail';
+  }
+
+  @override
+  String get normalizedBiodataDraft => 'तयार झालेला बायोडाटा मसुदा';
+
+  @override
+  String get rawNormalizedDraftJson => 'मसुद्याचा मूळ JSON';
+
+  @override
+  String get missingOrReviewNeeded => 'बाकी / तपासणी हवी';
+
+  @override
+  String get parsedJsonTitle => 'वाचलेला JSON';
+
+  @override
+  String get ocrDiagnostics => 'OCR तपासणीची माहिती';
 }

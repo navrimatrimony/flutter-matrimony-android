@@ -2036,5 +2036,20 @@
         "type": "String"
       }
     }
-  }
+  },
+  "biodataSourceFallback": "Biodata",
+  "fieldFallback": "Field",
+  "parsingFailedDetail": "Parsing failed: {detail}",
+  "@parsingFailedDetail": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "normalizedBiodataDraft": "Normalized Biodata Draft",
+  "rawNormalizedDraftJson": "Raw normalized draft JSON",
+  "missingOrReviewNeeded": "Missing / review needed",
+  "parsedJsonTitle": "Parsed JSON",
+  "ocrDiagnostics": "OCR preprocessing diagnostics"
 }

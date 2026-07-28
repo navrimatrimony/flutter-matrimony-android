@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/app_language.dart';
 import '../models/onboarding_option.dart';
 import '../models/paged_lookup_response.dart';
 import 'smart_picker_panel.dart';
@@ -148,7 +149,7 @@ class OnboardingPickerField extends StatelessWidget {
                 },
               )
             : Text(
-                placeholder ?? 'Select',
+                placeholder ?? appText.select,
                 style: TextStyle(color: Colors.grey.shade700),
               ),
       ),

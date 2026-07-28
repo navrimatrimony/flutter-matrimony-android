@@ -614,7 +614,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
                   if (_fileInfo != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Selected file: $_fileInfo',
+                      appText.selectedFileName(_fileInfo!),
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),

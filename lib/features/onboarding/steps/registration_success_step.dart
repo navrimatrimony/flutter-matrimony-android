@@ -603,7 +603,7 @@ class _OtpBox extends StatelessWidget {
             if (debugOtp != null) ...[
               const SizedBox(height: 6),
               Text(
-                'Debug OTP: $debugOtp',
+                appText.testOtpLabel(debugOtp!),
                 style: TextStyle(
                   color: colors.primary,
                   fontWeight: FontWeight.w800,

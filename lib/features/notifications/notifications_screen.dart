@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api_error_text.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
@@ -68,7 +69,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = '${AppStrings.notificationsLoadFailed} $error';
+        _errorMessage = failureText(AppStrings.notificationsLoadFailed, error);
         _loading = false;
       });
     }
@@ -105,7 +106,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       }
     } catch (error) {
       if (!mounted) return;
-      _showSnackBar('${AppStrings.notificationsLoadFailed} $error');
+      _showSnackBar(failureText(AppStrings.notificationsLoadFailed, error));
     } finally {
       if (mounted) {
         setState(() {
@@ -146,7 +147,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         }
       } catch (error) {
         if (!mounted) return;
-        _showSnackBar('${AppStrings.notificationsLoadFailed} $error');
+        _showSnackBar(failureText(AppStrings.notificationsLoadFailed, error));
         return;
       } finally {
         if (mounted) {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api_error_text.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
@@ -120,7 +121,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _listError = '${AppStrings.chatLoadFailed} $error';
+        _listError = failureText(AppStrings.chatLoadFailed, error);
         _loadingList = false;
       });
     }
@@ -182,7 +183,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _threadError = '${AppStrings.chatOpenFailed} $error';
+        _threadError = failureText(AppStrings.chatOpenFailed, error);
         _loadingThread = false;
       });
     }
@@ -272,7 +273,7 @@ class _ChatScreenState extends State<ChatScreen> with WidgetsBindingObserver {
       setState(() {
         _sending = false;
       });
-      _showSnackBar('${AppStrings.chatSendFailed} $error');
+      _showSnackBar(failureText(AppStrings.chatSendFailed, error));
     }
   }
 

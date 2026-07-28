@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
+import '../../core/api_error_text.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/app_language.dart';
@@ -64,7 +65,7 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
       if (!mounted) return;
       setState(() {
         _errorMessage =
-            '${AppStrings.biodataExportLoadFailed} ${error.toString()}';
+            failureText(AppStrings.biodataExportLoadFailed, error);
         _isLoading = false;
       });
     }
@@ -148,7 +149,7 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
       }
     } catch (error) {
       if (!mounted) return;
-      _showSnackBar('${AppStrings.biodataExportFailed} ${error.toString()}');
+      _showSnackBar(failureText(AppStrings.biodataExportFailed, error));
     } finally {
       if (mounted) {
         setState(() {

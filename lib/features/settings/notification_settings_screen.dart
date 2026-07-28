@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api_error_text.dart';
 import '../../core/api_client.dart';
 import '../../core/app_language.dart';
 import '../../core/app_loading.dart';
@@ -99,7 +100,7 @@ class _NotificationSettingsScreenState extends State<NotificationSettingsScreen>
     } catch (error) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = '${AppStrings.settingsLoadFailed} $error';
+        _errorMessage = failureText(AppStrings.settingsLoadFailed, error);
         _loading = false;
       });
     }

@@ -47,3 +47,15 @@ String networkErrorText(Object error, {String label = 'Request'}) {
   debugPrint('$label failed: $error');
   return AppStrings.loginNetworkError;
 }
+
+/// The same rule for a caught exception that already has a localised heading.
+///
+/// Screens used to render `'$marathiPrefix $error'`, which put a raw English
+/// `Exception: Auth token is missing. User not logged in.` on the end of a
+/// Marathi sentence. The exception text is written for us, not for a rural
+/// family, and there is nothing in it they could act on — so it goes to the
+/// log and the member reads the heading alone.
+String failureText(String localizedMessage, Object error) {
+  debugPrint('$localizedMessage: $error');
+  return localizedMessage;
+}

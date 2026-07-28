@@ -5015,4 +5015,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String heightPreferenceMax(String max) {
     return 'Height up to $max';
   }
+
+  @override
+  String get biodataSourceFallback => 'Biodata';
+
+  @override
+  String get fieldFallback => 'Field';
+
+  @override
+  String parsingFailedDetail(String detail) {
+    return 'Parsing failed: $detail';
+  }
+
+  @override
+  String get normalizedBiodataDraft => 'Normalized Biodata Draft';
+
+  @override
+  String get rawNormalizedDraftJson => 'Raw normalized draft JSON';
+
+  @override
+  String get missingOrReviewNeeded => 'Missing / review needed';
+
+  @override
+  String get parsedJsonTitle => 'Parsed JSON';
+
+  @override
+  String get ocrDiagnostics => 'OCR preprocessing diagnostics';
 }

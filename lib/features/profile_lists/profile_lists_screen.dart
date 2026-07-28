@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/api_error_text.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
@@ -75,7 +76,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = '${AppStrings.profileListsLoadFailed} ${e.toString()}';
+        _errorMessage = failureText(AppStrings.profileListsLoadFailed, e);
         _isLoading = false;
       });
     }
