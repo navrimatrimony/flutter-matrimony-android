@@ -11,6 +11,7 @@ import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
 import '../../core/email_hint_service.dart';
 import '../../core/mobile_number.dart';
+import '../../main.dart';
 import 'models/mobile_otp_models.dart';
 import 'models/onboarding_field_error_map.dart';
 import 'models/onboarding_bootstrap.dart';
@@ -2076,11 +2077,18 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
   }
 
+  /// The single way out of this screen and into the app, for both a brand-new
+  /// member and one who signed in with a one-time code.
+  ///
+  /// This used to be `pushReplacementNamed`, which swaps only the top route.
+  /// The landing screen PUSHES this screen, so the stack ended up as
+  /// `[/landing, /matches]` — and a signed-in member pressing Back once on the
+  /// match list was dropped onto the signed-out Register/Login page.
   Future<void> _finishOnboardingAfterPasswordStep() async {
     await AppStorage.instance.clearOnboardingDraftJson();
     if (!mounted) return;
-    Navigator.pushReplacementNamed(
-      context,
+    enterMemberApp(
+      Navigator.of(context),
       '/matches',
       arguments: const {'showRecommendationDeck': true},
     );

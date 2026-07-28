@@ -216,6 +216,31 @@ Future<void> signOutAndReturnToLogin(NavigatorState navigator) async {
   navigator.pushNamedAndRemoveUntil('/login', (route) => false);
 }
 
+/// Takes a member who has just signed in into the app, and throws away every
+/// signed-out screen underneath them.
+///
+/// The counterpart to [signOutAndReturnToLogin], for the same reason.
+/// `pushReplacementNamed` swaps only the TOP route, so a member who reached
+/// onboarding from the landing screen — which PUSHES it — arrived at the match
+/// list with `/landing` still alive beneath her. One Back on a perfectly valid
+/// session dropped her onto the signed-out Register/Login page. Entering the
+/// app has to take the signed-out world down with it, not sit on top of it.
+///
+/// Every route this lands on is a member route, so it also restores the
+/// [AuthenticatedRoute] root guard: the landing screen is gone, the member
+/// screen is `isFirst`, and Back can no longer walk off the bottom of the app.
+void enterMemberApp(
+  NavigatorState navigator,
+  String routeName, {
+  Object? arguments,
+}) {
+  navigator.pushNamedAndRemoveUntil(
+    routeName,
+    (route) => false,
+    arguments: arguments,
+  );
+}
+
 Widget _authenticatedScreen(Widget child) {
   return AuthenticatedRoute(child: child);
 }

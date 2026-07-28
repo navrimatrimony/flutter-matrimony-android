@@ -36,6 +36,9 @@ void main() {
         '/home': (_) => const AuthenticatedRoute(child: _Screen('member-home')),
         '/login': (_) => const _Screen('login'),
         '/landing': (_) => const _Screen('landing'),
+        // Not wrapped, exactly like the real one: onboarding runs before there
+        // is a session to gate.
+        '/smart-onboarding': (_) => const _Screen('onboarding'),
       },
     );
   }
@@ -104,6 +107,71 @@ void main() {
 
     expect(find.text('member-matches'), findsOneWidget);
     expect(find.text('landing'), findsNothing);
+  });
+
+  /// Reported from a real device: "back दाबले की बाहेर पडून सुरुवातीच्या home
+  /// screen वर येते" — one Back and a signed-in member was on the signed-out
+  /// Register/Login page.
+  ///
+  /// The landing screen PUSHES the onboarding screen, and onboarding used to
+  /// finish with `pushReplacementNamed('/matches')`, which swaps only the top
+  /// route. The stack was `[/landing, /matches]`, so `/matches` was not `isFirst`
+  /// and the root guard never applied.
+  testWidgets('finishing signup leaves no signed-out screen underneath', (
+    tester,
+  ) async {
+    await tester.pumpWidget(harness(initialRoute: '/landing'));
+    await tester.pumpAndSettle();
+
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    unawaitedPush(navigator, '/smart-onboarding');
+    await tester.pumpAndSettle();
+    expect(find.text('onboarding'), findsOneWidget);
+    // The landing screen is still alive underneath — that part is not a bug.
+    expect(navigator.canPop(), isTrue);
+
+    // Onboarding ends with a session and hands over to the match list.
+    ApiClient.authToken = 'test-token';
+    enterMemberApp(navigator, '/matches');
+    await tester.pumpAndSettle();
+
+    expect(find.text('member-matches'), findsOneWidget);
+    expect(find.text('landing'), findsNothing);
+    // The regression itself: Back must have nothing left to fall through to.
+    expect(navigator.canPop(), isFalse);
+  });
+
+  testWidgets('Back on the root member screen never leaves the app', (
+    tester,
+  ) async {
+    ApiClient.authToken = 'test-token';
+
+    await tester.pumpWidget(harness());
+    await tester.pumpAndSettle();
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.text('member-matches'), findsOneWidget);
+    expect(find.text('landing'), findsNothing);
+  });
+
+  testWidgets('Back moves exactly one member screen', (tester) async {
+    ApiClient.authToken = 'test-token';
+
+    await tester.pumpWidget(harness());
+    await tester.pumpAndSettle();
+
+    final navigator = tester.state<NavigatorState>(find.byType(Navigator));
+    unawaitedPush(navigator, '/home');
+    await tester.pumpAndSettle();
+    expect(find.text('member-home'), findsOneWidget);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+
+    expect(find.text('member-matches'), findsOneWidget);
+    expect(find.text('member-home'), findsNothing);
   });
 }
 

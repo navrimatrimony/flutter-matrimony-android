@@ -15,6 +15,7 @@ import '../../core/phone_number_hint_service.dart';
 // the mobile-OTP contract has exactly one shape. A second copy of it here is the
 // duplicate that eventually drifts.
 import '../onboarding/models/mobile_otp_models.dart';
+import '../../main.dart';
 
 /// How the member proves who they are.
 ///
@@ -420,11 +421,7 @@ class _LoginScreenState extends State<LoginScreen> {
             duration: const Duration(seconds: 2),
           ),
         );
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          '/smart-onboarding',
-          (route) => false,
-        );
+        enterMemberApp(Navigator.of(context), '/smart-onboarding');
         return;
       }
 
@@ -432,7 +429,7 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() => isLoading = false);
         final route = await _completedProfileRoute();
         if (!mounted) return;
-        Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
+        enterMemberApp(Navigator.of(context), route);
         return;
       }
 
