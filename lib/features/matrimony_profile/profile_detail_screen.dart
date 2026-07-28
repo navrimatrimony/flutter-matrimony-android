@@ -1068,7 +1068,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
   /// The no-photo placeholder keeps clear of exactly this much, so the avatar
   /// and its "no photo yet" caption can never be drawn through the name again.
   /// Both read this one number; neither owns a copy of it.
-  static const double _heroIdentityInset = 172;
+  ///
+  /// Raised from 172 when the header took on the card's education line: on a
+  /// profile with no photo the header is short, and the extra line pushed the
+  /// chip row down into the rounded top of the content sheet.
+  static const double _heroIdentityInset = 196;
 
   double _heroHeight(bool hasPhoto) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -1364,7 +1368,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
                 // The caption is one short line; whatever is left over is the
                 // avatar. On a short screen the avatar gives way rather than
                 // spilling past the space reserved for it.
-                const captionBlock = 32.0;
+                //
+                // 50 = the 14 gap plus a full Devanagari line box at 13pt. Sized
+                // for Devanagari on purpose: its matras and descenders make the
+                // line roughly half again as tall as the point size, and reserving
+                // a Latin-sized line here overflowed the space by 4px in Marathi.
+                const captionBlock = 50.0;
                 final diameter = (constraints.maxHeight - captionBlock).clamp(
                   0.0,
                   118.0,
