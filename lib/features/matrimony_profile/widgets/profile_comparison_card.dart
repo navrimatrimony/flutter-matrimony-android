@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/app_language.dart';
 import '../../../core/app_strings.dart';
 import '../../../core/profile_photo_view.dart';
 
@@ -479,16 +480,16 @@ String _groupKeyForItem(ProfileComparisonItemData item) {
 _ComparisonStatusStyle _statusStyle(String status) {
   switch (status) {
     case 'strong':
-      return const _ComparisonStatusStyle(
-        label: 'Strong match',
+      return _ComparisonStatusStyle(
+        label: appText.comparisonStrongMatch,
         icon: Icons.verified_outlined,
         color: Color(0xFF13795B),
         chipColor: Color(0xFFE2F4EB),
         borderColor: Color(0xFFAEDCC8),
       );
     case 'match':
-      return const _ComparisonStatusStyle(
-        label: 'Match',
+      return _ComparisonStatusStyle(
+        label: appText.comparisonMatch,
         icon: Icons.check_circle_outline,
         color: Color(0xFF2F8F55),
         chipColor: Color(0xFFE7F6ED),
@@ -496,8 +497,8 @@ _ComparisonStatusStyle _statusStyle(String status) {
       );
     case 'near':
     case 'flexible':
-      return const _ComparisonStatusStyle(
-        label: 'Near match',
+      return _ComparisonStatusStyle(
+        label: appText.comparisonNearMatch,
         icon: Icons.check_circle_outline,
         color: Color(0xFF9A6A00),
         chipColor: Color(0xFFFFF4D8),
@@ -505,16 +506,16 @@ _ComparisonStatusStyle _statusStyle(String status) {
       );
     case 'not_matched':
     case 'mismatch':
-      return const _ComparisonStatusStyle(
-        label: 'Needs review',
+      return _ComparisonStatusStyle(
+        label: appText.comparisonNeedsReview,
         icon: Icons.cancel_outlined,
         color: Color(0xFFB33A3A),
         chipColor: Color(0xFFFFEEEE),
         borderColor: Color(0xFFF0B8B8),
       );
     default:
-      return const _ComparisonStatusStyle(
-        label: 'Review',
+      return _ComparisonStatusStyle(
+        label: appText.comparisonReview,
         icon: Icons.help_outline,
         color: Color(0xFF7A6F6A),
         chipColor: Color(0xFFF4ECE8),

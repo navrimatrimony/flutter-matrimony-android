@@ -71,7 +71,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
       );
 
       if (pickedFile == null) {
-        _showMessage('Photo selection cancelled.', _NoticeTone.info);
+        _showMessage(appText.photoSelectionCancelled, _NoticeTone.info);
         return;
       }
 
@@ -84,7 +84,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
         _selectedImage = file;
         _fileInfo = '$fileSizeMB MB';
         _detailMessage =
-            'Photo selected. It will be checked for quality and safety after upload.';
+            appText.photoSelectedWillBeChecked;
         _stage = _PhotoUploadStage.selected;
       });
     } catch (error) {
@@ -417,10 +417,10 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
     return Scaffold(
       backgroundColor: colors.surface,
       appBar: AppBar(
-        title: const Text('Profile Photo'),
+        title: Text(appText.profilePhoto),
         actions: [
           IconButton(
-            tooltip: 'Refresh status',
+            tooltip: appText.refreshStatus,
             onPressed: _checkingStatus ? null : () => _refreshProfileStatus(),
             icon: _checkingStatus
                 ? const SizedBox(
@@ -514,7 +514,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
           Icon(Icons.person_outline, size: 62, color: colors.onSurfaceVariant),
           const SizedBox(height: 10),
           Text(
-            'Clear profile photo',
+            appText.clearProfilePhoto,
             style: TextStyle(
               color: colors.onSurfaceVariant,
               fontWeight: FontWeight.w700,
@@ -522,7 +522,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            '3:4 portrait works best',
+            appText.portrait34WorksBest,
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
         ],
@@ -538,7 +538,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
           child: OutlinedButton.icon(
             onPressed: disabled ? null : () => _pickImage(ImageSource.camera),
             icon: const Icon(Icons.photo_camera_outlined),
-            label: const Text('Camera'),
+            label: Text(appText.camera),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
             ),
@@ -549,7 +549,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
           child: OutlinedButton.icon(
             onPressed: disabled ? null : () => _pickImage(ImageSource.gallery),
             icon: const Icon(Icons.photo_library_outlined),
-            label: const Text('Gallery'),
+            label: Text(appText.gallery),
             style: OutlinedButton.styleFrom(
               minimumSize: const Size.fromHeight(48),
             ),
@@ -571,7 +571,9 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : const Icon(Icons.cloud_upload_outlined),
-      label: Text(_uploading ? 'Uploading photo' : 'Upload selected photo'),
+      label: Text(
+        _uploading ? appText.uploadingPhoto : appText.uploadSelectedPhoto,
+      ),
       style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
     );
   }
@@ -640,31 +642,31 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Photo guidelines',
+              appText.photoGuidelines,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 12),
-            const Wrap(
+            Wrap(
               spacing: 8,
               runSpacing: 8,
               children: [
                 _GuidelineChip(
                   icon: Icons.face_retouching_natural_outlined,
-                  label: 'Clear face',
+                  label: appText.clearFace,
                 ),
                 _GuidelineChip(
                   icon: Icons.person_outline,
-                  label: 'Single person',
+                  label: appText.singlePerson,
                 ),
                 _GuidelineChip(
                   icon: Icons.light_mode_outlined,
-                  label: 'Good light',
+                  label: appText.goodLight,
                 ),
                 _GuidelineChip(
                   icon: Icons.verified_user_outlined,
-                  label: 'Safe photo',
+                  label: appText.safePhoto,
                 ),
               ],
             ),
@@ -676,14 +678,14 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
 
   String _stageTitle(_PhotoUploadStage stage) {
     return switch (stage) {
-      _PhotoUploadStage.idle => 'Add your profile photo',
-      _PhotoUploadStage.selected => 'Ready to upload',
-      _PhotoUploadStage.uploading => 'Uploading photo',
-      _PhotoUploadStage.processing => 'Quality check in progress',
-      _PhotoUploadStage.approved => 'Photo approved',
-      _PhotoUploadStage.pending => 'Approval pending',
-      _PhotoUploadStage.rejected => 'Photo not approved',
-      _PhotoUploadStage.error => 'Upload needs attention',
+      _PhotoUploadStage.idle => appText.stageAddYourProfilePhoto,
+      _PhotoUploadStage.selected => appText.readyToUpload,
+      _PhotoUploadStage.uploading => appText.uploadingPhoto,
+      _PhotoUploadStage.processing => appText.stageQualityCheckInProgress,
+      _PhotoUploadStage.approved => appText.dashboardPhotoApproved,
+      _PhotoUploadStage.pending => appText.approvalPending,
+      _PhotoUploadStage.rejected => appText.photoNotApproved,
+      _PhotoUploadStage.error => appText.uploadNeedsAttention,
     };
   }
 
@@ -747,7 +749,7 @@ class _StatusHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Profile photo',
+          appText.profilePhoto,
           style: theme.textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w800,
           ),
@@ -755,8 +757,8 @@ class _StatusHeader extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           stage == _PhotoUploadStage.approved
-              ? 'Approved photo currently visible on your profile.'
-              : 'Upload a clear photo. We will optimize it and check it before it appears on your profile.',
+              ? appText.approvedPhotoVisibleOnProfile
+              : appText.uploadClearPhotoWeWillCheck,
           style: theme.textTheme.bodyMedium?.copyWith(
             color: colors.onSurfaceVariant,
             height: 1.35,
@@ -785,14 +787,14 @@ class _StageBadge extends StatelessWidget {
     };
 
     final label = switch (stage) {
-      _PhotoUploadStage.approved => 'Approved',
-      _PhotoUploadStage.rejected => 'Rejected',
-      _PhotoUploadStage.error => 'Needs retry',
-      _PhotoUploadStage.pending => 'Pending',
-      _PhotoUploadStage.processing => 'Checking',
-      _PhotoUploadStage.uploading => 'Uploading',
-      _PhotoUploadStage.selected => 'Selected',
-      _PhotoUploadStage.idle => 'Photo',
+      _PhotoUploadStage.approved => appText.approved,
+      _PhotoUploadStage.rejected => appText.rejected,
+      _PhotoUploadStage.error => appText.badgeNeedsRetry,
+      _PhotoUploadStage.pending => appText.pending,
+      _PhotoUploadStage.processing => appText.badgeChecking,
+      _PhotoUploadStage.uploading => appText.badgeUploading,
+      _PhotoUploadStage.selected => appText.badgeSelected,
+      _PhotoUploadStage.idle => appText.dashboardPhoto,
     };
 
     return DecoratedBox(

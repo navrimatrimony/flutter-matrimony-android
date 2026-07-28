@@ -374,7 +374,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         _viewerContext = viewerContext is Map
             ? Map<String, dynamic>.from(viewerContext)
             : _viewerContext;
-        _moreSectionsError = ok ? null : 'More Matches sections unavailable.';
+        _moreSectionsError = ok
+            ? null
+            : appText.moreMatchesSectionsUnavailable;
       });
     } catch (_) {
       if (!mounted) return;
@@ -382,7 +384,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         _moreSectionsLoaded = true;
         _moreSectionsLoading = false;
         _moreSections = <Map<String, dynamic>>[];
-        _moreSectionsError = 'More Matches sections unavailable.';
+        _moreSectionsError = appText.moreMatchesSectionsUnavailable;
       });
     }
   }
@@ -440,7 +442,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         automaticallyImplyLeading: true,
         actions: [
           IconButton(
-            tooltip: 'Notifications',
+            tooltip: appText.notificationsTitle,
             icon: _buildNotificationIcon(),
             onPressed: _openNotifications,
           ),
@@ -723,7 +725,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 alignment: Alignment.center,
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  'Recommendation',
+                  appText.recommendationTitle,
                   maxLines: 1,
                   style: const TextStyle(
                     color: Color(0xFF111827),
@@ -854,8 +856,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 child: OutlinedButton.icon(
                   onPressed: disabled ? null : _skipRecommendationProfile,
                   icon: const Icon(Icons.close_rounded, size: 20),
-                  label: const Text(
-                    'Skip',
+                  label: Text(
+                    appText.skip,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -880,8 +882,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.favorite_rounded, size: 20),
-                  label: const Text(
-                    'Interested',
+                  label: Text(
+                    appText.suchakRequestInterested,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -939,7 +941,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                     ),
                   ),
                 Semantics(
-                  label: 'Swipe right to send interest. Swipe left to skip.',
+                  label: appText.swipeInterestHint,
                   child: GestureDetector(
                     onHorizontalDragStart: (_) {
                       if (_recommendationActionBusy ||
@@ -1079,7 +1081,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             border: Border.all(color: Colors.white, width: 2),
           ),
           child: Text(
-            interested ? 'INTERESTED' : 'SKIP',
+            interested
+                ? appText.suchakRequestInterested.toUpperCase()
+                : appText.skip.toUpperCase(),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 18,
@@ -3786,7 +3790,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   String? _displayString(dynamic value) {
     if (value == null) return null;
     if (value is Map || value is List) return null;
-    if (value is bool) return value ? 'Yes' : 'No';
+    if (value is bool) return value ? appText.yes : appText.no;
 
     final text = value.toString().trim();
     if (text.isEmpty) return null;

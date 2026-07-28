@@ -1269,5 +1269,277 @@
   "intervalEachWeek": "each week",
   "intervalEachMonth": "each month",
   "intervalEachQuarter": "each quarter",
-  "intervalInTotal": "in total"
+  "intervalInTotal": "in total",
+  "sectionBasicInformation": "Basic Information",
+  "sectionPhysical": "Physical",
+  "sectionSiblings": "Siblings",
+  "sectionRelatives": "Relatives",
+  "sectionProperty": "Property",
+  "sectionHoroscope": "Horoscope",
+  "sectionAboutMe": "About Me",
+  "sectionPartnerPreferences": "Partner Preferences",
+  "labelSelfAddresses": "Self Addresses",
+  "labelAddressLine": "Address Line",
+  "labelBirthTime": "Birth Time",
+  "labelBirthPlace": "Birth Place",
+  "labelMarriageHistory": "Marriage History",
+  "labelChildren": "Children",
+  "labelWeight": "Weight",
+  "labelComplexion": "Complexion",
+  "labelBloodGroup": "Blood Group",
+  "labelPhysicalCondition": "Physical Condition",
+  "labelHighestEducation": "Highest Education",
+  "labelCompanyName": "Company Name",
+  "labelWorkLocation": "Work Location",
+  "labelFather": "Father",
+  "labelMother": "Mother",
+  "labelFatherContactNumbered": "Father Contact {number}",
+  "@labelFatherContactNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMotherContactNumbered": "Mother Contact {number}",
+  "@labelMotherContactNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "labelFamilyIncome": "Family Income",
+  "labelFamilyType": "Family Type",
+  "labelParentsAddresses": "Parents Addresses",
+  "labelAllianceNetwork": "Alliance Network",
+  "labelOtherRelatives": "Other Relatives",
+  "labelPropertyDetails": "Property Details",
+  "labelGan": "Gan",
+  "labelNadi": "Nadi",
+  "labelYoni": "Yoni",
+  "labelVarna": "Varna",
+  "labelVashya": "Vashya",
+  "labelRashiLord": "Rashi Lord",
+  "labelDevak": "Devak",
+  "labelKul": "Kul",
+  "labelGotra": "Gotra",
+  "labelNavrasName": "Navras Name",
+  "labelBirthWeekday": "Birth Weekday",
+  "labelExpectations": "Expectations",
+  "labelHeightRange": "Height Range",
+  "labelPartnerWithChildren": "Partner With Children",
+  "labelPreferredMaritalStatus": "Preferred Marital Status",
+  "labelPreferredDiet": "Preferred Diet",
+  "labelPreferredReligion": "Preferred Religion",
+  "labelPreferredCaste": "Preferred Caste",
+  "labelPreferredEducation": "Preferred Education",
+  "labelPreferredOccupation": "Preferred Occupation",
+  "labelPhotoStatus": "Photo Status",
+  "valueNotAdded": "Not added",
+  "valuePhotoUploaded": "Photo uploaded",
+  "valuePhotoPendingOrNotApproved": "Photo pending or not approved",
+  "valueNoApprovedPhoto": "No approved photo",
+  "valueUndisclosed": "Undisclosed",
+  "valueUpTo": "Up to {value}",
+  "@valueUpTo": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "valueApproxAmount": "Approx. {value}",
+  "@valueApproxAmount": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "valueNoSiblings": "No siblings",
+  "valueMoreCount": "+{count} more",
+  "@valueMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "siblingCountOne": "1 sibling",
+  "siblingCountOther": "{count} siblings",
+  "@siblingCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "childCountOne": "1 child",
+  "childCountOther": "{count} children",
+  "@childCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "valueMarriageYear": "Marriage {year}",
+  "@valueMarriageYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueSeparatedYear": "Separated {year}",
+  "@valueSeparatedYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueDivorceYear": "Divorce {year}",
+  "@valueDivorceYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueAnnulmentYear": "Annulment {year}",
+  "@valueAnnulmentYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueSpouseDeathYear": "Spouse death {year}",
+  "@valueSpouseDeathYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueChildNumbered": "Child {number}",
+  "@valueChildNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "valueAgeYears": "{age} years",
+  "@valueAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "valueFinalized": "Finalized",
+  "valueMutual": "Mutual",
+  "valueContested": "Contested",
+  "valuePreferNotToSay": "Prefer not to say",
+  "valueMarried": "Married",
+  "valueUnmarried": "Unmarried",
+  "relationBrotherWife": "Brother's wife",
+  "relationSisterHusband": "Sister's husband",
+  "relationPaternalGrandfather": "Paternal Grandfather",
+  "relationPaternalGrandmother": "Paternal Grandmother",
+  "relationPaternalUncle": "Paternal Uncle",
+  "relationPaternalUncleWife": "Wife of Paternal Uncle",
+  "relationPaternalAunt": "Paternal Aunt",
+  "relationPaternalAuntHusband": "Husband of Paternal Aunt",
+  "relationCousin": "Cousin",
+  "relationMaternalAddressAjol": "Maternal address (Ajol)",
+  "relationMaternalGrandfather": "Maternal Grandfather",
+  "relationMaternalGrandmother": "Maternal Grandmother",
+  "relationMaternalUncle": "Maternal Uncle",
+  "relationMaternalUncleWife": "Maternal Uncle's wife",
+  "relationMaternalAunt": "Maternal Aunt",
+  "relationMaternalAuntHusband": "Husband of Maternal Aunt",
+  "clear": "Clear",
+  "unableToLoad": "Unable to load",
+  "tryAnotherSearchTerm": "Try another search term.",
+  "requestToAdd": "Request to add",
+  "popular": "Popular",
+  "notSelectableForThisField": "Not selectable for this field.",
+  "translationMissingFallback": "Translation missing. Showing fallback label.",
+  "done": "Done",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noPendingContactRequests": "No pending contact requests.",
+  "noSentContactRequests": "No sent contact requests.",
+  "requestedLabel": "Requested",
+  "createdLabel": "Created",
+  "approve": "Approve",
+  "approveContactTitle": "Approve Contact",
+  "durationLabel": "Duration",
+  "approveOnce24Hours": "Approve once (24 hours)",
+  "grantAccess": "Grant Access",
+  "contactAccessGranted": "Contact access granted.",
+  "rejectRequestTitle": "Reject request?",
+  "rejectRequestBody": "This will reject the contact request.",
+  "requestRejected": "Request rejected.",
+  "contactRequestLabel": "Contact request",
+  "interestWithdrawnSuccessfully": "Interest withdrawn successfully.",
+  "unknown": "Unknown",
+  "noSentInterestsYet": "You have not sent any interests yet.",
+  "statusPrefix": "Status: ",
+  "withdrawInterest": "Withdraw Interest",
+  "unauthorizedAccess": "Unauthorized",
+  "photoSelectedWillBeChecked": "Photo selected. It will be checked for quality and safety after upload.",
+  "refreshStatus": "Refresh status",
+  "clearProfilePhoto": "Clear profile photo",
+  "portrait34WorksBest": "3:4 portrait works best",
+  "photoGuidelines": "Photo guidelines",
+  "stageAddYourProfilePhoto": "Add your profile photo",
+  "stageQualityCheckInProgress": "Quality check in progress",
+  "approvedPhotoVisibleOnProfile": "Approved photo currently visible on your profile.",
+  "uploadClearPhotoWeWillCheck": "Upload a clear photo. We will optimize it and check it before it appears on your profile.",
+  "approved": "Approved",
+  "badgeNeedsRetry": "Needs retry",
+  "badgeChecking": "Checking",
+  "badgeUploading": "Uploading",
+  "badgeSelected": "Selected",
+  "primaryPhotoUpdated": "Primary photo updated.",
+  "photoDeleted": "Photo deleted.",
+  "photoOrderUpdated": "Photo order updated.",
+  "dashboardHome": "Dashboard",
+  "upload": "Upload",
+  "adjustCrop34": "Adjust 3:4 crop",
+  "dragFramePullCorners": "Drag the frame. Pull corners to resize.",
+  "usePhoto": "Use photo",
+  "cropEncodingFailed": "Crop encoding failed.",
+  "comparisonStrongMatch": "Strong match",
+  "comparisonMatch": "Match",
+  "comparisonNearMatch": "Near match",
+  "comparisonNeedsReview": "Needs review",
+  "comparisonReview": "Review",
+  "mobileLabel": "Mobile",
+  "adminPolicyHeading": "Admin policy",
+  "requestModeLabel": "Request mode",
+  "allowedScopesLabel": "Allowed scopes",
+  "messagingLabel": "Messaging",
+  "accountProfileIdLabel": "Profile ID",
+  "moreMatchesSectionsUnavailable": "More Matches sections unavailable.",
+  "recommendationTitle": "Recommendation",
+  "skip": "Skip",
+  "swipeInterestHint": "Swipe right to send interest. Swipe left to skip.",
+  "filterTabMinimum": "Minimum",
+  "filterTabAdvanced": "Advanced",
+  "apply": "Apply",
+  "basicPreference": "Basic preference",
+  "verifiedPhoto": "Verified photo",
+  "optionFallback": "Option"
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/app_language.dart';
+
 class ProfileDisplaySectionData {
   final String key;
   final String title;
@@ -242,7 +244,7 @@ IconData _iconFor(String? icon) {
 String? _cleanDisplayString(dynamic value) {
   if (value == null) return null;
   if (value is Map || value is List) return null;
-  if (value is bool) return value ? 'Yes' : 'No';
+  if (value is bool) return value ? appText.yes : appText.no;
 
   final text = value.toString().trim();
   if (text.isEmpty) return null;

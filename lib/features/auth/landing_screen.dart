@@ -92,7 +92,7 @@ class LandingScreen extends StatelessWidget {
                   autofillHints: const [AutofillHints.email],
                   textInputAction: TextInputAction.done,
                   decoration: InputDecoration(
-                    labelText: _copy('Email', 'Email'),
+                    labelText: appText.contactEmailLabel,
                     prefixIcon: const Icon(Icons.email_outlined),
                   ),
                   onSubmitted: (_) {
@@ -245,7 +245,7 @@ class LandingScreen extends StatelessWidget {
                                 shape: const StadiumBorder(),
                               ),
                               child: Text(
-                                _copy('Login', 'Login'),
+                                appText.login,
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w800,

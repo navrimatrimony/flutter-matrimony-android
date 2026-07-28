@@ -3831,4 +3831,541 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get intervalInTotal => 'एकूण';
+
+  @override
+  String get sectionBasicInformation => 'मूलभूत माहिती';
+
+  @override
+  String get sectionPhysical => 'शारीरिक माहिती';
+
+  @override
+  String get sectionSiblings => 'भावंडे';
+
+  @override
+  String get sectionRelatives => 'नातेवाईक';
+
+  @override
+  String get sectionProperty => 'मालमत्ता';
+
+  @override
+  String get sectionHoroscope => 'पत्रिका';
+
+  @override
+  String get sectionAboutMe => 'माझ्याबद्दल';
+
+  @override
+  String get sectionPartnerPreferences => 'जोडीदाराच्या अपेक्षा';
+
+  @override
+  String get labelSelfAddresses => 'स्वतःचे पत्ते';
+
+  @override
+  String get labelAddressLine => 'पत्ता';
+
+  @override
+  String get labelBirthTime => 'जन्मवेळ';
+
+  @override
+  String get labelBirthPlace => 'जन्मस्थान';
+
+  @override
+  String get labelMarriageHistory => 'विवाहाचा तपशील';
+
+  @override
+  String get labelChildren => 'अपत्ये';
+
+  @override
+  String get labelWeight => 'वजन';
+
+  @override
+  String get labelComplexion => 'वर्ण';
+
+  @override
+  String get labelBloodGroup => 'रक्तगट';
+
+  @override
+  String get labelPhysicalCondition => 'शारीरिक स्थिती';
+
+  @override
+  String get labelHighestEducation => 'सर्वोच्च शिक्षण';
+
+  @override
+  String get labelCompanyName => 'कंपनीचे नाव';
+
+  @override
+  String get labelWorkLocation => 'कामाचे ठिकाण';
+
+  @override
+  String get labelFather => 'वडील';
+
+  @override
+  String get labelMother => 'आई';
+
+  @override
+  String labelFatherContactNumbered(int number) {
+    return 'वडिलांचा संपर्क $number';
+  }
+
+  @override
+  String labelMotherContactNumbered(int number) {
+    return 'आईचा संपर्क $number';
+  }
+
+  @override
+  String get labelFamilyIncome => 'कौटुंबिक उत्पन्न';
+
+  @override
+  String get labelFamilyType => 'कुटुंबाचा प्रकार';
+
+  @override
+  String get labelParentsAddresses => 'आई-वडिलांचे पत्ते';
+
+  @override
+  String get labelAllianceNetwork => 'सोयरिक नेटवर्क';
+
+  @override
+  String get labelOtherRelatives => 'इतर नातेवाईक';
+
+  @override
+  String get labelPropertyDetails => 'मालमत्तेचा तपशील';
+
+  @override
+  String get labelGan => 'गण';
+
+  @override
+  String get labelNadi => 'नाडी';
+
+  @override
+  String get labelYoni => 'योनी';
+
+  @override
+  String get labelVarna => 'वर्ण';
+
+  @override
+  String get labelVashya => 'वश्य';
+
+  @override
+  String get labelRashiLord => 'राशी स्वामी';
+
+  @override
+  String get labelDevak => 'देवक';
+
+  @override
+  String get labelKul => 'कुळ';
+
+  @override
+  String get labelGotra => 'गोत्र';
+
+  @override
+  String get labelNavrasName => 'नवरस नाव';
+
+  @override
+  String get labelBirthWeekday => 'जन्मवार';
+
+  @override
+  String get labelExpectations => 'अपेक्षा';
+
+  @override
+  String get labelHeightRange => 'उंचीची मर्यादा';
+
+  @override
+  String get labelPartnerWithChildren => 'अपत्य असलेला जोडीदार';
+
+  @override
+  String get labelPreferredMaritalStatus => 'अपेक्षित वैवाहिक स्थिती';
+
+  @override
+  String get labelPreferredDiet => 'अपेक्षित आहार';
+
+  @override
+  String get labelPreferredReligion => 'अपेक्षित धर्म';
+
+  @override
+  String get labelPreferredCaste => 'अपेक्षित जात';
+
+  @override
+  String get labelPreferredEducation => 'अपेक्षित शिक्षण';
+
+  @override
+  String get labelPreferredOccupation => 'अपेक्षित व्यवसाय';
+
+  @override
+  String get labelPhotoStatus => 'फोटोची स्थिती';
+
+  @override
+  String get valueNotAdded => 'भरलेले नाही';
+
+  @override
+  String get valuePhotoUploaded => 'फोटो जोडला आहे';
+
+  @override
+  String get valuePhotoPendingOrNotApproved => 'फोटो अजून मंजूर झालेला नाही';
+
+  @override
+  String get valueNoApprovedPhoto => 'मंजूर फोटो नाही';
+
+  @override
+  String get valueUndisclosed => 'सांगितलेले नाही';
+
+  @override
+  String valueUpTo(String value) {
+    return '$value पर्यंत';
+  }
+
+  @override
+  String valueApproxAmount(String value) {
+    return 'अंदाजे $value';
+  }
+
+  @override
+  String get valueNoSiblings => 'भावंडे नाहीत';
+
+  @override
+  String valueMoreCount(int count) {
+    return 'आणखी $count';
+  }
+
+  @override
+  String get siblingCountOne => '1 भावंड';
+
+  @override
+  String siblingCountOther(int count) {
+    return '$count भावंडे';
+  }
+
+  @override
+  String get childCountOne => '1 अपत्य';
+
+  @override
+  String childCountOther(int count) {
+    return '$count अपत्ये';
+  }
+
+  @override
+  String valueMarriageYear(String year) {
+    return 'विवाह $year';
+  }
+
+  @override
+  String valueSeparatedYear(String year) {
+    return 'विभक्त $year';
+  }
+
+  @override
+  String valueDivorceYear(String year) {
+    return 'घटस्फोट $year';
+  }
+
+  @override
+  String valueAnnulmentYear(String year) {
+    return 'विवाह रद्द $year';
+  }
+
+  @override
+  String valueSpouseDeathYear(String year) {
+    return 'जोडीदाराचे निधन $year';
+  }
+
+  @override
+  String valueChildNumbered(int number) {
+    return 'अपत्य $number';
+  }
+
+  @override
+  String valueAgeYears(String age) {
+    return '$age वर्षे';
+  }
+
+  @override
+  String get valueFinalized => 'अंतिम झाले';
+
+  @override
+  String get valueMutual => 'परस्पर संमतीने';
+
+  @override
+  String get valueContested => 'वाद सुरू आहे';
+
+  @override
+  String get valuePreferNotToSay => 'सांगायचे नाही';
+
+  @override
+  String get valueMarried => 'विवाहित';
+
+  @override
+  String get valueUnmarried => 'अविवाहित';
+
+  @override
+  String get relationBrotherWife => 'वहिनी';
+
+  @override
+  String get relationSisterHusband => 'बहिणीचे पती';
+
+  @override
+  String get relationPaternalGrandfather => 'आजोबा (वडिलांकडील)';
+
+  @override
+  String get relationPaternalGrandmother => 'आजी (वडिलांकडील)';
+
+  @override
+  String get relationPaternalUncle => 'काका';
+
+  @override
+  String get relationPaternalUncleWife => 'काकू';
+
+  @override
+  String get relationPaternalAunt => 'आत्या';
+
+  @override
+  String get relationPaternalAuntHusband => 'आत्याचे पती';
+
+  @override
+  String get relationCousin => 'चुलत / मामे भावंड';
+
+  @override
+  String get relationMaternalAddressAjol => 'आजोळ';
+
+  @override
+  String get relationMaternalGrandfather => 'आजोबा (आईकडील)';
+
+  @override
+  String get relationMaternalGrandmother => 'आजी (आईकडील)';
+
+  @override
+  String get relationMaternalUncle => 'मामा';
+
+  @override
+  String get relationMaternalUncleWife => 'मामी';
+
+  @override
+  String get relationMaternalAunt => 'मावशी';
+
+  @override
+  String get relationMaternalAuntHusband => 'मावशीचे पती';
+
+  @override
+  String get clear => 'साफ करा';
+
+  @override
+  String get unableToLoad => 'माहिती आणता आली नाही';
+
+  @override
+  String get tryAnotherSearchTerm => 'दुसरा शब्द टाकून बघा.';
+
+  @override
+  String get requestToAdd => 'जोडण्याची विनंती करा';
+
+  @override
+  String get popular => 'नेहमीचे';
+
+  @override
+  String get notSelectableForThisField => 'इथे हा पर्याय निवडता येणार नाही.';
+
+  @override
+  String get translationMissingFallback =>
+      'मराठी नाव उपलब्ध नाही. मूळ नाव दाखवत आहोत.';
+
+  @override
+  String get done => 'झाले';
+
+  @override
+  String selectedCount(int count) {
+    return '$count निवडले';
+  }
+
+  @override
+  String get noPendingContactRequests => 'प्रलंबित संपर्क विनंत्या नाहीत.';
+
+  @override
+  String get noSentContactRequests => 'पाठवलेल्या संपर्क विनंत्या नाहीत.';
+
+  @override
+  String get requestedLabel => 'मागितलेले';
+
+  @override
+  String get createdLabel => 'तारीख';
+
+  @override
+  String get approve => 'मंजूर करा';
+
+  @override
+  String get approveContactTitle => 'संपर्काला मंजुरी';
+
+  @override
+  String get durationLabel => 'कालावधी';
+
+  @override
+  String get approveOnce24Hours => 'एकदाच मंजुरी (24 तास)';
+
+  @override
+  String get grantAccess => 'परवानगी द्या';
+
+  @override
+  String get contactAccessGranted => 'संपर्काची परवानगी दिली.';
+
+  @override
+  String get rejectRequestTitle => 'विनंती नाकारायची?';
+
+  @override
+  String get rejectRequestBody => 'यामुळे संपर्काची विनंती नाकारली जाईल.';
+
+  @override
+  String get requestRejected => 'विनंती नाकारली.';
+
+  @override
+  String get contactRequestLabel => 'संपर्काची विनंती';
+
+  @override
+  String get interestWithdrawnSuccessfully => 'पसंती मागे घेतली.';
+
+  @override
+  String get unknown => 'माहीत नाही';
+
+  @override
+  String get noSentInterestsYet => 'तुम्ही अजून कोणालाही पसंती पाठवलेली नाही.';
+
+  @override
+  String get statusPrefix => 'स्थिती: ';
+
+  @override
+  String get withdrawInterest => 'पसंती मागे घ्या';
+
+  @override
+  String get unauthorizedAccess => 'परवानगी नाही';
+
+  @override
+  String get photoSelectedWillBeChecked =>
+      'फोटो निवडला. अपलोड झाल्यावर त्याचा दर्जा आणि सुरक्षितता तपासली जाईल.';
+
+  @override
+  String get refreshStatus => 'स्थिती पुन्हा तपासा';
+
+  @override
+  String get clearProfilePhoto => 'स्पष्ट प्रोफाइल फोटो';
+
+  @override
+  String get portrait34WorksBest => '3:4 उभा फोटो सर्वात चांगला दिसतो';
+
+  @override
+  String get photoGuidelines => 'फोटोसाठी सूचना';
+
+  @override
+  String get stageAddYourProfilePhoto => 'तुमचा प्रोफाइल फोटो जोडा';
+
+  @override
+  String get stageQualityCheckInProgress => 'तपासणी सुरू आहे';
+
+  @override
+  String get approvedPhotoVisibleOnProfile =>
+      'सध्या तुमच्या प्रोफाइलवर मंजूर फोटो दिसत आहे.';
+
+  @override
+  String get uploadClearPhotoWeWillCheck =>
+      'स्पष्ट फोटो अपलोड करा. प्रोफाइलवर दाखवण्याआधी आम्ही तो तपासून घेतो.';
+
+  @override
+  String get approved => 'मंजूर';
+
+  @override
+  String get badgeNeedsRetry => 'पुन्हा पाठवा';
+
+  @override
+  String get badgeChecking => 'तपासत आहोत';
+
+  @override
+  String get badgeUploading => 'अपलोड होत आहे';
+
+  @override
+  String get badgeSelected => 'निवडला';
+
+  @override
+  String get primaryPhotoUpdated => 'मुख्य फोटो बदलला.';
+
+  @override
+  String get photoDeleted => 'फोटो काढून टाकला.';
+
+  @override
+  String get photoOrderUpdated => 'फोटोंचा क्रम बदलला.';
+
+  @override
+  String get dashboardHome => 'मुख्य पान';
+
+  @override
+  String get upload => 'अपलोड करा';
+
+  @override
+  String get adjustCrop34 => '3:4 प्रमाणात फोटो कापा';
+
+  @override
+  String get dragFramePullCorners => 'चौकट सरकवा. कोपरे ओढून आकार बदला.';
+
+  @override
+  String get usePhoto => 'हा फोटो वापरा';
+
+  @override
+  String get cropEncodingFailed => 'फोटो कापताना अडचण आली.';
+
+  @override
+  String get comparisonStrongMatch => 'भक्कम जुळणी';
+
+  @override
+  String get comparisonMatch => 'जुळते';
+
+  @override
+  String get comparisonNearMatch => 'जवळपास जुळते';
+
+  @override
+  String get comparisonNeedsReview => 'तपासून पाहा';
+
+  @override
+  String get comparisonReview => 'तपासा';
+
+  @override
+  String get mobileLabel => 'मोबाइल';
+
+  @override
+  String get adminPolicyHeading => 'प्रशासनाचे धोरण';
+
+  @override
+  String get requestModeLabel => 'विनंतीची पद्धत';
+
+  @override
+  String get allowedScopesLabel => 'परवानगी असलेली माहिती';
+
+  @override
+  String get messagingLabel => 'संदेश';
+
+  @override
+  String get accountProfileIdLabel => 'प्रोफाइल आयडी';
+
+  @override
+  String get moreMatchesSectionsUnavailable =>
+      'अधिक जुळणी विभाग सध्या उपलब्ध नाहीत.';
+
+  @override
+  String get recommendationTitle => 'शिफारस';
+
+  @override
+  String get skip => 'नको';
+
+  @override
+  String get swipeInterestHint =>
+      'पसंती पाठवण्यासाठी उजवीकडे सरकवा. वगळण्यासाठी डावीकडे सरकवा.';
+
+  @override
+  String get filterTabMinimum => 'किमान';
+
+  @override
+  String get filterTabAdvanced => 'अधिक पर्याय';
+
+  @override
+  String get apply => 'लागू करा';
+
+  @override
+  String get basicPreference => 'मूलभूत अपेक्षा';
+
+  @override
+  String get verifiedPhoto => 'पडताळलेला फोटो';
+
+  @override
+  String get optionFallback => 'पर्याय';
 }

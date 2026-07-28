@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../../core/app_language.dart';
 import '../models/onboarding_option.dart';
 import '../models/paged_lookup_response.dart';
 
@@ -262,7 +263,7 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
       if (!mounted) return;
       if (!response.success) {
         setState(() {
-          _error = response.message ?? 'Could not load options.';
+          _error = response.message ?? appText.couldNotLoadOptions;
           _loading = false;
           _loadingMore = false;
         });
@@ -402,11 +403,11 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
                               autofocus: true,
                               decoration: InputDecoration(
                                 prefixIcon: const Icon(Icons.search),
-                                hintText: widget.searchHint ?? 'Search',
+                                hintText: widget.searchHint ?? appText.search,
                                 suffixIcon: _searchController.text.isEmpty
                                     ? null
                                     : IconButton(
-                                        tooltip: 'Clear',
+                                        tooltip: appText.clear,
                                         icon: const Icon(Icons.close),
                                         onPressed: _searchController.clear,
                                       ),
@@ -444,9 +445,9 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
     if (_error != null) {
       return _PanelMessage(
         icon: Icons.error_outline,
-        title: 'Unable to load',
+        title: appText.unableToLoad,
         message: _error!,
-        actionLabel: 'Retry',
+        actionLabel: appText.retry,
         onAction: () => _load(reset: true),
       );
     }
@@ -465,15 +466,15 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
         title:
             widget.emptyTitleBuilder?.call(query) ??
             widget.emptyTitle ??
-            'No options found',
+            appText.noOptionsFound2,
         message:
             widget.emptyMessageBuilder?.call(query) ??
             widget.emptyMessage ??
-            'Try another search term.',
+            appText.tryAnotherSearchTerm,
         actionLabel: canRequestToAdd
             ? widget.requestToAddLabelBuilder?.call(query) ??
                   widget.requestToAddLabel ??
-                  'Request to add'
+                  appText.requestToAdd
             : null,
         onAction: canRequestToAdd ? widget.onRequestToAdd : null,
       );
@@ -484,10 +485,10 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
       padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
       children: [
         if (showPopular) ...[
-          const _SectionLabel(label: 'Popular'),
+          _SectionLabel(label: appText.popular),
           ..._buildOptionTiles(_popular),
           const SizedBox(height: 10),
-          const _SectionLabel(label: 'All'),
+          _SectionLabel(label: appText.chatAll),
         ],
         ..._buildOptionTiles(_results),
         if (_loadingMore)
@@ -554,14 +555,14 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
           ? null
           : Text(subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
       trailing: !enabled
-          ? const Tooltip(
-              message: 'Not selectable for this field.',
-              child: Icon(Icons.lock_outline, size: 18),
+          ? Tooltip(
+              message: appText.notSelectableForThisField,
+              child: const Icon(Icons.lock_outline, size: 18),
             )
           : option.translationMissing
-          ? const Tooltip(
-              message: 'Translation missing. Showing fallback label.',
-              child: Icon(Icons.translate, size: 18),
+          ? Tooltip(
+              message: appText.translationMissingFallback,
+              child: const Icon(Icons.translate, size: 18),
             )
           : null,
       onTap: enabled ? () => _select(option) : null,
@@ -584,7 +585,7 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
           child: OutlinedButton.icon(
             onPressed: widget.onRequestToAdd,
             icon: const Icon(Icons.add),
-            label: Text(widget.requestToAddLabel ?? 'Request to add'),
+            label: Text(widget.requestToAddLabel ?? appText.requestToAdd),
           ),
         ),
       );
@@ -598,7 +599,7 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
           children: [
             Expanded(
               child: Text(
-                '${_selected.length} selected',
+                appText.selectedCount(_selected.length),
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -607,12 +608,12 @@ class _SmartPickerPanelState extends State<SmartPickerPanel> {
                 setState(_selected.clear);
                 widget.onChanged(const <OnboardingOption>[]);
               },
-              child: const Text('Clear'),
+              child: Text(appText.clear),
             ),
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: _finishMultiSelect,
-              child: const Text('Done'),
+              child: Text(appText.done),
             ),
           ],
         ),
@@ -676,7 +677,7 @@ class _PanelHeader extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Close',
+            tooltip: appText.close,
             onPressed: () => Navigator.of(context).pop(),
             icon: const Icon(Icons.close),
           ),

@@ -7141,6 +7141,1008 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'in total'**
   String get intervalInTotal;
+
+  /// No description provided for @sectionBasicInformation.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic Information'**
+  String get sectionBasicInformation;
+
+  /// No description provided for @sectionPhysical.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical'**
+  String get sectionPhysical;
+
+  /// No description provided for @sectionSiblings.
+  ///
+  /// In en, this message translates to:
+  /// **'Siblings'**
+  String get sectionSiblings;
+
+  /// No description provided for @sectionRelatives.
+  ///
+  /// In en, this message translates to:
+  /// **'Relatives'**
+  String get sectionRelatives;
+
+  /// No description provided for @sectionProperty.
+  ///
+  /// In en, this message translates to:
+  /// **'Property'**
+  String get sectionProperty;
+
+  /// No description provided for @sectionHoroscope.
+  ///
+  /// In en, this message translates to:
+  /// **'Horoscope'**
+  String get sectionHoroscope;
+
+  /// No description provided for @sectionAboutMe.
+  ///
+  /// In en, this message translates to:
+  /// **'About Me'**
+  String get sectionAboutMe;
+
+  /// No description provided for @sectionPartnerPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner Preferences'**
+  String get sectionPartnerPreferences;
+
+  /// No description provided for @labelSelfAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Self Addresses'**
+  String get labelSelfAddresses;
+
+  /// No description provided for @labelAddressLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Address Line'**
+  String get labelAddressLine;
+
+  /// No description provided for @labelBirthTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth Time'**
+  String get labelBirthTime;
+
+  /// No description provided for @labelBirthPlace.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth Place'**
+  String get labelBirthPlace;
+
+  /// No description provided for @labelMarriageHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Marriage History'**
+  String get labelMarriageHistory;
+
+  /// No description provided for @labelChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Children'**
+  String get labelChildren;
+
+  /// No description provided for @labelWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get labelWeight;
+
+  /// No description provided for @labelComplexion.
+  ///
+  /// In en, this message translates to:
+  /// **'Complexion'**
+  String get labelComplexion;
+
+  /// No description provided for @labelBloodGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood Group'**
+  String get labelBloodGroup;
+
+  /// No description provided for @labelPhysicalCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical Condition'**
+  String get labelPhysicalCondition;
+
+  /// No description provided for @labelHighestEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest Education'**
+  String get labelHighestEducation;
+
+  /// No description provided for @labelCompanyName.
+  ///
+  /// In en, this message translates to:
+  /// **'Company Name'**
+  String get labelCompanyName;
+
+  /// No description provided for @labelWorkLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Work Location'**
+  String get labelWorkLocation;
+
+  /// No description provided for @labelFather.
+  ///
+  /// In en, this message translates to:
+  /// **'Father'**
+  String get labelFather;
+
+  /// No description provided for @labelMother.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother'**
+  String get labelMother;
+
+  /// No description provided for @labelFatherContactNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Father Contact {number}'**
+  String labelFatherContactNumbered(int number);
+
+  /// No description provided for @labelMotherContactNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother Contact {number}'**
+  String labelMotherContactNumbered(int number);
+
+  /// No description provided for @labelFamilyIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Income'**
+  String get labelFamilyIncome;
+
+  /// No description provided for @labelFamilyType.
+  ///
+  /// In en, this message translates to:
+  /// **'Family Type'**
+  String get labelFamilyType;
+
+  /// No description provided for @labelParentsAddresses.
+  ///
+  /// In en, this message translates to:
+  /// **'Parents Addresses'**
+  String get labelParentsAddresses;
+
+  /// No description provided for @labelAllianceNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'Alliance Network'**
+  String get labelAllianceNetwork;
+
+  /// No description provided for @labelOtherRelatives.
+  ///
+  /// In en, this message translates to:
+  /// **'Other Relatives'**
+  String get labelOtherRelatives;
+
+  /// No description provided for @labelPropertyDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Property Details'**
+  String get labelPropertyDetails;
+
+  /// No description provided for @labelGan.
+  ///
+  /// In en, this message translates to:
+  /// **'Gan'**
+  String get labelGan;
+
+  /// No description provided for @labelNadi.
+  ///
+  /// In en, this message translates to:
+  /// **'Nadi'**
+  String get labelNadi;
+
+  /// No description provided for @labelYoni.
+  ///
+  /// In en, this message translates to:
+  /// **'Yoni'**
+  String get labelYoni;
+
+  /// No description provided for @labelVarna.
+  ///
+  /// In en, this message translates to:
+  /// **'Varna'**
+  String get labelVarna;
+
+  /// No description provided for @labelVashya.
+  ///
+  /// In en, this message translates to:
+  /// **'Vashya'**
+  String get labelVashya;
+
+  /// No description provided for @labelRashiLord.
+  ///
+  /// In en, this message translates to:
+  /// **'Rashi Lord'**
+  String get labelRashiLord;
+
+  /// No description provided for @labelDevak.
+  ///
+  /// In en, this message translates to:
+  /// **'Devak'**
+  String get labelDevak;
+
+  /// No description provided for @labelKul.
+  ///
+  /// In en, this message translates to:
+  /// **'Kul'**
+  String get labelKul;
+
+  /// No description provided for @labelGotra.
+  ///
+  /// In en, this message translates to:
+  /// **'Gotra'**
+  String get labelGotra;
+
+  /// No description provided for @labelNavrasName.
+  ///
+  /// In en, this message translates to:
+  /// **'Navras Name'**
+  String get labelNavrasName;
+
+  /// No description provided for @labelBirthWeekday.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth Weekday'**
+  String get labelBirthWeekday;
+
+  /// No description provided for @labelExpectations.
+  ///
+  /// In en, this message translates to:
+  /// **'Expectations'**
+  String get labelExpectations;
+
+  /// No description provided for @labelHeightRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Height Range'**
+  String get labelHeightRange;
+
+  /// No description provided for @labelPartnerWithChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Partner With Children'**
+  String get labelPartnerWithChildren;
+
+  /// No description provided for @labelPreferredMaritalStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Marital Status'**
+  String get labelPreferredMaritalStatus;
+
+  /// No description provided for @labelPreferredDiet.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Diet'**
+  String get labelPreferredDiet;
+
+  /// No description provided for @labelPreferredReligion.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Religion'**
+  String get labelPreferredReligion;
+
+  /// No description provided for @labelPreferredCaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Caste'**
+  String get labelPreferredCaste;
+
+  /// No description provided for @labelPreferredEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Education'**
+  String get labelPreferredEducation;
+
+  /// No description provided for @labelPreferredOccupation.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Occupation'**
+  String get labelPreferredOccupation;
+
+  /// No description provided for @labelPhotoStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo Status'**
+  String get labelPhotoStatus;
+
+  /// No description provided for @valueNotAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not added'**
+  String get valueNotAdded;
+
+  /// No description provided for @valuePhotoUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo uploaded'**
+  String get valuePhotoUploaded;
+
+  /// No description provided for @valuePhotoPendingOrNotApproved.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo pending or not approved'**
+  String get valuePhotoPendingOrNotApproved;
+
+  /// No description provided for @valueNoApprovedPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'No approved photo'**
+  String get valueNoApprovedPhoto;
+
+  /// No description provided for @valueUndisclosed.
+  ///
+  /// In en, this message translates to:
+  /// **'Undisclosed'**
+  String get valueUndisclosed;
+
+  /// No description provided for @valueUpTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Up to {value}'**
+  String valueUpTo(String value);
+
+  /// No description provided for @valueApproxAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Approx. {value}'**
+  String valueApproxAmount(String value);
+
+  /// No description provided for @valueNoSiblings.
+  ///
+  /// In en, this message translates to:
+  /// **'No siblings'**
+  String get valueNoSiblings;
+
+  /// No description provided for @valueMoreCount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count} more'**
+  String valueMoreCount(int count);
+
+  /// No description provided for @siblingCountOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 sibling'**
+  String get siblingCountOne;
+
+  /// No description provided for @siblingCountOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} siblings'**
+  String siblingCountOther(int count);
+
+  /// No description provided for @childCountOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 child'**
+  String get childCountOne;
+
+  /// No description provided for @childCountOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} children'**
+  String childCountOther(int count);
+
+  /// No description provided for @valueMarriageYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Marriage {year}'**
+  String valueMarriageYear(String year);
+
+  /// No description provided for @valueSeparatedYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Separated {year}'**
+  String valueSeparatedYear(String year);
+
+  /// No description provided for @valueDivorceYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Divorce {year}'**
+  String valueDivorceYear(String year);
+
+  /// No description provided for @valueAnnulmentYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Annulment {year}'**
+  String valueAnnulmentYear(String year);
+
+  /// No description provided for @valueSpouseDeathYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Spouse death {year}'**
+  String valueSpouseDeathYear(String year);
+
+  /// No description provided for @valueChildNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Child {number}'**
+  String valueChildNumbered(int number);
+
+  /// No description provided for @valueAgeYears.
+  ///
+  /// In en, this message translates to:
+  /// **'{age} years'**
+  String valueAgeYears(String age);
+
+  /// No description provided for @valueFinalized.
+  ///
+  /// In en, this message translates to:
+  /// **'Finalized'**
+  String get valueFinalized;
+
+  /// No description provided for @valueMutual.
+  ///
+  /// In en, this message translates to:
+  /// **'Mutual'**
+  String get valueMutual;
+
+  /// No description provided for @valueContested.
+  ///
+  /// In en, this message translates to:
+  /// **'Contested'**
+  String get valueContested;
+
+  /// No description provided for @valuePreferNotToSay.
+  ///
+  /// In en, this message translates to:
+  /// **'Prefer not to say'**
+  String get valuePreferNotToSay;
+
+  /// No description provided for @valueMarried.
+  ///
+  /// In en, this message translates to:
+  /// **'Married'**
+  String get valueMarried;
+
+  /// No description provided for @valueUnmarried.
+  ///
+  /// In en, this message translates to:
+  /// **'Unmarried'**
+  String get valueUnmarried;
+
+  /// No description provided for @relationBrotherWife.
+  ///
+  /// In en, this message translates to:
+  /// **'Brother\'s wife'**
+  String get relationBrotherWife;
+
+  /// No description provided for @relationSisterHusband.
+  ///
+  /// In en, this message translates to:
+  /// **'Sister\'s husband'**
+  String get relationSisterHusband;
+
+  /// No description provided for @relationPaternalGrandfather.
+  ///
+  /// In en, this message translates to:
+  /// **'Paternal Grandfather'**
+  String get relationPaternalGrandfather;
+
+  /// No description provided for @relationPaternalGrandmother.
+  ///
+  /// In en, this message translates to:
+  /// **'Paternal Grandmother'**
+  String get relationPaternalGrandmother;
+
+  /// No description provided for @relationPaternalUncle.
+  ///
+  /// In en, this message translates to:
+  /// **'Paternal Uncle'**
+  String get relationPaternalUncle;
+
+  /// No description provided for @relationPaternalUncleWife.
+  ///
+  /// In en, this message translates to:
+  /// **'Wife of Paternal Uncle'**
+  String get relationPaternalUncleWife;
+
+  /// No description provided for @relationPaternalAunt.
+  ///
+  /// In en, this message translates to:
+  /// **'Paternal Aunt'**
+  String get relationPaternalAunt;
+
+  /// No description provided for @relationPaternalAuntHusband.
+  ///
+  /// In en, this message translates to:
+  /// **'Husband of Paternal Aunt'**
+  String get relationPaternalAuntHusband;
+
+  /// No description provided for @relationCousin.
+  ///
+  /// In en, this message translates to:
+  /// **'Cousin'**
+  String get relationCousin;
+
+  /// No description provided for @relationMaternalAddressAjol.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal address (Ajol)'**
+  String get relationMaternalAddressAjol;
+
+  /// No description provided for @relationMaternalGrandfather.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal Grandfather'**
+  String get relationMaternalGrandfather;
+
+  /// No description provided for @relationMaternalGrandmother.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal Grandmother'**
+  String get relationMaternalGrandmother;
+
+  /// No description provided for @relationMaternalUncle.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal Uncle'**
+  String get relationMaternalUncle;
+
+  /// No description provided for @relationMaternalUncleWife.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal Uncle\'s wife'**
+  String get relationMaternalUncleWife;
+
+  /// No description provided for @relationMaternalAunt.
+  ///
+  /// In en, this message translates to:
+  /// **'Maternal Aunt'**
+  String get relationMaternalAunt;
+
+  /// No description provided for @relationMaternalAuntHusband.
+  ///
+  /// In en, this message translates to:
+  /// **'Husband of Maternal Aunt'**
+  String get relationMaternalAuntHusband;
+
+  /// No description provided for @clear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
+  /// No description provided for @unableToLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to load'**
+  String get unableToLoad;
+
+  /// No description provided for @tryAnotherSearchTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another search term.'**
+  String get tryAnotherSearchTerm;
+
+  /// No description provided for @requestToAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Request to add'**
+  String get requestToAdd;
+
+  /// No description provided for @popular.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular'**
+  String get popular;
+
+  /// No description provided for @notSelectableForThisField.
+  ///
+  /// In en, this message translates to:
+  /// **'Not selectable for this field.'**
+  String get notSelectableForThisField;
+
+  /// No description provided for @translationMissingFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Translation missing. Showing fallback label.'**
+  String get translationMissingFallback;
+
+  /// No description provided for @done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get done;
+
+  /// No description provided for @selectedCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String selectedCount(int count);
+
+  /// No description provided for @noPendingContactRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No pending contact requests.'**
+  String get noPendingContactRequests;
+
+  /// No description provided for @noSentContactRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No sent contact requests.'**
+  String get noSentContactRequests;
+
+  /// No description provided for @requestedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested'**
+  String get requestedLabel;
+
+  /// No description provided for @createdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get createdLabel;
+
+  /// No description provided for @approve.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve'**
+  String get approve;
+
+  /// No description provided for @approveContactTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve Contact'**
+  String get approveContactTitle;
+
+  /// No description provided for @durationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration'**
+  String get durationLabel;
+
+  /// No description provided for @approveOnce24Hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Approve once (24 hours)'**
+  String get approveOnce24Hours;
+
+  /// No description provided for @grantAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant Access'**
+  String get grantAccess;
+
+  /// No description provided for @contactAccessGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact access granted.'**
+  String get contactAccessGranted;
+
+  /// No description provided for @rejectRequestTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reject request?'**
+  String get rejectRequestTitle;
+
+  /// No description provided for @rejectRequestBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will reject the contact request.'**
+  String get rejectRequestBody;
+
+  /// No description provided for @requestRejected.
+  ///
+  /// In en, this message translates to:
+  /// **'Request rejected.'**
+  String get requestRejected;
+
+  /// No description provided for @contactRequestLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact request'**
+  String get contactRequestLabel;
+
+  /// No description provided for @interestWithdrawnSuccessfully.
+  ///
+  /// In en, this message translates to:
+  /// **'Interest withdrawn successfully.'**
+  String get interestWithdrawnSuccessfully;
+
+  /// No description provided for @unknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get unknown;
+
+  /// No description provided for @noSentInterestsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'You have not sent any interests yet.'**
+  String get noSentInterestsYet;
+
+  /// No description provided for @statusPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Status: '**
+  String get statusPrefix;
+
+  /// No description provided for @withdrawInterest.
+  ///
+  /// In en, this message translates to:
+  /// **'Withdraw Interest'**
+  String get withdrawInterest;
+
+  /// No description provided for @unauthorizedAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Unauthorized'**
+  String get unauthorizedAccess;
+
+  /// No description provided for @photoSelectedWillBeChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo selected. It will be checked for quality and safety after upload.'**
+  String get photoSelectedWillBeChecked;
+
+  /// No description provided for @refreshStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh status'**
+  String get refreshStatus;
+
+  /// No description provided for @clearProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear profile photo'**
+  String get clearProfilePhoto;
+
+  /// No description provided for @portrait34WorksBest.
+  ///
+  /// In en, this message translates to:
+  /// **'3:4 portrait works best'**
+  String get portrait34WorksBest;
+
+  /// No description provided for @photoGuidelines.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo guidelines'**
+  String get photoGuidelines;
+
+  /// No description provided for @stageAddYourProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your profile photo'**
+  String get stageAddYourProfilePhoto;
+
+  /// No description provided for @stageQualityCheckInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Quality check in progress'**
+  String get stageQualityCheckInProgress;
+
+  /// No description provided for @approvedPhotoVisibleOnProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved photo currently visible on your profile.'**
+  String get approvedPhotoVisibleOnProfile;
+
+  /// No description provided for @uploadClearPhotoWeWillCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload a clear photo. We will optimize it and check it before it appears on your profile.'**
+  String get uploadClearPhotoWeWillCheck;
+
+  /// No description provided for @approved.
+  ///
+  /// In en, this message translates to:
+  /// **'Approved'**
+  String get approved;
+
+  /// No description provided for @badgeNeedsRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs retry'**
+  String get badgeNeedsRetry;
+
+  /// No description provided for @badgeChecking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get badgeChecking;
+
+  /// No description provided for @badgeUploading.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get badgeUploading;
+
+  /// No description provided for @badgeSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get badgeSelected;
+
+  /// No description provided for @primaryPhotoUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary photo updated.'**
+  String get primaryPhotoUpdated;
+
+  /// No description provided for @photoDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo deleted.'**
+  String get photoDeleted;
+
+  /// No description provided for @photoOrderUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo order updated.'**
+  String get photoOrderUpdated;
+
+  /// No description provided for @dashboardHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get dashboardHome;
+
+  /// No description provided for @upload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload'**
+  String get upload;
+
+  /// No description provided for @adjustCrop34.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust 3:4 crop'**
+  String get adjustCrop34;
+
+  /// No description provided for @dragFramePullCorners.
+  ///
+  /// In en, this message translates to:
+  /// **'Drag the frame. Pull corners to resize.'**
+  String get dragFramePullCorners;
+
+  /// No description provided for @usePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Use photo'**
+  String get usePhoto;
+
+  /// No description provided for @cropEncodingFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Crop encoding failed.'**
+  String get cropEncodingFailed;
+
+  /// No description provided for @comparisonStrongMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong match'**
+  String get comparisonStrongMatch;
+
+  /// No description provided for @comparisonMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Match'**
+  String get comparisonMatch;
+
+  /// No description provided for @comparisonNearMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Near match'**
+  String get comparisonNearMatch;
+
+  /// No description provided for @comparisonNeedsReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs review'**
+  String get comparisonNeedsReview;
+
+  /// No description provided for @comparisonReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Review'**
+  String get comparisonReview;
+
+  /// No description provided for @mobileLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile'**
+  String get mobileLabel;
+
+  /// No description provided for @adminPolicyHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Admin policy'**
+  String get adminPolicyHeading;
+
+  /// No description provided for @requestModeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Request mode'**
+  String get requestModeLabel;
+
+  /// No description provided for @allowedScopesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Allowed scopes'**
+  String get allowedScopesLabel;
+
+  /// No description provided for @messagingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Messaging'**
+  String get messagingLabel;
+
+  /// No description provided for @accountProfileIdLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile ID'**
+  String get accountProfileIdLabel;
+
+  /// No description provided for @moreMatchesSectionsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'More Matches sections unavailable.'**
+  String get moreMatchesSectionsUnavailable;
+
+  /// No description provided for @recommendationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recommendation'**
+  String get recommendationTitle;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @swipeInterestHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Swipe right to send interest. Swipe left to skip.'**
+  String get swipeInterestHint;
+
+  /// No description provided for @filterTabMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum'**
+  String get filterTabMinimum;
+
+  /// No description provided for @filterTabAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get filterTabAdvanced;
+
+  /// No description provided for @apply.
+  ///
+  /// In en, this message translates to:
+  /// **'Apply'**
+  String get apply;
+
+  /// No description provided for @basicPreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Basic preference'**
+  String get basicPreference;
+
+  /// No description provided for @verifiedPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Verified photo'**
+  String get verifiedPhoto;
+
+  /// No description provided for @optionFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Option'**
+  String get optionFallback;
 }
 
 class _AppLocalizationsDelegate

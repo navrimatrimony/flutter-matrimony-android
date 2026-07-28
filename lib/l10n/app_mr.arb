@@ -1173,5 +1173,277 @@
   "intervalEachWeek": "दर आठवड्याला",
   "intervalEachMonth": "दर महिन्याला",
   "intervalEachQuarter": "दर तिमाहीला",
-  "intervalInTotal": "एकूण"
+  "intervalInTotal": "एकूण",
+  "sectionBasicInformation": "मूलभूत माहिती",
+  "sectionPhysical": "शारीरिक माहिती",
+  "sectionSiblings": "भावंडे",
+  "sectionRelatives": "नातेवाईक",
+  "sectionProperty": "मालमत्ता",
+  "sectionHoroscope": "पत्रिका",
+  "sectionAboutMe": "माझ्याबद्दल",
+  "sectionPartnerPreferences": "जोडीदाराच्या अपेक्षा",
+  "labelSelfAddresses": "स्वतःचे पत्ते",
+  "labelAddressLine": "पत्ता",
+  "labelBirthTime": "जन्मवेळ",
+  "labelBirthPlace": "जन्मस्थान",
+  "labelMarriageHistory": "विवाहाचा तपशील",
+  "labelChildren": "अपत्ये",
+  "labelWeight": "वजन",
+  "labelComplexion": "वर्ण",
+  "labelBloodGroup": "रक्तगट",
+  "labelPhysicalCondition": "शारीरिक स्थिती",
+  "labelHighestEducation": "सर्वोच्च शिक्षण",
+  "labelCompanyName": "कंपनीचे नाव",
+  "labelWorkLocation": "कामाचे ठिकाण",
+  "labelFather": "वडील",
+  "labelMother": "आई",
+  "labelFatherContactNumbered": "वडिलांचा संपर्क {number}",
+  "@labelFatherContactNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "labelMotherContactNumbered": "आईचा संपर्क {number}",
+  "@labelMotherContactNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "labelFamilyIncome": "कौटुंबिक उत्पन्न",
+  "labelFamilyType": "कुटुंबाचा प्रकार",
+  "labelParentsAddresses": "आई-वडिलांचे पत्ते",
+  "labelAllianceNetwork": "सोयरिक नेटवर्क",
+  "labelOtherRelatives": "इतर नातेवाईक",
+  "labelPropertyDetails": "मालमत्तेचा तपशील",
+  "labelGan": "गण",
+  "labelNadi": "नाडी",
+  "labelYoni": "योनी",
+  "labelVarna": "वर्ण",
+  "labelVashya": "वश्य",
+  "labelRashiLord": "राशी स्वामी",
+  "labelDevak": "देवक",
+  "labelKul": "कुळ",
+  "labelGotra": "गोत्र",
+  "labelNavrasName": "नवरस नाव",
+  "labelBirthWeekday": "जन्मवार",
+  "labelExpectations": "अपेक्षा",
+  "labelHeightRange": "उंचीची मर्यादा",
+  "labelPartnerWithChildren": "अपत्य असलेला जोडीदार",
+  "labelPreferredMaritalStatus": "अपेक्षित वैवाहिक स्थिती",
+  "labelPreferredDiet": "अपेक्षित आहार",
+  "labelPreferredReligion": "अपेक्षित धर्म",
+  "labelPreferredCaste": "अपेक्षित जात",
+  "labelPreferredEducation": "अपेक्षित शिक्षण",
+  "labelPreferredOccupation": "अपेक्षित व्यवसाय",
+  "labelPhotoStatus": "फोटोची स्थिती",
+  "valueNotAdded": "भरलेले नाही",
+  "valuePhotoUploaded": "फोटो जोडला आहे",
+  "valuePhotoPendingOrNotApproved": "फोटो अजून मंजूर झालेला नाही",
+  "valueNoApprovedPhoto": "मंजूर फोटो नाही",
+  "valueUndisclosed": "सांगितलेले नाही",
+  "valueUpTo": "{value} पर्यंत",
+  "@valueUpTo": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "valueApproxAmount": "अंदाजे {value}",
+  "@valueApproxAmount": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "valueNoSiblings": "भावंडे नाहीत",
+  "valueMoreCount": "आणखी {count}",
+  "@valueMoreCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "siblingCountOne": "1 भावंड",
+  "siblingCountOther": "{count} भावंडे",
+  "@siblingCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "childCountOne": "1 अपत्य",
+  "childCountOther": "{count} अपत्ये",
+  "@childCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "valueMarriageYear": "विवाह {year}",
+  "@valueMarriageYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueSeparatedYear": "विभक्त {year}",
+  "@valueSeparatedYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueDivorceYear": "घटस्फोट {year}",
+  "@valueDivorceYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueAnnulmentYear": "विवाह रद्द {year}",
+  "@valueAnnulmentYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueSpouseDeathYear": "जोडीदाराचे निधन {year}",
+  "@valueSpouseDeathYear": {
+    "placeholders": {
+      "year": {
+        "type": "String"
+      }
+    }
+  },
+  "valueChildNumbered": "अपत्य {number}",
+  "@valueChildNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "valueAgeYears": "{age} वर्षे",
+  "@valueAgeYears": {
+    "placeholders": {
+      "age": {
+        "type": "String"
+      }
+    }
+  },
+  "valueFinalized": "अंतिम झाले",
+  "valueMutual": "परस्पर संमतीने",
+  "valueContested": "वाद सुरू आहे",
+  "valuePreferNotToSay": "सांगायचे नाही",
+  "valueMarried": "विवाहित",
+  "valueUnmarried": "अविवाहित",
+  "relationBrotherWife": "वहिनी",
+  "relationSisterHusband": "बहिणीचे पती",
+  "relationPaternalGrandfather": "आजोबा (वडिलांकडील)",
+  "relationPaternalGrandmother": "आजी (वडिलांकडील)",
+  "relationPaternalUncle": "काका",
+  "relationPaternalUncleWife": "काकू",
+  "relationPaternalAunt": "आत्या",
+  "relationPaternalAuntHusband": "आत्याचे पती",
+  "relationCousin": "चुलत / मामे भावंड",
+  "relationMaternalAddressAjol": "आजोळ",
+  "relationMaternalGrandfather": "आजोबा (आईकडील)",
+  "relationMaternalGrandmother": "आजी (आईकडील)",
+  "relationMaternalUncle": "मामा",
+  "relationMaternalUncleWife": "मामी",
+  "relationMaternalAunt": "मावशी",
+  "relationMaternalAuntHusband": "मावशीचे पती",
+  "clear": "साफ करा",
+  "unableToLoad": "माहिती आणता आली नाही",
+  "tryAnotherSearchTerm": "दुसरा शब्द टाकून बघा.",
+  "requestToAdd": "जोडण्याची विनंती करा",
+  "popular": "नेहमीचे",
+  "notSelectableForThisField": "इथे हा पर्याय निवडता येणार नाही.",
+  "translationMissingFallback": "मराठी नाव उपलब्ध नाही. मूळ नाव दाखवत आहोत.",
+  "done": "झाले",
+  "selectedCount": "{count} निवडले",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "noPendingContactRequests": "प्रलंबित संपर्क विनंत्या नाहीत.",
+  "noSentContactRequests": "पाठवलेल्या संपर्क विनंत्या नाहीत.",
+  "requestedLabel": "मागितलेले",
+  "createdLabel": "तारीख",
+  "approve": "मंजूर करा",
+  "approveContactTitle": "संपर्काला मंजुरी",
+  "durationLabel": "कालावधी",
+  "approveOnce24Hours": "एकदाच मंजुरी (24 तास)",
+  "grantAccess": "परवानगी द्या",
+  "contactAccessGranted": "संपर्काची परवानगी दिली.",
+  "rejectRequestTitle": "विनंती नाकारायची?",
+  "rejectRequestBody": "यामुळे संपर्काची विनंती नाकारली जाईल.",
+  "requestRejected": "विनंती नाकारली.",
+  "contactRequestLabel": "संपर्काची विनंती",
+  "interestWithdrawnSuccessfully": "पसंती मागे घेतली.",
+  "unknown": "माहीत नाही",
+  "noSentInterestsYet": "तुम्ही अजून कोणालाही पसंती पाठवलेली नाही.",
+  "statusPrefix": "स्थिती: ",
+  "withdrawInterest": "पसंती मागे घ्या",
+  "unauthorizedAccess": "परवानगी नाही",
+  "photoSelectedWillBeChecked": "फोटो निवडला. अपलोड झाल्यावर त्याचा दर्जा आणि सुरक्षितता तपासली जाईल.",
+  "refreshStatus": "स्थिती पुन्हा तपासा",
+  "clearProfilePhoto": "स्पष्ट प्रोफाइल फोटो",
+  "portrait34WorksBest": "3:4 उभा फोटो सर्वात चांगला दिसतो",
+  "photoGuidelines": "फोटोसाठी सूचना",
+  "stageAddYourProfilePhoto": "तुमचा प्रोफाइल फोटो जोडा",
+  "stageQualityCheckInProgress": "तपासणी सुरू आहे",
+  "approvedPhotoVisibleOnProfile": "सध्या तुमच्या प्रोफाइलवर मंजूर फोटो दिसत आहे.",
+  "uploadClearPhotoWeWillCheck": "स्पष्ट फोटो अपलोड करा. प्रोफाइलवर दाखवण्याआधी आम्ही तो तपासून घेतो.",
+  "approved": "मंजूर",
+  "badgeNeedsRetry": "पुन्हा पाठवा",
+  "badgeChecking": "तपासत आहोत",
+  "badgeUploading": "अपलोड होत आहे",
+  "badgeSelected": "निवडला",
+  "primaryPhotoUpdated": "मुख्य फोटो बदलला.",
+  "photoDeleted": "फोटो काढून टाकला.",
+  "photoOrderUpdated": "फोटोंचा क्रम बदलला.",
+  "dashboardHome": "मुख्य पान",
+  "upload": "अपलोड करा",
+  "adjustCrop34": "3:4 प्रमाणात फोटो कापा",
+  "dragFramePullCorners": "चौकट सरकवा. कोपरे ओढून आकार बदला.",
+  "usePhoto": "हा फोटो वापरा",
+  "cropEncodingFailed": "फोटो कापताना अडचण आली.",
+  "comparisonStrongMatch": "भक्कम जुळणी",
+  "comparisonMatch": "जुळते",
+  "comparisonNearMatch": "जवळपास जुळते",
+  "comparisonNeedsReview": "तपासून पाहा",
+  "comparisonReview": "तपासा",
+  "mobileLabel": "मोबाइल",
+  "adminPolicyHeading": "प्रशासनाचे धोरण",
+  "requestModeLabel": "विनंतीची पद्धत",
+  "allowedScopesLabel": "परवानगी असलेली माहिती",
+  "messagingLabel": "संदेश",
+  "accountProfileIdLabel": "प्रोफाइल आयडी",
+  "moreMatchesSectionsUnavailable": "अधिक जुळणी विभाग सध्या उपलब्ध नाहीत.",
+  "recommendationTitle": "शिफारस",
+  "skip": "नको",
+  "swipeInterestHint": "पसंती पाठवण्यासाठी उजवीकडे सरकवा. वगळण्यासाठी डावीकडे सरकवा.",
+  "filterTabMinimum": "किमान",
+  "filterTabAdvanced": "अधिक पर्याय",
+  "apply": "लागू करा",
+  "basicPreference": "मूलभूत अपेक्षा",
+  "verifiedPhoto": "पडताळलेला फोटो",
+  "optionFallback": "पर्याय"
 }

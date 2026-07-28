@@ -1924,7 +1924,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     final profile = _effectiveProfile;
     return [
       _readinessItem(
-        title: _readinessCopy('Basic Information', 'Basic Information'),
+        title: appText.sectionBasicInformation,
         icon: Icons.badge_outlined,
         filled: _filledCount([
           _profileName(profile) != AppStrings.profile,
@@ -1962,7 +1962,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             _openEditProfile(targetSection: EditProfileTargetSection.photo),
       ),
       _readinessItem(
-        title: _readinessCopy('Physical', 'Physical'),
+        title: appText.sectionPhysical,
         icon: Icons.accessibility_new_outlined,
         filled: _filledCount([
           _hasAnyProfileValue(profile, const ['height_cm', 'height']),
@@ -2007,7 +2007,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ),
       ),
       _readinessItem(
-        title: _readinessCopy('Family Details', 'Family Details'),
+        title: appText.familyDetails,
         icon: Icons.family_restroom_outlined,
         filled: _filledCount([
           _hasAnyProfileValue(profile, const ['father_name']),
@@ -2044,7 +2044,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ),
       ),
       _readinessItem(
-        title: _readinessCopy('Siblings', 'Siblings'),
+        title: appText.sectionSiblings,
         icon: Icons.groups_2_outlined,
         filled: _hasSiblingDecision(profile) ? 1 : 0,
         total: 1,
@@ -2053,7 +2053,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             _openEditProfile(targetSection: EditProfileTargetSection.siblings),
       ),
       _readinessItem(
-        title: _readinessCopy('Relatives', 'Relatives'),
+        title: appText.sectionRelatives,
         icon: Icons.handshake_outlined,
         filled: _filledCount([
           _hasAnyListData(profile, const ['relatives']),
@@ -2067,7 +2067,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             _openEditProfile(targetSection: EditProfileTargetSection.relatives),
       ),
       _readinessItem(
-        title: _readinessCopy('Property', 'Property'),
+        title: appText.sectionProperty,
         icon: Icons.home_work_outlined,
         filled:
             _hasAnyProfileValue(profile, const [
@@ -2082,7 +2082,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             _openEditProfile(targetSection: EditProfileTargetSection.property),
       ),
       _readinessItem(
-        title: _readinessCopy('Horoscope', 'Horoscope'),
+        title: appText.sectionHoroscope,
         icon: Icons.auto_awesome_outlined,
         filled: _filledCount([
           _hasAnyProfileValue(profile, const ['rashi_id', 'rashi']),
@@ -2099,7 +2099,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             _openEditProfile(targetSection: EditProfileTargetSection.horoscope),
       ),
       _readinessItem(
-        title: _readinessCopy('About Me', 'About Me'),
+        title: appText.sectionAboutMe,
         icon: Icons.notes_outlined,
         filled: _aboutMeReady(profile) ? 1 : 0,
         total: 1,

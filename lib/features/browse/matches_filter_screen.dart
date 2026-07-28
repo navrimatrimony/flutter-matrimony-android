@@ -311,8 +311,8 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white.withValues(alpha: 0.72),
             tabs: [
-              Tab(text: _text('Minimum', 'Minimum')),
-              Tab(text: _text('Advanced', 'Advanced')),
+              Tab(text: appText.filterTabMinimum),
+              Tab(text: appText.filterTabAdvanced),
             ],
           ),
         ),
@@ -341,7 +341,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
                       setState(() => _draft = const MatchesFilterState());
                     },
                     icon: const Icon(Icons.refresh_rounded),
-                    label: Text(_text('Clear', 'Clear')),
+                    label: Text(appText.clear),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _brandColor,
                       side: const BorderSide(color: _brandColor),
@@ -355,7 +355,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => Navigator.pop(context, _draft),
                     icon: const Icon(Icons.done_rounded),
-                    label: Text(_text('Apply', 'Apply')),
+                    label: Text(appText.apply),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: _brandColor,
                       foregroundColor: Colors.white,
@@ -377,7 +377,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
       children: [
         _buildSectionCard(
-          title: _text('Basic preference', 'Basic preference'),
+          title: appText.basicPreference,
           children: [
             _buildRangeBlock(
               label: _text('Age', 'वय'),
@@ -553,7 +553,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
             const SizedBox(height: 8),
             _buildSwitchTile(
               icon: Icons.verified_outlined,
-              label: _text('Verified photo', 'Verified photo'),
+              label: appText.verifiedPhoto,
               value: _draft.verifiedPhoto,
               onChanged: (value) {
                 setState(() {
@@ -564,7 +564,7 @@ class _MatchesFilterScreenState extends State<MatchesFilterScreen> {
             const SizedBox(height: 8),
             _buildSwitchTile(
               icon: Icons.bolt_outlined,
-              label: _text('Recently active', 'Recently active'),
+              label: appText.recentlyActive,
               value: _draft.recentlyActive,
               onChanged: (value) {
                 setState(() {
@@ -1328,7 +1328,8 @@ int? _optionId(Map<String, dynamic> row) {
 }
 
 String _optionLabel(Map<String, dynamic> row) {
-  return ApiClient.safeDisplayLabel(row, allowIdFallback: true) ?? 'Option';
+  return ApiClient.safeDisplayLabel(row, allowIdFallback: true) ??
+      appText.optionFallback;
 }
 
 String? _optionSubtitle(Map<String, dynamic> row, String label) {

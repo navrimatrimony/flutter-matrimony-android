@@ -3849,4 +3849,542 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get intervalInTotal => 'in total';
+
+  @override
+  String get sectionBasicInformation => 'Basic Information';
+
+  @override
+  String get sectionPhysical => 'Physical';
+
+  @override
+  String get sectionSiblings => 'Siblings';
+
+  @override
+  String get sectionRelatives => 'Relatives';
+
+  @override
+  String get sectionProperty => 'Property';
+
+  @override
+  String get sectionHoroscope => 'Horoscope';
+
+  @override
+  String get sectionAboutMe => 'About Me';
+
+  @override
+  String get sectionPartnerPreferences => 'Partner Preferences';
+
+  @override
+  String get labelSelfAddresses => 'Self Addresses';
+
+  @override
+  String get labelAddressLine => 'Address Line';
+
+  @override
+  String get labelBirthTime => 'Birth Time';
+
+  @override
+  String get labelBirthPlace => 'Birth Place';
+
+  @override
+  String get labelMarriageHistory => 'Marriage History';
+
+  @override
+  String get labelChildren => 'Children';
+
+  @override
+  String get labelWeight => 'Weight';
+
+  @override
+  String get labelComplexion => 'Complexion';
+
+  @override
+  String get labelBloodGroup => 'Blood Group';
+
+  @override
+  String get labelPhysicalCondition => 'Physical Condition';
+
+  @override
+  String get labelHighestEducation => 'Highest Education';
+
+  @override
+  String get labelCompanyName => 'Company Name';
+
+  @override
+  String get labelWorkLocation => 'Work Location';
+
+  @override
+  String get labelFather => 'Father';
+
+  @override
+  String get labelMother => 'Mother';
+
+  @override
+  String labelFatherContactNumbered(int number) {
+    return 'Father Contact $number';
+  }
+
+  @override
+  String labelMotherContactNumbered(int number) {
+    return 'Mother Contact $number';
+  }
+
+  @override
+  String get labelFamilyIncome => 'Family Income';
+
+  @override
+  String get labelFamilyType => 'Family Type';
+
+  @override
+  String get labelParentsAddresses => 'Parents Addresses';
+
+  @override
+  String get labelAllianceNetwork => 'Alliance Network';
+
+  @override
+  String get labelOtherRelatives => 'Other Relatives';
+
+  @override
+  String get labelPropertyDetails => 'Property Details';
+
+  @override
+  String get labelGan => 'Gan';
+
+  @override
+  String get labelNadi => 'Nadi';
+
+  @override
+  String get labelYoni => 'Yoni';
+
+  @override
+  String get labelVarna => 'Varna';
+
+  @override
+  String get labelVashya => 'Vashya';
+
+  @override
+  String get labelRashiLord => 'Rashi Lord';
+
+  @override
+  String get labelDevak => 'Devak';
+
+  @override
+  String get labelKul => 'Kul';
+
+  @override
+  String get labelGotra => 'Gotra';
+
+  @override
+  String get labelNavrasName => 'Navras Name';
+
+  @override
+  String get labelBirthWeekday => 'Birth Weekday';
+
+  @override
+  String get labelExpectations => 'Expectations';
+
+  @override
+  String get labelHeightRange => 'Height Range';
+
+  @override
+  String get labelPartnerWithChildren => 'Partner With Children';
+
+  @override
+  String get labelPreferredMaritalStatus => 'Preferred Marital Status';
+
+  @override
+  String get labelPreferredDiet => 'Preferred Diet';
+
+  @override
+  String get labelPreferredReligion => 'Preferred Religion';
+
+  @override
+  String get labelPreferredCaste => 'Preferred Caste';
+
+  @override
+  String get labelPreferredEducation => 'Preferred Education';
+
+  @override
+  String get labelPreferredOccupation => 'Preferred Occupation';
+
+  @override
+  String get labelPhotoStatus => 'Photo Status';
+
+  @override
+  String get valueNotAdded => 'Not added';
+
+  @override
+  String get valuePhotoUploaded => 'Photo uploaded';
+
+  @override
+  String get valuePhotoPendingOrNotApproved => 'Photo pending or not approved';
+
+  @override
+  String get valueNoApprovedPhoto => 'No approved photo';
+
+  @override
+  String get valueUndisclosed => 'Undisclosed';
+
+  @override
+  String valueUpTo(String value) {
+    return 'Up to $value';
+  }
+
+  @override
+  String valueApproxAmount(String value) {
+    return 'Approx. $value';
+  }
+
+  @override
+  String get valueNoSiblings => 'No siblings';
+
+  @override
+  String valueMoreCount(int count) {
+    return '+$count more';
+  }
+
+  @override
+  String get siblingCountOne => '1 sibling';
+
+  @override
+  String siblingCountOther(int count) {
+    return '$count siblings';
+  }
+
+  @override
+  String get childCountOne => '1 child';
+
+  @override
+  String childCountOther(int count) {
+    return '$count children';
+  }
+
+  @override
+  String valueMarriageYear(String year) {
+    return 'Marriage $year';
+  }
+
+  @override
+  String valueSeparatedYear(String year) {
+    return 'Separated $year';
+  }
+
+  @override
+  String valueDivorceYear(String year) {
+    return 'Divorce $year';
+  }
+
+  @override
+  String valueAnnulmentYear(String year) {
+    return 'Annulment $year';
+  }
+
+  @override
+  String valueSpouseDeathYear(String year) {
+    return 'Spouse death $year';
+  }
+
+  @override
+  String valueChildNumbered(int number) {
+    return 'Child $number';
+  }
+
+  @override
+  String valueAgeYears(String age) {
+    return '$age years';
+  }
+
+  @override
+  String get valueFinalized => 'Finalized';
+
+  @override
+  String get valueMutual => 'Mutual';
+
+  @override
+  String get valueContested => 'Contested';
+
+  @override
+  String get valuePreferNotToSay => 'Prefer not to say';
+
+  @override
+  String get valueMarried => 'Married';
+
+  @override
+  String get valueUnmarried => 'Unmarried';
+
+  @override
+  String get relationBrotherWife => 'Brother\'s wife';
+
+  @override
+  String get relationSisterHusband => 'Sister\'s husband';
+
+  @override
+  String get relationPaternalGrandfather => 'Paternal Grandfather';
+
+  @override
+  String get relationPaternalGrandmother => 'Paternal Grandmother';
+
+  @override
+  String get relationPaternalUncle => 'Paternal Uncle';
+
+  @override
+  String get relationPaternalUncleWife => 'Wife of Paternal Uncle';
+
+  @override
+  String get relationPaternalAunt => 'Paternal Aunt';
+
+  @override
+  String get relationPaternalAuntHusband => 'Husband of Paternal Aunt';
+
+  @override
+  String get relationCousin => 'Cousin';
+
+  @override
+  String get relationMaternalAddressAjol => 'Maternal address (Ajol)';
+
+  @override
+  String get relationMaternalGrandfather => 'Maternal Grandfather';
+
+  @override
+  String get relationMaternalGrandmother => 'Maternal Grandmother';
+
+  @override
+  String get relationMaternalUncle => 'Maternal Uncle';
+
+  @override
+  String get relationMaternalUncleWife => 'Maternal Uncle\'s wife';
+
+  @override
+  String get relationMaternalAunt => 'Maternal Aunt';
+
+  @override
+  String get relationMaternalAuntHusband => 'Husband of Maternal Aunt';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String get unableToLoad => 'Unable to load';
+
+  @override
+  String get tryAnotherSearchTerm => 'Try another search term.';
+
+  @override
+  String get requestToAdd => 'Request to add';
+
+  @override
+  String get popular => 'Popular';
+
+  @override
+  String get notSelectableForThisField => 'Not selectable for this field.';
+
+  @override
+  String get translationMissingFallback =>
+      'Translation missing. Showing fallback label.';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String selectedCount(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get noPendingContactRequests => 'No pending contact requests.';
+
+  @override
+  String get noSentContactRequests => 'No sent contact requests.';
+
+  @override
+  String get requestedLabel => 'Requested';
+
+  @override
+  String get createdLabel => 'Created';
+
+  @override
+  String get approve => 'Approve';
+
+  @override
+  String get approveContactTitle => 'Approve Contact';
+
+  @override
+  String get durationLabel => 'Duration';
+
+  @override
+  String get approveOnce24Hours => 'Approve once (24 hours)';
+
+  @override
+  String get grantAccess => 'Grant Access';
+
+  @override
+  String get contactAccessGranted => 'Contact access granted.';
+
+  @override
+  String get rejectRequestTitle => 'Reject request?';
+
+  @override
+  String get rejectRequestBody => 'This will reject the contact request.';
+
+  @override
+  String get requestRejected => 'Request rejected.';
+
+  @override
+  String get contactRequestLabel => 'Contact request';
+
+  @override
+  String get interestWithdrawnSuccessfully =>
+      'Interest withdrawn successfully.';
+
+  @override
+  String get unknown => 'Unknown';
+
+  @override
+  String get noSentInterestsYet => 'You have not sent any interests yet.';
+
+  @override
+  String get statusPrefix => 'Status: ';
+
+  @override
+  String get withdrawInterest => 'Withdraw Interest';
+
+  @override
+  String get unauthorizedAccess => 'Unauthorized';
+
+  @override
+  String get photoSelectedWillBeChecked =>
+      'Photo selected. It will be checked for quality and safety after upload.';
+
+  @override
+  String get refreshStatus => 'Refresh status';
+
+  @override
+  String get clearProfilePhoto => 'Clear profile photo';
+
+  @override
+  String get portrait34WorksBest => '3:4 portrait works best';
+
+  @override
+  String get photoGuidelines => 'Photo guidelines';
+
+  @override
+  String get stageAddYourProfilePhoto => 'Add your profile photo';
+
+  @override
+  String get stageQualityCheckInProgress => 'Quality check in progress';
+
+  @override
+  String get approvedPhotoVisibleOnProfile =>
+      'Approved photo currently visible on your profile.';
+
+  @override
+  String get uploadClearPhotoWeWillCheck =>
+      'Upload a clear photo. We will optimize it and check it before it appears on your profile.';
+
+  @override
+  String get approved => 'Approved';
+
+  @override
+  String get badgeNeedsRetry => 'Needs retry';
+
+  @override
+  String get badgeChecking => 'Checking';
+
+  @override
+  String get badgeUploading => 'Uploading';
+
+  @override
+  String get badgeSelected => 'Selected';
+
+  @override
+  String get primaryPhotoUpdated => 'Primary photo updated.';
+
+  @override
+  String get photoDeleted => 'Photo deleted.';
+
+  @override
+  String get photoOrderUpdated => 'Photo order updated.';
+
+  @override
+  String get dashboardHome => 'Dashboard';
+
+  @override
+  String get upload => 'Upload';
+
+  @override
+  String get adjustCrop34 => 'Adjust 3:4 crop';
+
+  @override
+  String get dragFramePullCorners => 'Drag the frame. Pull corners to resize.';
+
+  @override
+  String get usePhoto => 'Use photo';
+
+  @override
+  String get cropEncodingFailed => 'Crop encoding failed.';
+
+  @override
+  String get comparisonStrongMatch => 'Strong match';
+
+  @override
+  String get comparisonMatch => 'Match';
+
+  @override
+  String get comparisonNearMatch => 'Near match';
+
+  @override
+  String get comparisonNeedsReview => 'Needs review';
+
+  @override
+  String get comparisonReview => 'Review';
+
+  @override
+  String get mobileLabel => 'Mobile';
+
+  @override
+  String get adminPolicyHeading => 'Admin policy';
+
+  @override
+  String get requestModeLabel => 'Request mode';
+
+  @override
+  String get allowedScopesLabel => 'Allowed scopes';
+
+  @override
+  String get messagingLabel => 'Messaging';
+
+  @override
+  String get accountProfileIdLabel => 'Profile ID';
+
+  @override
+  String get moreMatchesSectionsUnavailable =>
+      'More Matches sections unavailable.';
+
+  @override
+  String get recommendationTitle => 'Recommendation';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get swipeInterestHint =>
+      'Swipe right to send interest. Swipe left to skip.';
+
+  @override
+  String get filterTabMinimum => 'Minimum';
+
+  @override
+  String get filterTabAdvanced => 'Advanced';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get basicPreference => 'Basic preference';
+
+  @override
+  String get verifiedPhoto => 'Verified photo';
+
+  @override
+  String get optionFallback => 'Option';
 }

@@ -70,10 +70,10 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(AppStrings.contactRequests),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Received'),
-              Tab(text: 'Sent'),
+              Tab(text: appText.connectReceived),
+              Tab(text: appText.chatMessageSent),
             ],
           ),
         ),
@@ -109,7 +109,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
               OutlinedButton.icon(
                 onPressed: _loadInbox,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(appText.retry),
               ),
             ],
           ),
@@ -121,12 +121,12 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       children: [
         _buildRequestList(
           rows: _received,
-          emptyText: 'No pending contact requests.',
+          emptyText: appText.noPendingContactRequests,
           received: true,
         ),
         _buildRequestList(
           rows: _sent,
-          emptyText: 'No sent contact requests.',
+          emptyText: appText.noSentContactRequests,
           received: false,
         ),
       ],
@@ -219,7 +219,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _displayString(profile?['name']) ?? 'Profile',
+                      _displayString(profile?['name']) ?? appText.profile,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -250,19 +250,19 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
           const SizedBox(height: 12),
           _buildInfoLine(
             icon: Icons.help_outline,
-            label: 'Reason',
+            label: appText.reason,
             value: _reasonText(row),
           ),
           if (scopes.isNotEmpty)
             _buildInfoLine(
               icon: Icons.contact_phone_outlined,
-              label: 'Requested',
+              label: appText.requestedLabel,
               value: scopes.join(', '),
             ),
           if (_displayString(row['created_at']) != null)
             _buildInfoLine(
               icon: Icons.schedule,
-              label: 'Created',
+              label: appText.createdLabel,
               value: _displayString(row['created_at'])!,
             ),
           if (received && status == 'pending') ...[
@@ -281,7 +281,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check_circle_outline),
-                    label: const Text('Approve'),
+                    label: Text(appText.approve),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -291,7 +291,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
                         ? null
                         : () => _rejectRequest(row),
                     icon: const Icon(Icons.close),
-                    label: const Text('Reject'),
+                    label: Text(appText.reject),
                   ),
                 ),
               ],
@@ -441,10 +441,10 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
                   children: [
                     Row(
                       children: [
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            'Approve Contact',
-                            style: TextStyle(
+                            appText.approveContactTitle,
+                            style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w900,
                               color: Color(0xFF2E2220),
@@ -452,7 +452,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
                           ),
                         ),
                         IconButton(
-                          tooltip: 'Close',
+                          tooltip: appText.close,
                           onPressed: () => Navigator.pop(sheetContext),
                           icon: const Icon(Icons.close),
                         ),
@@ -485,16 +485,16 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                       initialValue: durationKey,
-                      decoration: const InputDecoration(
-                        labelText: 'Duration',
-                        prefixIcon: Icon(Icons.timer_outlined),
+                      decoration: InputDecoration(
+                        labelText: appText.durationLabel,
+                        prefixIcon: const Icon(Icons.timer_outlined),
                       ),
                       items:
                           (durationOptions.isEmpty
-                                  ? const [
+                                  ? [
                                       _OptionData(
                                         key: 'approve_once',
-                                        label: 'Approve once (24 hours)',
+                                        label: appText.approveOnce24Hours,
                                       ),
                                     ]
                                   : durationOptions)
@@ -527,7 +527,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
                     ElevatedButton.icon(
                       onPressed: submit,
                       icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Grant Access'),
+                      label: Text(appText.grantAccess),
                     ),
                   ],
                 ),
@@ -556,7 +556,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       if (!mounted) return;
 
       if (_responseSuccess(response)) {
-        _showSnackBar(_backendMessage(response, 'Contact access granted.'));
+        _showSnackBar(_backendMessage(response, appText.contactAccessGranted));
         await _loadInbox();
         return;
       }
@@ -584,16 +584,16 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Reject request?'),
-        content: const Text('This will reject the contact request.'),
+        title: Text(appText.rejectRequestTitle),
+        content: Text(appText.rejectRequestBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(appText.cancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Reject'),
+            child: Text(appText.reject),
           ),
         ],
       ),
@@ -609,7 +609,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
       if (!mounted) return;
 
       if (_responseSuccess(response)) {
-        _showSnackBar(_backendMessage(response, 'Request rejected.'));
+        _showSnackBar(_backendMessage(response, appText.requestRejected));
         await _loadInbox();
         return;
       }
@@ -634,7 +634,7 @@ class _ContactInboxScreenState extends State<ContactInboxScreen> {
     final reason =
         _displayString(row['reason_label']) ??
         _displayString(row['reason']) ??
-        'Contact request';
+        appText.contactRequestLabel;
     final other = _displayString(row['other_reason_text']);
 
     return other == null ? reason : '$reason - $other';

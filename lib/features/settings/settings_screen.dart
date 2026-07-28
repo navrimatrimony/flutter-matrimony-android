@@ -184,7 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               OutlinedButton.icon(
                 onPressed: _loadSettings,
                 icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
+                label: Text(appText.retry),
               ),
             ],
           ),
@@ -221,9 +221,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _readOnlyLine(AppStrings.name, _displayValue(account['name'])),
-          _readOnlyLine('Email', _displayValue(account['email'])),
-          _readOnlyLine('Mobile', _displayValue(account['mobile'])),
-          _readOnlyLine('Profile ID', _displayValue(account['profile_id'])),
+          _readOnlyLine(appText.contactEmailLabel, _displayValue(account['email'])),
+          _readOnlyLine(appText.mobileLabel, _displayValue(account['mobile'])),
+          _readOnlyLine(
+            appText.accountProfileIdLabel,
+            _displayValue(account['profile_id']),
+          ),
         ],
       ),
     );
@@ -332,17 +335,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _unavailableText(section),
           if (adminPolicy.isNotEmpty) ...[
             const Divider(height: 24),
-            _smallHeading('Admin policy'),
+            _smallHeading(appText.adminPolicyHeading),
             _readOnlyLine(
-              'Request mode',
+              appText.requestModeLabel,
               _displayValue(adminPolicy['contact_request_mode']),
             ),
             _readOnlyLine(
-              'Allowed scopes',
+              appText.allowedScopesLabel,
               _displayValue(adminPolicy['allowed_contact_scopes']),
             ),
             _readOnlyLine(
-              'Messaging',
+              appText.messagingLabel,
               _displayValue(adminPolicy['messaging_mode']),
             ),
           ],
@@ -746,7 +749,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   String _displayValue(dynamic value) {
     if (value == null) return AppStrings.settingsNotAvailable;
-    if (value is bool) return value ? 'Yes' : 'No';
+    if (value is bool) return value ? appText.yes : appText.no;
     if (value is List) {
       if (value.isEmpty) return AppStrings.settingsNotAvailable;
       return value.map((item) => item.toString()).join(', ');

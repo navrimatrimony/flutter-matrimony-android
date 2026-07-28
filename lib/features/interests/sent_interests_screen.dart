@@ -87,10 +87,10 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
 
       if (statusCode == 200 && response['success'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Interest withdrawn successfully.'),
+          SnackBar(
+            content: Text('✅ ${appText.interestWithdrawnSuccessfully}'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
         // Refresh the list
@@ -122,13 +122,13 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
   String _getStatusText(String? status) {
     switch (status) {
       case 'pending':
-        return 'Pending';
+        return appText.pending;
       case 'accepted':
-        return 'Accepted';
+        return appText.accepted;
       case 'rejected':
-        return 'Rejected';
+        return appText.rejected;
       default:
-        return 'Unknown';
+        return appText.unknown;
     }
   }
 
@@ -148,7 +148,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sent Interests')),
+      appBar: AppBar(title: Text(appText.sentInterests)),
       body: _buildBody(),
     );
   }
@@ -185,10 +185,10 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
     }
 
     if (_interests.isEmpty) {
-      return const Center(
+      return Center(
         child: Text(
-          'You have not sent any interests yet.',
-          style: TextStyle(fontSize: 16),
+          appText.noSentInterestsYet,
+          style: const TextStyle(fontSize: 16),
         ),
       );
     }
@@ -211,7 +211,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
 
           final photoUrl = ApiClient.resolveProfilePhotoUrl(receiverProfile);
           final receiverName =
-              receiverProfile['full_name']?.toString() ?? 'Unknown';
+              receiverProfile['full_name']?.toString() ?? appText.unknown;
           final receiverProfileId = receiverProfile['id'] as int?;
 
           return Card(
@@ -279,9 +279,9 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Text(
-                              'Status: ',
-                              style: TextStyle(
+                            Text(
+                              appText.statusPrefix,
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.grey,
                               ),
@@ -312,7 +312,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
                                   vertical: 8,
                                 ),
                               ),
-                              child: const Text('Withdraw Interest'),
+                              child: Text(appText.withdrawInterest),
                             ),
                           ),
                       ],

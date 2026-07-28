@@ -219,7 +219,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     try {
       final response = await ApiClient.setPrimaryProfilePhoto(id);
       if (!mounted) return;
-      _handleActionResponse(response, id, 'Primary photo updated.');
+      _handleActionResponse(response, id, appText.primaryPhotoUpdated);
     } catch (e) {
       if (!mounted) return;
       setState(() => _busyPhotoIds.remove(id));
@@ -254,7 +254,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
     try {
       final response = await ApiClient.deleteProfilePhoto(id);
       if (!mounted) return;
-      _handleActionResponse(response, id, 'Photo deleted.');
+      _handleActionResponse(response, id, appText.photoDeleted);
     } catch (e) {
       if (!mounted) return;
       setState(() => _busyPhotoIds.remove(id));
@@ -279,7 +279,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
       if (!mounted) return;
       if (_responseSuccess(response)) {
         setState(() => _applyResponse(response));
-        _showMessage(_responseMessage(response, 'Photo order updated.'));
+        _showMessage(_responseMessage(response, appText.photoOrderUpdated));
         return;
       }
 
@@ -347,7 +347,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
         title: Text(AppStrings.photosVerification),
         actions: [
           IconButton(
-            tooltip: 'Dashboard',
+            tooltip: appText.dashboardHome,
             onPressed: () {
               Navigator.of(
                 context,
@@ -457,7 +457,7 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.photo_library_outlined),
-                  label: Text(_isUploading ? AppStrings.uploading : 'Upload'),
+                  label: Text(_isUploading ? AppStrings.uploading : appText.upload),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(50),
                   ),
@@ -490,11 +490,11 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _guidelineChips(const [
-            'Clear face',
-            'Single person',
-            'Good light',
-            'Safe photo',
+          _guidelineChips([
+            appText.clearFace,
+            appText.singlePerson,
+            appText.goodLight,
+            appText.safePhoto,
           ]),
         ],
       ),
@@ -987,13 +987,16 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
 
   _PhotoStatusStyle _photoStatusStyle(String status) {
     return switch (status) {
-      'approved' => const _PhotoStatusStyle('Approved', Color(0xFF15803D)),
+      'approved' => _PhotoStatusStyle(appText.approved, const Color(0xFF15803D)),
       'rejected' => _PhotoStatusStyle(
-        'Rejected',
+        appText.rejected,
         Theme.of(context).colorScheme.error,
       ),
       'pending' ||
-      'pending_review' => const _PhotoStatusStyle('Pending', Color(0xFFB45309)),
+      'pending_review' => _PhotoStatusStyle(
+        appText.pending,
+        const Color(0xFFB45309),
+      ),
       _ => _PhotoStatusStyle(status, const Color(0xFF6B7280)),
     };
   }
@@ -1117,7 +1120,7 @@ class _PhotoCropSheetState extends State<_PhotoCropSheet> {
               children: [
                 Expanded(
                   child: Text(
-                    'Adjust 3:4 crop',
+                    appText.adjustCrop34,
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -1145,7 +1148,7 @@ class _PhotoCropSheetState extends State<_PhotoCropSheet> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Drag the frame. Pull corners to resize.',
+                    appText.dragFramePullCorners,
                     style: TextStyle(
                       color: Colors.grey.shade700,
                       fontWeight: FontWeight.w700,
@@ -1179,7 +1182,7 @@ class _PhotoCropSheetState extends State<_PhotoCropSheet> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.check),
-                    label: const Text('Use photo'),
+                    label: Text(appText.usePhoto),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),
                     ),
@@ -1480,7 +1483,7 @@ class _PhotoCropSheetState extends State<_PhotoCropSheet> {
     croppedImage.dispose();
 
     if (byteData == null) {
-      throw StateError('Crop encoding failed.');
+      throw StateError(appText.cropEncodingFailed);
     }
 
     final bytes = Uint8List.view(byteData.buffer);
