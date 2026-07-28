@@ -4,6 +4,7 @@ import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_network_image.dart';
+import '../../core/profile_photo_hero.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 import '../../core/app_language.dart';
 
@@ -195,7 +196,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
         itemCount: rows.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          return _buildProfileCard(kind, rows[index], rows);
+          return _buildProfileCard(kind, rows[index], rows, index);
         },
       ),
     );
@@ -205,6 +206,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
     _ProfileListKind kind,
     Map<String, dynamic> row,
     List<Map<String, dynamic>> visibleRows,
+    int index,
   ) {
     final profileId = _profileId(row);
     final canOpen =
@@ -212,6 +214,18 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
         _boolValue(row['can_open_profile']);
     final title = _stringValue(_field(row, 'name')) ?? AppStrings.profile;
     final photoUrl = _stringValue(_field(row, 'primary_photo_url'));
+    // The three lists live in a TabBarView, which keeps both neighbours in the
+    // tree mid-swipe, and one profile can be shortlisted and hidden at the same
+    // time. So the list kind is part of the scope, not just the row position.
+    // A row the viewer is not allowed to open never flies — there is no
+    // destination for it.
+    final photoHeroTag = canOpen
+        ? ProfilePhotoHero.tagFor(
+            profileId: profileId,
+            scope: '${kind.name}:$index',
+            photoUrl: photoUrl,
+          )
+        : null;
     final subtitle = _joinNonEmpty([
       _stringValue(_field(row, 'age_label')),
       _stringValue(_field(row, 'height_label')),
@@ -230,7 +244,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
       onTap: profileId == null
           ? null
           : () {
-              _openProfile(row, visibleRows);
+              _openProfile(row, visibleRows, photoHeroTag: photoHeroTag);
             },
       child: Card(
         elevation: 0,
@@ -248,7 +262,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildAvatar(photoUrl),
+                  _buildAvatar(photoUrl, photoHeroTag),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -333,7 +347,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
     );
   }
 
-  Widget _buildAvatar(String? photoUrl) {
+  Widget _buildAvatar(String? photoUrl, String? photoHeroTag) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: Container(
@@ -342,14 +356,18 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
         color: const Color(0xFFF1DDD8),
         child: photoUrl == null
             ? const Icon(Icons.person, color: Color(0xFFB42318), size: 34)
-            : ProfileNetworkImage(
-                url: photoUrl,
-                placeholder: const Icon(
-                  Icons.person,
-                  color: Color(0xFFB42318),
-                  size: 34,
+            : ProfilePhotoHero(
+                tag: photoHeroTag,
+                borderRadius: BorderRadius.circular(10),
+                child: ProfileNetworkImage(
+                  url: photoUrl,
+                  placeholder: const Icon(
+                    Icons.person,
+                    color: Color(0xFFB42318),
+                    size: 34,
+                  ),
+                  decodeWidth: 72,
                 ),
-                decodeWidth: 72,
               ),
       ),
     );
@@ -357,8 +375,9 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
 
   Future<void> _openProfile(
     Map<String, dynamic> row,
-    List<Map<String, dynamic>> visibleRows,
-  ) async {
+    List<Map<String, dynamic>> visibleRows, {
+    String? photoHeroTag,
+  }) async {
     final profileId = _profileId(row);
     if (profileId == null) return;
 
@@ -377,6 +396,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
           profileId: profileId,
           profileIds: _openableIds(visibleRows),
           initialProfile: row,
+          photoHeroTag: photoHeroTag,
         ),
       ),
     );

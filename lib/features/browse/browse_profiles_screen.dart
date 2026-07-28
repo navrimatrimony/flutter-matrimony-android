@@ -8,6 +8,7 @@ import '../../core/api_client.dart';
 import '../../core/app_storage.dart';
 import '../../core/locked_teaser.dart';
 import '../../core/profile_network_image.dart';
+import '../../core/profile_photo_hero.dart';
 import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../contact/contact_inbox_screen.dart';
@@ -930,7 +931,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                       scale: 0.96 + (reveal * 0.035),
                       child: Opacity(
                         opacity: 0.55 + (reveal * 0.20),
-                        child: _buildRecommendationCard(next, height),
+                        child: _buildRecommendationCard(
+                          next,
+                          height,
+                          nextIndex,
+                        ),
                       ),
                     ),
                   ),
@@ -1014,7 +1019,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
-                                _buildRecommendationCard(current, height),
+                                _buildRecommendationCard(
+                                  current,
+                                  height,
+                                  _recommendationIndex,
+                                ),
                                 _buildRecommendationSwipeLabel(animatedOffset),
                               ],
                             ),
@@ -1038,12 +1047,19 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     return Alignment.bottomCenter;
   }
 
-  Widget _buildRecommendationCard(Map<String, dynamic> profile, double height) {
+  Widget _buildRecommendationCard(
+    Map<String, dynamic> profile,
+    double height,
+    int deckIndex,
+  ) {
     return _buildMatchCard(
       profile,
       height: height,
       margin: EdgeInsets.zero,
       showActionStrip: false,
+      // The deck stacks the current card and the one behind it at the same
+      // time, so the scope is the deck position rather than the deck itself.
+      photoHeroScope: 'deck:$deckIndex',
     );
   }
 
@@ -1513,6 +1529,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 profile,
                 height: cardHeight.toDouble(),
                 margin: EdgeInsets.zero,
+                photoHeroScope: 'matches:$index',
               ),
             );
           },
@@ -1886,9 +1903,13 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         else ...[
           if (_moreSectionsError != null) _buildMoreSectionsFallbackNotice(),
           if (_moreSectionsError != null) const SizedBox(height: 14),
-          _buildMiniCarousel(profiles),
+          // This branch deliberately shows the first few profiles twice — once
+          // in the strip, again in the cards below — so the two copies must be
+          // scoped apart or they would claim one tag each and crash the flight.
+          _buildMiniCarousel(profiles, scope: 'fallback_mini'),
           if (profiles.isNotEmpty) const SizedBox(height: 16),
-          ...profiles.map(_buildMatchCard),
+          for (final (index, profile) in profiles.indexed)
+            _buildMatchCard(profile, photoHeroScope: 'fallback_card:$index'),
         ],
       ],
     );
@@ -1909,6 +1930,12 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         .toList();
   }
 
+  /// The More tab renders every server section at once, and the server builds
+  /// them independently with no cross-section de-duplication — one profile can
+  /// legitimately be in `matching_my_preference`, `nearby` and `you_may_like`
+  /// together. The section key is therefore part of every photo's hero scope, so
+  /// those copies never collide. `_orderedMoreSections` keys the sections by
+  /// name, so a key can only be laid out once.
   List<Widget> _buildBackendSection(Map<String, dynamic> section) {
     final key = _displayString(section['key']) ?? '';
     final profiles = _sectionProfiles(section);
@@ -1932,12 +1959,18 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     return [
       _buildSectionHeader(_sectionTitle(section), _sectionSubtitle(section)),
       switch (key) {
-        'looking_for_me' => _buildHorizontalProfileCarousel(profiles),
-        'recently_viewed' => _buildRecentlyViewedStrip(profiles),
-        'matching_my_preference' => _buildMatchingPreferenceLayout(profiles),
-        'nearby' => _buildNearbyProfileStrip(profiles),
-        'you_may_like' => _buildCompactProfileGrid(profiles),
-        _ => _buildCompactProfileGrid(profiles),
+        'looking_for_me' => _buildHorizontalProfileCarousel(
+          profiles,
+          scope: key,
+        ),
+        'recently_viewed' => _buildRecentlyViewedStrip(profiles, scope: key),
+        'matching_my_preference' => _buildMatchingPreferenceLayout(
+          profiles,
+          scope: key,
+        ),
+        'nearby' => _buildNearbyProfileStrip(profiles, scope: key),
+        'you_may_like' => _buildCompactProfileGrid(profiles, scope: key),
+        _ => _buildCompactProfileGrid(profiles, scope: key),
       },
       const SizedBox(height: 18),
     ];
@@ -1964,15 +1997,23 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   List<Widget> _recentVisitorCards(Map<String, dynamic> section) {
+    const scope = 'recent_visitors';
     final rows = section['rows'];
     if (rows is List && rows.isNotEmpty) {
       final cards = <Widget>[];
-      for (final rawRow in rows.whereType<Map>()) {
+      for (final (index, rawRow) in rows.whereType<Map>().indexed) {
         final row = Map<String, dynamic>.from(rawRow);
         final mode = _displayString(row['mode'])?.toLowerCase();
         if (mode == 'profile') {
           final profile = _safeMap(row['profile']);
-          if (profile != null) cards.add(_buildCompactProfileCard(profile));
+          if (profile != null) {
+            cards.add(
+              _buildCompactProfileCard(
+                profile,
+                photoHeroScope: '$scope:$index',
+              ),
+            );
+          }
         } else if (mode == 'teaser') {
           final teaser = _safeMap(row['teaser']);
           if (teaser != null) cards.add(_buildRecentVisitorTeaserCard(teaser));
@@ -1982,7 +2023,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     }
 
     return <Widget>[
-      ..._sectionProfiles(section).map(_buildCompactProfileCard),
+      for (final (index, profile) in _sectionProfiles(section).indexed)
+        _buildCompactProfileCard(profile, photoHeroScope: '$scope:$index'),
       ..._sectionTeasers(section).map(_buildRecentVisitorTeaserCard),
     ];
   }
@@ -2110,7 +2152,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildCompactProfileGrid(List<Map<String, dynamic>> profiles) {
+  Widget _buildCompactProfileGrid(
+    List<Map<String, dynamic>> profiles, {
+    required String scope,
+  }) {
     if (profiles.isEmpty) return const SizedBox.shrink();
 
     return GridView.builder(
@@ -2124,13 +2169,24 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         childAspectRatio: 0.66,
       ),
       itemBuilder: (context, index) {
-        return _buildCompactProfileCard(profiles[index]);
+        return _buildCompactProfileCard(
+          profiles[index],
+          photoHeroScope: '$scope:$index',
+        );
       },
     );
   }
 
-  Widget _buildCompactProfileCard(Map<String, dynamic> profile) {
+  Widget _buildCompactProfileCard(
+    Map<String, dynamic> profile, {
+    String? photoHeroScope,
+  }) {
     final data = _cardData(profile);
+    final photoHeroTag = ProfilePhotoHero.tagFor(
+      profileId: data.profileId,
+      scope: photoHeroScope,
+      photoUrl: data.photoUrl,
+    );
     final detailLine = _joinNonEmpty([
       data.ageShortLabel,
       data.locationLabel,
@@ -2142,7 +2198,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => _openProfile(profile),
+        onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -2151,12 +2207,18 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 fit: StackFit.expand,
                 children: [
                   data.photoUrl != null
-                      ? ProfileNetworkImage(
-                          url: data.photoUrl!,
-                          placeholder: _buildCompactPhotoFallback(),
-                          // Two columns with 12 between them.
-                          decodeWidth:
-                              (MediaQuery.sizeOf(context).width - 12) / 2,
+                      ? ProfilePhotoHero(
+                          tag: photoHeroTag,
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(18),
+                          ),
+                          child: ProfileNetworkImage(
+                            url: data.photoUrl!,
+                            placeholder: _buildCompactPhotoFallback(),
+                            // Two columns with 12 between them.
+                            decodeWidth:
+                                (MediaQuery.sizeOf(context).width - 12) / 2,
+                          ),
                         )
                       : _buildCompactPhotoFallback(),
                   const DecoratedBox(
@@ -2317,7 +2379,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildHorizontalProfileCarousel(List<Map<String, dynamic>> profiles) {
+  Widget _buildHorizontalProfileCarousel(
+    List<Map<String, dynamic>> profiles, {
+    required String scope,
+  }) {
     if (profiles.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
@@ -2327,14 +2392,25 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         itemCount: profiles.length,
         separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          return _buildCarouselProfileCard(profiles[index]);
+          return _buildCarouselProfileCard(
+            profiles[index],
+            photoHeroScope: '$scope:$index',
+          );
         },
       ),
     );
   }
 
-  Widget _buildCarouselProfileCard(Map<String, dynamic> profile) {
+  Widget _buildCarouselProfileCard(
+    Map<String, dynamic> profile, {
+    String? photoHeroScope,
+  }) {
     final data = _cardData(profile);
+    final photoHeroTag = ProfilePhotoHero.tagFor(
+      profileId: data.profileId,
+      scope: photoHeroScope,
+      photoUrl: data.photoUrl,
+    );
     final details = _joinNonEmpty([
       data.ageShortLabel,
       data.heightLabel,
@@ -2348,17 +2424,23 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         borderRadius: BorderRadius.circular(18),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => _openProfile(profile),
+          onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(
                 height: 118,
                 child: data.photoUrl != null
-                    ? ProfileNetworkImage(
-                        url: data.photoUrl!,
-                        placeholder: _buildCompactPhotoFallback(),
-                        decodeWidth: 164,
+                    ? ProfilePhotoHero(
+                        tag: photoHeroTag,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(18),
+                        ),
+                        child: ProfileNetworkImage(
+                          url: data.photoUrl!,
+                          placeholder: _buildCompactPhotoFallback(),
+                          decodeWidth: 164,
+                        ),
                       )
                     : _buildCompactPhotoFallback(),
               ),
@@ -2399,7 +2481,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildRecentlyViewedStrip(List<Map<String, dynamic>> profiles) {
+  Widget _buildRecentlyViewedStrip(
+    List<Map<String, dynamic>> profiles, {
+    required String scope,
+  }) {
     if (profiles.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
@@ -2411,7 +2496,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         itemBuilder: (context, index) {
           final profile = profiles[index];
           final viewedAt = _displayString(profile['viewed_at_human']);
-          return _buildViewedProfileCard(profile, viewedAt);
+          return _buildViewedProfileCard(
+            profile,
+            viewedAt,
+            photoHeroScope: '$scope:$index',
+          );
         },
       ),
     );
@@ -2419,15 +2508,21 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
   Widget _buildViewedProfileCard(
     Map<String, dynamic> profile,
-    String? viewedAt,
-  ) {
+    String? viewedAt, {
+    String? photoHeroScope,
+  }) {
     final data = _cardData(profile);
+    final photoHeroTag = ProfilePhotoHero.tagFor(
+      profileId: data.profileId,
+      scope: photoHeroScope,
+      photoUrl: data.photoUrl,
+    );
 
     return SizedBox(
       width: 148,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => _openProfile(profile),
+        onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -2437,7 +2532,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           ),
           child: Column(
             children: [
-              _buildCircularPhoto(data.photoUrl, 58),
+              _buildCircularPhoto(data.photoUrl, 58, heroTag: photoHeroTag),
               const SizedBox(height: 8),
               Text(
                 data.name,
@@ -2474,7 +2569,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildMatchingPreferenceLayout(List<Map<String, dynamic>> profiles) {
+  Widget _buildMatchingPreferenceLayout(
+    List<Map<String, dynamic>> profiles, {
+    required String scope,
+  }) {
     if (profiles.isEmpty) return const SizedBox.shrink();
 
     final featured = profiles.first;
@@ -2483,17 +2581,28 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildFeaturedPreferenceCard(featured),
+        _buildFeaturedPreferenceCard(
+          featured,
+          photoHeroScope: '$scope:featured',
+        ),
         if (rest.isNotEmpty) ...[
           const SizedBox(height: 12),
-          _buildCompactProfileGrid(rest),
+          _buildCompactProfileGrid(rest, scope: '$scope:rest'),
         ],
       ],
     );
   }
 
-  Widget _buildFeaturedPreferenceCard(Map<String, dynamic> profile) {
+  Widget _buildFeaturedPreferenceCard(
+    Map<String, dynamic> profile, {
+    String? photoHeroScope,
+  }) {
     final data = _cardData(profile);
+    final photoHeroTag = ProfilePhotoHero.tagFor(
+      profileId: data.profileId,
+      scope: photoHeroScope,
+      photoUrl: data.photoUrl,
+    );
     final detailLine = _joinNonEmpty([
       data.ageShortLabel,
       data.heightLabel,
@@ -2503,7 +2612,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      onTap: () => _openProfile(profile),
+      onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
       child: Container(
         height: 164,
         decoration: BoxDecoration(
@@ -2528,10 +2637,16 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 width: 122,
                 height: double.infinity,
                 child: data.photoUrl != null
-                    ? ProfileNetworkImage(
-                        url: data.photoUrl!,
-                        placeholder: _buildCompactPhotoFallback(),
-                        decodeWidth: 122,
+                    ? ProfilePhotoHero(
+                        tag: photoHeroTag,
+                        borderRadius: const BorderRadius.horizontal(
+                          left: Radius.circular(20),
+                        ),
+                        child: ProfileNetworkImage(
+                          url: data.photoUrl!,
+                          placeholder: _buildCompactPhotoFallback(),
+                          decodeWidth: 122,
+                        ),
                       )
                     : _buildCompactPhotoFallback(),
               ),
@@ -2589,7 +2704,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildNearbyProfileStrip(List<Map<String, dynamic>> profiles) {
+  Widget _buildNearbyProfileStrip(
+    List<Map<String, dynamic>> profiles, {
+    required String scope,
+  }) {
     if (profiles.isEmpty) return const SizedBox.shrink();
 
     return SizedBox(
@@ -2599,20 +2717,31 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         itemCount: profiles.length,
         separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          return _buildNearbyProfileCard(profiles[index]);
+          return _buildNearbyProfileCard(
+            profiles[index],
+            photoHeroScope: '$scope:$index',
+          );
         },
       ),
     );
   }
 
-  Widget _buildNearbyProfileCard(Map<String, dynamic> profile) {
+  Widget _buildNearbyProfileCard(
+    Map<String, dynamic> profile, {
+    String? photoHeroScope,
+  }) {
     final data = _cardData(profile);
+    final photoHeroTag = ProfilePhotoHero.tagFor(
+      profileId: data.profileId,
+      scope: photoHeroScope,
+      photoUrl: data.photoUrl,
+    );
 
     return SizedBox(
       width: 196,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => _openProfile(profile),
+        onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -2625,7 +2754,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             children: [
               Row(
                 children: [
-                  _buildCircularPhoto(data.photoUrl, 50),
+                  _buildCircularPhoto(data.photoUrl, 50, heroTag: photoHeroTag),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -2675,7 +2804,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildMiniCarousel(List<Map<String, dynamic>> profiles) {
+  Widget _buildMiniCarousel(
+    List<Map<String, dynamic>> profiles, {
+    required String scope,
+  }) {
     final suggestions = profiles.take(5).toList();
     if (suggestions.isEmpty) return const SizedBox.shrink();
 
@@ -2688,9 +2820,14 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         itemBuilder: (context, index) {
           final profile = suggestions[index];
           final data = _cardData(profile);
+          final photoHeroTag = ProfilePhotoHero.tagFor(
+            profileId: data.profileId,
+            scope: '$scope:$index',
+            photoUrl: data.photoUrl,
+          );
           return InkWell(
             borderRadius: BorderRadius.circular(18),
-            onTap: () => _openProfile(profile),
+            onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
             child: Container(
               width: 126,
               padding: const EdgeInsets.all(10),
@@ -2708,7 +2845,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               ),
               child: Column(
                 children: [
-                  _buildCircularPhoto(data.photoUrl, 54),
+                  _buildCircularPhoto(data.photoUrl, 54, heroTag: photoHeroTag),
                   const SizedBox(height: 8),
                   Text(
                     data.name,
@@ -2741,8 +2878,14 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     double? height,
     EdgeInsetsGeometry margin = const EdgeInsets.only(bottom: 18),
     bool showActionStrip = true,
+    String? photoHeroScope,
   }) {
     final data = _cardData(profile);
+    final photoHeroTag = ProfilePhotoHero.tagFor(
+      profileId: data.profileId,
+      scope: photoHeroScope,
+      photoUrl: data.photoUrl,
+    );
     final cardHeight =
         height ??
         (MediaQuery.sizeOf(context).height * 0.58)
@@ -2770,11 +2913,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         borderRadius: BorderRadius.circular(22),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => _openProfile(profile),
+          onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _buildCardPhoto(data),
+              _buildCardPhoto(data, photoHeroTag),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -2812,26 +2955,30 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildCardPhoto(_MatchCardData data) {
+  Widget _buildCardPhoto(_MatchCardData data, String? heroTag) {
     if (data.photoUrl == null) {
       return _buildPhotoPlaceholder();
     }
 
-    return ProfileNetworkImage(
-      url: data.photoUrl!,
-      placeholder: _buildPhotoPlaceholder(),
-      decodeWidth: MediaQuery.sizeOf(context).width,
-      onError: () {
-        final failedUrl = data.photoUrl;
-        if (failedUrl != null && !_failedPhotoUrls.contains(failedUrl)) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            setState(() {
-              _failedPhotoUrls.add(failedUrl);
+    return ProfilePhotoHero(
+      tag: heroTag,
+      borderRadius: BorderRadius.circular(22),
+      child: ProfileNetworkImage(
+        url: data.photoUrl!,
+        placeholder: _buildPhotoPlaceholder(),
+        decodeWidth: MediaQuery.sizeOf(context).width,
+        onError: () {
+          final failedUrl = data.photoUrl;
+          if (failedUrl != null && !_failedPhotoUrls.contains(failedUrl)) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              setState(() {
+                _failedPhotoUrls.add(failedUrl);
+              });
             });
-          });
-        }
-      },
+          }
+        },
+      ),
     );
   }
 
@@ -3179,7 +3326,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Widget _buildCircularPhoto(String? photoUrl, double size) {
+  Widget _buildCircularPhoto(String? photoUrl, double size, {String? heroTag}) {
     return Container(
       width: size,
       height: size,
@@ -3189,10 +3336,17 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       ),
       child: ClipOval(
         child: photoUrl != null
-            ? ProfileNetworkImage(
-                url: photoUrl,
-                placeholder: _buildCircleFallback(),
-                decodeWidth: size,
+            ? ProfilePhotoHero(
+                tag: heroTag,
+                // The flight is drawn outside this ClipOval, so the round shape
+                // has to travel with it — otherwise the avatar would snap
+                // square the moment it lifted off.
+                borderRadius: BorderRadius.circular(size / 2),
+                child: ProfileNetworkImage(
+                  url: photoUrl,
+                  placeholder: _buildCircleFallback(),
+                  decodeWidth: size,
+                ),
               )
             : _buildCircleFallback(),
       ),
@@ -3209,7 +3363,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  Future<void> _openProfile(Map<String, dynamic> profile) async {
+  Future<void> _openProfile(
+    Map<String, dynamic> profile, {
+    String? photoHeroTag,
+  }) async {
     final profileId = _displayInt(profile['id']);
     if (profileId == null) return;
 
@@ -3220,6 +3377,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           profileId: profileId,
           profileIds: _visibleProfileIds(),
           initialProfile: profile,
+          photoHeroTag: photoHeroTag,
         ),
       ),
     );

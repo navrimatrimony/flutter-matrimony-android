@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_network_image.dart';
+import '../../core/profile_photo_hero.dart';
 import '../../main.dart';
 import '../chat/chat_screen.dart';
 import 'profile_album_blur.dart';
@@ -23,11 +24,22 @@ class ProfileDetailScreen extends StatefulWidget {
   final List<int> profileIds;
   final Map<String, dynamic>? initialProfile;
 
+  /// Ties this screen's header photo to the exact list photo that was tapped,
+  /// so it grows out of that card and shrinks back into it.
+  ///
+  /// Passed in rather than derived from [profileId] on purpose: the same profile
+  /// can be on screen in several lists at once, so only the caller knows *which*
+  /// of those photos was tapped. Callers with no photo on screen — a push
+  /// notification, an interest list, a suggested profile on another detail
+  /// screen — leave it null and the screen simply cuts in with no flight.
+  final String? photoHeroTag;
+
   const ProfileDetailScreen({
     super.key,
     required this.profileId,
     this.profileIds = const <int>[],
     this.initialProfile,
+    this.photoHeroTag,
   });
 
   @override
@@ -830,7 +842,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
           left: 0,
           right: 0,
           height: heroHeight,
-          child: _buildHeroPhoto(photoUrl: photoUrl, blur: heroPhotoBlur),
+          child: _buildHeroPhoto(
+            photoUrl: photoUrl,
+            blur: heroPhotoBlur,
+            heroTag: _photoHeroTag(),
+          ),
         ),
         ListView(
           controller: _scrollController,
@@ -1007,7 +1023,23 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
         .toDouble();
   }
 
-  Widget _buildHeroPhoto({required String? photoUrl, required bool blur}) {
+  /// The tag of the list photo this screen was opened from, while it is still
+  /// showing that profile.
+  ///
+  /// A horizontal swipe moves to the next profile in place, without a route
+  /// change ([_openAdjacentProfile]). Keeping the original tag past that point
+  /// would make Back fly a stranger's photo into the tapped card's slot, so the
+  /// flight is given up as soon as the screen stops showing what it was opened
+  /// with.
+  String? _photoHeroTag() {
+    return _currentProfileId == widget.profileId ? widget.photoHeroTag : null;
+  }
+
+  Widget _buildHeroPhoto({
+    required String? photoUrl,
+    required bool blur,
+    String? heroTag,
+  }) {
     final hasPhoto = photoUrl != null;
     final heroHeight = _heroHeight(hasPhoto);
 
@@ -1017,7 +1049,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
       child: Stack(
         fit: StackFit.expand,
         children: [
-          _buildHeroImage(photoUrl, blur: blur),
+          _buildHeroImage(photoUrl, blur: blur, heroTag: heroTag),
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -1105,7 +1137,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
   /// admin instruction.
   static const double _heroBackdropSigma = 14;
 
-  Widget _buildHeroImage(String? photoUrl, {bool blur = false}) {
+  Widget _buildHeroImage(
+    String? photoUrl, {
+    bool blur = false,
+    String? heroTag,
+  }) {
     if (photoUrl == null) {
       return _buildHeroFallback();
     }
@@ -1145,10 +1181,24 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
               ImageFilter.blur(sigmaX: 0, sigmaY: 0),
           child: Transform.scale(
             scale: blur ? 1.04 : 1.0,
-            child: ProfileNetworkImage(
-              url: photoUrl,
-              placeholder: _buildHeroFallback(),
-              decodeWidth: heroDecodeWidth,
+            // Only the foreground photo flies. The blurred backdrop, the lock
+            // overlay, the scrim and this scale all stay outside the Hero: they
+            // are this screen's own chrome, and dragging the always-on backdrop
+            // through the flight would both double-transform the photo and blur
+            // every frame of the animation for no reason.
+            // borderRadius is left at zero: the header photo is full-bleed, so
+            // it is the square end every rounded list card interpolates to.
+            child: ProfilePhotoHero(
+              tag: heroTag,
+              // Hands the flight the same strength this screen is already
+              // drawing at, so a locked photo cannot come out of the shuttle
+              // any clearer than it went in.
+              blurSigma: blur ? albumBlur.sigma : null,
+              child: ProfileNetworkImage(
+                url: photoUrl,
+                placeholder: _buildHeroFallback(),
+                decodeWidth: heroDecodeWidth,
+              ),
             ),
           ),
         ),
