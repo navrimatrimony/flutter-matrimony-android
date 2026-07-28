@@ -15,6 +15,22 @@ class AboutTemplateSuggestion {
 
   final String label;
   final String text;
+
+  // Value equality is load-bearing, not tidiness. `SmartOnboardingScreen`
+  // rebuilds this list from scratch on every build, so without this
+  // `listEquals` in `didUpdateWidget` compares object identities, never
+  // matches, and the step re-seeds itself from the draft on every parent
+  // rebuild — silently discarding whatever the member had just selected.
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is AboutTemplateSuggestion &&
+        other.label == label &&
+        other.text == text;
+  }
+
+  @override
+  int get hashCode => Object.hash(label, text);
 }
 
 class FamilyOptionalStep extends StatefulWidget {
@@ -53,6 +69,13 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   String? _familyStatusError;
   String? _aboutError;
   int? _selectedSuggestionIndex;
+
+  /// Set the moment the member touches anything on this step. Same guard
+  /// `MaritalStatusStep` uses: once there is a human choice on screen, no
+  /// incoming prop change may overwrite it. Props here are draft/server state,
+  /// which is by definition older than the tap that has not been saved yet.
+  bool _edited = false;
+
   @override
   void initState() {
     super.initState();
@@ -63,6 +86,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   @override
   void didUpdateWidget(covariant FamilyOptionalStep oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (_edited) return;
     if (!mapEquals(oldWidget.data, widget.data) ||
         oldWidget.initialAbout != widget.initialAbout ||
         !listEquals(oldWidget.aboutSuggestions, widget.aboutSuggestions)) {
@@ -138,6 +162,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     final suggestions = _aboutSuggestions;
     if (index < 0 || index >= suggestions.length) return;
     setState(() {
+      _edited = true;
       _selectedSuggestionIndex = index;
       _aboutController.text = _suggestionText(suggestions[index]);
       _aboutError = null;
@@ -253,6 +278,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
               onChanged: widget.loading
                   ? null
                   : (key) => setState(() {
+                      _edited = true;
                       _familyStatus = key;
                       _familyStatusError = null;
                       _localError = null;
@@ -282,6 +308,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
             onChanged: widget.loading
                 ? null
                 : (key) => setState(() {
+                    _edited = true;
                     _familyValues = _familyValues == key ? null : key;
                     _localError = null;
                     _maybePrefillAboutFromSuggestion();
@@ -312,6 +339,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
                   maxLength: 500,
                   textInputAction: TextInputAction.newline,
                   onChanged: (_) => setState(() {
+                    _edited = true;
                     _selectedSuggestionIndex = null;
                     _aboutError = null;
                     _localError = null;
