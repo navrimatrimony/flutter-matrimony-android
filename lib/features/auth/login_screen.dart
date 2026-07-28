@@ -1,7 +1,28 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+
 import '../../core/api_client.dart';
+import '../../core/app_consent.dart';
+import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
+import '../../core/mobile_number.dart';
+import '../../core/phone_number_hint_service.dart';
+// Reused, not re-declared: registration already parses these two responses, and
+// the mobile-OTP contract has exactly one shape. A second copy of it here is the
+// duplicate that eventually drifts.
+import '../onboarding/models/mobile_otp_models.dart';
+
+/// How the member proves who they are.
+///
+/// Registration signs a member in with a mobile OTP and nothing else, so OTP is
+/// the default here too — a rural family should not have to remember a password
+/// they were never asked to create. Password stays as an equal second door for
+/// the members who do have one (it also accepts email / username, which OTP
+/// cannot).
+enum _LoginMethod { otp, password }
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,37 +34,279 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController loginController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController mobileController = TextEditingController();
+  final TextEditingController otpController = TextEditingController();
+  final FocusNode _mobileFocus = FocusNode();
+
+  _LoginMethod _method = _LoginMethod.otp;
 
   bool isLoading = false;
   String errorMessage = '';
   bool _obscurePassword = true;
 
+  MobileOtpSendResponse? _challenge;
+  String? _testOtpCode;
+  String? _deliveryHint;
+
+  Timer? _resendTimer;
+  Timer? _autoVerifyTimer;
+  DateTime? _resendAvailableAt;
+  int _resendSecondsRemaining = 0;
+  String? _lastAutoVerifyAttempt;
+
+  bool get _otpSent => _challenge?.challengeId != null;
+
   @override
   void initState() {
     super.initState();
     _loadSavedLoginPreference();
+    otpController.addListener(_onOtpChanged);
+  }
+
+  @override
+  void dispose() {
+    _resendTimer?.cancel();
+    _autoVerifyTimer?.cancel();
+    otpController.removeListener(_onOtpChanged);
+    loginController.dispose();
+    passwordController.dispose();
+    mobileController.dispose();
+    otpController.dispose();
+    _mobileFocus.dispose();
+    super.dispose();
   }
 
   Future<void> _loadSavedLoginPreference() async {
     final rememberedLogin = await AppStorage.instance
         .readRememberedLoginIdentifier();
     if (!mounted) return;
+    final remembered = rememberedLogin?.trim() ?? '';
+    if (remembered.isEmpty) return;
+
     setState(() {
-      if (loginController.text.trim().isEmpty &&
-          rememberedLogin != null &&
-          rememberedLogin.trim().isNotEmpty) {
-        loginController.text = rememberedLogin.trim();
+      if (loginController.text.trim().isEmpty) {
+        loginController.text = remembered;
+      }
+      // The same stored identifier seeds the OTP field, but only when it really
+      // is a mobile number — an email or a username must not land there.
+      if (mobileController.text.trim().isEmpty &&
+          MobileNumberInput.isComplete(remembered)) {
+        mobileController.text = MobileNumberInput.normalize(remembered);
       }
     });
   }
 
-  void handleLogin() async {
+  // ---------------------------------------------------------------------------
+  // Mobile OTP
+  // ---------------------------------------------------------------------------
+
+  Future<void> _pickMobileFromSim() async {
+    final raw = await PhoneNumberHintService.requestPhoneNumberHint();
+    if (!mounted || raw == null) return;
+    final mobile = MobileNumberInput.normalize(raw);
+    if (mobile.length != 10) return;
+    setState(() {
+      mobileController.text = mobile;
+      errorMessage = '';
+    });
+  }
+
+  Future<void> _sendOtp() async {
+    final mobile = MobileNumberInput.normalize(mobileController.text);
+    if (mobile.length != 10) {
+      setState(() => errorMessage = AppStrings.loginMobileInvalid);
+      return;
+    }
+    mobileController.text = mobile;
+
+    _autoVerifyTimer?.cancel();
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+      _lastAutoVerifyAttempt = null;
+    });
+
+    try {
+      final data = await ApiClient.sendMobileOtp(
+        mobile: mobile,
+        locale: appLanguageCode(currentAppLanguage),
+        // The login screen shows the same consent line registration shows, and
+        // stamps the same version — the server writes a user_consents row for
+        // each challenge it verifies.
+        termsAccepted: true,
+        privacyAccepted: true,
+        termsVersion: AppConsent.version,
+        privacyVersion: AppConsent.version,
+      );
+      if (!mounted) return;
+
+      final response = MobileOtpSendResponse.fromJson(data);
+      if (!response.success || response.challengeId == null) {
+        // A 429 carries the seconds left, so the member is told how long to
+        // wait instead of being left to guess.
+        final retryAfter = response.resendAfter;
+        setState(() {
+          errorMessage = _messageOf(data, AppStrings.loginOtpSendFailed);
+        });
+        if (retryAfter != null && retryAfter > 0) {
+          _startResendCooldown(retryAfter);
+        }
+        return;
+      }
+
+      final isTestChannel = response.deliveryChannel == 'dev';
+      setState(() {
+        _challenge = response;
+        // Shown, never typed in for the member. Production is on dev_show right
+        // now; if this screen filled the box itself, the only path anyone would
+        // ever exercise is the one that disappears the day WhatsApp goes live.
+        _testOtpCode = isTestChannel ? response.debugOtp : null;
+        _deliveryHint = isTestChannel
+            ? AppStrings.loginTestOtpBanner
+            : AppStrings.loginOtpWhatsappHint;
+      });
+      _startResendCooldown(response.resendAfter ?? 60);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => errorMessage = _networkMessage(error));
+    } finally {
+      // Whatever route this took out, the spinner stops. A verified member left
+      // holding a dead spinner is the exact bug this screen must not grow back.
+      if (mounted && isLoading) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  void _onOtpChanged() {
+    final otp = otpController.text.trim();
+    if (otp.length != 6 || otp != _lastAutoVerifyAttempt) {
+      _lastAutoVerifyAttempt = null;
+    }
+    _scheduleAutoVerify();
+  }
+
+  void _scheduleAutoVerify() {
+    _autoVerifyTimer?.cancel();
+    final otp = otpController.text.trim();
+    if (!_otpSent ||
+        isLoading ||
+        otp.length != 6 ||
+        _lastAutoVerifyAttempt == otp) {
+      return;
+    }
+    _autoVerifyTimer = Timer(const Duration(milliseconds: 400), () {
+      if (!mounted) return;
+      unawaited(_verifyOtp(autoTriggered: true));
+    });
+  }
+
+  Future<void> _verifyOtp({bool autoTriggered = false}) async {
+    if (isLoading) return;
+    _autoVerifyTimer?.cancel();
+
+    final challengeId = _challenge?.challengeId;
+    if (challengeId == null || challengeId.isEmpty) {
+      setState(() => errorMessage = AppStrings.loginOtpSendFailed);
+      return;
+    }
+
+    final otp = otpController.text.trim();
+    if (otp.length != 6) {
+      // Auto-verify never nags: it only fires at six digits, and a half-typed
+      // code is not a mistake worth shouting about.
+      if (!autoTriggered) {
+        setState(() => errorMessage = AppStrings.loginOtpInvalidLength);
+      }
+      return;
+    }
+
+    _lastAutoVerifyAttempt = otp;
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final data = await ApiClient.verifyMobileOtp(
+        challengeId: challengeId,
+        mobile: MobileNumberInput.normalize(mobileController.text),
+        otp: otp,
+      );
+      if (!mounted) return;
+
+      final response = MobileOtpVerifyResponse.fromJson(data);
+      if (!response.success || (response.token ?? '').isEmpty) {
+        // Wrong code, expired challenge, attempt limit, rate limit — the server
+        // words each one, and the member reads that wording.
+        setState(() {
+          errorMessage = _messageOf(data, AppStrings.loginOtpVerifyFailed);
+        });
+        return;
+      }
+
+      // ApiClient.verifyMobileOtp has already stored the token and registered
+      // the FCM device token, exactly as ApiClient.login does. From here the
+      // two paths are the same screen-for-screen.
+      setState(() => isLoading = false);
+      await _afterAuthenticated(
+        rememberIdentifier: MobileNumberInput.normalize(mobileController.text),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => errorMessage = _networkMessage(error));
+    } finally {
+      if (mounted && isLoading) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  void _startResendCooldown(int seconds) {
+    _resendTimer?.cancel();
+    final waitSeconds = seconds <= 0 ? 60 : seconds;
+    _resendAvailableAt = DateTime.now().add(Duration(seconds: waitSeconds));
+    setState(() => _resendSecondsRemaining = waitSeconds);
+
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      final target = _resendAvailableAt;
+      if (!mounted || target == null) {
+        timer.cancel();
+        return;
+      }
+      final remaining = target.difference(DateTime.now()).inSeconds;
+      if (remaining <= 0) {
+        timer.cancel();
+        setState(() => _resendSecondsRemaining = 0);
+        return;
+      }
+      setState(() => _resendSecondsRemaining = remaining);
+    });
+  }
+
+  void _resetOtpChallenge() {
+    _resendTimer?.cancel();
+    _autoVerifyTimer?.cancel();
+    setState(() {
+      _challenge = null;
+      _testOtpCode = null;
+      _deliveryHint = null;
+      _resendSecondsRemaining = 0;
+      _lastAutoVerifyAttempt = null;
+      errorMessage = '';
+      otpController.clear();
+    });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Password
+  // ---------------------------------------------------------------------------
+
+  Future<void> _handlePasswordLogin() async {
     final loginValue = loginController.text.trim();
     final passwordValue = passwordController.text;
     if (loginValue.isEmpty || passwordValue.isEmpty) {
-      setState(() {
-        errorMessage = AppStrings.loginMissingFields;
-      });
+      setState(() => errorMessage = AppStrings.loginMissingFields);
       return;
     }
 
@@ -52,85 +315,101 @@ class _LoginScreenState extends State<LoginScreen> {
       errorMessage = '';
     });
 
-    final result = await ApiClient.login(
-      login: loginValue,
-      password: passwordValue,
-    );
-
-    // Check if login was successful (token present)
-    if (result.containsKey('token') && result['token'] != null) {
-      await AppStorage.instance.saveRememberedLoginIdentifier(loginValue);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppStrings.loginSuccess),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-        ),
+    try {
+      final result = await ApiClient.login(
+        login: loginValue,
+        password: passwordValue,
       );
+      if (!mounted) return;
 
-      // Check if user has created matrimony profile
-      try {
-        final profileResult = await ApiClient.getMyProfile();
-        if (!mounted) return;
-        final statusCode = profileResult['statusCode'];
-
-        if (statusCode == 404) {
-          setState(() {
-            isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(AppStrings.loginProfileMissing),
-              backgroundColor: Colors.blue,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/smart-onboarding',
-            (route) => false,
-          );
-          return;
-        }
-
-        if (statusCode == 200 && profileResult['success'] == true) {
-          setState(() {
-            isLoading = false;
-          });
-          final route = await _completedProfileRoute();
-          if (!mounted) return;
-          Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
-          return;
-        }
-
+      if (result['token'] == null ||
+          result['token'].toString().trim().isEmpty) {
         setState(() {
-          isLoading = false;
-          errorMessage =
-              profileResult['message'] ?? AppStrings.loginProfileCheckFailed;
+          errorMessage = _messageOf(result, AppStrings.loginFailed);
         });
-      } catch (e) {
-        if (!mounted) return;
-        setState(() {
-          isLoading = false;
-          errorMessage = 'Profile check error: ${e.toString()}';
-        });
+        return;
       }
-      return;
+
+      setState(() => isLoading = false);
+      await _afterAuthenticated(rememberIdentifier: loginValue);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => errorMessage = _networkMessage(error));
+    } finally {
+      if (mounted && isLoading) {
+        setState(() => isLoading = false);
+      }
     }
-    // Login failed
-    if (!mounted) return;
-    setState(() {
-      isLoading = false;
-      errorMessage = result['message'] ?? AppStrings.loginFailed;
-    });
   }
 
-  @override
-  void dispose() {
-    loginController.dispose();
-    passwordController.dispose();
-    super.dispose();
+  // ---------------------------------------------------------------------------
+  // Shared post-login handling — one path for every door
+  // ---------------------------------------------------------------------------
+
+  /// Runs after any successful authentication. Both `ApiClient.login` and
+  /// `ApiClient.verifyMobileOtp` have already saved the token and fired
+  /// `PushNotificationService.instance.registerToken()` before we get here, so
+  /// a member who signs in with an OTP is as reachable by push as one who typed
+  /// a password.
+  Future<void> _afterAuthenticated({required String rememberIdentifier}) async {
+    if (rememberIdentifier.isNotEmpty) {
+      await AppStorage.instance.saveRememberedLoginIdentifier(
+        rememberIdentifier,
+      );
+    }
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppStrings.loginSuccess),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    try {
+      final profileResult = await ApiClient.getMyProfile();
+      if (!mounted) return;
+      final statusCode = profileResult['statusCode'];
+
+      if (statusCode == 404) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.loginProfileMissing),
+            backgroundColor: Colors.blue,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          '/smart-onboarding',
+          (route) => false,
+        );
+        return;
+      }
+
+      if (statusCode == 200 && profileResult['success'] == true) {
+        setState(() => isLoading = false);
+        final route = await _completedProfileRoute();
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(context, route, (route) => false);
+        return;
+      }
+
+      setState(() {
+        isLoading = false;
+        errorMessage =
+            profileResult['message']?.toString() ??
+            AppStrings.loginProfileCheckFailed;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() {
+        isLoading = false;
+        errorMessage = _networkMessage(error);
+      });
+    }
   }
 
   Future<String> _completedProfileRoute() async {
@@ -144,6 +423,67 @@ class _LoginScreenState extends State<LoginScreen> {
     final month = now.month.toString().padLeft(2, '0');
     final day = now.day.toString().padLeft(2, '0');
     return '${now.year}-$month-$day';
+  }
+
+  /// The server words its own failures (wrong OTP, expired challenge, attempt
+  /// limit, rate limit). Prefer that wording; fall back only when it sends none.
+  String _messageOf(Map<String, dynamic> data, String fallback) {
+    final message = data['message']?.toString().trim();
+    if (message != null && message.isNotEmpty) return message;
+
+    final errors = data['errors'];
+    if (errors is Map) {
+      for (final value in errors.values) {
+        if (value is List && value.isNotEmpty) {
+          final first = value.first?.toString().trim();
+          if (first != null && first.isNotEmpty) return first;
+        }
+        final text = value?.toString().trim();
+        if (text != null && text.isNotEmpty) return text;
+      }
+    }
+
+    return fallback;
+  }
+
+  /// A thrown request means the server was never reached — a dropped socket, a
+  /// timeout, no signal. The member gets told that in their own language; the
+  /// raw exception (`SocketException: Failed host lookup…`) is never useful to
+  /// a rural family and is not shown.
+  String _networkMessage(Object error) {
+    debugPrint('Login request failed: $error');
+    return AppStrings.loginNetworkError;
+  }
+
+  // ---------------------------------------------------------------------------
+  // UI
+  // ---------------------------------------------------------------------------
+
+  void _switchMethod(_LoginMethod next) {
+    if (_method == next) return;
+    _resetOtpChallenge();
+    setState(() {
+      _method = next;
+      errorMessage = '';
+    });
+  }
+
+  void _submit() {
+    FocusScope.of(context).unfocus();
+    if (_method == _LoginMethod.password) {
+      unawaited(_handlePasswordLogin());
+      return;
+    }
+    if (_otpSent) {
+      unawaited(_verifyOtp());
+      return;
+    }
+    unawaited(_sendOtp());
+  }
+
+  String get _primaryActionLabel {
+    if (_method == _LoginMethod.password) return AppStrings.login;
+    return _otpSent ? AppStrings.loginVerifyOtp : AppStrings.loginSendOtp;
   }
 
   @override
@@ -220,7 +560,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            AppStrings.loginWelcomeSubtitle,
+                            _method == _LoginMethod.otp
+                                ? (_otpSent
+                                      ? AppStrings.loginOtpSentHint
+                                      : AppStrings.loginMobileHint)
+                                : AppStrings.loginWelcomeSubtitle,
                             textAlign: TextAlign.center,
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: const Color(0xFF6B7280),
@@ -228,57 +572,14 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           const SizedBox(height: 24),
-                          TextField(
-                            controller: loginController,
-                            keyboardType: TextInputType.text,
-                            textInputAction: TextInputAction.next,
-                            autofillHints: const [
-                              AutofillHints.username,
-                              AutofillHints.email,
-                              AutofillHints.telephoneNumber,
-                            ],
-                            decoration: InputDecoration(
-                              labelText: AppStrings.loginIdentifierLabel,
-                              prefixIcon: const Icon(
-                                Icons.person_outline_rounded,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 14),
-                          TextField(
-                            controller: passwordController,
-                            obscureText: _obscurePassword,
-                            textInputAction: TextInputAction.done,
-                            autofillHints: const [AutofillHints.password],
-                            onSubmitted: (_) {
-                              if (!isLoading) handleLogin();
-                            },
-                            decoration: InputDecoration(
-                              labelText: AppStrings.loginPasswordLabel,
-                              prefixIcon: const Icon(
-                                Icons.lock_outline_rounded,
-                              ),
-                              suffixIcon: IconButton(
-                                tooltip: _obscurePassword
-                                    ? AppStrings.loginShowPassword
-                                    : AppStrings.loginHidePassword,
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
+                          if (_method == _LoginMethod.otp)
+                            ..._buildOtpFields(theme)
+                          else
+                            ..._buildPasswordFields(theme),
                           if (errorMessage.isNotEmpty) ...[
                             const SizedBox(height: 14),
                             Container(
+                              key: const ValueKey('login-error'),
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFEBEE),
@@ -300,7 +601,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           SizedBox(
                             height: 52,
                             child: ElevatedButton(
-                              onPressed: isLoading ? null : handleLogin,
+                              onPressed: isLoading ? null : _submit,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFE65A43),
                                 foregroundColor: Colors.white,
@@ -319,14 +620,30 @@ class _LoginScreenState extends State<LoginScreen> {
                                       ),
                                     )
                                   : Text(
-                                      AppStrings.login,
+                                      _primaryActionLabel,
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w800,
                                       ),
                                     ),
                             ),
                           ),
-                          const SizedBox(height: 10),
+                          const SizedBox(height: 4),
+                          TextButton(
+                            onPressed: isLoading
+                                ? null
+                                : () => _switchMethod(
+                                    _method == _LoginMethod.otp
+                                        ? _LoginMethod.password
+                                        : _LoginMethod.otp,
+                                  ),
+                            child: Text(
+                              _method == _LoginMethod.otp
+                                  ? AppStrings.loginUsePasswordInstead
+                                  : AppStrings.loginUseOtpInstead,
+                            ),
+                          ),
+                          if (_method == _LoginMethod.otp)
+                            _ConsentFooter(theme: theme),
                           TextButton(
                             onPressed: isLoading
                                 ? null
@@ -343,6 +660,227 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _buildOtpFields(ThemeData theme) {
+    return <Widget>[
+      TextField(
+        controller: mobileController,
+        focusNode: _mobileFocus,
+        enabled: !_otpSent,
+        keyboardType: TextInputType.phone,
+        textInputAction: TextInputAction.done,
+        autofillHints: const [AutofillHints.telephoneNumber],
+        inputFormatters: [
+          // Latin 0-9 only. A Devanagari numeral typed on a Marathi keyboard is
+          // dropped here rather than rejected by the server.
+          FilteringTextInputFormatter.digitsOnly,
+          LengthLimitingTextInputFormatter(10),
+        ],
+        decoration: InputDecoration(
+          labelText: AppStrings.loginMobileLabel,
+          prefixIcon: const Icon(Icons.phone_iphone_rounded),
+          suffixIcon: _otpSent
+              ? null
+              : IconButton(
+                  tooltip: AppStrings.loginPickFromSim,
+                  onPressed: isLoading
+                      ? null
+                      : () => unawaited(_pickMobileFromSim()),
+                  icon: const Icon(Icons.sim_card_outlined),
+                ),
+        ),
+        onSubmitted: (_) {
+          if (!isLoading && !_otpSent) unawaited(_sendOtp());
+        },
+      ),
+      if (_otpSent) ...[
+        const SizedBox(height: 14),
+        if (_deliveryHint != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              _deliveryHint!,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: const Color(0xFF6B7280),
+              ),
+            ),
+          ),
+        if (_testOtpCode != null)
+          Container(
+            key: const ValueKey('login-test-otp'),
+            margin: const EdgeInsets.only(bottom: 10),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF7ED),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: const Color(0xFFFED7AA)),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.science_outlined,
+                  size: 18,
+                  color: Color(0xFF9A3412),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    AppStrings.loginTestOtpLabel(_testOtpCode!),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: const Color(0xFF9A3412),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        TextField(
+          controller: otpController,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
+          autofillHints: const [AutofillHints.oneTimeCode],
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(6),
+          ],
+          decoration: InputDecoration(
+            labelText: AppStrings.loginOtpLabel,
+            prefixIcon: const Icon(Icons.pin_outlined),
+            helperText: AppStrings.loginOtpAutoFillHint,
+            helperMaxLines: 2,
+          ),
+          onSubmitted: (_) {
+            if (!isLoading) unawaited(_verifyOtp());
+          },
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Flexible(
+              child: TextButton(
+                onPressed: isLoading ? null : _resetOtpChallenge,
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+                child: Text(
+                  AppStrings.loginChangeMobile,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+            Flexible(
+              child: TextButton(
+                onPressed: (isLoading || _resendSecondsRemaining > 0)
+                    ? null
+                    : () => unawaited(_sendOtp()),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                ),
+                child: Text(
+                  _resendSecondsRemaining > 0
+                      ? AppStrings.loginResendInSeconds(_resendSecondsRemaining)
+                      : AppStrings.loginSendOtp,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ];
+  }
+
+  List<Widget> _buildPasswordFields(ThemeData theme) {
+    return <Widget>[
+      TextField(
+        controller: loginController,
+        keyboardType: TextInputType.text,
+        textInputAction: TextInputAction.next,
+        autofillHints: const [
+          AutofillHints.username,
+          AutofillHints.email,
+          AutofillHints.telephoneNumber,
+        ],
+        decoration: InputDecoration(
+          labelText: AppStrings.loginIdentifierLabel,
+          prefixIcon: const Icon(Icons.person_outline_rounded),
+        ),
+      ),
+      const SizedBox(height: 14),
+      TextField(
+        controller: passwordController,
+        obscureText: _obscurePassword,
+        textInputAction: TextInputAction.done,
+        autofillHints: const [AutofillHints.password],
+        onSubmitted: (_) {
+          if (!isLoading) unawaited(_handlePasswordLogin());
+        },
+        decoration: InputDecoration(
+          labelText: AppStrings.loginPasswordLabel,
+          prefixIcon: const Icon(Icons.lock_outline_rounded),
+          suffixIcon: IconButton(
+            tooltip: _obscurePassword
+                ? AppStrings.loginShowPassword
+                : AppStrings.loginHidePassword,
+            onPressed: () {
+              setState(() => _obscurePassword = !_obscurePassword);
+            },
+            icon: Icon(
+              _obscurePassword
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+            ),
+          ),
+        ),
+      ),
+    ];
+  }
+}
+
+/// Same consent wording registration shows, because the same consent is being
+/// recorded: `/auth/mobile-otp/send` requires a terms and privacy version, and
+/// verifying the challenge writes both into `user_consents`.
+class _ConsentFooter extends StatelessWidget {
+  const _ConsentFooter({required this.theme});
+
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final textStyle = theme.textTheme.bodySmall?.copyWith(
+      color: const Color(0xFF6B7280),
+      fontSize: 11,
+      height: 1.2,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 2),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(AppStrings.loginConsentPrefix, style: textStyle),
+              Text(
+                'T & C',
+                style: textStyle?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              Text(AppStrings.loginConsentAnd, style: textStyle),
+              Text(
+                'Privacy Policy',
+                style: textStyle?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              Text(AppStrings.loginConsentSuffix, style: textStyle),
+            ],
+          ),
         ),
       ),
     );
