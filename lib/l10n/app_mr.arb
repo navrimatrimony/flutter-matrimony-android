@@ -1955,5 +1955,13 @@
   "rawNormalizedDraftJson": "मसुद्याचा मूळ JSON",
   "missingOrReviewNeeded": "बाकी / तपासणी हवी",
   "parsedJsonTitle": "वाचलेला JSON",
-  "ocrDiagnostics": "OCR तपासणीची माहिती"
+  "ocrDiagnostics": "OCR तपासणीची माहिती",
+  "profileForWhomSelf": "स्वतःसाठी",
+  "profileForWhomSon": "मुलासाठी",
+  "profileForWhomDaughter": "मुलीसाठी",
+  "profileForWhomBrother": "भावासाठी",
+  "profileForWhomSister": "बहिणीसाठी",
+  "profileForWhomRelative": "नातेवाईकासाठी",
+  "profileForWhomFriend": "मित्र/मैत्रिणीसाठी",
+  "categoryIdOptional": "श्रेणी क्रमांक (ऐच्छिक)"
 }

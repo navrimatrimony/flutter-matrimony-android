@@ -9265,6 +9265,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OCR preprocessing diagnostics'**
   String get ocrDiagnostics;
+
+  /// No description provided for @profileForWhomSelf.
+  ///
+  /// In en, this message translates to:
+  /// **'For myself'**
+  String get profileForWhomSelf;
+
+  /// No description provided for @profileForWhomSon.
+  ///
+  /// In en, this message translates to:
+  /// **'For my son'**
+  String get profileForWhomSon;
+
+  /// No description provided for @profileForWhomDaughter.
+  ///
+  /// In en, this message translates to:
+  /// **'For my daughter'**
+  String get profileForWhomDaughter;
+
+  /// No description provided for @profileForWhomBrother.
+  ///
+  /// In en, this message translates to:
+  /// **'For my brother'**
+  String get profileForWhomBrother;
+
+  /// No description provided for @profileForWhomSister.
+  ///
+  /// In en, this message translates to:
+  /// **'For my sister'**
+  String get profileForWhomSister;
+
+  /// No description provided for @profileForWhomRelative.
+  ///
+  /// In en, this message translates to:
+  /// **'For a relative'**
+  String get profileForWhomRelative;
+
+  /// No description provided for @profileForWhomFriend.
+  ///
+  /// In en, this message translates to:
+  /// **'For a friend'**
+  String get profileForWhomFriend;
+
+  /// No description provided for @categoryIdOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Category number (optional)'**
+  String get categoryIdOptional;
 }
 
 class _AppLocalizationsDelegate

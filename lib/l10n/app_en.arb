@@ -2051,5 +2051,13 @@
   "rawNormalizedDraftJson": "Raw normalized draft JSON",
   "missingOrReviewNeeded": "Missing / review needed",
   "parsedJsonTitle": "Parsed JSON",
-  "ocrDiagnostics": "OCR preprocessing diagnostics"
+  "ocrDiagnostics": "OCR preprocessing diagnostics",
+  "profileForWhomSelf": "For myself",
+  "profileForWhomSon": "For my son",
+  "profileForWhomDaughter": "For my daughter",
+  "profileForWhomBrother": "For my brother",
+  "profileForWhomSister": "For my sister",
+  "profileForWhomRelative": "For a relative",
+  "profileForWhomFriend": "For a friend",
+  "categoryIdOptional": "Category number (optional)"
 }

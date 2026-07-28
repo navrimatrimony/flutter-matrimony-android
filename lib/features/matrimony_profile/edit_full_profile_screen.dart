@@ -5727,11 +5727,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
+  /// [isLocation] picks the hierarchical location labeller instead of the plain
+  /// option one. It used to be inferred by comparing [fallbackPrefix] against
+  /// the literal 'Location', which quietly stopped matching once the callers
+  /// began passing the translated `appText.location` — so Marathi fell through
+  /// to the plain labeller and lost the village/taluka/district composition.
   Widget _buildSuggestions({
     required List<Map<String, dynamic>> suggestions,
     required String fallbackPrefix,
     required ValueChanged<Map<String, dynamic>> onSelect,
     bool loading = false,
+    bool isLocation = false,
   }) {
     if (loading) {
       return const Padding(
@@ -5753,7 +5759,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         itemCount: suggestions.length,
         itemBuilder: (context, index) {
           final item = suggestions[index];
-          final label = fallbackPrefix == 'Location'
+          final label = isLocation
               ? _locationLabel(item)
               : _optionLabel(item, fallbackPrefix);
           final hierarchy =
@@ -6966,6 +6972,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _buildSuggestions(
             suggestions: row.locationSuggestions,
             fallbackPrefix: appText.location,
+            isLocation: true,
             loading: row.locationSearching,
             onSelect: (location) => _selectAddressLocation(row, location),
           ),
@@ -7133,6 +7140,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _buildSuggestions(
           suggestions: _birthPlaceSuggestions,
           fallbackPrefix: appText.location,
+          isLocation: true,
           loading: _birthPlaceSearching,
           onSelect: _selectBirthPlace,
         ),
@@ -7401,7 +7409,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   if (id == null) return null;
                   return PopupMenuItem<int>(
                     value: id,
-                    child: Text(_optionLabel(option, 'Currency')),
+                    child: Text(_optionLabel(option, appText.currencyLabel)),
                   );
                 })
                 .whereType<PopupMenuItem<int>>()
@@ -7599,6 +7607,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _buildSuggestions(
           suggestions: _workLocationSuggestions,
           fallbackPrefix: appText.location,
+          isLocation: true,
           loading: _workLocationSearching,
           onSelect: _selectWorkLocation,
         ),
@@ -8425,6 +8434,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _buildSuggestions(
             suggestions: row.locationSuggestions,
             fallbackPrefix: appText.location,
+            isLocation: true,
             loading: row.locationSearching,
             onSelect: (location) => _selectAllianceLocation(row, location),
           ),

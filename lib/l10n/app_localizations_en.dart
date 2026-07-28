@@ -5041,4 +5041,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ocrDiagnostics => 'OCR preprocessing diagnostics';
+
+  @override
+  String get profileForWhomSelf => 'For myself';
+
+  @override
+  String get profileForWhomSon => 'For my son';
+
+  @override
+  String get profileForWhomDaughter => 'For my daughter';
+
+  @override
+  String get profileForWhomBrother => 'For my brother';
+
+  @override
+  String get profileForWhomSister => 'For my sister';
+
+  @override
+  String get profileForWhomRelative => 'For a relative';
+
+  @override
+  String get profileForWhomFriend => 'For a friend';
+
+  @override
+  String get categoryIdOptional => 'Category number (optional)';
 }

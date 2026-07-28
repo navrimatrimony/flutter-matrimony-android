@@ -5022,4 +5022,28 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get ocrDiagnostics => 'OCR तपासणीची माहिती';
+
+  @override
+  String get profileForWhomSelf => 'स्वतःसाठी';
+
+  @override
+  String get profileForWhomSon => 'मुलासाठी';
+
+  @override
+  String get profileForWhomDaughter => 'मुलीसाठी';
+
+  @override
+  String get profileForWhomBrother => 'भावासाठी';
+
+  @override
+  String get profileForWhomSister => 'बहिणीसाठी';
+
+  @override
+  String get profileForWhomRelative => 'नातेवाईकासाठी';
+
+  @override
+  String get profileForWhomFriend => 'मित्र/मैत्रिणीसाठी';
+
+  @override
+  String get categoryIdOptional => 'श्रेणी क्रमांक (ऐच्छिक)';
 }

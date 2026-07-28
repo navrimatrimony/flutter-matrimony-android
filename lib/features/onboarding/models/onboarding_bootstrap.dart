@@ -1,3 +1,4 @@
+import '../../../core/app_language.dart';
 import 'onboarding_option.dart';
 
 class OnboardingBootstrap {
@@ -106,41 +107,45 @@ class OnboardingBootstrap {
     );
   }
 
+  /// Shown on the very first onboarding question until the lookup call answers,
+  /// and permanently if it never does. The wording mirrors the server's
+  /// `OnboardingLookupController::PROFILE_FOR_WHOM` in both locales so the list
+  /// does not visibly rewrite itself when the real options arrive.
   factory OnboardingBootstrap.fallbackProfileForWhom() {
-    const rows = <Map<String, dynamic>>[
+    final rows = <Map<String, dynamic>>[
       {
         'key': 'self',
-        'label': 'Self',
+        'label': appText.profileForWhomSelf,
         'meta': {'gender_mode': 'ask'},
       },
       {
         'key': 'son',
-        'label': 'Son',
+        'label': appText.profileForWhomSon,
         'meta': {'gender_mode': 'male'},
       },
       {
         'key': 'daughter',
-        'label': 'Daughter',
+        'label': appText.profileForWhomDaughter,
         'meta': {'gender_mode': 'female'},
       },
       {
         'key': 'brother',
-        'label': 'Brother',
+        'label': appText.profileForWhomBrother,
         'meta': {'gender_mode': 'male'},
       },
       {
         'key': 'sister',
-        'label': 'Sister',
+        'label': appText.profileForWhomSister,
         'meta': {'gender_mode': 'female'},
       },
       {
         'key': 'relative',
-        'label': 'Relative',
+        'label': appText.profileForWhomRelative,
         'meta': {'gender_mode': 'ask'},
       },
       {
         'key': 'friend',
-        'label': 'Friend',
+        'label': appText.profileForWhomFriend,
         'meta': {'gender_mode': 'ask'},
       },
     ];

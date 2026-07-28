@@ -8,6 +8,7 @@ import 'package:flutter_matrimony_android/core/api_client.dart';
 import 'package:flutter_matrimony_android/core/app_language.dart';
 import 'package:flutter_matrimony_android/core/app_storage.dart';
 import 'package:flutter_matrimony_android/l10n/app_localizations.dart';
+import 'package:flutter_matrimony_android/features/onboarding/models/onboarding_bootstrap.dart';
 import 'package:flutter_matrimony_android/features/matrimony_profile/profile_detail_screen.dart';
 import 'package:flutter_matrimony_android/features/matrimony_profile/view_profile_screen.dart';
 
@@ -253,6 +254,29 @@ void main() {
       reason: 'English left on the Marathi My Profile screen:'
           '\n${offenders.join('\n')}',
     );
+  });
+
+  test('the onboarding fallback options are localized, not baked in English', () {
+    // `OnboardingBootstrap.fallbackProfileForWhom()` seeds the very first
+    // onboarding question and is what a member reads until the lookup call
+    // answers — or forever, if it never does. It shipped seven English labels
+    // ('Self', 'Son', 'Daughter'…) that no widget test reached, because the
+    // list is built in a model, not a screen.
+    setAppLanguage(AppLanguage.marathi);
+    addTearDown(() => setAppLanguage(AppLanguage.english));
+
+    final labels = OnboardingBootstrap.fallbackProfileForWhom().profileForWhom
+        .map((option) => option.label)
+        .toList();
+
+    expect(labels, hasLength(7));
+    for (final label in labels) {
+      expect(
+        devanagari.hasMatch(label),
+        isTrue,
+        reason: 'Onboarding fallback option is not Marathi: $label',
+      );
+    }
   });
 
   test('bilingual helpers are never handed the same string twice', () {

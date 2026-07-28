@@ -1228,8 +1228,8 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
                   TextField(
                     controller: categoryId,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'category_id optional',
+                    decoration: InputDecoration(
+                      labelText: appText.categoryIdOptional,
                     ),
                   ),
                   const SizedBox(height: 10),

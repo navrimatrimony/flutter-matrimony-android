@@ -49,7 +49,7 @@ class _SentInterestsScreenState extends State<SentInterestsScreen> {
 
       if (statusCode == 403) {
         setState(() {
-          _errorMessage = response['message'] ?? 'Unauthorized';
+          _errorMessage = response['message'] ?? appText.unauthorizedAccess;
           _isLoading = false;
         });
         return;
