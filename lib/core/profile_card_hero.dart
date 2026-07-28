@@ -26,6 +26,10 @@ import 'package:flutter/material.dart';
 /// the same route animation over the same interval, but the photo roughly
 /// doubles in size on the way to the header while the name has to stay legible
 /// at both ends. Scaling them together would blow the name up with the photo.
+///
+/// **A missing photo does not cancel the text flight.** The overlay block is
+/// drawn on a gradient placeholder when a profile has no photo, and that block
+/// still has somewhere to land, so only [photo] is withheld in that case.
 @immutable
 class ProfileCardHeroTags {
   const ProfileCardHeroTags._({required this.photo, required this.identity});
@@ -40,16 +44,20 @@ class ProfileCardHeroTags {
     required String? scope,
     required String? photoUrl,
   }) {
-    if (profileId == null || scope == null || photoUrl == null) return null;
+    if (profileId == null || scope == null) return null;
 
     return ProfileCardHeroTags._(
-      photo: 'profile-photo:$profileId@$scope',
+      // Only the picture itself is gated on there being a picture. Handing the
+      // photo tag out anyway would fly one screen's "no photo yet" placeholder
+      // into the other's, which are two different drawings of nothing.
+      photo: photoUrl == null ? null : 'profile-photo:$profileId@$scope',
       identity: 'profile-identity:$profileId@$scope',
     );
   }
 
-  /// Tag for the photo itself. See [ProfilePhotoHero].
-  final String photo;
+  /// Tag for the photo itself, or null when this profile has no photo to fly.
+  /// See [ProfilePhotoHero].
+  final String? photo;
 
   /// Tag for the name/age block drawn over the photo. See [ProfileIdentityHero].
   ///
@@ -186,30 +194,59 @@ class ProfilePhotoHero extends StatelessWidget {
   }
 }
 
-/// The name/age headline and the one detail line under it — the words printed
-/// on the photo on both ends — flown across alongside the photo.
+/// One line of the overlay block, as one end draws it.
+///
+/// [gap] is the space this end leaves *above* the line, so a shuttle can
+/// interpolate the spacing as well as the type.
+@immutable
+class ProfileIdentityLine {
+  const ProfileIdentityLine({
+    required this.text,
+    required this.style,
+    this.gap = 0,
+    this.icon,
+  });
+
+  final String text;
+  final TextStyle style;
+  final double gap;
+
+  /// Leading glyph this end draws before the text, if any.
+  final IconData? icon;
+}
+
+/// The whole block of words printed on the photo — headline, every detail line
+/// under it, and the status chips below those — flown across alongside the
+/// photo.
 ///
 /// A photo-only flight came apart in the hand: the picture lifted out of the
-/// card and the words it was printed on stayed behind and cut. So the shared
-/// strings travel too, and land at exactly the size and place the detail screen
-/// was going to draw them in.
+/// card and the words it was printed on stayed behind and cut. Carrying only the
+/// headline was no better — the block visibly lost three quarters of itself at
+/// the hand-off. So the block travels whole.
+///
+/// **Both ends must word the block the same way.** That is not something this
+/// widget can enforce, and it is not something it will paper over: the shuttle
+/// renders one end's strings, so if the two ends disagree the words change at
+/// the hand-off instead of in mid-air, which is only marginally better. The
+/// profile detail screen therefore composes its header from the card's own
+/// fields rather than from a second, shorter idea of the same profile.
 ///
 /// Both ends keep rendering their own [child] untouched — this widget only
-/// *carries* the strings and styles so the shuttle can reach them. The two
-/// screens therefore look exactly as they did whenever no flight is running, and
-/// the shuttle is the single place their two designs are reconciled.
+/// *carries* the strings, styles and chips so the shuttle can reach them. The
+/// two screens therefore look exactly as they did whenever no flight is running,
+/// and the shuttle is the single place their two designs are reconciled.
 ///
 /// What the shuttle does with them:
 ///
 ///  * **The words never change in mid-air.** It renders the strings of the end
-///    being left behind and interpolates only the *style*, so the text settles
-///    into the destination's size instead of snapping at the hand-off.
-///  * **Only what is genuinely shared travels.** Everything the two ends word
-///    differently — the card's work and location lines, its status chips and
-///    action strip, the detail screen's own chips — stays outside this widget
-///    and cross-fades with the routes. A [trailing] widget that exists on one
-///    end only (the detail screen's verified tick) fades in or out across the
-///    flight rather than appearing all at once on landing.
+///    being left behind and interpolates only the *style* and the spacing, so
+///    the block settles into the destination's size instead of snapping.
+///  * **A missing line degrades, it does not gap.** Lines are matched by
+///    position; a line the destination does not draw at all keeps the outgoing
+///    end's type and fades out over the flight, taking its own leading gap with
+///    it, so the block shrinks smoothly instead of leaving a hole. The same
+///    holds for the chip row and for a [trailing] widget only one end has (the
+///    detail screen's verified tick).
 class ProfileIdentityHero extends StatelessWidget {
   const ProfileIdentityHero({
     super.key,
@@ -220,16 +257,17 @@ class ProfileIdentityHero extends StatelessWidget {
     this.titleMaxLines = 2,
     this.trailing,
     this.trailingGap = 8,
-    this.subtitle,
-    this.subtitleStyle,
-    this.subtitleGap = 0,
+    this.lines = const <ProfileIdentityLine>[],
+    this.chips = const <Widget>[],
+    this.chipsGap = 0,
+    this.chipsSpacing = 8,
   });
 
   /// Null disables the flight for this instance and renders [child] unchanged.
   ///
   /// Pass `ProfileCardHeroTags.identity` only from a surface that really draws
-  /// this text over the photo and words it the way the detail screen words it. A
-  /// compact tile that shows the bare name where the header shows "name, age"
+  /// this block over the photo and words it the way the detail screen words it.
+  /// A compact tile that shows the bare name where the header shows "name, age"
   /// must leave this null — the words would have to change in mid-air.
   final String? tag;
 
@@ -244,12 +282,15 @@ class ProfileIdentityHero extends StatelessWidget {
   final Widget? trailing;
   final double trailingGap;
 
-  /// The single detail line under the headline, or null when this end has none.
-  final String? subtitle;
-  final TextStyle? subtitleStyle;
+  /// The detail lines under the headline, in the order this end draws them.
+  final List<ProfileIdentityLine> lines;
 
-  /// Vertical space between [title] and [subtitle] as this end draws it.
-  final double subtitleGap;
+  /// The status chips under the lines, already built by this end.
+  final List<Widget> chips;
+
+  /// Space this end leaves above the chip row.
+  final double chipsGap;
+  final double chipsSpacing;
 
   final Widget child;
 
@@ -267,9 +308,10 @@ class ProfileIdentityHero extends StatelessWidget {
         titleMaxLines: titleMaxLines,
         trailing: trailing,
         trailingGap: trailingGap,
-        subtitle: subtitle,
-        subtitleStyle: subtitleStyle,
-        subtitleGap: subtitleGap,
+        lines: lines,
+        chips: chips,
+        chipsGap: chipsGap,
+        chipsSpacing: chipsSpacing,
         child: child,
       ),
     );
@@ -307,14 +349,36 @@ class ProfileIdentityHero extends StatelessWidget {
     final trailingOpacity = from.trailing == null
         ? (to.trailing == null ? 0.0 : progress)
         : (to.trailing == null ? 1 - progress : 1.0);
+
     // The outgoing end's words, for the same reason the photo shuttle draws the
-    // outgoing photo: that is what the viewer is already looking at.
-    final subtitle = from.subtitle;
-    final subtitleStyle = TextStyle.lerp(
-      from.subtitleStyle ?? to.subtitleStyle,
-      to.subtitleStyle ?? from.subtitleStyle,
-      progress,
-    );
+    // outgoing photo: that is what the viewer is already looking at. Lines pair
+    // up by position, and a line with no counterpart shrinks away rather than
+    // holding an empty row open.
+    final lines = <Widget>[];
+    for (var i = 0; i < from.lines.length; i++) {
+      final line = from.lines[i];
+      final landing = i < to.lines.length ? to.lines[i] : null;
+      final opacity = landing == null ? 1 - progress : 1.0;
+      lines.add(
+        SizedBox(
+          height:
+              lerpDouble(line.gap, landing?.gap ?? 0, progress) ?? line.gap,
+        ),
+      );
+      lines.add(
+        Opacity(
+          opacity: opacity,
+          child: _flightLine(
+            line,
+            TextStyle.lerp(line.style, landing?.style ?? line.style, progress),
+            progress,
+          ),
+        ),
+      );
+    }
+
+    final chips = from.chips;
+    final chipsOpacity = to.chips.isEmpty ? 1 - progress : 1.0;
 
     return DefaultTextStyle(
       // The flight is drawn in the navigator's overlay, outside any Material, so
@@ -362,22 +426,57 @@ class ProfileIdentityHero extends StatelessWidget {
                 ],
               ],
             ),
-            if (subtitle != null) ...[
+            ...lines,
+            if (chips.isNotEmpty) ...[
               SizedBox(
                 height:
-                    lerpDouble(from.subtitleGap, to.subtitleGap, progress) ??
-                    to.subtitleGap,
+                    lerpDouble(from.chipsGap, to.chipsGap, progress) ??
+                    from.chipsGap,
               ),
-              Text(
-                subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: subtitleStyle,
+              Opacity(
+                opacity: chipsOpacity,
+                child: Wrap(
+                  spacing:
+                      lerpDouble(
+                        from.chipsSpacing,
+                        to.chipsSpacing,
+                        progress,
+                      ) ??
+                      from.chipsSpacing,
+                  runSpacing: 8,
+                  children: chips,
+                ),
               ),
             ],
           ],
         ),
       ),
+    );
+  }
+
+  /// One line as the shuttle draws it: the outgoing end's words and glyph at an
+  /// interpolated size. The icon is sized off the text so it keeps pace with it.
+  static Widget _flightLine(
+    ProfileIdentityLine line,
+    TextStyle? style,
+    double progress,
+  ) {
+    final text = Text(
+      line.text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: style,
+    );
+
+    final icon = line.icon;
+    if (icon == null) return text;
+
+    return Row(
+      children: [
+        Icon(icon, size: (style?.fontSize ?? 15) + 1, color: style?.color),
+        const SizedBox(width: 5),
+        Flexible(child: text),
+      ],
     );
   }
 }
@@ -436,9 +535,10 @@ class _ProfileIdentityHeroContent extends StatelessWidget {
     required this.titleMaxLines,
     required this.trailing,
     required this.trailingGap,
-    required this.subtitle,
-    required this.subtitleStyle,
-    required this.subtitleGap,
+    required this.lines,
+    required this.chips,
+    required this.chipsGap,
+    required this.chipsSpacing,
     required this.child,
   });
 
@@ -447,9 +547,10 @@ class _ProfileIdentityHeroContent extends StatelessWidget {
   final int titleMaxLines;
   final Widget? trailing;
   final double trailingGap;
-  final String? subtitle;
-  final TextStyle? subtitleStyle;
-  final double subtitleGap;
+  final List<ProfileIdentityLine> lines;
+  final List<Widget> chips;
+  final double chipsGap;
+  final double chipsSpacing;
   final Widget child;
 
   @override

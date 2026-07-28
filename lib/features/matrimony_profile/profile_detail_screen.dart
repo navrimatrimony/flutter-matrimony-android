@@ -647,16 +647,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     final occupationLabel =
         _displayString(hero?['occupation_label']) ??
         ApiClient.profileOccupationLabel(profile);
+    // `education_label` is a list-card field; the detail payload has no hero
+    // equivalent, so the raw column carries this line once the fetch lands. That
+    // is deliberate — it is what keeps the line the card printed from
+    // disappearing a second after the block arrives.
+    final educationLabel =
+        _displayString(hero?['education_label']) ??
+        ApiClient.profileEducationLabel(profile);
     final location =
         _displayString(hero?['location_label']) ??
         ApiClient.profileLocationLabel(profile, allowIdFallback: false);
-    final line1 = _joinNonEmpty([heightLabel, communityLabel]);
-    final compactLine = line1 ?? location;
+    // No `?? location` fallback any more: the location has its own line further
+    // down, exactly as on the card, and standing in for a missing height and
+    // community line here used to print it twice on some profiles and shift
+    // every line below it on others.
+    final compactLine = _joinNonEmpty([heightLabel, communityLabel]);
+    // Same composition and order as the list card's work line, so the block the
+    // member tapped is the block that lands.
+    final workLine = _joinNonEmpty([occupationLabel, educationLabel]);
     final isVerified = _displayBool(hero?['verified']) ?? _isVerified(profile);
-    final heroChips = _displayChips(
-      profile,
-      hasComparisonCard: _comparisonData() != null,
-    );
+    final heroChips = _heroChips(profile, hero);
 
     return AnimatedBuilder(
       animation: _scrollController,
@@ -664,7 +674,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
         final progress = Curves.easeOutCubic.transform(
           _headerCollapseProgress(),
         );
-        final startTop = (statusHeight + heroHeight - 172)
+        final startTop = (statusHeight + heroHeight - _heroIdentityInset)
             .clamp(statusHeight + 112, statusHeight + heroHeight - 92)
             .toDouble();
         final top = _lerpValue(startTop, statusHeight + 7, progress);
@@ -689,6 +699,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
           height: 1.18,
         );
         final subtitleGap = _lerpValue(8, 3, progress);
+        final detailLineStyle = TextStyle(
+          color: Colors.white.withValues(alpha: 0.92),
+          fontSize: 14.5,
+          fontWeight: FontWeight.w600,
+          height: 1.25,
+        );
         final verifiedTick = isVerified
             ? Icon(
                 Icons.verified,
@@ -696,6 +712,31 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
                 size: _lerpValue(24, 18, progress),
               )
             : null;
+
+        // The same four things the tapped card printed on the same photo, in the
+        // card's order, so the block arrives whole instead of the headline
+        // arriving and the rest cutting in underneath it. Collapsing the header
+        // on scroll drops the lower lines from the block itself, not just from
+        // its opacity, so a flight started from a scrolled header carries only
+        // what is actually on screen.
+        final heroLines = <ProfileIdentityLine>[
+          if (compactLine != null)
+            ProfileIdentityLine(
+              text: compactLine,
+              style: subtitleStyle,
+              gap: subtitleGap,
+            ),
+          if (showHeroDetails && workLine != null)
+            ProfileIdentityLine(text: workLine, style: detailLineStyle, gap: 5),
+          if (showHeroDetails && location != null)
+            ProfileIdentityLine(
+              text: location,
+              style: detailLineStyle,
+              gap: 5,
+              icon: Icons.place,
+            ),
+        ];
+        final blockChips = showHeroDetails ? heroChips : const <Widget>[];
 
         return Positioned(
           top: top,
@@ -705,107 +746,85 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
             ignoring: progress > 0.82,
             child: DefaultTextStyle(
               style: const TextStyle(color: Colors.white),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // The tapped card printed this same headline and detail line
-                  // on the same photo, so they arrive with it instead of cutting
-                  // in underneath it. The occupation, location and chips below
-                  // are this screen's own wording and stay out of the flight.
-                  ProfileIdentityHero(
-                    tag: _heroTags()?.identity,
-                    title: heroName,
-                    titleStyle: titleStyle,
-                    titleMaxLines: titleMaxLines,
-                    trailing: verifiedTick,
-                    subtitle: compactLine,
-                    subtitleStyle: subtitleStyle,
-                    subtitleGap: subtitleGap,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
+              child: ProfileIdentityHero(
+                tag: _heroTags()?.identity,
+                title: heroName,
+                titleStyle: titleStyle,
+                titleMaxLines: titleMaxLines,
+                trailing: verifiedTick,
+                lines: heroLines,
+                chips: blockChips,
+                chipsGap: 14,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                heroName,
-                                maxLines: titleMaxLines,
-                                overflow: TextOverflow.ellipsis,
-                                style: titleStyle,
-                              ),
-                            ),
-                            if (verifiedTick != null) ...[
-                              const SizedBox(width: 8),
-                              verifiedTick,
-                            ],
-                          ],
-                        ),
-                        if (compactLine != null) ...[
-                          SizedBox(height: subtitleGap),
-                          Text(
-                            compactLine,
-                            maxLines: 1,
+                        Flexible(
+                          child: Text(
+                            heroName,
+                            maxLines: titleMaxLines,
                             overflow: TextOverflow.ellipsis,
-                            style: subtitleStyle,
+                            style: titleStyle,
                           ),
+                        ),
+                        if (verifiedTick != null) ...[
+                          const SizedBox(width: 8),
+                          verifiedTick,
                         ],
                       ],
                     ),
-                  ),
-                  if (showHeroDetails && occupationLabel != null) ...[
-                    const SizedBox(height: 5),
-                    Opacity(
-                      opacity: detailsOpacity,
-                      child: Text(
-                        occupationLabel,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w600,
-                          height: 1.25,
+                    for (var i = 0; i < heroLines.length; i++) ...[
+                      SizedBox(height: heroLines[i].gap),
+                      Opacity(
+                        // The headline's own line never fades with the collapse;
+                        // the ones the card added below it do.
+                        opacity: i == 0 ? 1.0 : detailsOpacity,
+                        child: _buildHeroLine(heroLines[i]),
+                      ),
+                    ],
+                    if (blockChips.isNotEmpty) ...[
+                      const SizedBox(height: 14),
+                      Opacity(
+                        opacity: detailsOpacity,
+                        child: Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: blockChips,
                         ),
                       ),
-                    ),
+                    ],
                   ],
-                  if (showHeroDetails && location != null && line1 != null) ...[
-                    const SizedBox(height: 5),
-                    Opacity(
-                      opacity: detailsOpacity,
-                      child: Text(
-                        location,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.92),
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w600,
-                          height: 1.25,
-                        ),
-                      ),
-                    ),
-                  ],
-                  if (showHeroDetails && heroChips.isNotEmpty) ...[
-                    const SizedBox(height: 14),
-                    Opacity(
-                      opacity: detailsOpacity,
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: heroChips,
-                      ),
-                    ),
-                  ],
-                ],
+                ),
               ),
             ),
           ),
         );
       },
+    );
+  }
+
+  /// One line of the header block. Matches how the list card draws the same
+  /// line, icon included, so neither end has to redraw the other's wording.
+  Widget _buildHeroLine(ProfileIdentityLine line) {
+    final text = Text(
+      line.text,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: line.style,
+    );
+
+    final icon = line.icon;
+    if (icon == null) return text;
+
+    return Row(
+      children: [
+        Icon(icon, size: (line.style.fontSize ?? 15) + 1, color: line.style.color),
+        const SizedBox(width: 5),
+        Flexible(child: text),
+      ],
     );
   }
 
@@ -1043,6 +1062,13 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
       ),
     );
   }
+
+  /// How far above the bottom of the hero photo the name block starts.
+  ///
+  /// The no-photo placeholder keeps clear of exactly this much, so the avatar
+  /// and its "no photo yet" caption can never be drawn through the name again.
+  /// Both read this one number; neither owns a copy of it.
+  static const double _heroIdentityInset = 172;
 
   double _heroHeight(bool hasPhoto) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -1321,37 +1347,64 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
               ),
             ),
           ),
-          Center(
-            child: Container(
-              width: 118,
-              height: 118,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.16),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.30),
-                  width: 1.4,
-                ),
-              ),
-              child: Icon(
-                Icons.person,
-                size: 70,
-                color: Colors.white.withValues(alpha: 0.86),
-              ),
-            ),
-          ),
+          // The avatar and its caption were laid out against the whole hero box
+          // — one centred, one pinned 122 from the top — while the name block is
+          // positioned from the *bottom* of that same box. On a profile with no
+          // photo the box is short enough that the two met: the caption and the
+          // circle were drawn straight through "name, age". Both now sit inside
+          // the space above the name block and are stacked in one column, so
+          // they cannot cross each other or it.
           Positioned(
             left: 16,
             right: 16,
-            top: 122,
-            child: Text(
-              appText.photoNotAddedYet,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.72),
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-              ),
+            top: 0,
+            bottom: _heroIdentityInset,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // The caption is one short line; whatever is left over is the
+                // avatar. On a short screen the avatar gives way rather than
+                // spilling past the space reserved for it.
+                const captionBlock = 32.0;
+                final diameter = (constraints.maxHeight - captionBlock).clamp(
+                  0.0,
+                  118.0,
+                );
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: diameter,
+                      height: diameter,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.30),
+                          width: 1.4,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.person,
+                        size: diameter * 0.6,
+                        color: Colors.white.withValues(alpha: 0.86),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Text(
+                      appText.photoNotAddedYet,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.72),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         ],
@@ -3785,8 +3838,33 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     );
   }
 
+  /// Every label this screen's header prints, from whichever payload it was
+  /// opened with.
+  ///
+  /// The two payloads do not agree on where the labels live. `getProfileDetail`
+  /// returns them under `display.hero`. A tapped list row — which seeds this
+  /// screen so it has something to draw before the fetch returns — comes from
+  /// `MobileProfileDisplayPresenter::forListCard()`, which puts every label
+  /// under `display.card` and leaves `display.hero` as a two-key photo summary.
+  ///
+  /// Reading `hero` and falling back to `card` therefore never reached `card` on
+  /// a seeded row: the stub is not null, it is just empty of labels, so the
+  /// header silently dropped to raw-field fallbacks and printed a shorter,
+  /// different profile than the card the member had just tapped — height gone,
+  /// religion and sub-caste gone. Merging the two, card first, is what makes
+  /// both ends of the flight say the same words.
   Map<String, dynamic>? _displayHero() {
-    return _safeMap(_display?['hero']) ?? _safeMap(_display?['card']);
+    final hero = _safeMap(_display?['hero']);
+    final card = _safeMap(_display?['card']);
+    if (card == null) return hero;
+    if (hero == null) return card;
+
+    final merged = Map<String, dynamic>.from(card);
+    hero.forEach((key, value) {
+      // A null in the richer payload must not erase a label the other one has.
+      if (value != null) merged[key] = value;
+    });
+    return merged;
   }
 
   Map<String, dynamic>? _displayAbout() {
@@ -4246,6 +4324,53 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
           value.contains('not matched') ||
           value.contains('review');
     });
+  }
+
+  /// The chip row printed under the header lines, resolved so that it says the
+  /// same thing before and after the detail fetch lands.
+  ///
+  /// The seed a tapped card leaves behind has no `display.chips` and no
+  /// comparison payload — it carries `comparison_label` and `has_astro` on the
+  /// card instead — while the fetched payload has all three and no card fields.
+  /// Reading only the fetched shape meant the chips the card was showing
+  /// appeared out of nowhere a second after the block landed. Both shapes are
+  /// read here, and both resolve to the same two chips, because the server
+  /// builds `card.comparison_label`, `comparison.title` and the `compare` chip
+  /// label from one method, and gates `has_astro` and the `astro` chip on one
+  /// condition.
+  ///
+  /// Verified, premium and photo count are deliberately absent: this screen
+  /// already draws all three as badges over the photo, and so does the card.
+  List<Widget> _heroChips(
+    Map<String, dynamic> profile,
+    Map<String, dynamic>? hero,
+  ) {
+    final fetched = _displayChips(
+      profile,
+      hasComparisonCard: _comparisonData() != null,
+    );
+    if (fetched.isNotEmpty) return fetched;
+
+    final chips = <Widget>[];
+    final comparisonLabel = _displayString(hero?['comparison_label']);
+    if (comparisonLabel != null) {
+      chips.add(
+        _buildHeroChip(
+          icon: Icons.compare_arrows,
+          label: AppStrings.comparisonLabel(comparisonLabel),
+        ),
+      );
+    }
+    if (_displaySafeBool(hero?['has_astro']) == true) {
+      chips.add(
+        _buildHeroChip(
+          icon: Icons.auto_awesome,
+          label: appText.astro,
+          iconColor: const Color(0xFFFFB84D),
+        ),
+      );
+    }
+    return chips;
   }
 
   List<Widget> _displayChips(

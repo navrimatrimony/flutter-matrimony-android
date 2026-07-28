@@ -2995,7 +2995,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           colors: [Color(0xFFFEE2E2), Color(0xFFDC2626)],
         ),
       ),
-      child: Center(
+      // Held above the middle, not centred: the overlay block is anchored to the
+      // bottom of the card and a centred avatar was drawn straight through the
+      // name on every profile with no photo.
+      child: Align(
+        alignment: const Alignment(0, -0.5),
         child: Container(
           width: 92,
           height: 92,
@@ -3092,23 +3096,41 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     final workLine = _joinNonEmpty([data.occupationLabel, data.educationLabel]);
     final chips = _statusChips(data);
 
+    // This card is the source of truth for the block printed on the photo: the
+    // profile detail screen composes its header from the same fields, in this
+    // order, so the whole block can travel rather than the headline alone.
+    // Only the action strip stays behind — the detail screen puts those two
+    // buttons in a bottom bar, so there is nowhere for them to land.
+    final lines = <ProfileIdentityLine>[
+      if (communityLine != null)
+        ProfileIdentityLine(
+          text: communityLine,
+          style: _overlayLineStyle(fontWeight: FontWeight.w800),
+          // 8 below the headline plus the 4 every overlay line carries.
+          gap: 12,
+        ),
+      if (workLine != null)
+        ProfileIdentityLine(text: workLine, style: _overlayLineStyle(), gap: 4),
+      if (data.locationLabel != null)
+        ProfileIdentityLine(
+          text: data.locationLabel!,
+          style: _overlayLineStyle(),
+          gap: 4,
+          icon: Icons.place,
+        ),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        // The headline and the height/community line under it are worded the
-        // same way on the profile detail screen, so they travel with the photo.
-        // Everything below stays put: the work and location lines, the chips and
-        // the action strip either say something else there or do not exist there
-        // at all, and text that has to change words cannot be animated.
         ProfileIdentityHero(
           tag: identityHeroTag,
           title: data.titleLine,
           titleStyle: _cardTitleStyle,
-          subtitle: communityLine,
-          subtitleStyle: _overlayLineStyle(fontWeight: FontWeight.w800),
-          // 8 below the headline plus the 4 every overlay line carries.
-          subtitleGap: 12,
+          lines: lines,
+          chips: chips,
+          chipsGap: 10,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -3122,16 +3144,16 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               const SizedBox(height: 8),
               if (communityLine != null)
                 _buildOverlayLine(communityLine, fontWeight: FontWeight.w800),
+              if (workLine != null) _buildOverlayLine(workLine),
+              if (data.locationLabel != null)
+                _buildOverlayLine(data.locationLabel!, icon: Icons.place),
+              if (chips.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Wrap(spacing: 8, runSpacing: 8, children: chips),
+              ],
             ],
           ),
         ),
-        if (workLine != null) _buildOverlayLine(workLine),
-        if (data.locationLabel != null)
-          _buildOverlayLine(data.locationLabel!, icon: Icons.place),
-        if (chips.isNotEmpty) ...[
-          const SizedBox(height: 10),
-          Wrap(spacing: 8, runSpacing: 8, children: chips),
-        ],
         if (showActionStrip) ...[
           const SizedBox(height: 14),
           _buildCardActionStrip(profile, data),
@@ -3184,16 +3206,12 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           Icons.compare_arrows,
           _brandColor,
         ),
-      // Verified is not repeated here — the tick badge at the top of the card
-      // already carries it.
+      // Verified and premium are not repeated here — the tick and the premium
+      // badge at the top of the card already carry them, and the detail screen
+      // draws the same two as badges too, so a chip would be a duplicate on
+      // both ends and would have to vanish when the block lands.
       if (data.hasAstro)
         _buildStatusChip(appText.astro, Icons.auto_awesome, _premiumGold),
-      if (data.premium)
-        _buildStatusChip(
-          appText.biodataTemplatePremium,
-          Icons.workspace_premium,
-          _premiumGold,
-        ),
     ];
   }
 

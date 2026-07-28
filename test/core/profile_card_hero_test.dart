@@ -48,7 +48,7 @@ void main() {
       );
     });
 
-    test('refuses tags when anything needed for a flight is missing', () {
+    test('refuses tags when there is no rendered position to fly from', () {
       expect(
         ProfileCardHeroTags.of(
           profileId: null,
@@ -61,12 +61,30 @@ void main() {
         ProfileCardHeroTags.of(profileId: 7, scope: null, photoUrl: url),
         isNull,
       );
+    });
+
+    test('withholds only the photo tag when the profile has no photo', () {
+      final tags = ProfileCardHeroTags.of(
+        profileId: 7,
+        scope: 'nearby:0',
+        photoUrl: null,
+      );
+
+      expect(tags, isNotNull);
       expect(
-        ProfileCardHeroTags.of(profileId: 7, scope: 'nearby:0', photoUrl: null),
+        tags!.photo,
         isNull,
         reason:
-            'A card showing the placeholder has no photo to fly, so it must '
-            'not claim the tags its photo would have used.',
+            'The two screens draw two different "no photo yet" placeholders, '
+            'so there is nothing to fly between them.',
+      );
+      expect(
+        tags.identity,
+        isNotNull,
+        reason:
+            'The block of words is drawn on the placeholder just as it is on a '
+            'photo, and it has somewhere to land, so a missing photo must not '
+            'cancel the text flight as well.',
       );
     });
   });
@@ -202,21 +220,34 @@ void main() {
       String cardTitle = 'Asha, 27',
       String headerTitle = 'Asha, 27',
       bool headerVerified = false,
+      List<String> cardLines = const ['Pune'],
+      List<String> headerLines = const ['Pune'],
+      List<String> cardChips = const [],
+      List<String> headerChips = const [],
     }) async {
       Widget end({
         required String title,
         required double size,
+        required List<String> lineTexts,
+        required List<String> chipTexts,
         Widget? trailing,
       }) {
         final style = TextStyle(fontSize: size, fontWeight: FontWeight.w800);
+        const lineStyle = TextStyle(fontSize: 15);
+        final lines = [
+          for (final text in lineTexts)
+            ProfileIdentityLine(text: text, style: lineStyle, gap: 8),
+        ];
+        final chips = [for (final text in chipTexts) Text(text)];
+
         return ProfileIdentityHero(
           tag: tag,
           title: title,
           titleStyle: style,
           trailing: trailing,
-          subtitle: 'Pune',
-          subtitleStyle: const TextStyle(fontSize: 15),
-          subtitleGap: 8,
+          lines: lines,
+          chips: chips,
+          chipsGap: 10,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -227,8 +258,14 @@ void main() {
                   if (trailing != null) trailing,
                 ],
               ),
-              const SizedBox(height: 8),
-              const Text('Pune', style: TextStyle(fontSize: 15)),
+              for (final line in lines) ...[
+                SizedBox(height: line.gap),
+                Text(line.text, style: line.style),
+              ],
+              if (chips.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Wrap(children: chips),
+              ],
             ],
           ),
         );
@@ -241,7 +278,12 @@ void main() {
               body: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  end(title: cardTitle, size: cardTitleSize),
+                  end(
+                    title: cardTitle,
+                    size: cardTitleSize,
+                    lineTexts: cardLines,
+                    chipTexts: cardChips,
+                  ),
                   TextButton(
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(
@@ -249,6 +291,8 @@ void main() {
                           body: end(
                             title: headerTitle,
                             size: headerTitleSize,
+                            lineTexts: headerLines,
+                            chipTexts: headerChips,
                             trailing: headerVerified
                                 ? const Icon(Icons.verified)
                                 : null,
@@ -308,6 +352,73 @@ void main() {
             'The shuttle carries the words of the end being left behind, so a '
             'surface that words the headline differently changes it on landing '
             'rather than part-way through the animation.',
+      );
+
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('every line of the block flies, not just the headline', (
+      tester,
+    ) async {
+      await pumpFlightApp(
+        tester,
+        cardLines: const ['5\'7" • Hindu, Maratha', 'B.Sc. (Agri.)', 'Pune'],
+        headerLines: const ['5\'7" • Hindu, Maratha', 'B.Sc. (Agri.)', 'Pune'],
+        cardChips: const ['You & her'],
+        headerChips: const ['You & her'],
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 140));
+
+      // Two of each: the outgoing card still painted underneath, plus the copy
+      // the shuttle is carrying. The point is that none of them is missing.
+      for (final line in const [
+        '5\'7" • Hindu, Maratha',
+        'B.Sc. (Agri.)',
+        'Pune',
+        'You & her',
+      ]) {
+        expect(
+          find.text(line),
+          findsWidgets,
+          reason:
+              'The member tapped a card with this line on it. Leaving it behind '
+              'is the "photo moves, caption is swapped" complaint.',
+        );
+      }
+
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('a line the destination lacks fades out instead of gapping', (
+      tester,
+    ) async {
+      await pumpFlightApp(
+        tester,
+        cardLines: const ['Pune', 'B.Sc. (Agri.)'],
+        headerLines: const ['Pune'],
+      );
+
+      await tester.tap(find.text('open'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 140));
+
+      final fade = tester.widget<Opacity>(
+        find
+            .ancestor(
+              of: find.text('B.Sc. (Agri.)'),
+              matching: find.byType(Opacity),
+            )
+            .first,
+      );
+      expect(
+        fade.opacity,
+        allOf(greaterThan(0.0), lessThan(1.0)),
+        reason:
+            'Not every profile fills every line. One that stops short has to '
+            'shrink away over the flight rather than blink out at the hand-off.',
       );
 
       await tester.pumpAndSettle();
