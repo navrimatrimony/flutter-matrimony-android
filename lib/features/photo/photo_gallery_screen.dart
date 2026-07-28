@@ -11,6 +11,7 @@ import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/app_language.dart';
+import '../../core/profile_network_image.dart';
 
 class PhotoGalleryScreen extends StatefulWidget {
   const PhotoGalleryScreen({super.key});
@@ -562,10 +563,10 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
                       if (url == null)
                         _photoPlaceholder(status)
                       else
-                        Image.network(
-                          url,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => _photoPlaceholder(status),
+                        ProfileNetworkImage(
+                          url: url,
+                          placeholder: _photoPlaceholder(status),
+                          alignment: Alignment.center,
                         ),
                       Positioned(
                         left: 12,
@@ -660,11 +661,9 @@ class _PhotoGalleryScreenState extends State<PhotoGalleryScreen> {
               if (url == null)
                 _photoPlaceholder(status)
               else
-                Image.network(
-                  url,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.topCenter,
-                  errorBuilder: (_, _, _) => _photoPlaceholder(status),
+                ProfileNetworkImage(
+                  url: url,
+                  placeholder: _photoPlaceholder(status),
                 ),
               Positioned(left: 5, bottom: 5, child: _statusDot(status)),
               if (primary)

@@ -3,6 +3,7 @@ import '../../core/app_language.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
+import '../../core/profile_network_image.dart';
 import 'edit_full_profile_screen.dart';
 import 'widgets/profile_display_section.dart';
 
@@ -1063,13 +1064,10 @@ class _ViewProfileScreenState extends State<ViewProfileScreen> {
         fit: StackFit.expand,
         children: [
           if (photoUrl != null)
-            Image.network(
-              photoUrl,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-              errorBuilder: (context, error, stackTrace) {
-                return _buildProfileHeroFallback();
-              },
+            ProfileNetworkImage(
+              url: photoUrl,
+              placeholder: _buildProfileHeroFallback(),
+              decodeWidth: MediaQuery.sizeOf(context).width,
             )
           else
             _buildProfileHeroFallback(),

@@ -7,6 +7,7 @@ import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_language.dart';
 import '../../core/app_strings.dart';
+import '../../core/profile_network_image.dart';
 import '../photo/photo_upload_screen.dart';
 
 class EditFullProfileScreen extends StatefulWidget {
@@ -8659,14 +8660,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                         color: Colors.grey.shade600,
                         size: 36,
                       )
-                    : Image.network(
-                        photoUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Icon(
+                    : ProfileNetworkImage(
+                        url: photoUrl,
+                        placeholder: Icon(
                           Icons.person_outline,
                           color: Colors.grey.shade600,
                           size: 36,
                         ),
+                        alignment: Alignment.center,
+                        decodeWidth: 72,
                       ),
               ),
             ),

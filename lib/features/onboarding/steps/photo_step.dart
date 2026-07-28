@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/api_client.dart';
+import '../../../core/profile_network_image.dart';
 import '../models/onboarding_status.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
@@ -995,11 +996,10 @@ class _PhotoHero extends StatelessWidget {
                   else if (photoUrl == null)
                     _PhotoPlaceholder(state: state)
                   else
-                    Image.network(
-                      photoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) =>
-                          _PhotoPlaceholder(state: state),
+                    ProfileNetworkImage(
+                      url: photoUrl!,
+                      placeholder: _PhotoPlaceholder(state: state),
+                      alignment: Alignment.center,
                     ),
                   Positioned(
                     left: 12,

@@ -6,6 +6,7 @@ import '../../core/api_client.dart';
 import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
+import '../../core/profile_network_image.dart';
 import '../../core/profile_photo_view.dart';
 import '../../main.dart';
 import '../interests/received_interests_screen.dart';
@@ -389,21 +390,21 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       children: [
                         ImageFiltered(
                           imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                          child: Image.network(
-                            photoUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(color: _brand);
-                            },
+                          // Both layers draw the same url and neither asks for
+                          // a decode size, so they share one cache entry and
+                          // one download.
+                          child: ProfileNetworkImage(
+                            url: photoUrl,
+                            placeholder: Container(color: _brand),
+                            alignment: Alignment.center,
                           ),
                         ),
                         Center(
-                          child: Image.network(
-                            photoUrl,
+                          child: ProfileNetworkImage(
+                            url: photoUrl,
+                            placeholder: _drawerLogoFallback(),
                             fit: BoxFit.contain,
-                            errorBuilder: (context, error, stackTrace) {
-                              return _drawerLogoFallback();
-                            },
+                            alignment: Alignment.center,
                           ),
                         ),
                       ],

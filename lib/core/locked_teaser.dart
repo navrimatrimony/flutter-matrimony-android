@@ -3,6 +3,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import 'profile_network_image.dart';
+
 /// The one client-side reading of the server's locked-teaser payload.
 ///
 /// Laravel builds this block in `App\Services\WhoViewed\WhoViewedTeaserPresenter`
@@ -446,12 +448,12 @@ class LockedTeaserPhoto extends StatelessWidget {
         scale: teaser.photoScale,
         child: ImageFiltered(
           imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-          child: Image.network(
-            Uri.encodeFull(url),
-            fit: BoxFit.cover,
+          child: ProfileNetworkImage(
+            url: Uri.encodeFull(url),
+            placeholder: LockedTeaserSilhouette(
+              iconSize: placeholderIconSize,
+            ),
             alignment: alignment,
-            errorBuilder: (_, _, _) =>
-                LockedTeaserSilhouette(iconSize: placeholderIconSize),
           ),
         ),
       ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'profile_network_image.dart';
+
 class ProfilePhotoView extends StatelessWidget {
   const ProfilePhotoView({
     super.key,
@@ -31,11 +33,10 @@ class ProfilePhotoView extends StatelessWidget {
     final radius = borderRadius ?? BorderRadius.circular(8);
     final content = photoUrl == null
         ? _fallback()
-        : Image.network(
-            photoUrl!,
-            fit: BoxFit.cover,
-            alignment: Alignment.topCenter,
-            errorBuilder: (_, _, _) => _fallback(),
+        : ProfileNetworkImage(
+            url: photoUrl!,
+            placeholder: _fallback(),
+            decodeWidth: width,
           );
 
     return Container(

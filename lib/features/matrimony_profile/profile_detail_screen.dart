@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_strings.dart';
+import '../../core/profile_network_image.dart';
 import '../../main.dart';
 import '../chat/chat_screen.dart';
 import 'profile_album_blur.dart';
@@ -1118,6 +1119,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
       decorative: _heroBackdropSigma,
     );
 
+    // Backdrop and foreground draw the SAME url, so they must ask for the same
+    // decode size: a different size is a different image-cache key, which would
+    // download the photo twice instead of sharing one bitmap.
+    final heroDecodeWidth = MediaQuery.sizeOf(context).width;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -1126,12 +1132,11 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
             sigmaX: backdropSigma,
             sigmaY: backdropSigma,
           ),
-          child: Image.network(
-            photoUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return _buildHeroFallback();
-            },
+          child: ProfileNetworkImage(
+            url: photoUrl,
+            placeholder: _buildHeroFallback(),
+            alignment: Alignment.center,
+            decodeWidth: heroDecodeWidth,
           ),
         ),
         ImageFiltered(
@@ -1140,13 +1145,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
               ImageFilter.blur(sigmaX: 0, sigmaY: 0),
           child: Transform.scale(
             scale: blur ? 1.04 : 1.0,
-            child: Image.network(
-              photoUrl,
-              fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
-              errorBuilder: (context, error, stackTrace) {
-                return _buildHeroFallback();
-              },
+            child: ProfileNetworkImage(
+              url: photoUrl,
+              placeholder: _buildHeroFallback(),
+              decodeWidth: heroDecodeWidth,
             ),
           ),
         ),
@@ -2291,6 +2293,19 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     );
   }
 
+  /// Stand-in for a suggested profile's photo, drawn both while it loads and if
+  /// it fails, so the tile always reads as "a person is here".
+  Widget _buildSuggestedPhotoFallback() {
+    return Container(
+      color: const Color(0xFFF1E7E3),
+      child: const Icon(
+        Icons.person_outline,
+        size: 30,
+        color: Color(0xFF9B1B46),
+      ),
+    );
+  }
+
   Widget _buildSuggestedProfileCard(Map<String, dynamic> profile) {
     final profileId = _displayInt(profile['id']);
     final photoUrl = _suggestedPhotoUrl(profile);
@@ -2317,20 +2332,10 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.network(
-                      photoUrl!,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: const Color(0xFFF1E7E3),
-                          child: const Icon(
-                            Icons.person_outline,
-                            size: 30,
-                            color: Color(0xFF9B1B46),
-                          ),
-                        );
-                      },
+                    ProfileNetworkImage(
+                      url: photoUrl!,
+                      placeholder: _buildSuggestedPhotoFallback(),
+                      decodeWidth: 110,
                     ),
                     DecoratedBox(
                       decoration: BoxDecoration(
@@ -4673,6 +4678,17 @@ class _ProfilePhotoGalleryViewerState
   /// it if the admin ever asks for a stronger lock than this.
   static const double _galleryBackdropSigma = 22;
 
+  /// Logical width of a strip thumbnail, used as its decode size.
+  static const double _thumbDecodeWidth = 44;
+
+  /// Stand-in for a strip thumbnail while it loads and if it fails.
+  Widget _buildThumbFallback() {
+    return ColoredBox(
+      color: Colors.white.withValues(alpha: 0.10),
+      child: const Icon(Icons.photo_outlined, color: Colors.white70, size: 20),
+    );
+  }
+
   Widget _buildBlurredBackdrop(String photoUrl, {required bool blur}) {
     final sigma = widget.albumBlur.backdropSigma(
       blur: blur,
@@ -4684,12 +4700,13 @@ class _ProfilePhotoGalleryViewerState
       children: [
         ImageFiltered(
           imageFilter: ImageFilter.blur(sigmaX: sigma, sigmaY: sigma),
-          child: Image.network(
-            photoUrl,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) {
-              return const ColoredBox(color: Colors.black);
-            },
+          // No decodeWidth: the gallery page below draws this same url, and a
+          // different decode size would be a second image-cache key and a
+          // second download.
+          child: ProfileNetworkImage(
+            url: photoUrl,
+            placeholder: const ColoredBox(color: Colors.black),
+            alignment: Alignment.center,
           ),
         ),
         DecoratedBox(
@@ -4744,18 +4761,13 @@ class _ProfilePhotoGalleryViewerState
   }
 
   Widget _galleryPhotoImage(_ProfilePhotoItem photo) {
-    final image = Image.network(
-      photo.url,
+    final image = ProfileNetworkImage(
+      url: photo.url,
+      placeholder: const Center(
+        child: Icon(Icons.photo_outlined, color: Colors.white70, size: 54),
+      ),
       fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) {
-        return const Center(
-          child: Icon(
-            Icons.broken_image_outlined,
-            color: Colors.white70,
-            size: 54,
-          ),
-        );
-      },
+      alignment: Alignment.center,
     );
 
     final filter = widget.albumBlur.slotFilter(blur: photo.blur);
@@ -4898,20 +4910,12 @@ class _ProfilePhotoGalleryViewerState
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          Image.network(
-                            photo.url,
-                            fit: BoxFit.cover,
-                            alignment: Alignment.topCenter,
-                            errorBuilder: (context, error, stackTrace) {
-                              return ColoredBox(
-                                color: Colors.white.withValues(alpha: 0.10),
-                                child: const Icon(
-                                  Icons.photo_outlined,
-                                  color: Colors.white70,
-                                  size: 20,
-                                ),
-                              );
-                            },
+                          ProfileNetworkImage(
+                            url: photo.url,
+                            placeholder: _buildThumbFallback(),
+                            // Both thumbnail layers share this decode size on
+                            // purpose — one cache key, one download.
+                            decodeWidth: _thumbDecodeWidth,
                           ),
                           if (lockFilter != null)
                             ClipRect(
@@ -4919,11 +4923,10 @@ class _ProfilePhotoGalleryViewerState
                                 imageFilter: lockFilter,
                                 child: Transform.scale(
                                   scale: 1.04,
-                                  child: Image.network(
-                                    photo.url,
-                                    fit: BoxFit.cover,
-                                    alignment: Alignment.topCenter,
-                                    errorBuilder: (_, _, _) => const SizedBox(),
+                                  child: ProfileNetworkImage(
+                                    url: photo.url,
+                                    placeholder: const SizedBox(),
+                                    decodeWidth: _thumbDecodeWidth,
                                   ),
                                 ),
                               ),

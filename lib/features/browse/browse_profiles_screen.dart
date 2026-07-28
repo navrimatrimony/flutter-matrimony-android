@@ -7,6 +7,7 @@ import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../../core/app_storage.dart';
 import '../../core/locked_teaser.dart';
+import '../../core/profile_network_image.dart';
 import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../contact/contact_inbox_screen.dart';
@@ -2150,13 +2151,12 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 fit: StackFit.expand,
                 children: [
                   data.photoUrl != null
-                      ? Image.network(
-                          data.photoUrl!,
-                          fit: BoxFit.cover,
-                          alignment: Alignment.topCenter,
-                          errorBuilder: (context, error, stackTrace) {
-                            return _buildCompactPhotoFallback();
-                          },
+                      ? ProfileNetworkImage(
+                          url: data.photoUrl!,
+                          placeholder: _buildCompactPhotoFallback(),
+                          // Two columns with 12 between them.
+                          decodeWidth:
+                              (MediaQuery.sizeOf(context).width - 12) / 2,
                         )
                       : _buildCompactPhotoFallback(),
                   const DecoratedBox(
@@ -2355,11 +2355,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               SizedBox(
                 height: 118,
                 child: data.photoUrl != null
-                    ? Image.network(
-                        data.photoUrl!,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        errorBuilder: (_, _, _) => _buildCompactPhotoFallback(),
+                    ? ProfileNetworkImage(
+                        url: data.photoUrl!,
+                        placeholder: _buildCompactPhotoFallback(),
+                        decodeWidth: 164,
                       )
                     : _buildCompactPhotoFallback(),
               ),
@@ -2529,11 +2528,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 width: 122,
                 height: double.infinity,
                 child: data.photoUrl != null
-                    ? Image.network(
-                        data.photoUrl!,
-                        fit: BoxFit.cover,
-                        alignment: Alignment.topCenter,
-                        errorBuilder: (_, _, _) => _buildCompactPhotoFallback(),
+                    ? ProfileNetworkImage(
+                        url: data.photoUrl!,
+                        placeholder: _buildCompactPhotoFallback(),
+                        decodeWidth: 122,
                       )
                     : _buildCompactPhotoFallback(),
               ),
@@ -2755,6 +2753,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       margin: margin,
       height: cardHeight,
       decoration: BoxDecoration(
+        // The card owns an opaque fill so the page background can never show
+        // through while the photo loads. Same tone as the app's skeletons.
+        color: const Color(0xFFF2E7E2),
         borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
@@ -2816,11 +2817,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       return _buildPhotoPlaceholder();
     }
 
-    return Image.network(
-      data.photoUrl!,
-      fit: BoxFit.cover,
-      alignment: Alignment.topCenter,
-      errorBuilder: (context, error, stackTrace) {
+    return ProfileNetworkImage(
+      url: data.photoUrl!,
+      placeholder: _buildPhotoPlaceholder(),
+      decodeWidth: MediaQuery.sizeOf(context).width,
+      onError: () {
         final failedUrl = data.photoUrl;
         if (failedUrl != null && !_failedPhotoUrls.contains(failedUrl)) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -2830,7 +2831,6 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             });
           });
         }
-        return _buildPhotoPlaceholder();
       },
     );
   }
@@ -3189,11 +3189,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       ),
       child: ClipOval(
         child: photoUrl != null
-            ? Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (_, _, _) => _buildCircleFallback(),
+            ? ProfileNetworkImage(
+                url: photoUrl,
+                placeholder: _buildCircleFallback(),
+                decodeWidth: size,
               )
             : _buildCircleFallback(),
       ),

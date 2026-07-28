@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
+import '../../core/profile_network_image.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 import '../../core/app_language.dart';
 
@@ -341,17 +342,14 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
         color: const Color(0xFFF1DDD8),
         child: photoUrl == null
             ? const Icon(Icons.person, color: Color(0xFFB42318), size: 34)
-            : Image.network(
-                photoUrl,
-                fit: BoxFit.cover,
-                alignment: Alignment.topCenter,
-                errorBuilder: (_, _, _) {
-                  return const Icon(
-                    Icons.person,
-                    color: Color(0xFFB42318),
-                    size: 34,
-                  );
-                },
+            : ProfileNetworkImage(
+                url: photoUrl,
+                placeholder: const Icon(
+                  Icons.person,
+                  color: Color(0xFFB42318),
+                  size: 34,
+                ),
+                decodeWidth: 72,
               ),
       ),
     );

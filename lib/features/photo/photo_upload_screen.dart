@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_language.dart';
+import '../../core/profile_network_image.dart';
 
 enum _PhotoUploadStage {
   idle,
@@ -460,10 +461,11 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
     final image = _selectedImage != null
         ? Image.file(_selectedImage!, fit: BoxFit.cover)
         : (_approvedPhotoUrl != null
-              ? Image.network(
-                  _approvedPhotoUrl!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => _emptyPreview(colors),
+              ? ProfileNetworkImage(
+                  url: _approvedPhotoUrl!,
+                  placeholder: _emptyPreview(colors),
+                  alignment: Alignment.center,
+                  decodeWidth: 360,
                 )
               : _emptyPreview(colors));
 
