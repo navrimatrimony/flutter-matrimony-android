@@ -1440,31 +1440,31 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       AboutTemplateSuggestion(
         label: appText.simpleFamilyFirst,
         text: body(
-          'Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.',
+          appText.aboutTemplateFamilyFirstBody,
         ),
       ),
       AboutTemplateSuggestion(
         label: appText.careerWithBalance,
         text: body(
-          'I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.',
+          appText.aboutTemplateCareerBalanceBody,
         ),
       ),
       AboutTemplateSuggestion(
         label: appText.traditionOpenMind,
         text: body(
-          'I respect traditions and still value practical, open-minded conversations when important decisions need to be made.',
+          appText.aboutTemplateTraditionBody,
         ),
       ),
       AboutTemplateSuggestion(
         label: appText.honestyRespect,
         text: body(
-          'Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.',
+          appText.aboutTemplateHonestyBody,
         ),
       ),
       AboutTemplateSuggestion(
         label: appText.calmSteady,
         text: body(
-          'I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.',
+          appText.aboutTemplateCalmSteadyBody,
         ),
       ),
     ];
@@ -1486,7 +1486,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       age--;
     }
     if (age < 18 || age > 90) return null;
-    return 'Age is $age years.';
+    return appText.aboutFactAge(age);
   }
 
   String? _heightFact() {
@@ -1495,7 +1495,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final inches = (cm / 2.54).round();
     final feet = inches ~/ 12;
     final remaining = inches % 12;
-    return 'Height is about $feet ft $remaining in.';
+    return appText.aboutFactHeight(feet, remaining);
   }
 
   String? _maritalFact() {
@@ -1503,7 +1503,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final label =
         _optionLabelFromDraft(basic, 'marital_status_option') ??
         onboardingText(basic['marital_status_key']);
-    return label == null ? null : 'Marital status: $label.';
+    return label == null ? null : appText.aboutFactMaritalStatus(label);
   }
 
   String? _communityFact() {
@@ -1512,7 +1512,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final caste = _optionLabelFromDraft(community, 'caste_option');
     final parts = [religion, caste].whereType<String>().toList();
     if (parts.isEmpty) return null;
-    return 'Community background: ${parts.join(', ')}.';
+    return appText.aboutFactCommunity(parts.join(', '));
   }
 
   String? _educationFact() {
@@ -1526,7 +1526,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         .take(2)
         .toList();
     if (labels.isEmpty) return null;
-    return 'Education: ${labels.join(', ')}.';
+    return appText.aboutFactEducation(labels.join(', '));
   }
 
   String? _careerFact() {
@@ -1534,7 +1534,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final occupation = _optionLabelFromDraft(career, 'occupation_option');
     final workingWith = _optionLabelFromDraft(career, 'working_with_option');
     final label = occupation ?? workingWith;
-    return label == null ? null : 'Professionally connected with $label.';
+    return label == null ? null : appText.aboutFactCareer(label);
   }
 
   bool _hasReviewedPartnerPreference() {
@@ -3965,13 +3965,14 @@ class _TermsPrivacyFooter extends StatelessWidget {
                 style: textStyle,
               ),
               _FooterLink(
-                label: 'T & C',
-                onTap: () => _showUnavailable(context, 'T & C'),
+                label: appText.termsAndConditionsShort,
+                onTap: () =>
+                    _showUnavailable(context, appText.termsAndConditionsShort),
               ),
               Text(appText.and, style: textStyle),
               _FooterLink(
-                label: 'Privacy Policy',
-                onTap: () => _showUnavailable(context, 'Privacy Policy'),
+                label: appText.privacyPolicy,
+                onTap: () => _showUnavailable(context, appText.privacyPolicy),
               ),
               Text(appText.str, style: textStyle),
             ],

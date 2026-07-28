@@ -1316,7 +1316,7 @@ class _PreferenceSectionEditorState extends State<_PreferenceSectionEditor> {
       final text = onboardingText(row[key]);
       if (text != null) return text;
     }
-    return 'Option';
+    return appText.optionFallback;
   }
 }
 

@@ -145,6 +145,7 @@ class _LifestyleStepState extends State<LifestyleStep> {
     return OnboardingStepScaffold(
       title: '',
       loading: widget.loading,
+      continueLabel: appText.continueLabel,
       onBack: widget.onBack,
       onContinue: _save,
       children: [

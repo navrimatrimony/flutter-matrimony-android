@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/app_language.dart';
 import 'onboarding_step_helpers.dart';
 
 class OnboardingStepScaffold extends StatelessWidget {
@@ -59,7 +60,7 @@ class OnboardingStepScaffold extends StatelessWidget {
         ...children,
         const SizedBox(height: 18),
         OnboardingContinueButton(
-          label: continueLabel ?? 'Continue',
+          label: continueLabel ?? appText.continueLabel,
           loading: loading,
           enabled: continueEnabled,
           onPressed: onContinue,

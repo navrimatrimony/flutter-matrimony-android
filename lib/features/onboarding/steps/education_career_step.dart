@@ -758,6 +758,16 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
     _valueType ?? _fallbackOption('range', 'Range', 'श्रेणी'),
   );
 
+  /// The band tables are `const`, so their labels carry the compact English
+  /// units (L / Cr / K). Swapping them here keeps one table for both locales
+  /// instead of a second Marathi copy of all 40-odd bands.
+  String _localizedBandLabel(String label) {
+    return label
+        .replaceAll('Cr', appText.incomeUnitCrore)
+        .replaceAll('K', appText.incomeUnitThousand)
+        .replaceAll('L', appText.incomeUnitLakh);
+  }
+
   String _incomeGroupLabel(String key) {
     return switch (key) {
       'monthly_10_30k' => appText.v10kTo30k,
@@ -829,7 +839,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
         : appText.perYear;
     return OnboardingOption(
       key: '${periodKey}_${band.key}',
-      label: '$_currencySymbol${band.label}',
+      label: '$_currencySymbol${_localizedBandLabel(band.label)}',
       meta: <String, dynamic>{
         'period_key': periodKey,
         'period_label': periodLabel,
@@ -1481,7 +1491,7 @@ class _EducationCareerStepState extends State<EducationCareerStep> {
 
   Widget _rangeIncomeSection(BuildContext context) {
     final band = _currentIncomeBand;
-    final selectedRange = '$_currencySymbol${band.label}';
+    final selectedRange = '$_currencySymbol${_localizedBandLabel(band.label)}';
     final rangeError = _rangeIncomeError();
     final colorScheme = Theme.of(context).colorScheme;
     final privacyIcon = _incomePrivate

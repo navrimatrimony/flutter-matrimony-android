@@ -3153,31 +3153,31 @@ class AppLocalizationsMr extends AppLocalizations {
   String get v1 => '<1';
 
   @override
-  String get v10kTo30k => '10K ते 30K';
+  String get v10kTo30k => '10 हजार ते 30 हजार';
 
   @override
-  String get v10lTo30l => '10L ते 30L';
+  String get v10lTo30l => '10 लाख ते 30 लाख';
 
   @override
-  String get v1lTo2l => '1L ते 2L';
+  String get v1lTo2l => '1 लाख ते 2 लाख';
 
   @override
-  String get v2lTo5l => '2L ते 5L';
+  String get v2lTo5l => '2 लाख ते 5 लाख';
 
   @override
-  String get v30kTo1l => '30K ते 1L';
+  String get v30kTo1l => '30 हजार ते 1 लाख';
 
   @override
-  String get v30lTo50l => '30L ते 50L';
+  String get v30lTo50l => '30 लाख ते 50 लाख';
 
   @override
-  String get v50lAndAbove => '50L आणि पुढे';
+  String get v50lAndAbove => '50 लाख आणि पुढे';
 
   @override
-  String get v5lAndAbove => '5L आणि पुढे';
+  String get v5lAndAbove => '5 लाख आणि पुढे';
 
   @override
-  String get v5lTo10l => '5L ते 10L';
+  String get v5lTo10l => '5 लाख ते 10 लाख';
 
   @override
   String get verificationStatus => 'पडताळणी स्थिती';
@@ -4368,4 +4368,632 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get optionFallback => 'पर्याय';
+
+  @override
+  String get aboutTemplateFamilyFirstBody =>
+      'कुटुंब माझ्यासाठी खूप मोलाचे आहे. मोकळा संवाद आणि संयम ठेवून एकमेकांचा आदर करणारा संसार करावा, अशी माझी इच्छा आहे.';
+
+  @override
+  String get aboutTemplateCareerBalanceBody =>
+      'जबाबदाऱ्या मी मनापासून पार पाडतो, तसेच कुटुंब, नाती आणि शांत दिनक्रम यांनाही तेवढेच महत्त्व देतो.';
+
+  @override
+  String get aboutTemplateTraditionBody =>
+      'परंपरांचा मी आदर करतो, आणि मोठे निर्णय घेताना मोकळेपणाने व व्यवहारी विचाराने बोलणे मला आवडते.';
+
+  @override
+  String get aboutTemplateHonestyBody =>
+      'कागदावरच्या परिपूर्णतेपेक्षा प्रामाणिकपणा, एकमेकांबद्दलचा आदर आणि मनाची सुरक्षितता मला जास्त महत्त्वाची वाटते.';
+
+  @override
+  String get aboutTemplateCalmSteadyBody =>
+      'माझा स्वभाव शांत आणि स्थिर आहे. कोणतीही गोष्ट संयमाने, स्पष्टपणे आणि मायेने सोडवायला मला आवडते.';
+
+  @override
+  String aboutFactAge(int age) {
+    return 'वय $age वर्षे आहे.';
+  }
+
+  @override
+  String aboutFactHeight(int feet, int inches) {
+    return 'उंची अंदाजे $feet फूट $inches इंच आहे.';
+  }
+
+  @override
+  String aboutFactMaritalStatus(String label) {
+    return 'वैवाहिक स्थिती: $label.';
+  }
+
+  @override
+  String aboutFactCommunity(String labels) {
+    return 'समाज: $labels.';
+  }
+
+  @override
+  String aboutFactEducation(String labels) {
+    return 'शिक्षण: $labels.';
+  }
+
+  @override
+  String aboutFactCareer(String label) {
+    return 'व्यवसायाने $label या क्षेत्राशी जोडलेलो आहे.';
+  }
+
+  @override
+  String get aboutFamilyTemplateFamilyFirstBody =>
+      'कौटुंबिक मूल्ये आणि एकमेकांचा आदर मला महत्त्वाचा वाटतो. मोकळा संवाद, संयम आणि दोन्ही कुटुंबांची साथ असलेले संतुलित आयुष्य मला हवे आहे.';
+
+  @override
+  String get aboutFamilyTemplateCareerBalanceBody =>
+      'जबाबदाऱ्या मी मनापासून पार पाडतो आणि काम, कुटुंब व स्वतःची प्रगती यांचा चांगला समतोल ठेवायला आवडते. प्रामाणिकपणा आणि टिकणारी समजूत मला मोलाची वाटते.';
+
+  @override
+  String get aboutFamilyTemplateTraditionBody =>
+      'परंपरांचा आदर ठेवतानाच आजच्या व्यवहारी विचारांनाही मी मोकळेपणाने स्वीकारतो. विश्वास, माया आणि एकत्र घेतलेले निर्णय यावर उभे असलेले नाते मला हवे आहे.';
+
+  @override
+  String aboutFactFamilyBackground(String status) {
+    return 'कौटुंबिक पार्श्वभूमी $status आहे.';
+  }
+
+  @override
+  String aboutFactFamilyValues(String values) {
+    return 'कौटुंबिक मूल्ये $values आहेत.';
+  }
+
+  @override
+  String get termsAndConditionsShort => 'अटी व शर्ती';
+
+  @override
+  String get privacyPolicy => 'गोपनीयता धोरण';
+
+  @override
+  String get reviewInProgress => 'तपासणी सुरू आहे';
+
+  @override
+  String selectedFileName(String name) {
+    return 'निवडलेली फाइल: $name';
+  }
+
+  @override
+  String get incomeUnitLakh => ' लाख';
+
+  @override
+  String get incomeUnitCrore => ' कोटी';
+
+  @override
+  String get incomeUnitThousand => ' हजार';
+
+  @override
+  String get heightBelowMin => '4 फूट 6 इंचपेक्षा कमी (136 सेमी)';
+
+  @override
+  String get heightAboveMax => '7 फूटपेक्षा जास्त (214 सेमी)';
+
+  @override
+  String get countryIndia => 'भारत';
+
+  @override
+  String get locationGroupCity => 'शहर';
+
+  @override
+  String get locationGroupSuburban => 'निमशहरी';
+
+  @override
+  String get remove => 'काढा';
+
+  @override
+  String get unlimitedDownloads => 'मर्यादेशिवाय डाउनलोड';
+
+  @override
+  String downloadQuotaLine(String used, String limit, String remaining) {
+    return '$used / $limit, $remaining शिल्लक';
+  }
+
+  @override
+  String optionalFieldLabel(String label) {
+    return '$label (ऐच्छिक)';
+  }
+
+  @override
+  String get notSelected => 'निवडलेले नाही';
+
+  @override
+  String get manage => 'व्यवस्थापन';
+
+  @override
+  String get saveChanges => 'बदल जतन करा';
+
+  @override
+  String get discardChanges => 'बदल नकोत';
+
+  @override
+  String get unsavedChanges => 'जतन न केलेले बदल';
+
+  @override
+  String get savedLabel => 'जतन झाले';
+
+  @override
+  String get missingLabel => 'बाकी';
+
+  @override
+  String get needsDetails => 'माहिती अपूर्ण';
+
+  @override
+  String get partialLabel => 'अर्धवट';
+
+  @override
+  String get toggleOn => 'सुरू';
+
+  @override
+  String get toggleOff => 'बंद';
+
+  @override
+  String get optionsUnavailable => 'पर्याय उपलब्ध नाहीत';
+
+  @override
+  String get add => 'जोडा';
+
+  @override
+  String get profileSaveFailed => 'प्रोफाइल जतन करता आले नाही';
+
+  @override
+  String get notAddedYet => 'अजून भरलेले नाही';
+
+  @override
+  String get editAllProfileTitle => 'संपूर्ण प्रोफाइल बदला';
+
+  @override
+  String get editProfileSections => 'प्रोफाइलचे विभाग बदला';
+
+  @override
+  String get addressTypeCurrent => 'सध्याचा';
+
+  @override
+  String get addressTypePermanent => 'कायमचा';
+
+  @override
+  String get addressTypeNative => 'मूळ गाव';
+
+  @override
+  String get addressTypeWork => 'कामाचा';
+
+  @override
+  String get cardMaritalStatusAndChildren => 'वैवाहिक स्थिती आणि अपत्ये';
+
+  @override
+  String get cardBirthDetails => 'जन्माचा तपशील';
+
+  @override
+  String get cardPhysicalDetails => 'शारीरिक तपशील';
+
+  @override
+  String get cardFatherContactNumbers => 'वडिलांचे संपर्क क्रमांक';
+
+  @override
+  String get cardMotherContactNumbers => 'आईचे संपर्क क्रमांक';
+
+  @override
+  String get cardFamilyOverview => 'कुटुंबाची माहिती';
+
+  @override
+  String get cardPersonalIncome => 'स्वतःचे उत्पन्न';
+
+  @override
+  String get cardFamilyRelatives => 'कुटुंबातील नातेवाईक';
+
+  @override
+  String get cardAllianceDetails => 'सोयरिकीचा तपशील';
+
+  @override
+  String get smokingStatus => 'धूम्रपानाची सवय';
+
+  @override
+  String get drinkingStatus => 'मद्यपानाची सवय';
+
+  @override
+  String get marriageYear => 'विवाहाचे वर्ष';
+
+  @override
+  String get annulmentYear => 'विवाह रद्द झाल्याचे वर्ष';
+
+  @override
+  String get divorceYear => 'घटस्फोटाचे वर्ष';
+
+  @override
+  String get separationYear => 'विभक्त झाल्याचे वर्ष';
+
+  @override
+  String get spouseDeathYear => 'जोडीदाराच्या निधनाचे वर्ष';
+
+  @override
+  String get legalStatus => 'कायदेशीर स्थिती';
+
+  @override
+  String get annulmentDetails => 'विवाह रद्दचा तपशील';
+
+  @override
+  String get separationDetails => 'विभक्त होण्याचा तपशील';
+
+  @override
+  String get widowhoodDetails => 'वैधव्याचा तपशील';
+
+  @override
+  String get divorceDetails => 'घटस्फोटाचा तपशील';
+
+  @override
+  String get noChildrenAdded => 'अपत्यांची माहिती जोडलेली नाही.';
+
+  @override
+  String get addAddress => 'पत्ता जोडा';
+
+  @override
+  String addressNumbered(int number) {
+    return 'पत्ता $number';
+  }
+
+  @override
+  String get removeAddress => 'पत्ता काढा';
+
+  @override
+  String get addressLabel => 'पत्ता';
+
+  @override
+  String get addressType => 'पत्त्याचा प्रकार';
+
+  @override
+  String get searchCityOrVillage => 'गाव किंवा शहर शोधा';
+
+  @override
+  String get fullNameLabel => 'पूर्ण नाव';
+
+  @override
+  String get selectReligionFirst => 'आधी धर्म निवडा';
+
+  @override
+  String get selectCasteFirst => 'आधी जात निवडा';
+
+  @override
+  String get birthTimeHint => 'तास:मिनिटे';
+
+  @override
+  String get clearBirthTime => 'जन्मवेळ काढा';
+
+  @override
+  String get clearOccupation => 'व्यवसाय काढा';
+
+  @override
+  String customOptionLabel(String label) {
+    return '$label (स्वतःचा)';
+  }
+
+  @override
+  String get periodLabel => 'कालावधी';
+
+  @override
+  String exactPeriodIncome(String period) {
+    return 'नक्की $period उत्पन्न';
+  }
+
+  @override
+  String approximatePeriodIncome(String period) {
+    return 'अंदाजे $period उत्पन्न';
+  }
+
+  @override
+  String get minimumAmount => 'किमान रक्कम';
+
+  @override
+  String get maximumAmount => 'कमाल रक्कम';
+
+  @override
+  String keepFieldPrivate(String title) {
+    return '$title खाजगी ठेवा';
+  }
+
+  @override
+  String get currencyLabel => 'चलन';
+
+  @override
+  String get incomeTypeApproximate => 'अंदाजे';
+
+  @override
+  String get incomePeriodWeekly => 'साप्ताहिक';
+
+  @override
+  String get addIncomeDetails => 'उत्पन्नाची माहिती जोडा';
+
+  @override
+  String get approximateIncome => 'अंदाजे उत्पन्न';
+
+  @override
+  String get searchOrTypeEducation => 'शिक्षण शोधा किंवा लिहा';
+
+  @override
+  String get searchCityOrTypeWorkLocation => 'शहर शोधा किंवा कामाचे ठिकाण लिहा';
+
+  @override
+  String get selectWeight => 'वजन निवडा';
+
+  @override
+  String get addAnotherContact => 'आणखी एक संपर्क जोडा';
+
+  @override
+  String get removeThisContact => 'हा संपर्क काढा';
+
+  @override
+  String contactNumbered(int number) {
+    return 'संपर्क $number';
+  }
+
+  @override
+  String get fatherName => 'वडिलांचे नाव';
+
+  @override
+  String get fatherOccupationCategory => 'वडिलांच्या व्यवसायाचा प्रकार';
+
+  @override
+  String get fatherOccupationDetails => 'वडिलांच्या व्यवसायाचा तपशील';
+
+  @override
+  String get fatherExtraInfo => 'वडिलांबद्दल अधिक माहिती';
+
+  @override
+  String get motherName => 'आईचे नाव';
+
+  @override
+  String get motherOccupationCategory => 'आईच्या व्यवसायाचा प्रकार';
+
+  @override
+  String get motherOccupationDetails => 'आईच्या व्यवसायाचा तपशील';
+
+  @override
+  String get motherExtraInfo => 'आईबद्दल अधिक माहिती';
+
+  @override
+  String get addBrother => 'भाऊ जोडा';
+
+  @override
+  String get addSister => 'बहीण जोडा';
+
+  @override
+  String siblingNumbered(int number) {
+    return 'भावंड $number';
+  }
+
+  @override
+  String get relationLabel => 'नाते';
+
+  @override
+  String get addressOrCity => 'पत्ता / शहर';
+
+  @override
+  String get notesLabel => 'टिपण';
+
+  @override
+  String get addPaternal => 'वडिलांकडील नाते जोडा';
+
+  @override
+  String get addMaternal => 'आईकडील नाते जोडा';
+
+  @override
+  String relativeNumbered(int number) {
+    return 'नातेवाईक $number';
+  }
+
+  @override
+  String get relativeDetails => 'नातेवाइकाचा तपशील';
+
+  @override
+  String get relativeDetailsHint => 'नाव, व्यवसाय, पत्ता आणि इतर माहिती';
+
+  @override
+  String get addAllianceFamily => 'सोयरिक कुटुंब जोडा';
+
+  @override
+  String allianceFamilyNumbered(int number) {
+    return 'सोयरिक कुटुंब $number';
+  }
+
+  @override
+  String get surnameLabel => 'आडनाव';
+
+  @override
+  String get cityOrLocation => 'शहर / ठिकाण';
+
+  @override
+  String get publicSafeSummaryOnly =>
+      'सर्वांना दाखवता येईल एवढाच थोडक्यात तपशील लिहा.';
+
+  @override
+  String get mangalDoshType => 'मंगळ दोषाचा प्रकार';
+
+  @override
+  String get noProfilePhotoUploadedYet =>
+      'प्रोफाइल फोटो अजून अपलोड केलेला नाही.';
+
+  @override
+  String get profilePhotoUploaded => 'प्रोफाइल फोटो अपलोड झाला आहे.';
+
+  @override
+  String get manageProfilePhoto => 'प्रोफाइल फोटो सांभाळा';
+
+  @override
+  String get yourTaluka => 'तुमचा तालुका';
+
+  @override
+  String distanceKm(String distance) {
+    return '$distance किमी';
+  }
+
+  @override
+  String get preferredLocations => 'अपेक्षित ठिकाणे';
+
+  @override
+  String get noLocationsSelected => 'एकही ठिकाण निवडलेले नाही.';
+
+  @override
+  String get locationSuggestionsUnavailable =>
+      'ठिकाणांच्या सूचना अजून उपलब्ध नाहीत.';
+
+  @override
+  String get resetToSuggestedLocations => 'सुचवलेली ठिकाणे पुन्हा घ्या';
+
+  @override
+  String get preferredReligionsLabel => 'अपेक्षित धर्म';
+
+  @override
+  String get preferredCastesLabel => 'अपेक्षित जाती';
+
+  @override
+  String get openToIntercasteMatches => 'आंतरजातीय स्थळ चालेल';
+
+  @override
+  String get preferredMotherTongues => 'अपेक्षित मातृभाषा';
+
+  @override
+  String get preferredOccupationsLabel => 'अपेक्षित व्यवसाय';
+
+  @override
+  String get marriageTypePreference => 'विवाह प्रकाराची अपेक्षा';
+
+  @override
+  String get preferredMaritalStatuses => 'अपेक्षित वैवाहिक स्थिती';
+
+  @override
+  String get withChildren => 'अपत्य असलेले';
+
+  @override
+  String get preferredProfileManagedBy => 'प्रोफाइल कोण सांभाळते याची अपेक्षा';
+
+  @override
+  String get managedBy => 'कोण सांभाळते';
+
+  @override
+  String agePreferenceRange(String min, String max) {
+    return 'वय $min-$max';
+  }
+
+  @override
+  String agePreferenceMin(String min) {
+    return 'वय $min+';
+  }
+
+  @override
+  String agePreferenceMax(String max) {
+    return 'वय $max पर्यंत';
+  }
+
+  @override
+  String incomePreferenceRange(String min, String max) {
+    return 'उत्पन्न $min-$max';
+  }
+
+  @override
+  String incomePreferenceMin(String min) {
+    return 'उत्पन्न $min+';
+  }
+
+  @override
+  String incomePreferenceMax(String max) {
+    return 'उत्पन्न $max पर्यंत';
+  }
+
+  @override
+  String get siblingsAdded => 'भावंडे जोडली';
+
+  @override
+  String get otherRelativesAdded => 'इतर नातेवाईक जोडले';
+
+  @override
+  String get propertyAdded => 'मालमत्ता जोडली';
+
+  @override
+  String get photoNotUploadedYet => 'फोटो अजून अपलोड केलेला नाही';
+
+  @override
+  String get heightBelowMinCompact => '4 फूट 6 इंचपेक्षा कमी (136 सेमी)';
+
+  @override
+  String get heightAboveMaxCompact => '7 फूटपेक्षा जास्त (214 सेमी)';
+
+  @override
+  String heightFeetInchesCm(int feet, int inches, int cm) {
+    return '$feet फूट $inches इंच ($cm सेमी)';
+  }
+
+  @override
+  String weightKg(int kg) {
+    return '$kg किलो';
+  }
+
+  @override
+  String locationsCount(int count) {
+    return '$count ठिकाणे';
+  }
+
+  @override
+  String locationPlusNearby(String label, int count) {
+    return '$label + आणखी $count जवळची';
+  }
+
+  @override
+  String get addressCountOne => '1 पत्ता';
+
+  @override
+  String addressCountOther(int count) {
+    return '$count पत्ते';
+  }
+
+  @override
+  String get childDetailCountOne => '1 अपत्याची माहिती';
+
+  @override
+  String childDetailCountOther(int count) {
+    return '$count अपत्यांची माहिती';
+  }
+
+  @override
+  String get relativeCountOne => '1 नातेवाईक';
+
+  @override
+  String relativeCountOther(int count) {
+    return '$count नातेवाईक';
+  }
+
+  @override
+  String get allianceFamilyCountOne => '1 सोयरिक कुटुंब';
+
+  @override
+  String allianceFamilyCountOther(int count) {
+    return '$count सोयरिक कुटुंबे';
+  }
+
+  @override
+  String ageYearsRange(String start, String end) {
+    return '$start - $end वर्षे';
+  }
+
+  @override
+  String sectionProgressShort(String label, int filled, int total) {
+    return '$label $filled/$total';
+  }
+
+  @override
+  String get clearCharan => 'चरण काढा';
+
+  @override
+  String heightPreferenceRange(String min, String max) {
+    return 'उंची $min-$max';
+  }
+
+  @override
+  String heightPreferenceMin(String min) {
+    return 'उंची $min+';
+  }
+
+  @override
+  String heightPreferenceMax(String max) {
+    return 'उंची $max पर्यंत';
+  }
 }

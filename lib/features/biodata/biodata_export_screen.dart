@@ -314,8 +314,12 @@ class _BiodataExportScreenState extends State<BiodataExportScreen> {
     final limit = state['limit'] ?? '-';
     final remaining = state['remaining'] ?? '-';
     final text = unlimited
-        ? 'Unlimited downloads'
-        : '$used / $limit, $remaining remaining';
+        ? appText.unlimitedDownloads
+        : appText.downloadQuotaLine(
+            used.toString(),
+            limit.toString(),
+            remaining.toString(),
+          );
 
     return Container(
       width: double.infinity,

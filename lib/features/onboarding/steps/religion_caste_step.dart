@@ -414,6 +414,7 @@ class _ReligionCasteStepState extends State<ReligionCasteStep> {
       title: appText.communityDetails,
       subtitle: appText.selectMotherTongueReligionAndCaste,
       loading: widget.loading,
+      continueLabel: appText.continueLabel,
       onBack: widget.onBack,
       onContinue: _save,
       children: [

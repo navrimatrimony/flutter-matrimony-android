@@ -970,15 +970,15 @@
   "useNearbyKeepsBackendSuggestedCountry": "जवळपास वापरल्यास सर्व्हरने सुचवलेला देश/राज्य/जिल्हा राहतो. खुले केल्यास ठिकाणाची गाळणी काढली जाते.",
   "usefulForDayToDayCompatibility": "दैनंदिन जुळवणीसाठी उपयोगी.",
   "v1": "<1",
-  "v10kTo30k": "10K ते 30K",
-  "v10lTo30l": "10L ते 30L",
-  "v1lTo2l": "1L ते 2L",
-  "v2lTo5l": "2L ते 5L",
-  "v30kTo1l": "30K ते 1L",
-  "v30lTo50l": "30L ते 50L",
-  "v50lAndAbove": "50L आणि पुढे",
-  "v5lAndAbove": "5L आणि पुढे",
-  "v5lTo10l": "5L ते 10L",
+  "v10kTo30k": "10 हजार ते 30 हजार",
+  "v10lTo30l": "10 लाख ते 30 लाख",
+  "v1lTo2l": "1 लाख ते 2 लाख",
+  "v2lTo5l": "2 लाख ते 5 लाख",
+  "v30kTo1l": "30 हजार ते 1 लाख",
+  "v30lTo50l": "30 लाख ते 50 लाख",
+  "v50lAndAbove": "50 लाख आणि पुढे",
+  "v5lAndAbove": "5 लाख आणि पुढे",
+  "v5lTo10l": "5 लाख ते 10 लाख",
   "verificationStatus": "पडताळणी स्थिती",
   "verifiedEmail": "पडताळणी झालेला ईमेल",
   "verifyAndContinue": "पडताळून पुढे जा",
@@ -1445,5 +1445,500 @@
   "apply": "लागू करा",
   "basicPreference": "मूलभूत अपेक्षा",
   "verifiedPhoto": "पडताळलेला फोटो",
-  "optionFallback": "पर्याय"
+  "optionFallback": "पर्याय",
+  "aboutTemplateFamilyFirstBody": "कुटुंब माझ्यासाठी खूप मोलाचे आहे. मोकळा संवाद आणि संयम ठेवून एकमेकांचा आदर करणारा संसार करावा, अशी माझी इच्छा आहे.",
+  "aboutTemplateCareerBalanceBody": "जबाबदाऱ्या मी मनापासून पार पाडतो, तसेच कुटुंब, नाती आणि शांत दिनक्रम यांनाही तेवढेच महत्त्व देतो.",
+  "aboutTemplateTraditionBody": "परंपरांचा मी आदर करतो, आणि मोठे निर्णय घेताना मोकळेपणाने व व्यवहारी विचाराने बोलणे मला आवडते.",
+  "aboutTemplateHonestyBody": "कागदावरच्या परिपूर्णतेपेक्षा प्रामाणिकपणा, एकमेकांबद्दलचा आदर आणि मनाची सुरक्षितता मला जास्त महत्त्वाची वाटते.",
+  "aboutTemplateCalmSteadyBody": "माझा स्वभाव शांत आणि स्थिर आहे. कोणतीही गोष्ट संयमाने, स्पष्टपणे आणि मायेने सोडवायला मला आवडते.",
+  "aboutFactAge": "वय {age} वर्षे आहे.",
+  "@aboutFactAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "aboutFactHeight": "उंची अंदाजे {feet} फूट {inches} इंच आहे.",
+  "@aboutFactHeight": {
+    "placeholders": {
+      "feet": {
+        "type": "int"
+      },
+      "inches": {
+        "type": "int"
+      }
+    }
+  },
+  "aboutFactMaritalStatus": "वैवाहिक स्थिती: {label}.",
+  "@aboutFactMaritalStatus": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFactCommunity": "समाज: {labels}.",
+  "@aboutFactCommunity": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFactEducation": "शिक्षण: {labels}.",
+  "@aboutFactEducation": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFactCareer": "व्यवसायाने {label} या क्षेत्राशी जोडलेलो आहे.",
+  "@aboutFactCareer": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFamilyTemplateFamilyFirstBody": "कौटुंबिक मूल्ये आणि एकमेकांचा आदर मला महत्त्वाचा वाटतो. मोकळा संवाद, संयम आणि दोन्ही कुटुंबांची साथ असलेले संतुलित आयुष्य मला हवे आहे.",
+  "aboutFamilyTemplateCareerBalanceBody": "जबाबदाऱ्या मी मनापासून पार पाडतो आणि काम, कुटुंब व स्वतःची प्रगती यांचा चांगला समतोल ठेवायला आवडते. प्रामाणिकपणा आणि टिकणारी समजूत मला मोलाची वाटते.",
+  "aboutFamilyTemplateTraditionBody": "परंपरांचा आदर ठेवतानाच आजच्या व्यवहारी विचारांनाही मी मोकळेपणाने स्वीकारतो. विश्वास, माया आणि एकत्र घेतलेले निर्णय यावर उभे असलेले नाते मला हवे आहे.",
+  "aboutFactFamilyBackground": "कौटुंबिक पार्श्वभूमी {status} आहे.",
+  "@aboutFactFamilyBackground": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFactFamilyValues": "कौटुंबिक मूल्ये {values} आहेत.",
+  "@aboutFactFamilyValues": {
+    "placeholders": {
+      "values": {
+        "type": "String"
+      }
+    }
+  },
+  "termsAndConditionsShort": "अटी व शर्ती",
+  "privacyPolicy": "गोपनीयता धोरण",
+  "reviewInProgress": "तपासणी सुरू आहे",
+  "selectedFileName": "निवडलेली फाइल: {name}",
+  "@selectedFileName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeUnitLakh": " लाख",
+  "incomeUnitCrore": " कोटी",
+  "incomeUnitThousand": " हजार",
+  "heightBelowMin": "4 फूट 6 इंचपेक्षा कमी (136 सेमी)",
+  "heightAboveMax": "7 फूटपेक्षा जास्त (214 सेमी)",
+  "countryIndia": "भारत",
+  "locationGroupCity": "शहर",
+  "locationGroupSuburban": "निमशहरी",
+  "remove": "काढा",
+  "unlimitedDownloads": "मर्यादेशिवाय डाउनलोड",
+  "downloadQuotaLine": "{used} / {limit}, {remaining} शिल्लक",
+  "@downloadQuotaLine": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "optionalFieldLabel": "{label} (ऐच्छिक)",
+  "@optionalFieldLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "notSelected": "निवडलेले नाही",
+  "manage": "व्यवस्थापन",
+  "saveChanges": "बदल जतन करा",
+  "discardChanges": "बदल नकोत",
+  "unsavedChanges": "जतन न केलेले बदल",
+  "savedLabel": "जतन झाले",
+  "missingLabel": "बाकी",
+  "needsDetails": "माहिती अपूर्ण",
+  "partialLabel": "अर्धवट",
+  "toggleOn": "सुरू",
+  "toggleOff": "बंद",
+  "optionsUnavailable": "पर्याय उपलब्ध नाहीत",
+  "add": "जोडा",
+  "profileSaveFailed": "प्रोफाइल जतन करता आले नाही",
+  "notAddedYet": "अजून भरलेले नाही",
+  "editAllProfileTitle": "संपूर्ण प्रोफाइल बदला",
+  "editProfileSections": "प्रोफाइलचे विभाग बदला",
+  "addressTypeCurrent": "सध्याचा",
+  "addressTypePermanent": "कायमचा",
+  "addressTypeNative": "मूळ गाव",
+  "addressTypeWork": "कामाचा",
+  "cardMaritalStatusAndChildren": "वैवाहिक स्थिती आणि अपत्ये",
+  "cardBirthDetails": "जन्माचा तपशील",
+  "cardPhysicalDetails": "शारीरिक तपशील",
+  "cardFatherContactNumbers": "वडिलांचे संपर्क क्रमांक",
+  "cardMotherContactNumbers": "आईचे संपर्क क्रमांक",
+  "cardFamilyOverview": "कुटुंबाची माहिती",
+  "cardPersonalIncome": "स्वतःचे उत्पन्न",
+  "cardFamilyRelatives": "कुटुंबातील नातेवाईक",
+  "cardAllianceDetails": "सोयरिकीचा तपशील",
+  "smokingStatus": "धूम्रपानाची सवय",
+  "drinkingStatus": "मद्यपानाची सवय",
+  "marriageYear": "विवाहाचे वर्ष",
+  "annulmentYear": "विवाह रद्द झाल्याचे वर्ष",
+  "divorceYear": "घटस्फोटाचे वर्ष",
+  "separationYear": "विभक्त झाल्याचे वर्ष",
+  "spouseDeathYear": "जोडीदाराच्या निधनाचे वर्ष",
+  "legalStatus": "कायदेशीर स्थिती",
+  "annulmentDetails": "विवाह रद्दचा तपशील",
+  "separationDetails": "विभक्त होण्याचा तपशील",
+  "widowhoodDetails": "वैधव्याचा तपशील",
+  "divorceDetails": "घटस्फोटाचा तपशील",
+  "noChildrenAdded": "अपत्यांची माहिती जोडलेली नाही.",
+  "addAddress": "पत्ता जोडा",
+  "addressNumbered": "पत्ता {number}",
+  "@addressNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "removeAddress": "पत्ता काढा",
+  "addressLabel": "पत्ता",
+  "addressType": "पत्त्याचा प्रकार",
+  "searchCityOrVillage": "गाव किंवा शहर शोधा",
+  "fullNameLabel": "पूर्ण नाव",
+  "selectReligionFirst": "आधी धर्म निवडा",
+  "selectCasteFirst": "आधी जात निवडा",
+  "birthTimeHint": "तास:मिनिटे",
+  "clearBirthTime": "जन्मवेळ काढा",
+  "clearOccupation": "व्यवसाय काढा",
+  "customOptionLabel": "{label} (स्वतःचा)",
+  "@customOptionLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "periodLabel": "कालावधी",
+  "exactPeriodIncome": "नक्की {period} उत्पन्न",
+  "@exactPeriodIncome": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "approximatePeriodIncome": "अंदाजे {period} उत्पन्न",
+  "@approximatePeriodIncome": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "minimumAmount": "किमान रक्कम",
+  "maximumAmount": "कमाल रक्कम",
+  "keepFieldPrivate": "{title} खाजगी ठेवा",
+  "@keepFieldPrivate": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyLabel": "चलन",
+  "incomeTypeApproximate": "अंदाजे",
+  "incomePeriodWeekly": "साप्ताहिक",
+  "addIncomeDetails": "उत्पन्नाची माहिती जोडा",
+  "approximateIncome": "अंदाजे उत्पन्न",
+  "searchOrTypeEducation": "शिक्षण शोधा किंवा लिहा",
+  "searchCityOrTypeWorkLocation": "शहर शोधा किंवा कामाचे ठिकाण लिहा",
+  "selectWeight": "वजन निवडा",
+  "addAnotherContact": "आणखी एक संपर्क जोडा",
+  "removeThisContact": "हा संपर्क काढा",
+  "contactNumbered": "संपर्क {number}",
+  "@contactNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "fatherName": "वडिलांचे नाव",
+  "fatherOccupationCategory": "वडिलांच्या व्यवसायाचा प्रकार",
+  "fatherOccupationDetails": "वडिलांच्या व्यवसायाचा तपशील",
+  "fatherExtraInfo": "वडिलांबद्दल अधिक माहिती",
+  "motherName": "आईचे नाव",
+  "motherOccupationCategory": "आईच्या व्यवसायाचा प्रकार",
+  "motherOccupationDetails": "आईच्या व्यवसायाचा तपशील",
+  "motherExtraInfo": "आईबद्दल अधिक माहिती",
+  "addBrother": "भाऊ जोडा",
+  "addSister": "बहीण जोडा",
+  "siblingNumbered": "भावंड {number}",
+  "@siblingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "relationLabel": "नाते",
+  "addressOrCity": "पत्ता / शहर",
+  "notesLabel": "टिपण",
+  "addPaternal": "वडिलांकडील नाते जोडा",
+  "addMaternal": "आईकडील नाते जोडा",
+  "relativeNumbered": "नातेवाईक {number}",
+  "@relativeNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDetails": "नातेवाइकाचा तपशील",
+  "relativeDetailsHint": "नाव, व्यवसाय, पत्ता आणि इतर माहिती",
+  "addAllianceFamily": "सोयरिक कुटुंब जोडा",
+  "allianceFamilyNumbered": "सोयरिक कुटुंब {number}",
+  "@allianceFamilyNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "surnameLabel": "आडनाव",
+  "cityOrLocation": "शहर / ठिकाण",
+  "publicSafeSummaryOnly": "सर्वांना दाखवता येईल एवढाच थोडक्यात तपशील लिहा.",
+  "mangalDoshType": "मंगळ दोषाचा प्रकार",
+  "noProfilePhotoUploadedYet": "प्रोफाइल फोटो अजून अपलोड केलेला नाही.",
+  "profilePhotoUploaded": "प्रोफाइल फोटो अपलोड झाला आहे.",
+  "manageProfilePhoto": "प्रोफाइल फोटो सांभाळा",
+  "yourTaluka": "तुमचा तालुका",
+  "distanceKm": "{distance} किमी",
+  "@distanceKm": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "preferredLocations": "अपेक्षित ठिकाणे",
+  "noLocationsSelected": "एकही ठिकाण निवडलेले नाही.",
+  "locationSuggestionsUnavailable": "ठिकाणांच्या सूचना अजून उपलब्ध नाहीत.",
+  "resetToSuggestedLocations": "सुचवलेली ठिकाणे पुन्हा घ्या",
+  "preferredReligionsLabel": "अपेक्षित धर्म",
+  "preferredCastesLabel": "अपेक्षित जाती",
+  "openToIntercasteMatches": "आंतरजातीय स्थळ चालेल",
+  "preferredMotherTongues": "अपेक्षित मातृभाषा",
+  "preferredOccupationsLabel": "अपेक्षित व्यवसाय",
+  "marriageTypePreference": "विवाह प्रकाराची अपेक्षा",
+  "preferredMaritalStatuses": "अपेक्षित वैवाहिक स्थिती",
+  "withChildren": "अपत्य असलेले",
+  "preferredProfileManagedBy": "प्रोफाइल कोण सांभाळते याची अपेक्षा",
+  "managedBy": "कोण सांभाळते",
+  "agePreferenceRange": "वय {min}-{max}",
+  "@agePreferenceRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "agePreferenceMin": "वय {min}+",
+  "@agePreferenceMin": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "agePreferenceMax": "वय {max} पर्यंत",
+  "@agePreferenceMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "incomePreferenceRange": "उत्पन्न {min}-{max}",
+  "@incomePreferenceRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "incomePreferenceMin": "उत्पन्न {min}+",
+  "@incomePreferenceMin": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "incomePreferenceMax": "उत्पन्न {max} पर्यंत",
+  "@incomePreferenceMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "siblingsAdded": "भावंडे जोडली",
+  "otherRelativesAdded": "इतर नातेवाईक जोडले",
+  "propertyAdded": "मालमत्ता जोडली",
+  "photoNotUploadedYet": "फोटो अजून अपलोड केलेला नाही",
+  "heightBelowMinCompact": "4 फूट 6 इंचपेक्षा कमी (136 सेमी)",
+  "heightAboveMaxCompact": "7 फूटपेक्षा जास्त (214 सेमी)",
+  "heightFeetInchesCm": "{feet} फूट {inches} इंच ({cm} सेमी)",
+  "@heightFeetInchesCm": {
+    "placeholders": {
+      "feet": {
+        "type": "int"
+      },
+      "inches": {
+        "type": "int"
+      },
+      "cm": {
+        "type": "int"
+      }
+    }
+  },
+  "weightKg": "{kg} किलो",
+  "@weightKg": {
+    "placeholders": {
+      "kg": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsCount": "{count} ठिकाणे",
+  "@locationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "locationPlusNearby": "{label} + आणखी {count} जवळची",
+  "@locationPlusNearby": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addressCountOne": "1 पत्ता",
+  "addressCountOther": "{count} पत्ते",
+  "@addressCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "childDetailCountOne": "1 अपत्याची माहिती",
+  "childDetailCountOther": "{count} अपत्यांची माहिती",
+  "@childDetailCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeCountOne": "1 नातेवाईक",
+  "relativeCountOther": "{count} नातेवाईक",
+  "@relativeCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allianceFamilyCountOne": "1 सोयरिक कुटुंब",
+  "allianceFamilyCountOther": "{count} सोयरिक कुटुंबे",
+  "@allianceFamilyCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ageYearsRange": "{start} - {end} वर्षे",
+  "@ageYearsRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "sectionProgressShort": "{label} {filled}/{total}",
+  "@sectionProgressShort": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "filled": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "clearCharan": "चरण काढा",
+  "heightPreferenceRange": "उंची {min}-{max}",
+  "@heightPreferenceRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "heightPreferenceMin": "उंची {min}+",
+  "@heightPreferenceMin": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "heightPreferenceMax": "उंची {max} पर्यंत",
+  "@heightPreferenceMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  }
 }

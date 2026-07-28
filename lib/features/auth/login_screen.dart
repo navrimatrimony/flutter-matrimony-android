@@ -899,12 +899,12 @@ class _ConsentFooter extends StatelessWidget {
             children: [
               Text(AppStrings.loginConsentPrefix, style: textStyle),
               Text(
-                'T & C',
+                appText.termsAndConditionsShort,
                 style: textStyle?.copyWith(fontWeight: FontWeight.w700),
               ),
               Text(AppStrings.loginConsentAnd, style: textStyle),
               Text(
-                'Privacy Policy',
+                appText.privacyPolicy,
                 style: textStyle?.copyWith(fontWeight: FontWeight.w700),
               ),
               Text(AppStrings.loginConsentSuffix, style: textStyle),

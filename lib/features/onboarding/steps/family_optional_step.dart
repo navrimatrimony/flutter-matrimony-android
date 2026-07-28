@@ -115,17 +115,17 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
       AboutTemplateSuggestion(
         label: appText.simpleFamilyFirst2,
         text:
-            'Family values and mutual respect are important to me. I believe in a balanced life with clear communication, patience, and support from both families.',
+            appText.aboutFamilyTemplateFamilyFirstBody,
       ),
       AboutTemplateSuggestion(
         label: appText.careerWithBalance2,
         text:
-            'I take responsibilities seriously and like keeping a healthy balance between work, family, and personal growth. I value honesty and steady understanding.',
+            appText.aboutFamilyTemplateCareerBalanceBody,
       ),
       AboutTemplateSuggestion(
         label: appText.traditionOpenMind2,
         text:
-            'I respect traditions while staying open to practical modern thinking. I am looking for a relationship built on trust, kindness, and shared decisions.',
+            appText.aboutFamilyTemplateTraditionBody,
       ),
     ];
   }
@@ -143,10 +143,10 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     final status = _choiceLabel(_statusOptions, _familyStatus);
     final values = _choiceLabel(_valueOptions, _familyValues);
     if (status != null) {
-      additions.add('Family background is $status.');
+      additions.add(appText.aboutFactFamilyBackground(status));
     }
     if (values != null) {
-      additions.add('Family values are $values.');
+      additions.add(appText.aboutFactFamilyValues(values));
     }
     return [
       ...<String>[suggestion.text],

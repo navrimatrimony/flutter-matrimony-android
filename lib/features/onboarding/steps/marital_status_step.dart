@@ -972,7 +972,7 @@ class _ChildDetailCard extends StatelessWidget {
                   ),
                   if (canRemove)
                     IconButton(
-                      tooltip: 'Remove',
+                      tooltip: appText.remove,
                       visualDensity: VisualDensity.compact,
                       onPressed: onRemove,
                       icon: const Icon(Icons.delete_outline, size: 20),

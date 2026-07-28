@@ -270,7 +270,7 @@ class _LocationStepState extends State<LocationStep>
             country ??
             OnboardingOption(
               id: _parentId(state),
-              label: 'India',
+              label: appText.countryIndia,
               meta: const <String, dynamic>{
                 'type': 'country',
                 'status': 'approved',
@@ -1877,9 +1877,9 @@ class _LocationStepState extends State<LocationStep>
 
   String? _groupLabelForTag(String tag) {
     return switch (tag) {
-      'city' => 'City',
-      'suburban' => 'Suburban',
-      'rural' => 'Rural',
+      'city' => appText.locationGroupCity,
+      'suburban' => appText.locationGroupSuburban,
+      'rural' => appText.rural,
       _ => null,
     };
   }
@@ -1975,6 +1975,7 @@ class _LocationStepState extends State<LocationStep>
       title: appText.location,
       subtitle: appText.chooseWhereTheProfileLives,
       loading: widget.loading,
+      continueLabel: appText.continueLabel,
       onBack: widget.onBack,
       onContinue: _save,
       children: [

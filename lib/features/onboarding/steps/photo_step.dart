@@ -953,7 +953,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     croppedImage.dispose();
     picture.dispose();
     if (byteData == null) {
-      throw StateError('Crop encoding failed.');
+      throw StateError(appText.cropEncodingFailed);
     }
     return byteData.buffer.asUint8List();
   }
@@ -1042,10 +1042,10 @@ class _PhotoPlaceholder extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             state == _PhotoStepState.approved
-                ? 'Photo approved'
+                ? appText.dashboardPhotoApproved
                 : state == _PhotoStepState.pending
-                ? 'Review in progress'
-                : 'Profile photo',
+                ? appText.reviewInProgress
+                : appText.profilePhoto,
             style: TextStyle(
               color: colors.onSurfaceVariant,
               fontWeight: FontWeight.w800,
@@ -1053,7 +1053,7 @@ class _PhotoPlaceholder extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '3:4 portrait works best',
+            appText.portrait34WorksBest,
             style: TextStyle(color: colors.onSurfaceVariant),
           ),
         ],
@@ -1078,13 +1078,13 @@ class _PhotoBadge extends StatelessWidget {
       _PhotoStepState.selected || _PhotoStepState.missing => colors.primary,
     };
     final label = switch (state) {
-      _PhotoStepState.approved => 'Approved',
-      _PhotoStepState.rejected => 'Rejected',
-      _PhotoStepState.error => 'Retry',
-      _PhotoStepState.pending => 'Pending',
-      _PhotoStepState.uploading => 'Uploading',
-      _PhotoStepState.selected => 'Selected',
-      _PhotoStepState.missing => 'Photo',
+      _PhotoStepState.approved => appText.approved,
+      _PhotoStepState.rejected => appText.rejected,
+      _PhotoStepState.error => appText.retry,
+      _PhotoStepState.pending => appText.pending,
+      _PhotoStepState.uploading => appText.badgeUploading,
+      _PhotoStepState.selected => appText.badgeSelected,
+      _PhotoStepState.missing => appText.dashboardPhoto,
     };
 
     return DecoratedBox(
@@ -1175,7 +1175,7 @@ class _PhotoStatusPanel extends StatelessWidget {
                   if (fileInfo != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      'Selected file: $fileInfo',
+                      appText.selectedFileName(fileInfo!),
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: colors.onSurfaceVariant,
                       ),

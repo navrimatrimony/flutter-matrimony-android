@@ -8143,6 +8143,1080 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Option'**
   String get optionFallback;
+
+  /// No description provided for @aboutTemplateFamilyFirstBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.'**
+  String get aboutTemplateFamilyFirstBody;
+
+  /// No description provided for @aboutTemplateCareerBalanceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.'**
+  String get aboutTemplateCareerBalanceBody;
+
+  /// No description provided for @aboutTemplateTraditionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I respect traditions and still value practical, open-minded conversations when important decisions need to be made.'**
+  String get aboutTemplateTraditionBody;
+
+  /// No description provided for @aboutTemplateHonestyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.'**
+  String get aboutTemplateHonestyBody;
+
+  /// No description provided for @aboutTemplateCalmSteadyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.'**
+  String get aboutTemplateCalmSteadyBody;
+
+  /// No description provided for @aboutFactAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age is {age} years.'**
+  String aboutFactAge(int age);
+
+  /// No description provided for @aboutFactHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height is about {feet} ft {inches} in.'**
+  String aboutFactHeight(int feet, int inches);
+
+  /// No description provided for @aboutFactMaritalStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Marital status: {label}.'**
+  String aboutFactMaritalStatus(String label);
+
+  /// No description provided for @aboutFactCommunity.
+  ///
+  /// In en, this message translates to:
+  /// **'Community background: {labels}.'**
+  String aboutFactCommunity(String labels);
+
+  /// No description provided for @aboutFactEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Education: {labels}.'**
+  String aboutFactEducation(String labels);
+
+  /// No description provided for @aboutFactCareer.
+  ///
+  /// In en, this message translates to:
+  /// **'Professionally connected with {label}.'**
+  String aboutFactCareer(String label);
+
+  /// No description provided for @aboutFamilyTemplateFamilyFirstBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Family values and mutual respect are important to me. I believe in a balanced life with clear communication, patience, and support from both families.'**
+  String get aboutFamilyTemplateFamilyFirstBody;
+
+  /// No description provided for @aboutFamilyTemplateCareerBalanceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I take responsibilities seriously and like keeping a healthy balance between work, family, and personal growth. I value honesty and steady understanding.'**
+  String get aboutFamilyTemplateCareerBalanceBody;
+
+  /// No description provided for @aboutFamilyTemplateTraditionBody.
+  ///
+  /// In en, this message translates to:
+  /// **'I respect traditions while staying open to practical modern thinking. I am looking for a relationship built on trust, kindness, and shared decisions.'**
+  String get aboutFamilyTemplateTraditionBody;
+
+  /// No description provided for @aboutFactFamilyBackground.
+  ///
+  /// In en, this message translates to:
+  /// **'Family background is {status}.'**
+  String aboutFactFamilyBackground(String status);
+
+  /// No description provided for @aboutFactFamilyValues.
+  ///
+  /// In en, this message translates to:
+  /// **'Family values are {values}.'**
+  String aboutFactFamilyValues(String values);
+
+  /// No description provided for @termsAndConditionsShort.
+  ///
+  /// In en, this message translates to:
+  /// **'T & C'**
+  String get termsAndConditionsShort;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @reviewInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Review in progress'**
+  String get reviewInProgress;
+
+  /// No description provided for @selectedFileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected file: {name}'**
+  String selectedFileName(String name);
+
+  /// No description provided for @incomeUnitLakh.
+  ///
+  /// In en, this message translates to:
+  /// **'L'**
+  String get incomeUnitLakh;
+
+  /// No description provided for @incomeUnitCrore.
+  ///
+  /// In en, this message translates to:
+  /// **'Cr'**
+  String get incomeUnitCrore;
+
+  /// No description provided for @incomeUnitThousand.
+  ///
+  /// In en, this message translates to:
+  /// **'K'**
+  String get incomeUnitThousand;
+
+  /// No description provided for @heightBelowMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Below 4ft 6in (136 cm)'**
+  String get heightBelowMin;
+
+  /// No description provided for @heightAboveMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Above 7ft (214 cm)'**
+  String get heightAboveMax;
+
+  /// No description provided for @countryIndia.
+  ///
+  /// In en, this message translates to:
+  /// **'India'**
+  String get countryIndia;
+
+  /// No description provided for @locationGroupCity.
+  ///
+  /// In en, this message translates to:
+  /// **'City'**
+  String get locationGroupCity;
+
+  /// No description provided for @locationGroupSuburban.
+  ///
+  /// In en, this message translates to:
+  /// **'Suburban'**
+  String get locationGroupSuburban;
+
+  /// No description provided for @remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get remove;
+
+  /// No description provided for @unlimitedDownloads.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited downloads'**
+  String get unlimitedDownloads;
+
+  /// No description provided for @downloadQuotaLine.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} / {limit}, {remaining} remaining'**
+  String downloadQuotaLine(String used, String limit, String remaining);
+
+  /// No description provided for @optionalFieldLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} (Optional)'**
+  String optionalFieldLabel(String label);
+
+  /// No description provided for @notSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'Not selected'**
+  String get notSelected;
+
+  /// No description provided for @manage.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get manage;
+
+  /// No description provided for @saveChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Save changes'**
+  String get saveChanges;
+
+  /// No description provided for @discardChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discardChanges;
+
+  /// No description provided for @unsavedChanges.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get unsavedChanges;
+
+  /// No description provided for @savedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get savedLabel;
+
+  /// No description provided for @missingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing'**
+  String get missingLabel;
+
+  /// No description provided for @needsDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs details'**
+  String get needsDetails;
+
+  /// No description provided for @partialLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Partial'**
+  String get partialLabel;
+
+  /// No description provided for @toggleOn.
+  ///
+  /// In en, this message translates to:
+  /// **'ON'**
+  String get toggleOn;
+
+  /// No description provided for @toggleOff.
+  ///
+  /// In en, this message translates to:
+  /// **'OFF'**
+  String get toggleOff;
+
+  /// No description provided for @optionsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Options unavailable'**
+  String get optionsUnavailable;
+
+  /// No description provided for @add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get add;
+
+  /// No description provided for @profileSaveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile save failed'**
+  String get profileSaveFailed;
+
+  /// No description provided for @notAddedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not added yet'**
+  String get notAddedYet;
+
+  /// No description provided for @editAllProfileTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit All Profile'**
+  String get editAllProfileTitle;
+
+  /// No description provided for @editProfileSections.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit profile sections'**
+  String get editProfileSections;
+
+  /// No description provided for @addressTypeCurrent.
+  ///
+  /// In en, this message translates to:
+  /// **'Current'**
+  String get addressTypeCurrent;
+
+  /// No description provided for @addressTypePermanent.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanent'**
+  String get addressTypePermanent;
+
+  /// No description provided for @addressTypeNative.
+  ///
+  /// In en, this message translates to:
+  /// **'Native'**
+  String get addressTypeNative;
+
+  /// No description provided for @addressTypeWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Work'**
+  String get addressTypeWork;
+
+  /// No description provided for @cardMaritalStatusAndChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'Marital status and children'**
+  String get cardMaritalStatusAndChildren;
+
+  /// No description provided for @cardBirthDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Birth details'**
+  String get cardBirthDetails;
+
+  /// No description provided for @cardPhysicalDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Physical details'**
+  String get cardPhysicalDetails;
+
+  /// No description provided for @cardFatherContactNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Father contact numbers'**
+  String get cardFatherContactNumbers;
+
+  /// No description provided for @cardMotherContactNumbers.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother contact numbers'**
+  String get cardMotherContactNumbers;
+
+  /// No description provided for @cardFamilyOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Family overview'**
+  String get cardFamilyOverview;
+
+  /// No description provided for @cardPersonalIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal income'**
+  String get cardPersonalIncome;
+
+  /// No description provided for @cardFamilyRelatives.
+  ///
+  /// In en, this message translates to:
+  /// **'Family relatives'**
+  String get cardFamilyRelatives;
+
+  /// No description provided for @cardAllianceDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Alliance details'**
+  String get cardAllianceDetails;
+
+  /// No description provided for @smokingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Smoking status'**
+  String get smokingStatus;
+
+  /// No description provided for @drinkingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Drinking status'**
+  String get drinkingStatus;
+
+  /// No description provided for @marriageYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Marriage year'**
+  String get marriageYear;
+
+  /// No description provided for @annulmentYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Annulment year'**
+  String get annulmentYear;
+
+  /// No description provided for @divorceYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Divorce year'**
+  String get divorceYear;
+
+  /// No description provided for @separationYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Separation year'**
+  String get separationYear;
+
+  /// No description provided for @spouseDeathYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Spouse death year'**
+  String get spouseDeathYear;
+
+  /// No description provided for @legalStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal status'**
+  String get legalStatus;
+
+  /// No description provided for @annulmentDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Annulment details'**
+  String get annulmentDetails;
+
+  /// No description provided for @separationDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Separation details'**
+  String get separationDetails;
+
+  /// No description provided for @widowhoodDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Widowhood details'**
+  String get widowhoodDetails;
+
+  /// No description provided for @divorceDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Divorce details'**
+  String get divorceDetails;
+
+  /// No description provided for @noChildrenAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'No children added.'**
+  String get noChildrenAdded;
+
+  /// No description provided for @addAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Add address'**
+  String get addAddress;
+
+  /// No description provided for @addressNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Address {number}'**
+  String addressNumbered(int number);
+
+  /// No description provided for @removeAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove address'**
+  String get removeAddress;
+
+  /// No description provided for @addressLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Address'**
+  String get addressLabel;
+
+  /// No description provided for @addressType.
+  ///
+  /// In en, this message translates to:
+  /// **'Address type'**
+  String get addressType;
+
+  /// No description provided for @searchCityOrVillage.
+  ///
+  /// In en, this message translates to:
+  /// **'Search city or village'**
+  String get searchCityOrVillage;
+
+  /// No description provided for @fullNameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get fullNameLabel;
+
+  /// No description provided for @selectReligionFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select religion first'**
+  String get selectReligionFirst;
+
+  /// No description provided for @selectCasteFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Select caste first'**
+  String get selectCasteFirst;
+
+  /// No description provided for @birthTimeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'HH:MM'**
+  String get birthTimeHint;
+
+  /// No description provided for @clearBirthTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear birth time'**
+  String get clearBirthTime;
+
+  /// No description provided for @clearOccupation.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear occupation'**
+  String get clearOccupation;
+
+  /// No description provided for @customOptionLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} (Custom)'**
+  String customOptionLabel(String label);
+
+  /// No description provided for @periodLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Period'**
+  String get periodLabel;
+
+  /// No description provided for @exactPeriodIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact {period} income'**
+  String exactPeriodIncome(String period);
+
+  /// No description provided for @approximatePeriodIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate {period} income'**
+  String approximatePeriodIncome(String period);
+
+  /// No description provided for @minimumAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum amount'**
+  String get minimumAmount;
+
+  /// No description provided for @maximumAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Maximum amount'**
+  String get maximumAmount;
+
+  /// No description provided for @keepFieldPrivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep {title} private'**
+  String keepFieldPrivate(String title);
+
+  /// No description provided for @currencyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Currency'**
+  String get currencyLabel;
+
+  /// No description provided for @incomeTypeApproximate.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate'**
+  String get incomeTypeApproximate;
+
+  /// No description provided for @incomePeriodWeekly.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly'**
+  String get incomePeriodWeekly;
+
+  /// No description provided for @addIncomeDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Add income details'**
+  String get addIncomeDetails;
+
+  /// No description provided for @approximateIncome.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate income'**
+  String get approximateIncome;
+
+  /// No description provided for @searchOrTypeEducation.
+  ///
+  /// In en, this message translates to:
+  /// **'Search or type education'**
+  String get searchOrTypeEducation;
+
+  /// No description provided for @searchCityOrTypeWorkLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Search city or type work location'**
+  String get searchCityOrTypeWorkLocation;
+
+  /// No description provided for @selectWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Select weight'**
+  String get selectWeight;
+
+  /// No description provided for @addAnotherContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another contact'**
+  String get addAnotherContact;
+
+  /// No description provided for @removeThisContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this contact'**
+  String get removeThisContact;
+
+  /// No description provided for @contactNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact {number}'**
+  String contactNumbered(int number);
+
+  /// No description provided for @fatherName.
+  ///
+  /// In en, this message translates to:
+  /// **'Father name'**
+  String get fatherName;
+
+  /// No description provided for @fatherOccupationCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Father occupation category'**
+  String get fatherOccupationCategory;
+
+  /// No description provided for @fatherOccupationDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Father occupation details'**
+  String get fatherOccupationDetails;
+
+  /// No description provided for @fatherExtraInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Father extra info'**
+  String get fatherExtraInfo;
+
+  /// No description provided for @motherName.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother name'**
+  String get motherName;
+
+  /// No description provided for @motherOccupationCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother occupation category'**
+  String get motherOccupationCategory;
+
+  /// No description provided for @motherOccupationDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother occupation details'**
+  String get motherOccupationDetails;
+
+  /// No description provided for @motherExtraInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Mother extra info'**
+  String get motherExtraInfo;
+
+  /// No description provided for @addBrother.
+  ///
+  /// In en, this message translates to:
+  /// **'Add brother'**
+  String get addBrother;
+
+  /// No description provided for @addSister.
+  ///
+  /// In en, this message translates to:
+  /// **'Add sister'**
+  String get addSister;
+
+  /// No description provided for @siblingNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Sibling {number}'**
+  String siblingNumbered(int number);
+
+  /// No description provided for @relationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Relation'**
+  String get relationLabel;
+
+  /// No description provided for @addressOrCity.
+  ///
+  /// In en, this message translates to:
+  /// **'Address / City'**
+  String get addressOrCity;
+
+  /// No description provided for @notesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get notesLabel;
+
+  /// No description provided for @addPaternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add paternal'**
+  String get addPaternal;
+
+  /// No description provided for @addMaternal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add maternal'**
+  String get addMaternal;
+
+  /// No description provided for @relativeNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Relative {number}'**
+  String relativeNumbered(int number);
+
+  /// No description provided for @relativeDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Relative details'**
+  String get relativeDetails;
+
+  /// No description provided for @relativeDetailsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, occupation, address and other details'**
+  String get relativeDetailsHint;
+
+  /// No description provided for @addAllianceFamily.
+  ///
+  /// In en, this message translates to:
+  /// **'Add alliance family'**
+  String get addAllianceFamily;
+
+  /// No description provided for @allianceFamilyNumbered.
+  ///
+  /// In en, this message translates to:
+  /// **'Alliance family {number}'**
+  String allianceFamilyNumbered(int number);
+
+  /// No description provided for @surnameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Surname'**
+  String get surnameLabel;
+
+  /// No description provided for @cityOrLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'City / Location'**
+  String get cityOrLocation;
+
+  /// No description provided for @publicSafeSummaryOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Public-safe summary only.'**
+  String get publicSafeSummaryOnly;
+
+  /// No description provided for @mangalDoshType.
+  ///
+  /// In en, this message translates to:
+  /// **'Mangal dosh type'**
+  String get mangalDoshType;
+
+  /// No description provided for @noProfilePhotoUploadedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No profile photo uploaded yet.'**
+  String get noProfilePhotoUploadedYet;
+
+  /// No description provided for @profilePhotoUploaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile photo uploaded.'**
+  String get profilePhotoUploaded;
+
+  /// No description provided for @manageProfilePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage profile photo'**
+  String get manageProfilePhoto;
+
+  /// No description provided for @yourTaluka.
+  ///
+  /// In en, this message translates to:
+  /// **'Your taluka'**
+  String get yourTaluka;
+
+  /// No description provided for @distanceKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} km'**
+  String distanceKm(String distance);
+
+  /// No description provided for @preferredLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred locations'**
+  String get preferredLocations;
+
+  /// No description provided for @noLocationsSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'No locations selected.'**
+  String get noLocationsSelected;
+
+  /// No description provided for @locationSuggestionsUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Location suggestions are not available yet.'**
+  String get locationSuggestionsUnavailable;
+
+  /// No description provided for @resetToSuggestedLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset to suggested locations'**
+  String get resetToSuggestedLocations;
+
+  /// No description provided for @preferredReligionsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred religions'**
+  String get preferredReligionsLabel;
+
+  /// No description provided for @preferredCastesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred castes'**
+  String get preferredCastesLabel;
+
+  /// No description provided for @openToIntercasteMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to intercaste matches'**
+  String get openToIntercasteMatches;
+
+  /// No description provided for @preferredMotherTongues.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred mother tongues'**
+  String get preferredMotherTongues;
+
+  /// No description provided for @preferredOccupationsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred occupations'**
+  String get preferredOccupationsLabel;
+
+  /// No description provided for @marriageTypePreference.
+  ///
+  /// In en, this message translates to:
+  /// **'Marriage type preference'**
+  String get marriageTypePreference;
+
+  /// No description provided for @preferredMaritalStatuses.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred marital statuses'**
+  String get preferredMaritalStatuses;
+
+  /// No description provided for @withChildren.
+  ///
+  /// In en, this message translates to:
+  /// **'With children'**
+  String get withChildren;
+
+  /// No description provided for @preferredProfileManagedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred profile managed by'**
+  String get preferredProfileManagedBy;
+
+  /// No description provided for @managedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Managed by'**
+  String get managedBy;
+
+  /// No description provided for @agePreferenceRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Age {min}-{max}'**
+  String agePreferenceRange(String min, String max);
+
+  /// No description provided for @agePreferenceMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Age {min}+'**
+  String agePreferenceMin(String min);
+
+  /// No description provided for @agePreferenceMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Age up to {max}'**
+  String agePreferenceMax(String max);
+
+  /// No description provided for @incomePreferenceRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Income {min}-{max}'**
+  String incomePreferenceRange(String min, String max);
+
+  /// No description provided for @incomePreferenceMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Income {min}+'**
+  String incomePreferenceMin(String min);
+
+  /// No description provided for @incomePreferenceMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Income up to {max}'**
+  String incomePreferenceMax(String max);
+
+  /// No description provided for @siblingsAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Siblings added'**
+  String get siblingsAdded;
+
+  /// No description provided for @otherRelativesAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Other relatives added'**
+  String get otherRelativesAdded;
+
+  /// No description provided for @propertyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Property added'**
+  String get propertyAdded;
+
+  /// No description provided for @photoNotUploadedYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo not uploaded yet'**
+  String get photoNotUploadedYet;
+
+  /// No description provided for @heightBelowMinCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Below 4\' 6\" (136 cm)'**
+  String get heightBelowMinCompact;
+
+  /// No description provided for @heightAboveMaxCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'Above 7\' 0\" (214 cm)'**
+  String get heightAboveMaxCompact;
+
+  /// No description provided for @heightFeetInchesCm.
+  ///
+  /// In en, this message translates to:
+  /// **'{feet}\' {inches}\" ({cm} cm)'**
+  String heightFeetInchesCm(int feet, int inches, int cm);
+
+  /// No description provided for @weightKg.
+  ///
+  /// In en, this message translates to:
+  /// **'{kg} kg'**
+  String weightKg(int kg);
+
+  /// No description provided for @locationsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} locations'**
+  String locationsCount(int count);
+
+  /// No description provided for @locationPlusNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} +{count} nearby'**
+  String locationPlusNearby(String label, int count);
+
+  /// No description provided for @addressCountOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 address'**
+  String get addressCountOne;
+
+  /// No description provided for @addressCountOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} addresses'**
+  String addressCountOther(int count);
+
+  /// No description provided for @childDetailCountOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 child detail'**
+  String get childDetailCountOne;
+
+  /// No description provided for @childDetailCountOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} child details'**
+  String childDetailCountOther(int count);
+
+  /// No description provided for @relativeCountOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 relative'**
+  String get relativeCountOne;
+
+  /// No description provided for @relativeCountOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} relatives'**
+  String relativeCountOther(int count);
+
+  /// No description provided for @allianceFamilyCountOne.
+  ///
+  /// In en, this message translates to:
+  /// **'1 alliance family'**
+  String get allianceFamilyCountOne;
+
+  /// No description provided for @allianceFamilyCountOther.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} alliance families'**
+  String allianceFamilyCountOther(int count);
+
+  /// No description provided for @ageYearsRange.
+  ///
+  /// In en, this message translates to:
+  /// **'{start} - {end} years'**
+  String ageYearsRange(String start, String end);
+
+  /// No description provided for @sectionProgressShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{label} {filled}/{total}'**
+  String sectionProgressShort(String label, int filled, int total);
+
+  /// No description provided for @clearCharan.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear charan'**
+  String get clearCharan;
+
+  /// No description provided for @heightPreferenceRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Height {min}-{max}'**
+  String heightPreferenceRange(String min, String max);
+
+  /// No description provided for @heightPreferenceMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Height {min}+'**
+  String heightPreferenceMin(String min);
+
+  /// No description provided for @heightPreferenceMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Height up to {max}'**
+  String heightPreferenceMax(String max);
 }
 
 class _AppLocalizationsDelegate

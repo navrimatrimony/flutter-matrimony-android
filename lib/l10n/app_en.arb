@@ -1541,5 +1541,500 @@
   "apply": "Apply",
   "basicPreference": "Basic preference",
   "verifiedPhoto": "Verified photo",
-  "optionFallback": "Option"
+  "optionFallback": "Option",
+  "aboutTemplateFamilyFirstBody": "Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.",
+  "aboutTemplateCareerBalanceBody": "I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.",
+  "aboutTemplateTraditionBody": "I respect traditions and still value practical, open-minded conversations when important decisions need to be made.",
+  "aboutTemplateHonestyBody": "Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.",
+  "aboutTemplateCalmSteadyBody": "I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.",
+  "aboutFactAge": "Age is {age} years.",
+  "@aboutFactAge": {
+    "placeholders": {
+      "age": {
+        "type": "int"
+      }
+    }
+  },
+  "aboutFactHeight": "Height is about {feet} ft {inches} in.",
+  "@aboutFactHeight": {
+    "placeholders": {
+      "feet": {
+        "type": "int"
+      },
+      "inches": {
+        "type": "int"
+      }
+    }
+  },
+  "aboutFactMaritalStatus": "Marital status: {label}.",
+  "@aboutFactMaritalStatus": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFactCommunity": "Community background: {labels}.",
+  "@aboutFactCommunity": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFactEducation": "Education: {labels}.",
+  "@aboutFactEducation": {
+    "placeholders": {
+      "labels": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFactCareer": "Professionally connected with {label}.",
+  "@aboutFactCareer": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFamilyTemplateFamilyFirstBody": "Family values and mutual respect are important to me. I believe in a balanced life with clear communication, patience, and support from both families.",
+  "aboutFamilyTemplateCareerBalanceBody": "I take responsibilities seriously and like keeping a healthy balance between work, family, and personal growth. I value honesty and steady understanding.",
+  "aboutFamilyTemplateTraditionBody": "I respect traditions while staying open to practical modern thinking. I am looking for a relationship built on trust, kindness, and shared decisions.",
+  "aboutFactFamilyBackground": "Family background is {status}.",
+  "@aboutFactFamilyBackground": {
+    "placeholders": {
+      "status": {
+        "type": "String"
+      }
+    }
+  },
+  "aboutFactFamilyValues": "Family values are {values}.",
+  "@aboutFactFamilyValues": {
+    "placeholders": {
+      "values": {
+        "type": "String"
+      }
+    }
+  },
+  "termsAndConditionsShort": "T & C",
+  "privacyPolicy": "Privacy Policy",
+  "reviewInProgress": "Review in progress",
+  "selectedFileName": "Selected file: {name}",
+  "@selectedFileName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "incomeUnitLakh": "L",
+  "incomeUnitCrore": "Cr",
+  "incomeUnitThousand": "K",
+  "heightBelowMin": "Below 4ft 6in (136 cm)",
+  "heightAboveMax": "Above 7ft (214 cm)",
+  "countryIndia": "India",
+  "locationGroupCity": "City",
+  "locationGroupSuburban": "Suburban",
+  "remove": "Remove",
+  "unlimitedDownloads": "Unlimited downloads",
+  "downloadQuotaLine": "{used} / {limit}, {remaining} remaining",
+  "@downloadQuotaLine": {
+    "placeholders": {
+      "used": {
+        "type": "String"
+      },
+      "limit": {
+        "type": "String"
+      },
+      "remaining": {
+        "type": "String"
+      }
+    }
+  },
+  "optionalFieldLabel": "{label} (Optional)",
+  "@optionalFieldLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "notSelected": "Not selected",
+  "manage": "Manage",
+  "saveChanges": "Save changes",
+  "discardChanges": "Discard",
+  "unsavedChanges": "Unsaved changes",
+  "savedLabel": "Saved",
+  "missingLabel": "Missing",
+  "needsDetails": "Needs details",
+  "partialLabel": "Partial",
+  "toggleOn": "ON",
+  "toggleOff": "OFF",
+  "optionsUnavailable": "Options unavailable",
+  "add": "Add",
+  "profileSaveFailed": "Profile save failed",
+  "notAddedYet": "Not added yet",
+  "editAllProfileTitle": "Edit All Profile",
+  "editProfileSections": "Edit profile sections",
+  "addressTypeCurrent": "Current",
+  "addressTypePermanent": "Permanent",
+  "addressTypeNative": "Native",
+  "addressTypeWork": "Work",
+  "cardMaritalStatusAndChildren": "Marital status and children",
+  "cardBirthDetails": "Birth details",
+  "cardPhysicalDetails": "Physical details",
+  "cardFatherContactNumbers": "Father contact numbers",
+  "cardMotherContactNumbers": "Mother contact numbers",
+  "cardFamilyOverview": "Family overview",
+  "cardPersonalIncome": "Personal income",
+  "cardFamilyRelatives": "Family relatives",
+  "cardAllianceDetails": "Alliance details",
+  "smokingStatus": "Smoking status",
+  "drinkingStatus": "Drinking status",
+  "marriageYear": "Marriage year",
+  "annulmentYear": "Annulment year",
+  "divorceYear": "Divorce year",
+  "separationYear": "Separation year",
+  "spouseDeathYear": "Spouse death year",
+  "legalStatus": "Legal status",
+  "annulmentDetails": "Annulment details",
+  "separationDetails": "Separation details",
+  "widowhoodDetails": "Widowhood details",
+  "divorceDetails": "Divorce details",
+  "noChildrenAdded": "No children added.",
+  "addAddress": "Add address",
+  "addressNumbered": "Address {number}",
+  "@addressNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "removeAddress": "Remove address",
+  "addressLabel": "Address",
+  "addressType": "Address type",
+  "searchCityOrVillage": "Search city or village",
+  "fullNameLabel": "Full name",
+  "selectReligionFirst": "Select religion first",
+  "selectCasteFirst": "Select caste first",
+  "birthTimeHint": "HH:MM",
+  "clearBirthTime": "Clear birth time",
+  "clearOccupation": "Clear occupation",
+  "customOptionLabel": "{label} (Custom)",
+  "@customOptionLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "periodLabel": "Period",
+  "exactPeriodIncome": "Exact {period} income",
+  "@exactPeriodIncome": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "approximatePeriodIncome": "Approximate {period} income",
+  "@approximatePeriodIncome": {
+    "placeholders": {
+      "period": {
+        "type": "String"
+      }
+    }
+  },
+  "minimumAmount": "Minimum amount",
+  "maximumAmount": "Maximum amount",
+  "keepFieldPrivate": "Keep {title} private",
+  "@keepFieldPrivate": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "currencyLabel": "Currency",
+  "incomeTypeApproximate": "Approximate",
+  "incomePeriodWeekly": "Weekly",
+  "addIncomeDetails": "Add income details",
+  "approximateIncome": "Approximate income",
+  "searchOrTypeEducation": "Search or type education",
+  "searchCityOrTypeWorkLocation": "Search city or type work location",
+  "selectWeight": "Select weight",
+  "addAnotherContact": "Add another contact",
+  "removeThisContact": "Remove this contact",
+  "contactNumbered": "Contact {number}",
+  "@contactNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "fatherName": "Father name",
+  "fatherOccupationCategory": "Father occupation category",
+  "fatherOccupationDetails": "Father occupation details",
+  "fatherExtraInfo": "Father extra info",
+  "motherName": "Mother name",
+  "motherOccupationCategory": "Mother occupation category",
+  "motherOccupationDetails": "Mother occupation details",
+  "motherExtraInfo": "Mother extra info",
+  "addBrother": "Add brother",
+  "addSister": "Add sister",
+  "siblingNumbered": "Sibling {number}",
+  "@siblingNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "relationLabel": "Relation",
+  "addressOrCity": "Address / City",
+  "notesLabel": "Notes",
+  "addPaternal": "Add paternal",
+  "addMaternal": "Add maternal",
+  "relativeNumbered": "Relative {number}",
+  "@relativeNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeDetails": "Relative details",
+  "relativeDetailsHint": "Name, occupation, address and other details",
+  "addAllianceFamily": "Add alliance family",
+  "allianceFamilyNumbered": "Alliance family {number}",
+  "@allianceFamilyNumbered": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "surnameLabel": "Surname",
+  "cityOrLocation": "City / Location",
+  "publicSafeSummaryOnly": "Public-safe summary only.",
+  "mangalDoshType": "Mangal dosh type",
+  "noProfilePhotoUploadedYet": "No profile photo uploaded yet.",
+  "profilePhotoUploaded": "Profile photo uploaded.",
+  "manageProfilePhoto": "Manage profile photo",
+  "yourTaluka": "Your taluka",
+  "distanceKm": "{distance} km",
+  "@distanceKm": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "preferredLocations": "Preferred locations",
+  "noLocationsSelected": "No locations selected.",
+  "locationSuggestionsUnavailable": "Location suggestions are not available yet.",
+  "resetToSuggestedLocations": "Reset to suggested locations",
+  "preferredReligionsLabel": "Preferred religions",
+  "preferredCastesLabel": "Preferred castes",
+  "openToIntercasteMatches": "Open to intercaste matches",
+  "preferredMotherTongues": "Preferred mother tongues",
+  "preferredOccupationsLabel": "Preferred occupations",
+  "marriageTypePreference": "Marriage type preference",
+  "preferredMaritalStatuses": "Preferred marital statuses",
+  "withChildren": "With children",
+  "preferredProfileManagedBy": "Preferred profile managed by",
+  "managedBy": "Managed by",
+  "agePreferenceRange": "Age {min}-{max}",
+  "@agePreferenceRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "agePreferenceMin": "Age {min}+",
+  "@agePreferenceMin": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "agePreferenceMax": "Age up to {max}",
+  "@agePreferenceMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "incomePreferenceRange": "Income {min}-{max}",
+  "@incomePreferenceRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "incomePreferenceMin": "Income {min}+",
+  "@incomePreferenceMin": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "incomePreferenceMax": "Income up to {max}",
+  "@incomePreferenceMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "siblingsAdded": "Siblings added",
+  "otherRelativesAdded": "Other relatives added",
+  "propertyAdded": "Property added",
+  "photoNotUploadedYet": "Photo not uploaded yet",
+  "heightBelowMinCompact": "Below 4' 6\" (136 cm)",
+  "heightAboveMaxCompact": "Above 7' 0\" (214 cm)",
+  "heightFeetInchesCm": "{feet}' {inches}\" ({cm} cm)",
+  "@heightFeetInchesCm": {
+    "placeholders": {
+      "feet": {
+        "type": "int"
+      },
+      "inches": {
+        "type": "int"
+      },
+      "cm": {
+        "type": "int"
+      }
+    }
+  },
+  "weightKg": "{kg} kg",
+  "@weightKg": {
+    "placeholders": {
+      "kg": {
+        "type": "int"
+      }
+    }
+  },
+  "locationsCount": "{count} locations",
+  "@locationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "locationPlusNearby": "{label} +{count} nearby",
+  "@locationPlusNearby": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "addressCountOne": "1 address",
+  "addressCountOther": "{count} addresses",
+  "@addressCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "childDetailCountOne": "1 child detail",
+  "childDetailCountOther": "{count} child details",
+  "@childDetailCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "relativeCountOne": "1 relative",
+  "relativeCountOther": "{count} relatives",
+  "@relativeCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allianceFamilyCountOne": "1 alliance family",
+  "allianceFamilyCountOther": "{count} alliance families",
+  "@allianceFamilyCountOther": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "ageYearsRange": "{start} - {end} years",
+  "@ageYearsRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "sectionProgressShort": "{label} {filled}/{total}",
+  "@sectionProgressShort": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "filled": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "clearCharan": "Clear charan",
+  "heightPreferenceRange": "Height {min}-{max}",
+  "@heightPreferenceRange": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      }
+    }
+  },
+  "heightPreferenceMin": "Height {min}+",
+  "@heightPreferenceMin": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      }
+    }
+  },
+  "heightPreferenceMax": "Height up to {max}",
+  "@heightPreferenceMax": {
+    "placeholders": {
+      "max": {
+        "type": "String"
+      }
+    }
+  }
 }

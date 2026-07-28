@@ -10,6 +10,11 @@ import '../../core/app_strings.dart';
 import '../../core/profile_network_image.dart';
 import '../photo/photo_upload_screen.dart';
 
+/// Around sixty labels on this screen are the same field name with an
+/// "(Optional)" marker. Composing the marker once keeps the ARB holding one
+/// key per field instead of two spellings of the same field name.
+String _optionalLabel(String label) => appText.optionalFieldLabel(label);
+
 class EditFullProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? initialProfile;
   final bool openLocationDetails;
@@ -449,12 +454,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   static const Color _sectionReadyColor = Color(0xFF15803D);
   static const Color _sectionPartialColor = Color(0xFFD97706);
   static const Color _sectionMissingColor = Color(0xFFDC2626);
-  static const List<Map<String, String>> _addressTypeOptions = [
-    {'key': 'current', 'label': 'Current'},
-    {'key': 'permanent', 'label': 'Permanent'},
-    {'key': 'native', 'label': 'Native'},
-    {'key': 'work', 'label': 'Work'},
-    {'key': 'other', 'label': 'Other'},
+  static List<Map<String, String>> get _addressTypeOptions => [
+    {'key': 'current', 'label': appText.addressTypeCurrent},
+    {'key': 'permanent', 'label': appText.addressTypePermanent},
+    {'key': 'native', 'label': appText.addressTypeNative},
+    {'key': 'work', 'label': appText.addressTypeWork},
+    {'key': 'other', 'label': appText.other},
   ];
 
   final TextEditingController _fullNameController = TextEditingController();
@@ -1223,56 +1228,56 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   List<Map<String, dynamic>> _divorceStatusOptions() {
-    return const <Map<String, dynamic>>[
-      {'value': 'pending', 'label': 'Pending'},
-      {'value': 'finalized', 'label': 'Finalized'},
-      {'value': 'mutual', 'label': 'Mutual'},
-      {'value': 'contested', 'label': 'Contested'},
+    return <Map<String, dynamic>>[
+      {'value': 'pending', 'label': appText.pending},
+      {'value': 'finalized', 'label': appText.valueFinalized},
+      {'value': 'mutual', 'label': appText.valueMutual},
+      {'value': 'contested', 'label': appText.valueContested},
     ];
   }
 
   List<Map<String, dynamic>> _childGenderOptions() {
-    return const <Map<String, dynamic>>[
-      {'value': 'male', 'label': 'Male'},
-      {'value': 'female', 'label': 'Female'},
-      {'value': 'other', 'label': 'Other'},
-      {'value': 'prefer_not_say', 'label': 'Prefer not to say'},
+    return <Map<String, dynamic>>[
+      {'value': 'male', 'label': appText.male},
+      {'value': 'female', 'label': appText.female},
+      {'value': 'other', 'label': appText.other},
+      {'value': 'prefer_not_say', 'label': appText.valuePreferNotToSay},
     ];
   }
 
   List<Map<String, dynamic>> _siblingRelationOptions() {
-    return const <Map<String, dynamic>>[
-      {'value': 'brother', 'label': 'Brother'},
-      {'value': 'sister', 'label': 'Sister'},
-      {'value': 'brother_wife', 'label': "Brother's wife"},
-      {'value': 'sister_husband', 'label': "Sister's husband"},
+    return <Map<String, dynamic>>[
+      {'value': 'brother', 'label': appText.brother},
+      {'value': 'sister', 'label': appText.sister},
+      {'value': 'brother_wife', 'label': appText.relationBrotherWife},
+      {'value': 'sister_husband', 'label': appText.relationSisterHusband},
     ];
   }
 
   List<Map<String, dynamic>> _siblingMaritalStatusOptions() {
-    return const <Map<String, dynamic>>[
-      {'value': 'unmarried', 'label': 'Unmarried'},
-      {'value': 'married', 'label': 'Married'},
+    return <Map<String, dynamic>>[
+      {'value': 'unmarried', 'label': appText.valueUnmarried},
+      {'value': 'married', 'label': appText.valueMarried},
     ];
   }
 
   List<Map<String, dynamic>> _relativeRelationOptions() {
-    return const <Map<String, dynamic>>[
-      {'value': 'paternal_grandfather', 'label': 'Paternal Grandfather'},
-      {'value': 'paternal_grandmother', 'label': 'Paternal Grandmother'},
-      {'value': 'paternal_uncle', 'label': 'Paternal Uncle'},
-      {'value': 'wife_paternal_uncle', 'label': 'Wife of Paternal Uncle'},
-      {'value': 'paternal_aunt', 'label': 'Paternal Aunt'},
-      {'value': 'husband_paternal_aunt', 'label': 'Husband of Paternal Aunt'},
-      {'value': 'Cousin', 'label': 'Cousin'},
-      {'value': 'maternal_address_ajol', 'label': 'Maternal address (Ajol)'},
-      {'value': 'maternal_grandfather', 'label': 'Maternal Grandfather'},
-      {'value': 'maternal_grandmother', 'label': 'Maternal Grandmother'},
-      {'value': 'maternal_uncle', 'label': 'Maternal Uncle'},
-      {'value': 'wife_maternal_uncle', 'label': "Maternal Uncle's wife"},
-      {'value': 'maternal_aunt', 'label': 'Maternal Aunt'},
-      {'value': 'husband_maternal_aunt', 'label': 'Husband of Maternal Aunt'},
-      {'value': 'maternal_cousin', 'label': 'Cousin'},
+    return <Map<String, dynamic>>[
+      {'value': 'paternal_grandfather', 'label': appText.relationPaternalGrandfather},
+      {'value': 'paternal_grandmother', 'label': appText.relationPaternalGrandmother},
+      {'value': 'paternal_uncle', 'label': appText.relationPaternalUncle},
+      {'value': 'wife_paternal_uncle', 'label': appText.relationPaternalUncleWife},
+      {'value': 'paternal_aunt', 'label': appText.relationPaternalAunt},
+      {'value': 'husband_paternal_aunt', 'label': appText.relationPaternalAuntHusband},
+      {'value': 'Cousin', 'label': appText.relationCousin},
+      {'value': 'maternal_address_ajol', 'label': appText.relationMaternalAddressAjol},
+      {'value': 'maternal_grandfather', 'label': appText.relationMaternalGrandfather},
+      {'value': 'maternal_grandmother', 'label': appText.relationMaternalGrandmother},
+      {'value': 'maternal_uncle', 'label': appText.relationMaternalUncle},
+      {'value': 'wife_maternal_uncle', 'label': appText.relationMaternalUncleWife},
+      {'value': 'maternal_aunt', 'label': appText.relationMaternalAunt},
+      {'value': 'husband_maternal_aunt', 'label': appText.relationMaternalAuntHusband},
+      {'value': 'maternal_cousin', 'label': appText.relationCousin},
     ];
   }
 
@@ -1442,9 +1447,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (count <= 0) return null;
 
     final firstLabel = _readText(_selectedPreferredLocationRows.first['label']);
-    if (firstLabel == null) return '$count locations';
+    if (firstLabel == null) return appText.locationsCount(count);
     if (count == 1) return firstLabel;
-    return '$firstLabel +${count - 1} nearby';
+    return appText.locationPlusNearby(firstLabel, count - 1);
   }
 
   void _prefillPreferredLocations(
@@ -1530,7 +1535,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ApiClient.safeDisplayLabel(location['location_label']) ??
         ApiClient.safeDisplayLabel(location['label']) ??
         ApiClient.safeDisplayLabel(location['name']) ??
-        'Location';
+        appText.location;
   }
 
   int? _locationStateId(Map<String, dynamic> location) {
@@ -1861,7 +1866,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   String _educationDegreeLabel(Map<String, dynamic> degree) {
-    return _readText(degree['code']) ?? _optionLabel(degree, 'Education');
+    return _readText(degree['code']) ?? _optionLabel(degree, appText.education);
   }
 
   int? _findEducationDegreeIdByText(String text) {
@@ -1895,7 +1900,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     _selectedEducationDegreeId = degreeId;
     _selectedEducationDegreeLabel = degreeId == null
         ? null
-        : _labelForId(_educationDegreeOptions, degreeId, 'Education');
+        : _labelForId(_educationDegreeOptions, degreeId, appText.education);
   }
 
   void _prefillProfile(Map<String, dynamic> profile) {
@@ -2407,7 +2412,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           (row) => _readInt(row['id']) == selectedReligionId,
         );
         if (selected.isNotEmpty) {
-          _selectedReligionLabel = _optionLabel(selected.first, 'Religion');
+          _selectedReligionLabel = _optionLabel(selected.first, appText.religion);
           _religionController.text = _selectedReligionLabel ?? '';
         }
         await _loadCastes(selectedReligionId, preserveSelection: true);
@@ -2656,7 +2661,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         );
         if (selected.isNotEmpty) {
           setState(() {
-            _selectedCasteLabel = _optionLabel(selected.first, 'Caste');
+            _selectedCasteLabel = _optionLabel(selected.first, appText.caste);
             _casteController.text = _selectedCasteLabel ?? '';
           });
         }
@@ -2692,7 +2697,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final id = _readInt(religion['id']);
     if (id == null) return;
 
-    final label = _optionLabel(religion, 'Religion');
+    final label = _optionLabel(religion, appText.religion);
     setState(() {
       _selectedReligionId = id;
       _selectedReligionLabel = label;
@@ -2727,7 +2732,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final id = _readInt(caste['id']);
     if (id == null) return;
 
-    final label = _optionLabel(caste, 'Caste');
+    final label = _optionLabel(caste, appText.caste);
     setState(() {
       _selectedCasteId = id;
       _selectedCasteLabel = label;
@@ -2787,7 +2792,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final id = _readInt(subCaste['id']);
     if (id == null) return;
 
-    final label = _optionLabel(subCaste, 'Sub-caste');
+    final label = _optionLabel(subCaste, appText.subCaste);
     setState(() {
       _selectedSubCasteId = id;
       _selectedSubCasteLabel = label;
@@ -2853,7 +2858,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _selectedOccupationLabel = _labelForId(
           _occupationOptions,
           id,
-          'Occupation',
+          appText.occupation,
         );
       } else if (parts[0] == 'custom') {
         _selectedOccupationMasterId = null;
@@ -2861,7 +2866,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _selectedOccupationLabel = _labelForId(
           _customOccupationOptions,
           id,
-          'Occupation',
+          appText.occupation,
         );
       }
     });
@@ -2904,7 +2909,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _selectedFatherOccupationLabel = _labelForId(
             _familyOccupationOptions,
             id,
-            'Occupation',
+            appText.occupation,
           );
         } else {
           _selectedMotherOccupationMasterId = id;
@@ -2912,7 +2917,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _selectedMotherOccupationLabel = _labelForId(
             _familyOccupationOptions,
             id,
-            'Occupation',
+            appText.occupation,
           );
         }
       } else if (parts[0] == 'custom') {
@@ -2922,7 +2927,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _selectedFatherOccupationLabel = _labelForId(
             _familyCustomOccupationOptions,
             id,
-            'Occupation',
+            appText.occupation,
           );
         } else {
           _selectedMotherOccupationMasterId = null;
@@ -2930,7 +2935,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _selectedMotherOccupationLabel = _labelForId(
             _familyCustomOccupationOptions,
             id,
-            'Occupation',
+            appText.occupation,
           );
         }
       }
@@ -3313,7 +3318,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                       TextButton(
                         onPressed: () =>
                             Navigator.pop(sheetContext, _clearNumberSelection),
-                        child: const Text('Clear'),
+                        child: Text(appText.clear),
                       ),
                     ],
                   ),
@@ -3347,18 +3352,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   String _heightLabel(int cm) {
-    if (cm == 136) return 'Below 4\' 6" (136 cm)';
-    if (cm == 214) return 'Above 7\' 0" (214 cm)';
+    if (cm == 136) return appText.heightBelowMinCompact;
+    if (cm == 214) return appText.heightAboveMaxCompact;
 
     final totalInches = (cm / 2.54).round();
     final feet = totalInches ~/ 12;
     final inches = totalInches % 12;
-    return '$feet\' $inches" ($cm cm)';
+    return appText.heightFeetInchesCm(feet, inches, cm);
   }
 
   String _compactHeightLabel(int cm) => _heightLabel(cm).split(' (').first;
 
-  String _weightLabel(int kg) => '$kg kg';
+  String _weightLabel(int kg) => appText.weightKg(kg);
 
   List<int> _heightValues() {
     return <int>[
@@ -3390,7 +3395,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     for (final option in _incomeCurrencyOptions) {
       final code = _readText(option['code'])?.toUpperCase();
       final symbol = _readText(option['symbol']);
-      final label = _optionLabel(option, 'Currency').toUpperCase();
+      final label = _optionLabel(option, appText.currencyLabel).toUpperCase();
       if (code == 'INR' || symbol == '₹' || label.contains('INR')) {
         return _readInt(option['id']);
       }
@@ -3413,7 +3418,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
       return _readText(option['symbol']) ??
           _readText(option['code']) ??
-          _optionLabel(option, 'Currency');
+          _optionLabel(option, appText.currencyLabel);
     }
 
     return '₹';
@@ -3829,7 +3834,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
 
     return validateOne(
-          title: 'Personal income',
+          title: appText.cardPersonalIncome,
           enabled: _showIncomeGroup,
           valueType: _selectedIncomeValueType,
           amountController: _incomeAmountController,
@@ -3837,7 +3842,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           maxAmountController: _incomeMaxAmountController,
         ) &&
         validateOne(
-          title: 'Family income',
+          title: appText.labelFamilyIncome,
           enabled: _showFamilyIncomeGroup,
           valueType: _selectedFamilyIncomeValueType,
           amountController: _familyIncomeAmountController,
@@ -4364,7 +4369,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       }
       return true;
     } else {
-      _showMessage(response['message']?.toString() ?? 'Profile save failed');
+      _showMessage(response['message']?.toString() ?? appText.profileSaveFailed);
       return false;
     }
   }
@@ -4393,27 +4398,27 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   String _sectionTitle(_EditProfileSection section) {
     switch (section) {
       case _EditProfileSection.basic:
-        return 'Basic Information';
+        return appText.sectionBasicInformation;
       case _EditProfileSection.physical:
-        return 'Physical';
+        return appText.sectionPhysical;
       case _EditProfileSection.educationCareer:
-        return 'Education & Career';
+        return appText.educationCareer;
       case _EditProfileSection.familyDetails:
-        return 'Family Details';
+        return appText.familyDetails;
       case _EditProfileSection.siblings:
-        return 'Siblings';
+        return appText.sectionSiblings;
       case _EditProfileSection.relatives:
-        return 'Relatives';
+        return appText.sectionRelatives;
       case _EditProfileSection.property:
-        return 'Property';
+        return appText.sectionProperty;
       case _EditProfileSection.horoscope:
-        return 'Horoscope';
+        return appText.sectionHoroscope;
       case _EditProfileSection.aboutMe:
-        return 'About Me';
+        return appText.sectionAboutMe;
       case _EditProfileSection.partnerPreferences:
-        return 'Partner Preferences';
+        return appText.sectionPartnerPreferences;
       case _EditProfileSection.photo:
-        return 'Photo';
+        return appText.dashboardPhoto;
     }
   }
 
@@ -4472,7 +4477,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         .map((value) => _summaryText(value))
         .whereType<String>()
         .toList();
-    if (cleaned.isEmpty) return 'Not added yet';
+    if (cleaned.isEmpty) return appText.notAddedYet;
 
     return cleaned.take(4).join(' • ');
   }
@@ -4483,10 +4488,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   String _addressTypeLabel(String? key) {
     for (final row in _addressTypeOptions) {
-      if (row['key'] == key) return row['label'] ?? key ?? 'Address';
+      if (row['key'] == key) return row['label'] ?? key ?? appText.addressLabel;
     }
     final text = key?.trim();
-    if (text == null || text.isEmpty) return 'Address';
+    if (text == null || text.isEmpty) return appText.addressLabel;
     return text[0].toUpperCase() + text.substring(1);
   }
 
@@ -4503,7 +4508,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (filledRows.length == 1) return firstLabel;
 
     return _joinSummaryParts([
-      '${filledRows.length} address${filledRows.length == 1 ? '' : 'es'}',
+      filledRows.length == 1
+          ? appText.addressCountOne
+          : appText.addressCountOther(filledRows.length),
       firstLabel,
     ]);
   }
@@ -4520,21 +4527,23 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
     if (years <= 0) return null;
 
-    return '$years years';
+    return appText.valueAgeYears(years.toString());
   }
 
   String? _boolSummary(bool? value) {
     if (value == null) return null;
-    return value ? 'Yes' : 'No';
+    return value ? appText.yes : appText.no;
   }
 
   String? _preferenceAgeSummary() {
     final min = _selectedPreferredAgeMin;
     final max = _selectedPreferredAgeMax;
     if (min == null && max == null) return null;
-    if (min != null && max != null) return 'Age $min-$max';
-    if (min != null) return 'Age $min+';
-    return 'Age up to $max';
+    if (min != null && max != null) {
+      return appText.agePreferenceRange(min.toString(), max.toString());
+    }
+    if (min != null) return appText.agePreferenceMin(min.toString());
+    return appText.agePreferenceMax(max.toString());
   }
 
   String? _preferenceHeightSummary() {
@@ -4542,26 +4551,32 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final max = _selectedPreferredHeightMaxCm;
     if (min == null && max == null) return null;
     if (min != null && max != null) {
-      return 'Height ${_heightLabel(min).split(' (').first}-'
-          '${_heightLabel(max).split(' (').first}';
+      return appText.heightPreferenceRange(
+        _heightLabel(min).split(' (').first,
+        _heightLabel(max).split(' (').first,
+      );
     }
-    if (min != null) return 'Height ${_heightLabel(min).split(' (').first}+';
-    return 'Height up to ${_heightLabel(max!).split(' (').first}';
+    if (min != null) {
+      return appText.heightPreferenceMin(
+        _heightLabel(min).split(' (').first,
+      );
+    }
+    return appText.heightPreferenceMax(_heightLabel(max!).split(' (').first);
   }
 
   String _incomeLabel(int value) {
     if (value <= 0) return '₹0';
     if (value >= 10000000 && value % 10000000 == 0) {
       final crore = value ~/ 10000000;
-      return '₹${crore}Cr';
+      return '₹$crore${appText.incomeUnitCrore}';
     }
     if (value >= 10000000) {
-      return '₹${(value / 10000000).toStringAsFixed(1)}Cr';
+      return '₹${(value / 10000000).toStringAsFixed(1)}${appText.incomeUnitCrore}';
     }
     if (value % 100000 == 0) {
-      return '₹${value ~/ 100000}L';
+      return '₹${value ~/ 100000}${appText.incomeUnitLakh}';
     }
-    return '₹${(value / 100000).toStringAsFixed(1)}L';
+    return '₹${(value / 100000).toStringAsFixed(1)}${appText.incomeUnitLakh}';
   }
 
   String? _editableIncomeSummary({
@@ -4571,8 +4586,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     required TextEditingController maxAmountController,
     required bool private,
   }) {
-    if (private) return 'Hidden';
-    if (valueType == 'undisclosed') return 'Undisclosed';
+    if (private) return appText.profileListsHidden;
+    if (valueType == 'undisclosed') return appText.valueUndisclosed;
 
     String amountLabel(TextEditingController controller) {
       final value = _nullableNumber(controller);
@@ -4585,7 +4600,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       final max = amountLabel(maxAmountController);
       if (min.isEmpty && max.isEmpty) return null;
       if (min.isNotEmpty && max.isNotEmpty) return '$min-$max';
-      return min.isNotEmpty ? '$min+' : 'Up to $max';
+      return min.isNotEmpty ? '$min+' : appText.valueUpTo(max);
     }
 
     final amount = amountLabel(amountController);
@@ -4597,10 +4612,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final max = _selectedPreferredIncomeMax;
     if (min == null && max == null) return null;
     if (min != null && max != null) {
-      return 'Income ${_incomeLabel(min)}-${_incomeLabel(max)}';
+      return appText.incomePreferenceRange(_incomeLabel(min), _incomeLabel(max));
     }
-    if (min != null) return 'Income ${_incomeLabel(min)}+';
-    return 'Income up to ${_incomeLabel(max!)}';
+    if (min != null) return appText.incomePreferenceMin(_incomeLabel(min));
+    return appText.incomePreferenceMax(_incomeLabel(max!));
   }
 
   String _sectionSummary(_EditProfileSection section) {
@@ -4627,19 +4642,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _labelForId(
             _motherTongueOptions,
             _selectedMotherTongueId,
-            'Mother tongue',
+            appText.motherTongue2,
           ),
           _labelForId(
             _maritalStatusOptions,
             _selectedMaritalStatusId,
-            'Marital status',
+            appText.maritalStatus,
           ),
           showMarriageChildren
               ? _joinSummaryParts([
-                  'Children',
+                  appText.labelChildren,
                   _boolSummary(_selectedHasChildren),
                   _selectedHasChildren == true && _childRows.isNotEmpty
-                      ? '${_childRows.length} child${_childRows.length == 1 ? '' : 'ren'}'
+                      ? (_childRows.length == 1
+                ? appText.childCountOne
+                : appText.childCountOther(_childRows.length))
                       : null,
                 ], separator: ': ')
               : null,
@@ -4648,18 +4665,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _summaryFromParts([
           _selectedHeightCm == null ? null : _heightLabel(_selectedHeightCm!),
           _selectedWeightKg == null ? null : _weightLabel(_selectedWeightKg!),
-          _labelForId(_complexionOptions, _selectedComplexionId, 'Complexion'),
-          _labelForId(_dietOptions, _selectedDietId, 'Diet'),
+          _labelForId(_complexionOptions, _selectedComplexionId, appText.labelComplexion),
+          _labelForId(_dietOptions, _selectedDietId, appText.diet),
           _joinSummaryParts([
             _labelForId(
               _smokingStatusOptions,
               _selectedSmokingStatusId,
-              'Smoking status',
+              appText.smokingStatus,
             ),
             _labelForId(
               _drinkingStatusOptions,
               _selectedDrinkingStatusId,
-              'Drinking status',
+              appText.drinkingStatus,
             ),
           ]),
         ]);
@@ -4670,7 +4687,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               _labelForId(
                 _occupationOptions,
                 _selectedOccupationMasterId,
-                'Occupation',
+                appText.occupation,
               ),
           _controllerSummary(_workLocationController) ??
               _selectedWorkLocationLabel,
@@ -4687,26 +4704,26 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       case _EditProfileSection.familyDetails:
         return _summaryFromParts([
           _joinSummaryParts([
-            'Father',
+            appText.labelFather,
             _controllerSummary(_fatherNameController),
             _selectedFatherOccupationLabel,
           ], separator: ': '),
           _joinSummaryParts([
-            'Mother',
+            appText.labelMother,
             _controllerSummary(_motherNameController),
             _selectedMotherOccupationLabel,
           ], separator: ': '),
           _addressRowsSummary(_parentsAddressRows),
-          _labelForId(_familyTypeOptions, _selectedFamilyTypeId, 'Family type'),
+          _labelForId(_familyTypeOptions, _selectedFamilyTypeId, appText.labelFamilyType),
           _labelForValue(
             _familyStatusOptions,
             _selectedFamilyStatus,
-            'Family status',
+            appText.familyStatus,
           ),
           _labelForValue(
             _familyValueOptions,
             _selectedFamilyValues,
-            'Family values',
+            appText.familyValues,
           ),
           _showFamilyIncomeGroup
               ? _editableIncomeSummary(
@@ -4720,29 +4737,37 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ]);
       case _EditProfileSection.siblings:
         return _summaryFromParts([
-          _selectedHasSiblings == true ? 'Siblings added' : 'No siblings',
+          _selectedHasSiblings == true
+          ? appText.siblingsAdded
+          : appText.valueNoSiblings,
           _siblingRows.isEmpty
               ? null
-              : '${_siblingRows.length} sibling${_siblingRows.length == 1 ? '' : 's'}',
+              : (_siblingRows.length == 1
+                ? appText.siblingCountOne
+                : appText.siblingCountOther(_siblingRows.length)),
         ]);
       case _EditProfileSection.relatives:
         return _summaryFromParts([
           _relativeRows.isEmpty
               ? null
-              : '${_relativeRows.length} relative${_relativeRows.length == 1 ? '' : 's'}',
+              : (_relativeRows.length == 1
+                ? appText.relativeCountOne
+                : appText.relativeCountOther(_relativeRows.length)),
           _relativeRows.isEmpty
               ? null
               : _labelForValue(
                   _relativeRelationOptions(),
                   _relativeRows.first.relationType,
-                  'Relation',
+                  appText.relationLabel,
                 ),
           _otherRelativesController.text.trim().isEmpty
               ? null
-              : 'Other relatives added',
+              : appText.otherRelativesAdded,
           _allianceNetworkRows.isEmpty
               ? null
-              : '${_allianceNetworkRows.length} alliance famil${_allianceNetworkRows.length == 1 ? 'y' : 'ies'}',
+              : (_allianceNetworkRows.length == 1
+                ? appText.allianceFamilyCountOne
+                : appText.allianceFamilyCountOther(_allianceNetworkRows.length)),
           _allianceNetworkRows.isEmpty
               ? null
               : _controllerSummary(
@@ -4753,13 +4778,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _summaryFromParts([
           _propertyDetailsController.text.trim().isEmpty
               ? null
-              : 'Property added',
+              : appText.propertyAdded,
         ]);
       case _EditProfileSection.horoscope:
         return _summaryFromParts([
-          _labelForId(_rashiOptions, _selectedRashiId, 'Rashi'),
-          _labelForId(_nakshatraOptions, _selectedNakshatraId, 'Nakshatra'),
-          _labelForId(_ganOptions, _selectedGanId, 'Gan'),
+          _labelForId(_rashiOptions, _selectedRashiId, appText.rashi),
+          _labelForId(_nakshatraOptions, _selectedNakshatraId, appText.nakshatra),
+          _labelForId(_ganOptions, _selectedGanId, appText.labelGan),
         ]);
       case _EditProfileSection.aboutMe:
         return _summaryFromParts([
@@ -4773,27 +4798,27 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _labelForId(
             _marriageTypePreferenceOptions,
             _selectedMarriageTypePreferenceId,
-            'Marriage type',
+            appText.marriageType,
           ),
           _labelsForIds(
             _preferredReligionOptions,
             _selectedPreferredReligionIds,
-            'Religion',
+            appText.religion,
           ),
           _labelsForIds(
             _preferredMotherTongueOptions,
             _selectedPreferredMotherTongueIds,
-            'Mother tongue',
+            appText.motherTongue2,
           ),
           _labelsForIds(
             _preferredEducationDegreeOptions,
             _selectedPreferredEducationDegreeIds,
-            'Education',
+            appText.education,
           ),
           _labelsForIds(
             _preferredDietOptions,
             _selectedPreferredDietIds,
-            'Diet',
+            appText.diet,
           ),
           _preferredLocationSummary(),
         ]);
@@ -4802,8 +4827,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   _lastLoadedProfile ?? ApiClient.currentUserProfile,
                 ) !=
                 null
-            ? 'Photo uploaded'
-            : 'Photo not uploaded yet';
+            ? appText.valuePhotoUploaded
+            : appText.photoNotUploadedYet;
     }
   }
 
@@ -4849,7 +4874,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     if (safeFilled <= 0) {
       return _SectionStatusInfo(
-        label: 'Missing',
+        label: appText.missingLabel,
         color: _sectionMissingColor,
         filled: safeFilled,
         total: safeTotal,
@@ -4857,7 +4882,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
     if (safeFilled >= readyThreshold) {
       return _SectionStatusInfo(
-        label: 'Ready',
+        label: appText.dashboardReady,
         color: _sectionReadyColor,
         filled: safeFilled,
         total: safeTotal,
@@ -4865,7 +4890,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
 
     return _SectionStatusInfo(
-      label: 'Needs details',
+      label: appText.needsDetails,
       color: _sectionPartialColor,
       filled: safeFilled,
       total: safeTotal,
@@ -4977,7 +5002,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         if (length >= 40) return _statusFromCompletion(1, 1);
         if (length > 0) {
           return _SectionStatusInfo(
-            label: 'Needs details',
+            label: appText.needsDetails,
             color: _sectionPartialColor,
             filled: 1,
             total: 1,
@@ -5276,7 +5301,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Unsaved changes'),
+          title: Text(appText.unsavedChanges),
           content: Text(
             appText.saveOrDiscardChangesInSection,
           ),
@@ -5284,17 +5309,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             TextButton(
               onPressed: () =>
                   Navigator.pop(dialogContext, _UnsavedSectionAction.cancel),
-              child: const Text('Cancel'),
+              child: Text(appText.cancel),
             ),
             TextButton(
               onPressed: () =>
                   Navigator.pop(dialogContext, _UnsavedSectionAction.discard),
-              child: const Text('Discard'),
+              child: Text(appText.discardChanges),
             ),
             FilledButton(
               onPressed: () =>
                   Navigator.pop(dialogContext, _UnsavedSectionAction.save),
-              child: const Text('Save changes'),
+              child: Text(appText.saveChanges),
             ),
           ],
         );
@@ -5459,11 +5484,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Widget _sectionStatusChip(_SectionStatusInfo status, ThemeData theme) {
-    final shortLabel = status.label == 'Needs details'
-        ? 'Partial'
+    final shortLabel = status.label == appText.needsDetails
+        ? appText.partialLabel
         : status.label;
     final label = status.total > 1
-        ? '$shortLabel ${status.filled}/${status.total}'
+        ? appText.sectionProgressShort(
+            shortLabel,
+            status.filled,
+            status.total,
+          )
         : shortLabel;
 
     return ConstrainedBox(
@@ -5594,7 +5623,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
-                                    'Saved',
+                                    appText.savedLabel,
                                     style: theme.textTheme.labelMedium
                                         ?.copyWith(
                                           color: successColor,
@@ -5613,7 +5642,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 const SizedBox(width: 8),
                 if (showSiblingsHeaderSwitch) ...[
                   Text(
-                    _selectedHasSiblings == true ? 'ON' : 'OFF',
+                    _selectedHasSiblings == true ? appText.toggleOn : appText.toggleOff,
                     style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: _selectedHasSiblings == true
@@ -5634,7 +5663,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                     ? FilledButton.icon(
                         onPressed: _saving ? null : _openPhotoManager,
                         icon: const Icon(Icons.photo_library_outlined),
-                        label: const Text('Manage'),
+                        label: Text(appText.manage),
                       )
                     : TextButton.icon(
                         onPressed: _saving
@@ -5645,7 +5674,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                         icon: Icon(
                           isExpanded ? Icons.close : Icons.edit_outlined,
                         ),
-                        label: Text(isExpanded ? 'Cancel' : 'Edit'),
+                        label: Text(isExpanded ? appText.cancel : appText.edit),
                       ),
               ],
             ),
@@ -5660,7 +5689,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: _saving ? null : _cancelExpandedSection,
-                      child: const Text('Cancel'),
+                      child: Text(appText.cancel),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -5675,7 +5704,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                               height: 18,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Save section'),
+                          : Text(appText.saveSection),
                     ),
                   ),
                 ],
@@ -5782,12 +5811,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         labelText: labelText,
         hintText: isLoading
             ? AppStrings.loading
-            : _labelForId(options, selectedId, fallbackPrefix) ?? 'Optional',
+            : _labelForId(options, selectedId, fallbackPrefix) ?? appText.optional,
         prefixIcon: Icon(icon),
         suffixIcon: selectedId == null || _saving
             ? null
             : IconButton(
-                tooltip: 'Clear',
+                tooltip: appText.clear,
                 icon: const Icon(Icons.close),
                 onPressed: () => onChanged(null),
               ),
@@ -5839,12 +5868,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         hintText: isLoading
             ? AppStrings.loading
             : _labelForValue(options, selectedValue, fallbackPrefix) ??
-                  'Optional',
+                  appText.optional,
         prefixIcon: Icon(icon),
         suffixIcon: selectedValue == null || _saving
             ? null
             : IconButton(
-                tooltip: 'Clear',
+                tooltip: appText.clear,
                 icon: const Icon(Icons.close),
                 onPressed: () => onChanged(null),
               ),
@@ -5894,7 +5923,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             ),
           ),
           Text(
-            value ? 'ON' : 'OFF',
+            value ? appText.toggleOn : appText.toggleOff,
             style: theme.textTheme.labelMedium?.copyWith(
               fontWeight: FontWeight.w800,
               color: value ? theme.colorScheme.primary : Colors.grey.shade600,
@@ -5950,7 +5979,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 ),
               ),
               Text(
-                value ? 'ON' : 'OFF',
+                value ? appText.toggleOn : appText.toggleOff,
                 style: theme.textTheme.labelMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: value
@@ -6007,7 +6036,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               ),
               TextButton(
                 onPressed: _saving ? null : onClear,
-                child: const Text('Clear'),
+                child: Text(appText.clear),
               ),
             ],
           ),
@@ -6044,9 +6073,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final end = values.end.round();
 
     return _preferenceRangeField(
-      labelText: 'Preferred Age',
+      labelText: appText.ageRange,
       icon: Icons.cake_outlined,
-      valueText: hasValue ? '$start - $end years' : 'Not selected',
+      valueText: hasValue
+          ? appText.ageYearsRange(start.toString(), end.toString())
+          : appText.notSelected,
       onClear: hasValue
           ? () {
               setState(() {
@@ -6060,7 +6091,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         min: minAge.toDouble(),
         max: maxAge.toDouble(),
         divisions: maxAge - minAge,
-        labels: RangeLabels('$start years', '$end years'),
+        labels: RangeLabels(
+        appText.valueAgeYears(start.toString()),
+        appText.valueAgeYears(end.toString()),
+      ),
         onChanged: _saving
             ? null
             : (next) {
@@ -6092,11 +6126,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final end = values.end.round();
 
     return _preferenceRangeField(
-      labelText: 'Preferred Height',
+      labelText: appText.labelHeightRange,
       icon: Icons.straighten,
       valueText: hasValue
           ? '${_compactHeightLabel(start)} - ${_compactHeightLabel(end)}'
-          : 'Not selected',
+          : appText.notSelected,
       onClear: hasValue
           ? () {
               setState(() {
@@ -6150,10 +6184,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ? '${_incomeLabel(_selectedPreferredIncomeMin!)}+'
         : hasValue
         ? '${_incomeLabel(start)} - ${_incomeLabel(end)}'
-        : 'Not selected';
+        : appText.notSelected;
 
     return _preferenceRangeField(
-      labelText: 'Preferred Income',
+      labelText: appText.incomeRange,
       icon: Icons.currency_rupee,
       valueText: valueText,
       onClear: hasValue
@@ -6208,13 +6242,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         suffixIcon: selectedIds.isEmpty || _saving
             ? null
             : IconButton(
-                tooltip: 'Clear',
+                tooltip: appText.clear,
                 icon: const Icon(Icons.close),
                 onPressed: () => onChanged(<int>{}),
               ),
       ),
       child: options.isEmpty
-          ? const Text('Not selected')
+          ? Text(appText.notSelected)
           : Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -6283,7 +6317,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                                 ),
                               ),
                               IconButton(
-                                tooltip: 'Close',
+                                tooltip: appText.close,
                                 icon: const Icon(Icons.close),
                                 onPressed: () => Navigator.pop(sheetContext),
                               ),
@@ -6294,8 +6328,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                           child: TextField(
                             controller: searchController,
-                            decoration: const InputDecoration(
-                              labelText: 'Search',
+                            decoration: InputDecoration(
+                              labelText: appText.search,
                               prefixIcon: Icon(Icons.search),
                             ),
                             onChanged: (value) {
@@ -6310,7 +6344,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                         ),
                         Expanded(
                           child: filteredOptions.isEmpty
-                              ? const Center(child: Text('No options found.'))
+                              ? Center(child: Text(appText.noOptionsFound))
                               : ListView.builder(
                                   itemCount: filteredOptions.length,
                                   itemBuilder: (context, index) {
@@ -6352,7 +6386,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                                 onPressed: () {
                                   setSheetState(nextSelectedIds.clear);
                                 },
-                                child: const Text('Clear'),
+                                child: Text(appText.clear),
                               ),
                               const Spacer(),
                               FilledButton(
@@ -6360,7 +6394,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                                   sheetContext,
                                   Set<int>.from(nextSelectedIds),
                                 ),
-                                child: const Text('Done'),
+                                child: Text(appText.done),
                               ),
                             ],
                           ),
@@ -6400,7 +6434,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         suffixIcon: selectedIds.isEmpty || _saving
             ? null
             : IconButton(
-                tooltip: 'Clear',
+                tooltip: appText.clear,
                 icon: const Icon(Icons.close),
                 onPressed: () => onChanged(<int>{}),
               ),
@@ -6409,7 +6443,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (orderedIds.isEmpty)
-            const Text('Not selected')
+            Text(appText.notSelected)
           else
             Wrap(
               spacing: 8,
@@ -6443,7 +6477,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                     onChanged(next);
                   },
             icon: const Icon(Icons.playlist_add_check),
-            label: Text(options.isEmpty ? 'Options unavailable' : 'Select'),
+            label: Text(
+        options.isEmpty ? appText.optionsUnavailable : appText.select,
+      ),
           ),
         ],
       ),
@@ -6455,15 +6491,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final showStatusDetails = _maritalStatusShowsDetails(statusKey);
 
     return _sectionCard(
-      title: 'Marital status and children',
+      title: appText.cardMaritalStatusAndChildren,
       icon: Icons.favorite_border,
       children: [
         _intDropdown(
-          labelText: 'Marital status (Optional)',
+          labelText: _optionalLabel(appText.maritalStatus),
           icon: Icons.favorite_border,
           options: _maritalStatusOptions,
           selectedId: _selectedMaritalStatusId,
-          fallbackPrefix: 'Marital status',
+          fallbackPrefix: appText.maritalStatus,
           loading: _maritalLifestyleOptionsLoading,
           onChanged: (value) => setState(() => _setMaritalStatus(value)),
         ),
@@ -6472,10 +6508,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _buildMarriageHistoryEditor(),
           const SizedBox(height: 14),
           _connectedToggleGroup(
-            title: 'Children',
+            title: appText.labelChildren,
             subtitle: _selectedHasChildren == true
-                ? '${_childRows.length} child detail${_childRows.length == 1 ? '' : 's'}'
-                : 'No children',
+                ? (_childRows.length == 1
+                ? appText.childDetailCountOne
+                : appText.childDetailCountOther(_childRows.length))
+                : appText.noChildren,
             icon: Icons.child_care_outlined,
             value: _selectedHasChildren == true,
             onChanged: (value) => setState(() => _setHasChildren(value)),
@@ -6501,36 +6539,36 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildLifestyleChoicesSection() {
     return _sectionCard(
-      title: 'Lifestyle',
+      title: appText.lifestyle,
       icon: Icons.restaurant_outlined,
       children: [
         _intDropdown(
-          labelText: 'Diet (Optional)',
+          labelText: _optionalLabel(appText.diet),
           icon: Icons.restaurant_outlined,
           options: _dietOptions,
           selectedId: _selectedDietId,
-          fallbackPrefix: 'Diet',
+          fallbackPrefix: appText.diet,
           loading: _maritalLifestyleOptionsLoading,
           onChanged: (value) => setState(() => _selectedDietId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Smoking status (Optional)',
+          labelText: _optionalLabel(appText.smokingStatus),
           icon: Icons.smoke_free_outlined,
           options: _smokingStatusOptions,
           selectedId: _selectedSmokingStatusId,
-          fallbackPrefix: 'Smoking status',
+          fallbackPrefix: appText.smokingStatus,
           loading: _maritalLifestyleOptionsLoading,
           onChanged: (value) =>
               setState(() => _selectedSmokingStatusId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Drinking status (Optional)',
+          labelText: _optionalLabel(appText.drinkingStatus),
           icon: Icons.local_bar_outlined,
           options: _drinkingStatusOptions,
           selectedId: _selectedDrinkingStatusId,
-          fallbackPrefix: 'Drinking status',
+          fallbackPrefix: appText.drinkingStatus,
           loading: _maritalLifestyleOptionsLoading,
           onChanged: (value) =>
               setState(() => _selectedDrinkingStatusId = value),
@@ -6569,10 +6607,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final showLegalStatus = showDivorceFields || showSeparatedFields;
     final showWidowFields = statusKey == 'widowed';
     final title = switch (statusKey) {
-      'annulled' => 'Annulment details',
-      'separated' => 'Separation details',
-      'widowed' => 'Widowhood details',
-      _ => 'Divorce details',
+      'annulled' => appText.annulmentDetails,
+      'separated' => appText.separationDetails,
+      'widowed' => appText.widowhoodDetails,
+      _ => appText.divorceDetails,
     };
 
     return Container(
@@ -6601,8 +6639,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             controller: row.marriageYearController,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Marriage year (Optional)',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.marriageYear),
               prefixIcon: Icon(Icons.calendar_month_outlined),
             ),
           ),
@@ -6614,8 +6652,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 labelText: statusKey == 'annulled'
-                    ? 'Annulment year (Optional)'
-                    : 'Divorce year (Optional)',
+                    ? _optionalLabel(appText.annulmentYear)
+                    : _optionalLabel(appText.divorceYear),
                 prefixIcon: const Icon(Icons.gavel_outlined),
               ),
             ),
@@ -6626,8 +6664,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               controller: row.separationYearController,
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Separation year (Optional)',
+              decoration: InputDecoration(
+                labelText: _optionalLabel(appText.separationYear),
                 prefixIcon: Icon(Icons.event_busy_outlined),
               ),
             ),
@@ -6638,8 +6676,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               controller: row.spouseDeathYearController,
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Spouse death year (Optional)',
+              decoration: InputDecoration(
+                labelText: _optionalLabel(appText.spouseDeathYear),
                 prefixIcon: Icon(Icons.event_outlined),
               ),
             ),
@@ -6647,11 +6685,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           if (showLegalStatus) ...[
             const SizedBox(height: 12),
             _stringDropdown(
-              labelText: 'Legal status (Optional)',
+              labelText: _optionalLabel(appText.legalStatus),
               icon: Icons.verified_outlined,
               options: _divorceStatusOptions(),
               selectedValue: row.divorceStatus,
-              fallbackPrefix: 'Legal status',
+              fallbackPrefix: appText.legalStatus,
               loading: false,
               onChanged: (value) => setState(() => row.divorceStatus = value),
             ),
@@ -6670,14 +6708,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           child: OutlinedButton.icon(
             onPressed: _saving ? null : _addChild,
             icon: const Icon(Icons.add),
-            label: const Text('Add child'),
+            label: Text(appText.addChild),
           ),
         ),
         if (_childRows.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              'No children added.',
+              appText.noChildrenAdded,
               style: TextStyle(color: Colors.grey.shade700),
             ),
           )
@@ -6708,14 +6746,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Child ${index + 1}',
+                  appText.valueChildNumbered(index + 1),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
               IconButton(
-                tooltip: 'Remove',
+                tooltip: appText.remove,
                 onPressed: _saving ? null : () => _removeChild(index),
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -6723,11 +6761,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ),
           const SizedBox(height: 8),
           _stringDropdown(
-            labelText: 'Gender',
+            labelText: appText.gender,
             icon: Icons.person_outline,
             options: _childGenderOptions(),
             selectedValue: row.gender,
-            fallbackPrefix: 'Gender',
+            fallbackPrefix: appText.gender,
             loading: false,
             onChanged: (value) => setState(() => row.gender = value),
           ),
@@ -6736,18 +6774,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             controller: row.ageController,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Age',
+            decoration: InputDecoration(
+              labelText: appText.age,
               prefixIcon: Icon(Icons.cake_outlined),
             ),
           ),
           const SizedBox(height: 12),
           _intDropdown(
-            labelText: 'Living with (Optional)',
+            labelText: _optionalLabel(appText.livingWith),
             icon: Icons.home_outlined,
             options: _childLivingWithOptions,
             selectedId: row.childLivingWithId,
-            fallbackPrefix: 'Living with',
+            fallbackPrefix: appText.livingWith,
             loading: _maritalLifestyleOptionsLoading,
             onChanged: (value) => setState(() => row.childLivingWithId = value),
           ),
@@ -6809,7 +6847,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   ? null
                   : () => _addAddressRow(rows, defaultTypeKey),
               icon: const Icon(Icons.add_location_alt_outlined),
-              label: const Text('Add'),
+              label: Text(appText.add),
             ),
           ],
         ),
@@ -6820,7 +6858,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 ? null
                 : () => _addAddressRow(rows, defaultTypeKey),
             icon: const Icon(Icons.add_location_alt_outlined),
-            label: const Text('Add address'),
+            label: Text(appText.addAddress),
           )
         else
           ...rows.map((row) {
@@ -6833,7 +6871,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 row: row,
                 rows: rows,
                 defaultTypeKey: defaultTypeKey,
-                rowLabel: 'Address ${index + 1}',
+                rowLabel: appText.addressNumbered(index + 1),
               ),
             );
           }),
@@ -6870,7 +6908,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 ),
               ),
               IconButton(
-                tooltip: 'Remove address',
+                tooltip: appText.removeAddress,
                 onPressed: _saving ? null : () => _removeAddressRow(rows, row),
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -6884,7 +6922,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 .map(
                   (option) => DropdownMenuItem<String>(
                     value: option['key'],
-                    child: Text(option['label'] ?? option['key'] ?? 'Address'),
+                    child: Text(option['label'] ?? option['key'] ?? appText.addressLabel),
                   ),
                 )
                 .toList(),
@@ -6896,8 +6934,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                       _syncCurrentAddressFromSelfRows();
                     });
                   },
-            decoration: const InputDecoration(
-              labelText: 'Address type',
+            decoration: InputDecoration(
+              labelText: appText.addressType,
               prefixIcon: Icon(Icons.bookmark_border),
             ),
           ),
@@ -6905,8 +6943,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           TextField(
             controller: row.addressLineController,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Address line (Optional)',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.labelAddressLine),
               prefixIcon: Icon(Icons.home_outlined),
             ),
             onChanged: (_) {
@@ -6918,16 +6956,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           const SizedBox(height: 12),
           TextField(
             controller: row.locationController,
-            decoration: const InputDecoration(
-              labelText: 'Location',
-              hintText: 'Search city or village',
+            decoration: InputDecoration(
+              labelText: appText.location,
+              hintText: appText.searchCityOrVillage,
               prefixIcon: Icon(Icons.location_on_outlined),
             ),
             onChanged: (value) => _scheduleAddressLocationSearch(row, value),
           ),
           _buildSuggestions(
             suggestions: row.locationSuggestions,
-            fallbackPrefix: 'Location',
+            fallbackPrefix: appText.location,
             loading: row.locationSearching,
             onSelect: (location) => _selectAddressLocation(row, location),
           ),
@@ -6943,14 +6981,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         : null;
 
     return _sectionCard(
-      title: 'Basic details',
+      title: appText.basicDetails,
       icon: Icons.badge_outlined,
       children: [
         TextField(
           controller: _fullNameController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Full name',
+          decoration: InputDecoration(
+            labelText: appText.fullNameLabel,
             prefixIcon: Icon(Icons.person_outline),
           ),
         ),
@@ -6984,8 +7022,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         TextField(
           controller: _dobController,
           readOnly: true,
-          decoration: const InputDecoration(
-            labelText: 'Date of birth',
+          decoration: InputDecoration(
+            labelText: appText.dateOfBirth,
             prefixIcon: Icon(Icons.calendar_today_outlined),
           ),
           onTap: _pickDob,
@@ -6993,8 +7031,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         const SizedBox(height: 14),
         TextField(
           controller: _religionController,
-          decoration: const InputDecoration(
-            labelText: 'Religion',
+          decoration: InputDecoration(
+            labelText: appText.religion,
             prefixIcon: Icon(Icons.account_balance_outlined),
           ),
           onChanged: _onReligionChanged,
@@ -7002,7 +7040,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         _buildSuggestions(
           suggestions: _religionSuggestions,
-          fallbackPrefix: 'Religion',
+          fallbackPrefix: appText.religion,
           loading: _religionsLoading,
           onSelect: _selectReligion,
         ),
@@ -7011,9 +7049,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           controller: _casteController,
           enabled: _selectedReligionId != null && !_castesLoading,
           decoration: InputDecoration(
-            labelText: 'Caste',
+            labelText: appText.caste,
             hintText: _selectedReligionId == null
-                ? 'Select religion first'
+                ? appText.selectReligionFirst
                 : null,
             prefixIcon: const Icon(Icons.group_outlined),
           ),
@@ -7022,7 +7060,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         _buildSuggestions(
           suggestions: _casteSuggestions,
-          fallbackPrefix: 'Caste',
+          fallbackPrefix: appText.caste,
           loading: _castesLoading,
           onSelect: _selectCaste,
         ),
@@ -7031,15 +7069,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           controller: _subCasteController,
           enabled: _selectedCasteId != null,
           decoration: InputDecoration(
-            labelText: 'Sub-caste (Optional)',
-            hintText: _selectedCasteId == null ? 'Select caste first' : null,
+            labelText: _optionalLabel(appText.subCaste),
+            hintText: _selectedCasteId == null ? appText.selectCasteFirst : null,
             prefixIcon: const Icon(Icons.account_tree_outlined),
           ),
           onChanged: _searchSubCastes,
         ),
         _buildSuggestions(
           suggestions: _subCasteSuggestions,
-          fallbackPrefix: 'Sub-caste',
+          fallbackPrefix: appText.subCaste,
           loading: _subCasteSearching,
           onSelect: _selectSubCaste,
         ),
@@ -7047,7 +7085,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         KeyedSubtree(
           key: _selfAddressesSectionKey,
           child: _buildAddressRepeater(
-            title: 'Self addresses',
+            title: appText.labelSelfAddresses,
             rows: _selfAddressRows,
             defaultTypeKey: 'current',
           ),
@@ -7058,20 +7096,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildBirthSection() {
     return _sectionCard(
-      title: 'Birth details',
+      title: appText.cardBirthDetails,
       icon: Icons.event_available_outlined,
       children: [
         TextField(
           controller: _birthTimeController,
           readOnly: true,
           decoration: InputDecoration(
-            labelText: 'Birth time (Optional)',
-            hintText: 'HH:MM',
+            labelText: _optionalLabel(appText.labelBirthTime),
+            hintText: appText.birthTimeHint,
             prefixIcon: const Icon(Icons.schedule_outlined),
             suffixIcon: _birthTimeController.text.trim().isEmpty
                 ? null
                 : IconButton(
-                    tooltip: 'Clear birth time',
+                    tooltip: appText.clearBirthTime,
                     icon: const Icon(Icons.close),
                     onPressed: () {
                       setState(() {
@@ -7085,26 +7123,26 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         const SizedBox(height: 14),
         TextField(
           controller: _birthPlaceController,
-          decoration: const InputDecoration(
-            labelText: 'Birth place (Optional)',
-            hintText: 'Search city or village',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.labelBirthPlace),
+            hintText: appText.searchCityOrVillage,
             prefixIcon: Icon(Icons.place_outlined),
           ),
           onChanged: _scheduleBirthPlaceSearch,
         ),
         _buildSuggestions(
           suggestions: _birthPlaceSuggestions,
-          fallbackPrefix: 'Location',
+          fallbackPrefix: appText.location,
           loading: _birthPlaceSearching,
           onSelect: _selectBirthPlace,
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Mother tongue (Optional)',
+          labelText: _optionalLabel(appText.motherTongue2),
           icon: Icons.translate_outlined,
           options: _motherTongueOptions,
           selectedId: _selectedMotherTongueId,
-          fallbackPrefix: 'Mother tongue',
+          fallbackPrefix: appText.motherTongue2,
           onChanged: (value) {
             setState(() {
               _selectedMotherTongueId = value;
@@ -7120,7 +7158,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       ..._occupationOptions.map((occupation) {
         final id = _readInt(occupation['id']);
         if (id == null) return null;
-        final label = _optionLabel(occupation, 'Occupation');
+        final label = _optionLabel(occupation, appText.occupation);
         return DropdownMenuItem<String>(
           value: 'master:$id',
           child: Text(label, overflow: TextOverflow.ellipsis),
@@ -7129,10 +7167,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       ..._customOccupationOptions.map((occupation) {
         final id = _readInt(occupation['id']);
         if (id == null) return null;
-        final label = _optionLabel(occupation, 'Occupation');
+        final label = _optionLabel(occupation, appText.occupation);
         return DropdownMenuItem<String>(
           value: 'custom:$id',
-          child: Text('$label (Custom)', overflow: TextOverflow.ellipsis),
+          child: Text(
+        appText.customOptionLabel(label),
+        overflow: TextOverflow.ellipsis,
+      ),
         );
       }).whereType<DropdownMenuItem<String>>(),
     ];
@@ -7149,17 +7190,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       items: items,
       onChanged: _saving || items.isEmpty ? null : _selectOccupationChoice,
       decoration: InputDecoration(
-        labelText: 'Occupation (Optional)',
+        labelText: _optionalLabel(appText.occupation),
         hintText: _educationCareerOptionsLoading
             ? AppStrings.loading
-            : _selectedOccupationLabel ?? 'Optional',
+            : _selectedOccupationLabel ?? appText.optional,
         prefixIcon: const Icon(Icons.work_outline),
         suffixIcon:
             (_selectedOccupationMasterId == null &&
                 _selectedOccupationCustomId == null)
             ? null
             : IconButton(
-                tooltip: 'Clear occupation',
+                tooltip: appText.clearOccupation,
                 icon: const Icon(Icons.close),
                 onPressed: _saving ? null : () => _selectOccupationChoice(null),
               ),
@@ -7175,7 +7216,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       ..._familyOccupationOptions.map((occupation) {
         final id = _readInt(occupation['id']);
         if (id == null) return null;
-        final label = _optionLabel(occupation, 'Occupation');
+        final label = _optionLabel(occupation, appText.occupation);
         return DropdownMenuItem<String>(
           value: 'master:$id',
           child: Text(label, overflow: TextOverflow.ellipsis),
@@ -7184,10 +7225,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       ..._familyCustomOccupationOptions.map((occupation) {
         final id = _readInt(occupation['id']);
         if (id == null) return null;
-        final label = _optionLabel(occupation, 'Occupation');
+        final label = _optionLabel(occupation, appText.occupation);
         return DropdownMenuItem<String>(
           value: 'custom:$id',
-          child: Text('$label (Custom)', overflow: TextOverflow.ellipsis),
+          child: Text(
+        appText.customOptionLabel(label),
+        overflow: TextOverflow.ellipsis,
+      ),
         );
       }).whereType<DropdownMenuItem<String>>(),
     ];
@@ -7226,12 +7270,12 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         labelText: labelText,
         hintText: _remainingProfileOptionsLoading
             ? AppStrings.loading
-            : selectedLabel ?? 'Optional',
+            : selectedLabel ?? appText.optional,
         prefixIcon: const Icon(Icons.work_outline),
         suffixIcon: !hasSelection
             ? null
             : IconButton(
-                tooltip: 'Clear occupation',
+                tooltip: appText.clearOccupation,
                 icon: const Icon(Icons.close),
                 onPressed: _saving
                     ? null
@@ -7244,18 +7288,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
-  List<Map<String, dynamic>> _incomeValueTypeOptions() => const [
-    {'key': 'exact', 'label': 'Exact'},
-    {'key': 'approximate', 'label': 'Approximate'},
-    {'key': 'range', 'label': 'Range'},
-    {'key': 'undisclosed', 'label': 'Undisclosed'},
+  List<Map<String, dynamic>> _incomeValueTypeOptions() => [
+    {'key': 'exact', 'label': appText.exact},
+    {'key': 'approximate', 'label': appText.incomeTypeApproximate},
+    {'key': 'range', 'label': appText.range},
+    {'key': 'undisclosed', 'label': appText.valueUndisclosed},
   ];
 
-  List<Map<String, dynamic>> _incomePeriodOptions() => const [
-    {'key': 'annual', 'label': 'Annual'},
-    {'key': 'monthly', 'label': 'Monthly'},
-    {'key': 'weekly', 'label': 'Weekly'},
-    {'key': 'daily', 'label': 'Daily'},
+  List<Map<String, dynamic>> _incomePeriodOptions() => [
+    {'key': 'annual', 'label': appText.annual},
+    {'key': 'monthly', 'label': appText.monthly},
+    {'key': 'weekly', 'label': appText.incomePeriodWeekly},
+    {'key': 'daily', 'label': appText.matchesTabDaily},
   ];
 
   void _setPersonalIncomeGroupEnabled(bool value) {
@@ -7312,15 +7356,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 maxAmountController: maxAmountController,
                 private: private,
               ) ??
-              'Add income details'
-        : 'Not added';
+              appText.addIncomeDetails
+        : appText.valueNotAdded;
 
     String incomeTypeLabel(String key) {
       return switch (key) {
-        'exact' => 'Exact',
-        'approximate' => 'Approximate income',
-        'range' => 'Range',
-        'undisclosed' => 'Undisclosed',
+        'exact' => appText.exact,
+        'approximate' => appText.approximateIncome,
+        'range' => appText.range,
+        'undisclosed' => appText.valueUndisclosed,
         _ => key,
       };
     }
@@ -7347,7 +7391,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           suffixIcon: PopupMenuButton<int>(
             enabled: _incomeCurrencyOptions.isNotEmpty && !_saving,
             initialValue: effectiveCurrencyId,
-            tooltip: 'Currency',
+            tooltip: appText.currencyLabel,
             onSelected: (value) {
               setState(() => onCurrencyChanged(value));
             },
@@ -7378,7 +7422,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     }
 
     return _connectedToggleGroup(
-      title: '$title (Optional)',
+      title: _optionalLabel(title),
       subtitle: subtitle,
       icon: Icons.payments_outlined,
       value: enabled,
@@ -7413,11 +7457,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _stringDropdown(
-          labelText: 'Income period',
+          labelText: appText.incomePeriod,
           icon: Icons.calendar_month_outlined,
           options: _incomePeriodOptions(),
           selectedValue: effectivePeriod,
-          fallbackPrefix: 'Period',
+          fallbackPrefix: appText.periodLabel,
           loading: false,
           onChanged: (value) => setState(() {
             onPeriodChanged(value ?? 'annual');
@@ -7431,8 +7475,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           amountField(
             controller: amountController,
             labelText: effectiveValueType == 'exact'
-                ? 'Exact ${periodLabel(effectivePeriod)} income'
-                : 'Approximate ${periodLabel(effectivePeriod)} income',
+                ? appText.exactPeriodIncome(periodLabel(effectivePeriod))
+                : appText.approximatePeriodIncome(
+                    periodLabel(effectivePeriod),
+                  ),
           ),
         ],
         if (showRange) ...[
@@ -7442,14 +7488,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               Expanded(
                 child: amountField(
                   controller: minAmountController,
-                  labelText: 'Minimum amount',
+                  labelText: appText.minimumAmount,
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: amountField(
                   controller: maxAmountController,
-                  labelText: 'Maximum amount',
+                  labelText: appText.maximumAmount,
                 ),
               ),
             ],
@@ -7457,7 +7503,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ],
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: Text('Keep ${title.toLowerCase()} private'),
+          title: Text(appText.keepFieldPrivate(title.toLowerCase())),
           value: private,
           onChanged: _saving
               ? null
@@ -7491,13 +7537,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           .toList(),
       onChanged: _saving ? null : _selectCharan,
       decoration: InputDecoration(
-        labelText: 'Charan (Optional)',
-        hintText: 'Optional',
+        labelText: _optionalLabel(appText.charan),
+        hintText: appText.optional,
         prefixIcon: const Icon(Icons.filter_4),
         suffixIcon: _selectedCharan == null || _saving
             ? null
             : IconButton(
-                tooltip: 'Clear charan',
+                tooltip: appText.clearCharan,
                 icon: const Icon(Icons.close),
                 onPressed: () => _selectCharan(null),
               ),
@@ -7507,16 +7553,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildEducationCareerSection() {
     return _sectionCard(
-      title: 'Education & Career',
+      title: appText.educationCareer,
       icon: Icons.school_outlined,
       children: [
         TextField(
           controller: _educationController,
           decoration: InputDecoration(
-            labelText: 'Highest education',
+            labelText: appText.labelHighestEducation,
             hintText: _educationCareerOptionsLoading
                 ? AppStrings.loading
-                : 'Search or type education',
+                : appText.searchOrTypeEducation,
             prefixIcon: const Icon(Icons.school_outlined),
           ),
           onChanged: _onEducationChanged,
@@ -7524,7 +7570,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         _buildSuggestions(
           suggestions: _educationSuggestions,
-          fallbackPrefix: 'Education',
+          fallbackPrefix: appText.education,
           loading: _educationCareerOptionsLoading,
           onSelect: _selectEducation,
         ),
@@ -7534,8 +7580,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         TextField(
           controller: _companyNameController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Company name (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.labelCompanyName),
             prefixIcon: Icon(Icons.business_outlined),
           ),
         ),
@@ -7543,22 +7589,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         TextField(
           controller: _workLocationController,
           textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            labelText: 'Work location (Optional)',
-            hintText: 'Search city or type work location',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.labelWorkLocation),
+            hintText: appText.searchCityOrTypeWorkLocation,
             prefixIcon: Icon(Icons.location_city_outlined),
           ),
           onChanged: _scheduleWorkLocationSearch,
         ),
         _buildSuggestions(
           suggestions: _workLocationSuggestions,
-          fallbackPrefix: 'Location',
+          fallbackPrefix: appText.location,
           loading: _workLocationSearching,
           onSelect: _selectWorkLocation,
         ),
         const SizedBox(height: 18),
         _incomeEditor(
-          title: 'Personal income',
+          title: appText.cardPersonalIncome,
           enabled: _showIncomeGroup,
           onEnabledChanged: _setPersonalIncomeGroupEnabled,
           valueType: _selectedIncomeValueType,
@@ -7587,7 +7633,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildPhysicalSection() {
     return _sectionCard(
-      title: 'Physical details',
+      title: appText.cardPhysicalDetails,
       icon: Icons.accessibility_new_outlined,
       children: [
         Row(
@@ -7597,7 +7643,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 borderRadius: BorderRadius.circular(10),
                 onTap: () async {
                   final value = await _pickNumber(
-                    title: 'Select height',
+                    title: appText.selectHeight,
                     values: _heightValues(),
                     selected: _selectedHeightCm,
                     labelBuilder: _heightLabel,
@@ -7611,14 +7657,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   });
                 },
                 child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Height',
+                  decoration: InputDecoration(
+                    labelText: appText.heightLabel,
                     prefixIcon: Icon(Icons.straighten),
                     border: OutlineInputBorder(),
                   ),
                   child: Text(
                     _selectedHeightCm == null
-                        ? 'Not selected'
+                        ? appText.notSelected
                         : _heightLabel(_selectedHeightCm!),
                   ),
                 ),
@@ -7630,7 +7676,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 borderRadius: BorderRadius.circular(10),
                 onTap: () async {
                   final value = await _pickNumber(
-                    title: 'Select weight',
+                    title: appText.selectWeight,
                     values: _weightValues(),
                     selected: _selectedWeightKg,
                     labelBuilder: _weightLabel,
@@ -7644,14 +7690,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   });
                 },
                 child: InputDecorator(
-                  decoration: const InputDecoration(
-                    labelText: 'Weight',
+                  decoration: InputDecoration(
+                    labelText: appText.labelWeight,
                     prefixIcon: Icon(Icons.monitor_weight_outlined),
                     border: OutlineInputBorder(),
                   ),
                   child: Text(
                     _selectedWeightKg == null
-                        ? 'Not selected'
+                        ? appText.notSelected
                         : _weightLabel(_selectedWeightKg!),
                   ),
                 ),
@@ -7661,48 +7707,48 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Complexion (Optional)',
+          labelText: _optionalLabel(appText.labelComplexion),
           icon: Icons.color_lens_outlined,
           options: _complexionOptions,
           selectedId: _selectedComplexionId,
-          fallbackPrefix: 'Complexion',
+          fallbackPrefix: appText.labelComplexion,
           onChanged: (value) => setState(() => _selectedComplexionId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Blood group (Optional)',
+          labelText: _optionalLabel(appText.labelBloodGroup),
           icon: Icons.favorite_border,
           options: _bloodGroupOptions,
           selectedId: _selectedBloodGroupId,
-          fallbackPrefix: 'Blood group',
+          fallbackPrefix: appText.labelBloodGroup,
           onChanged: (value) => setState(() => _selectedBloodGroupId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Physical build (Optional)',
+          labelText: _optionalLabel(appText.physicalBuild),
           icon: Icons.accessibility_new_outlined,
           options: _physicalBuildOptions,
           selectedId: _selectedPhysicalBuildId,
-          fallbackPrefix: 'Physical build',
+          fallbackPrefix: appText.physicalBuild,
           onChanged: (value) =>
               setState(() => _selectedPhysicalBuildId = value),
         ),
         const SizedBox(height: 14),
         _stringDropdown(
-          labelText: 'Spectacles / Lens (Optional)',
+          labelText: _optionalLabel(appText.spectaclesLens),
           icon: Icons.visibility_outlined,
           options: _spectaclesLensOptions,
           selectedValue: _selectedSpectaclesLens,
-          fallbackPrefix: 'Spectacles / Lens',
+          fallbackPrefix: appText.spectaclesLens,
           onChanged: (value) => setState(() => _selectedSpectaclesLens = value),
         ),
         const SizedBox(height: 14),
         _stringDropdown(
-          labelText: 'Physical condition (Optional)',
+          labelText: _optionalLabel(appText.labelPhysicalCondition),
           icon: Icons.health_and_safety_outlined,
           options: _physicalConditionOptions,
           selectedValue: _selectedPhysicalCondition,
-          fallbackPrefix: 'Physical condition',
+          fallbackPrefix: appText.labelPhysicalCondition,
           onChanged: (value) =>
               setState(() => _selectedPhysicalCondition = value),
         ),
@@ -7824,7 +7870,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 labelText: label,
-                hintText: 'Optional',
+                hintText: appText.optional,
                 prefixIcon: const Icon(Icons.call_outlined),
               ),
             ),
@@ -7832,7 +7878,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           if (onAdd != null) ...[
             const SizedBox(width: 8),
             IconButton(
-              tooltip: 'Add another contact',
+              tooltip: appText.addAnotherContact,
               onPressed: onAdd,
               icon: const Icon(Icons.add_circle_outline),
             ),
@@ -7840,7 +7886,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           if (onRemove != null) ...[
             const SizedBox(width: 8),
             IconButton(
-              tooltip: 'Remove this contact',
+              tooltip: appText.removeThisContact,
               onPressed: onRemove,
               icon: const Icon(Icons.remove_circle_outline),
             ),
@@ -7865,7 +7911,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         const SizedBox(height: 12),
         contactRow(
           contact1Controller,
-          'Contact 1',
+          appText.contactNumbered(1),
           onAdd: canAddContact2
               ? () => _addParentContactSlot(father: father)
               : null,
@@ -7874,7 +7920,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           const SizedBox(height: 14),
           contactRow(
             contact2Controller,
-            'Contact 2',
+            appText.contactNumbered(2),
             onAdd: canAddContact3
                 ? () => _addParentContactSlot(father: father)
                 : null,
@@ -7885,7 +7931,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           const SizedBox(height: 14),
           contactRow(
             contact3Controller,
-            'Contact 3',
+            appText.contactNumbered(3),
             onRemove: () => _removeParentContactSlot(father: father, slot: 3),
           ),
         ],
@@ -7895,28 +7941,28 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildFamilyDetailsSection() {
     return _sectionCard(
-      title: 'Family details',
+      title: appText.familyDetails,
       icon: Icons.group_outlined,
       children: [
         TextField(
           controller: _fatherNameController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Father name (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.fatherName),
             prefixIcon: Icon(Icons.person_outline),
           ),
         ),
         const SizedBox(height: 14),
         _familyOccupationDropdown(
-          labelText: 'Father occupation category (Optional)',
+          labelText: _optionalLabel(appText.fatherOccupationCategory),
           father: true,
         ),
         const SizedBox(height: 14),
         TextField(
           controller: _fatherOccupationController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Father occupation details (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.fatherOccupationDetails),
             prefixIcon: Icon(Icons.edit),
           ),
         ),
@@ -7925,14 +7971,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           controller: _fatherExtraInfoController,
           maxLines: 2,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Father extra info (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.fatherExtraInfo),
             prefixIcon: Icon(Icons.notes),
           ),
         ),
         const SizedBox(height: 18),
         _buildParentContactFields(
-          title: 'Father contact numbers',
+          title: appText.cardFatherContactNumbers,
           father: true,
           contact1Controller: _fatherContact1Controller,
           contact2Controller: _fatherContact2Controller,
@@ -7944,22 +7990,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         TextField(
           controller: _motherNameController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Mother name (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.motherName),
             prefixIcon: Icon(Icons.person_outline),
           ),
         ),
         const SizedBox(height: 14),
         _familyOccupationDropdown(
-          labelText: 'Mother occupation category (Optional)',
+          labelText: _optionalLabel(appText.motherOccupationCategory),
           father: false,
         ),
         const SizedBox(height: 14),
         TextField(
           controller: _motherOccupationController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Mother occupation details (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.motherOccupationDetails),
             prefixIcon: Icon(Icons.edit),
           ),
         ),
@@ -7968,14 +8014,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           controller: _motherExtraInfoController,
           maxLines: 2,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Mother extra info (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.motherExtraInfo),
             prefixIcon: Icon(Icons.notes),
           ),
         ),
         const SizedBox(height: 18),
         _buildParentContactFields(
-          title: 'Mother contact numbers',
+          title: appText.cardMotherContactNumbers,
           father: false,
           contact1Controller: _motherContact1Controller,
           contact2Controller: _motherContact2Controller,
@@ -7985,7 +8031,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 18),
         _buildAddressRepeater(
-          title: 'Parents addresses',
+          title: appText.labelParentsAddresses,
           rows: _parentsAddressRows,
           defaultTypeKey: 'permanent',
         ),
@@ -7995,41 +8041,41 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildFamilyOverviewSection() {
     return _sectionCard(
-      title: 'Family overview',
+      title: appText.cardFamilyOverview,
       icon: Icons.home_outlined,
       children: [
         _intDropdown(
-          labelText: 'Family type (Optional)',
+          labelText: _optionalLabel(appText.labelFamilyType),
           icon: Icons.group,
           options: _familyTypeOptions,
           selectedId: _selectedFamilyTypeId,
-          fallbackPrefix: 'Family type',
+          fallbackPrefix: appText.labelFamilyType,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedFamilyTypeId = value),
         ),
         const SizedBox(height: 14),
         _stringDropdown(
-          labelText: 'Family status (Optional)',
+          labelText: _optionalLabel(appText.familyStatus),
           icon: Icons.info_outline,
           options: _familyStatusOptions,
           selectedValue: _selectedFamilyStatus,
-          fallbackPrefix: 'Family status',
+          fallbackPrefix: appText.familyStatus,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedFamilyStatus = value),
         ),
         const SizedBox(height: 14),
         _stringDropdown(
-          labelText: 'Family values (Optional)',
+          labelText: _optionalLabel(appText.familyValues),
           icon: Icons.favorite_border,
           options: _familyValueOptions,
           selectedValue: _selectedFamilyValues,
-          fallbackPrefix: 'Family values',
+          fallbackPrefix: appText.familyValues,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedFamilyValues = value),
         ),
         const SizedBox(height: 18),
         _incomeEditor(
-          title: 'Family income',
+          title: appText.labelFamilyIncome,
           enabled: _showFamilyIncomeGroup,
           onEnabledChanged: _setFamilyIncomeGroupEnabled,
           valueType: _selectedFamilyIncomeValueType,
@@ -8064,7 +8110,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               child: OutlinedButton.icon(
                 onPressed: _saving ? null : () => _addSibling('brother'),
                 icon: const Icon(Icons.person_add_alt_1_outlined),
-                label: const Text('Add brother'),
+                label: Text(appText.addBrother),
               ),
             ),
             const SizedBox(width: 10),
@@ -8072,7 +8118,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               child: OutlinedButton.icon(
                 onPressed: _saving ? null : () => _addSibling('sister'),
                 icon: const Icon(Icons.person_add_alt_1_outlined),
-                label: const Text('Add sister'),
+                label: Text(appText.addSister),
               ),
             ),
           ],
@@ -8096,14 +8142,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Sibling ${index + 1}',
+                  appText.siblingNumbered(index + 1),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
               IconButton(
-                tooltip: 'Remove',
+                tooltip: appText.remove,
                 onPressed: _saving ? null : () => _removeSibling(index),
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -8111,11 +8157,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ),
           const SizedBox(height: 8),
           _stringDropdown(
-            labelText: 'Relation',
+            labelText: appText.relationLabel,
             icon: Icons.people_outline,
             options: _siblingRelationOptions(),
             selectedValue: row.relationType,
-            fallbackPrefix: 'Relation',
+            fallbackPrefix: appText.relationLabel,
             loading: false,
             onChanged: (value) => setState(() => row.relationType = value),
           ),
@@ -8123,18 +8169,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           TextField(
             controller: row.nameController,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Name (Optional)',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.name),
               prefixIcon: Icon(Icons.person_outline),
             ),
           ),
           const SizedBox(height: 12),
           _stringDropdown(
-            labelText: 'Marital status (Optional)',
+            labelText: _optionalLabel(appText.maritalStatus),
             icon: Icons.favorite_border,
             options: _siblingMaritalStatusOptions(),
             selectedValue: row.maritalStatus,
-            fallbackPrefix: 'Marital status',
+            fallbackPrefix: appText.maritalStatus,
             loading: false,
             onChanged: (value) => setState(() => row.maritalStatus = value),
           ),
@@ -8142,8 +8188,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           TextField(
             controller: row.occupationController,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Occupation (Optional)',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.occupation),
               prefixIcon: Icon(Icons.work_outline),
             ),
           ),
@@ -8151,8 +8197,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           TextField(
             controller: row.addressLineController,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Address / City (Optional)',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.addressOrCity),
               prefixIcon: Icon(Icons.location_on_outlined),
             ),
           ),
@@ -8161,8 +8207,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             controller: row.notesController,
             maxLines: 2,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Notes (Optional)',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.notesLabel),
               prefixIcon: Icon(Icons.notes_outlined),
             ),
           ),
@@ -8195,7 +8241,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     return Column(
       children: [
         _sectionCard(
-          title: 'Family relatives',
+          title: appText.cardFamilyRelatives,
           icon: Icons.people_outline,
           children: [
             for (var index = 0; index < _relativeRows.length; index++) ...[
@@ -8210,7 +8256,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                         ? null
                         : () => _addRelative('paternal_uncle'),
                     icon: const Icon(Icons.person_add_alt_1_outlined),
-                    label: const Text('Add paternal'),
+                    label: Text(appText.addPaternal),
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -8220,7 +8266,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                         ? null
                         : () => _addRelative('maternal_uncle'),
                     icon: const Icon(Icons.person_add_alt_1_outlined),
-                    label: const Text('Add maternal'),
+                    label: Text(appText.addMaternal),
                   ),
                 ),
               ],
@@ -8251,14 +8297,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Relative ${index + 1}',
+                  appText.relativeNumbered(index + 1),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
               IconButton(
-                tooltip: 'Remove',
+                tooltip: appText.remove,
                 onPressed: _saving ? null : () => _removeRelative(index),
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -8266,11 +8312,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ),
           const SizedBox(height: 8),
           _stringDropdown(
-            labelText: 'Relation',
+            labelText: appText.relationLabel,
             icon: Icons.people_outline,
             options: _relativeRelationOptions(),
             selectedValue: row.relationType,
-            fallbackPrefix: 'Relation',
+            fallbackPrefix: appText.relationLabel,
             loading: false,
             onChanged: (value) => setState(() => row.relationType = value),
           ),
@@ -8280,9 +8326,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             minLines: 3,
             maxLines: 5,
             textInputAction: TextInputAction.newline,
-            decoration: const InputDecoration(
-              labelText: 'Relative details (Optional)',
-              hintText: 'Name, occupation, address and other details',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.relativeDetails),
+              hintText: appText.relativeDetailsHint,
               prefixIcon: Icon(Icons.notes_outlined),
             ),
           ),
@@ -8306,7 +8352,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildAllianceNetworkSection() {
     return _sectionCard(
-      title: 'Alliance Network',
+      title: appText.labelAllianceNetwork,
       icon: Icons.account_tree_outlined,
       children: [
         for (var index = 0; index < _allianceNetworkRows.length; index++) ...[
@@ -8318,7 +8364,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           child: OutlinedButton.icon(
             onPressed: _saving ? null : _addAllianceNetwork,
             icon: const Icon(Icons.add),
-            label: const Text('Add alliance family'),
+            label: Text(appText.addAllianceFamily),
           ),
         ),
       ],
@@ -8344,14 +8390,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             children: [
               Expanded(
                 child: Text(
-                  'Alliance family ${index + 1}',
+                  appText.allianceFamilyNumbered(index + 1),
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
               IconButton(
-                tooltip: 'Remove',
+                tooltip: appText.remove,
                 onPressed: _saving ? null : () => _removeAllianceNetwork(index),
                 icon: const Icon(Icons.delete_outline),
               ),
@@ -8361,8 +8407,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           TextField(
             controller: row.surnameController,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Surname',
+            decoration: InputDecoration(
+              labelText: appText.surnameLabel,
               prefixIcon: Icon(Icons.badge_outlined),
             ),
           ),
@@ -8371,14 +8417,14 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             controller: row.locationController,
             textInputAction: TextInputAction.next,
             onChanged: (value) => _scheduleAllianceLocationSearch(row, value),
-            decoration: const InputDecoration(
-              labelText: 'City / Location (Optional)',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.cityOrLocation),
               prefixIcon: Icon(Icons.location_on_outlined),
             ),
           ),
           _buildSuggestions(
             suggestions: row.locationSuggestions,
-            fallbackPrefix: 'Location',
+            fallbackPrefix: appText.location,
             loading: row.locationSearching,
             onSelect: (location) => _selectAllianceLocation(row, location),
           ),
@@ -8387,8 +8433,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             controller: row.notesController,
             maxLines: 2,
             textInputAction: TextInputAction.next,
-            decoration: const InputDecoration(
-              labelText: 'Notes (Optional)',
+            decoration: InputDecoration(
+              labelText: _optionalLabel(appText.notesLabel),
               prefixIcon: Icon(Icons.notes_outlined),
             ),
           ),
@@ -8412,7 +8458,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildAlliancePropertySection() {
     return _sectionCard(
-      title: 'Alliance details',
+      title: appText.cardAllianceDetails,
       icon: Icons.account_tree_outlined,
       children: [
         TextField(
@@ -8420,7 +8466,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           maxLines: 3,
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-            labelText: 'Other relatives (Optional)',
+            labelText: _optionalLabel(appText.labelOtherRelatives),
             helperText: appText.doNotEnterContactNumbersOrPrivateDetails,
             prefixIcon: Icon(Icons.people_outline),
           ),
@@ -8431,16 +8477,16 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildPropertySection() {
     return _sectionCard(
-      title: 'Property',
+      title: appText.sectionProperty,
       icon: Icons.real_estate_agent_outlined,
       children: [
         TextField(
           controller: _propertyDetailsController,
           maxLines: 3,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Property details (Optional)',
-            helperText: 'Public-safe summary only.',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.labelPropertyDetails),
+            helperText: appText.publicSafeSummaryOnly,
             prefixIcon: Icon(Icons.home_outlined),
           ),
         ),
@@ -8450,25 +8496,25 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildHoroscopeAstroSection() {
     return _sectionCard(
-      title: 'Horoscope',
+      title: appText.sectionHoroscope,
       icon: Icons.star_border,
       children: [
         _intDropdown(
-          labelText: 'Rashi (Optional)',
+          labelText: _optionalLabel(appText.rashi),
           icon: Icons.brightness_3,
           options: _rashiOptionsForSelection(),
           selectedId: _selectedRashiId,
-          fallbackPrefix: 'Rashi',
+          fallbackPrefix: appText.rashi,
           loading: _remainingProfileOptionsLoading,
           onChanged: _selectRashi,
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Nakshatra (Optional)',
+          labelText: _optionalLabel(appText.nakshatra),
           icon: Icons.star_border,
           options: _nakshatraOptionsForSelection(),
           selectedId: _selectedNakshatraId,
-          fallbackPrefix: 'Nakshatra',
+          fallbackPrefix: appText.nakshatra,
           loading: _remainingProfileOptionsLoading,
           onChanged: _selectNakshatra,
         ),
@@ -8476,71 +8522,71 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _charanDropdown(),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Gan (Optional)',
+          labelText: _optionalLabel(appText.labelGan),
           icon: Icons.category,
           options: _ganOptions,
           selectedId: _selectedGanId,
-          fallbackPrefix: 'Gan',
+          fallbackPrefix: appText.labelGan,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedGanId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Nadi (Optional)',
+          labelText: _optionalLabel(appText.labelNadi),
           icon: Icons.opacity,
           options: _nadiOptions,
           selectedId: _selectedNadiId,
-          fallbackPrefix: 'Nadi',
+          fallbackPrefix: appText.labelNadi,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedNadiId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Yoni (Optional)',
+          labelText: _optionalLabel(appText.labelYoni),
           icon: Icons.spa,
           options: _yoniOptionsForSelection(),
           selectedId: _selectedYoniId,
-          fallbackPrefix: 'Yoni',
+          fallbackPrefix: appText.labelYoni,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedYoniId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Varna (Optional)',
+          labelText: _optionalLabel(appText.labelVarna),
           icon: Icons.layers,
           options: _varnaOptions,
           selectedId: _selectedVarnaId,
-          fallbackPrefix: 'Varna',
+          fallbackPrefix: appText.labelVarna,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedVarnaId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Vashya (Optional)',
+          labelText: _optionalLabel(appText.labelVashya),
           icon: Icons.device_hub,
           options: _vashyaOptions,
           selectedId: _selectedVashyaId,
-          fallbackPrefix: 'Vashya',
+          fallbackPrefix: appText.labelVashya,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedVashyaId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Rashi lord (Optional)',
+          labelText: _optionalLabel(appText.labelRashiLord),
           icon: Icons.wb_sunny,
           options: _rashiLordOptions,
           selectedId: _selectedRashiLordId,
-          fallbackPrefix: 'Rashi lord',
+          fallbackPrefix: appText.labelRashiLord,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedRashiLordId = value),
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Mangal dosh type (Optional)',
+          labelText: _optionalLabel(appText.mangalDoshType),
           icon: Icons.warning,
           options: _mangalDoshTypeOptions,
           selectedId: _selectedMangalDoshTypeId,
-          fallbackPrefix: 'Mangal dosh',
+          fallbackPrefix: appText.mangalDosh,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) =>
               setState(() => _selectedMangalDoshTypeId = value),
@@ -8549,8 +8595,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         TextField(
           controller: _devakController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Devak (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.labelDevak),
             prefixIcon: Icon(Icons.account_balance_outlined),
           ),
         ),
@@ -8558,8 +8604,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         TextField(
           controller: _kulController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Kul (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.labelKul),
             prefixIcon: Icon(Icons.account_tree_outlined),
           ),
         ),
@@ -8567,8 +8613,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         TextField(
           controller: _gotraController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Gotra (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.labelGotra),
             prefixIcon: Icon(Icons.account_tree_outlined),
           ),
         ),
@@ -8576,18 +8622,18 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         TextField(
           controller: _navrasNameController,
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Navras name (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.labelNavrasName),
             prefixIcon: Icon(Icons.badge_outlined),
           ),
         ),
         const SizedBox(height: 14),
         _stringDropdown(
-          labelText: 'Birth weekday (Optional)',
+          labelText: _optionalLabel(appText.labelBirthWeekday),
           icon: Icons.calendar_today_outlined,
           options: _birthWeekdayOptions,
           selectedValue: _selectedBirthWeekday,
-          fallbackPrefix: 'Birth weekday',
+          fallbackPrefix: appText.labelBirthWeekday,
           loading: _remainingProfileOptionsLoading,
           onChanged: (value) => setState(() => _selectedBirthWeekday = value),
         ),
@@ -8622,15 +8668,15 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   Widget _buildAboutMeSection() {
     return _sectionCard(
-      title: 'About me',
+      title: appText.sectionAboutMe,
       icon: Icons.notes,
       children: [
         TextField(
           controller: _aboutMeController,
           maxLines: 5,
           textInputAction: TextInputAction.newline,
-          decoration: const InputDecoration(
-            labelText: 'About me (Optional)',
+          decoration: InputDecoration(
+            labelText: _optionalLabel(appText.sectionAboutMe),
             alignLabelWithHint: true,
             prefixIcon: Icon(Icons.edit),
           ),
@@ -8676,8 +8722,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             Expanded(
               child: Text(
                 photoUrl == null
-                    ? 'No profile photo uploaded yet.'
-                    : 'Profile photo uploaded.',
+                    ? appText.noProfilePhotoUploadedYet
+                    : appText.profilePhotoUploaded,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
             ),
@@ -8689,7 +8735,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           child: ElevatedButton.icon(
             onPressed: _saving ? null : _openPhotoManager,
             icon: const Icon(Icons.photo_camera_outlined),
-            label: const Text('Manage profile photo'),
+            label: Text(appText.manageProfilePhoto),
           ),
         ),
       ],
@@ -8719,11 +8765,13 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final source = _readText(row['source']);
     final distance = _readDouble(row['distance_km']);
     if (source == 'own_taluka' || distance == 0) {
-      return 'Your taluka';
+      return appText.yourTaluka;
     }
     if (distance != null && distance > 0) {
       final rounded = distance.round();
-      return rounded > 0 ? '$rounded km' : '${distance.toStringAsFixed(1)} km';
+      return rounded > 0
+        ? appText.distanceKm(rounded.toString())
+        : appText.distanceKm(distance.toStringAsFixed(1));
     }
     return null;
   }
@@ -8740,7 +8788,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     return InputDecorator(
       decoration: InputDecoration(
-        labelText: 'Preferred locations (Optional)',
+        labelText: _optionalLabel(appText.preferredLocations),
         prefixIcon: const Icon(Icons.place_outlined),
         border: const OutlineInputBorder(),
         helperText: _selectedPreferredLocationRows.isEmpty
@@ -8753,8 +8801,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           if (_selectedPreferredLocationRows.isEmpty)
             Text(
               suggestionsAvailable
-                  ? 'No locations selected.'
-                  : 'Location suggestions are not available yet.',
+                  ? appText.noLocationsSelected
+                  : appText.locationSuggestionsUnavailable,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey.shade700,
               ),
@@ -8764,7 +8812,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               spacing: 8,
               runSpacing: 8,
               children: _selectedPreferredLocationRows.map((row) {
-                final label = _readText(row['label']) ?? 'Location';
+                final label = _readText(row['label']) ?? appText.location;
                 final meta = _preferredLocationMetaLabel(row);
 
                 return InputChip(
@@ -8809,7 +8857,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                         _preferredLocationSuggestionRows,
                       ),
                 icon: const Icon(Icons.refresh),
-                label: const Text('Reset to suggested locations'),
+                label: Text(appText.resetToSuggestedLocations),
               ),
             ),
           ],
@@ -8822,7 +8870,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final preferredCasteOptions = _preferredCasteOptionsForSelectedReligions();
 
     return _sectionCard(
-      title: 'Partner Preferences',
+      title: appText.sectionPartnerPreferences,
       icon: Icons.tune_outlined,
       children: [
         _preferredAgeRangeField(),
@@ -8832,11 +8880,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _preferredIncomeRangeField(),
         const SizedBox(height: 14),
         _multiSelectPickerField(
-          labelText: 'Preferred religions (Optional)',
+          labelText: _optionalLabel(appText.preferredReligionsLabel),
           icon: Icons.temple_hindu_outlined,
           options: _preferredReligionOptions,
           selectedIds: _selectedPreferredReligionIds,
-          fallbackPrefix: 'Religion',
+          fallbackPrefix: appText.religion,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) {
             setState(() {
@@ -8851,20 +8899,20 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         if (_selectedPreferredReligionIds.isEmpty)
           InputDecorator(
             decoration: InputDecoration(
-              labelText: 'Preferred castes (Optional)',
+              labelText: _optionalLabel(appText.preferredCastesLabel),
               prefixIcon: Icon(Icons.groups_outlined),
               border: OutlineInputBorder(),
               helperText: appText.selectReligionFirstToChoosePreferredCaste,
             ),
-            child: Text('Not selected'),
+            child: Text(appText.notSelected),
           )
         else
           _multiSelectPickerField(
-            labelText: 'Preferred castes (Optional)',
+            labelText: _optionalLabel(appText.preferredCastesLabel),
             icon: Icons.groups_outlined,
             options: preferredCasteOptions,
             selectedIds: _selectedPreferredCasteIds,
-            fallbackPrefix: 'Caste',
+            fallbackPrefix: appText.caste,
             loading: _partnerPreferenceOptionsLoading,
             onChanged: (value) {
               setState(() {
@@ -8876,7 +8924,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ),
         const SizedBox(height: 14),
         _compactSwitchRow(
-          title: 'Open to intercaste matches',
+          title: appText.openToIntercasteMatches,
           icon: Icons.diversity_3_outlined,
           value: _selectedPreferredIntercaste == true,
           onChanged: (value) =>
@@ -8884,11 +8932,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _multiSelectPickerField(
-          labelText: 'Preferred mother tongues (Optional)',
+          labelText: _optionalLabel(appText.preferredMotherTongues),
           icon: Icons.translate_outlined,
           options: _preferredMotherTongueOptions,
           selectedIds: _selectedPreferredMotherTongueIds,
-          fallbackPrefix: 'Mother tongue',
+          fallbackPrefix: appText.motherTongue2,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) {
             setState(() {
@@ -8900,11 +8948,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _multiSelectPickerField(
-          labelText: 'Preferred education (Optional)',
+          labelText: _optionalLabel(appText.labelPreferredEducation),
           icon: Icons.school_outlined,
           options: _preferredEducationDegreeOptions,
           selectedIds: _selectedPreferredEducationDegreeIds,
-          fallbackPrefix: 'Education',
+          fallbackPrefix: appText.education,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) {
             setState(() {
@@ -8917,11 +8965,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _multiSelectPickerField(
-          labelText: 'Preferred occupations (Optional)',
+          labelText: _optionalLabel(appText.preferredOccupationsLabel),
           icon: Icons.work_outline,
           options: _preferredOccupationOptions,
           selectedIds: _selectedPreferredOccupationMasterIds,
-          fallbackPrefix: 'Occupation',
+          fallbackPrefix: appText.occupation,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) {
             setState(() {
@@ -8934,22 +8982,22 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _intDropdown(
-          labelText: 'Marriage type preference (Optional)',
+          labelText: _optionalLabel(appText.marriageTypePreference),
           icon: Icons.favorite_border,
           options: _marriageTypePreferenceOptions,
           selectedId: _selectedMarriageTypePreferenceId,
-          fallbackPrefix: 'Marriage type',
+          fallbackPrefix: appText.marriageType,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) =>
               setState(() => _selectedMarriageTypePreferenceId = value),
         ),
         const SizedBox(height: 14),
         _multiSelectChips(
-          labelText: 'Preferred marital statuses (Optional)',
+          labelText: _optionalLabel(appText.preferredMaritalStatuses),
           icon: Icons.favorite_border,
           options: _preferredMaritalStatusOptions,
           selectedIds: _selectedPreferredMaritalStatusIds,
-          fallbackPrefix: 'Marital status',
+          fallbackPrefix: appText.maritalStatus,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) {
             setState(() {
@@ -8961,29 +9009,29 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _stringDropdown(
-          labelText: 'Partner profile with children (Optional)',
+          labelText: _optionalLabel(appText.partnerProfileWithChildren),
           icon: Icons.child_care_outlined,
           options: _partnerProfileWithChildrenOptions,
           selectedValue: _selectedPartnerProfileWithChildren,
-          fallbackPrefix: 'With children',
+          fallbackPrefix: appText.withChildren,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) =>
               setState(() => _selectedPartnerProfileWithChildren = value),
         ),
         const SizedBox(height: 14),
         _stringDropdown(
-          labelText: 'Preferred profile managed by (Optional)',
+          labelText: _optionalLabel(appText.preferredProfileManagedBy),
           icon: Icons.manage_accounts_outlined,
           options: _preferredProfileManagedByOptions,
           selectedValue: _selectedPreferredProfileManagedBy,
-          fallbackPrefix: 'Managed by',
+          fallbackPrefix: appText.managedBy,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) =>
               setState(() => _selectedPreferredProfileManagedBy = value),
         ),
         const SizedBox(height: 14),
         _compactSwitchRow(
-          title: 'Willing to relocate',
+          title: appText.willingToRelocate,
           icon: Icons.flight_takeoff_outlined,
           value: _selectedWillingToRelocate == true,
           onChanged: (value) =>
@@ -8991,11 +9039,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ),
         const SizedBox(height: 14),
         _multiSelectChips(
-          labelText: 'Preferred diet (Optional)',
+          labelText: _optionalLabel(appText.labelPreferredDiet),
           icon: Icons.restaurant_outlined,
           options: _preferredDietOptions,
           selectedIds: _selectedPreferredDietIds,
-          fallbackPrefix: 'Diet',
+          fallbackPrefix: appText.diet,
           loading: _partnerPreferenceOptionsLoading,
           onChanged: (value) {
             setState(() {
@@ -9013,7 +9061,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           maxLines: 5,
           textInputAction: TextInputAction.newline,
           decoration: InputDecoration(
-            labelText: 'Expectations (Optional)',
+            labelText: _optionalLabel(appText.labelExpectations),
             helperText: appText.writeExpectationsAboutPartnerBriefly,
             alignLabelWithHint: true,
             prefixIcon: Icon(Icons.notes_outlined),
@@ -9045,7 +9093,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         await _handleBackPressed();
       },
       child: Scaffold(
-        appBar: AppBar(title: const Text('Edit All Profile')),
+        appBar: AppBar(title: Text(appText.editAllProfileTitle)),
         body: SafeArea(
           child: _loading
               ? AppLoadingState.profile()
@@ -9066,7 +9114,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                           ),
                         ),
                       Text(
-                        'Edit profile sections',
+                        appText.editProfileSections,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                         ),

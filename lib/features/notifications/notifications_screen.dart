@@ -892,7 +892,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       'profile' => appText.viewProfile,
       'contact_inbox' =>
         appText.contactInbox,
-      'mediation_inbox' => 'WhatsApp Response',
+      'mediation_inbox' => appText.whatsappResponse,
       'plans' => appText.unlock,
       'matches' => appText.viewMatches,
       'received_interests' =>

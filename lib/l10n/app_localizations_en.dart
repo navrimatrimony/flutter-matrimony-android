@@ -4387,4 +4387,632 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get optionFallback => 'Option';
+
+  @override
+  String get aboutTemplateFamilyFirstBody =>
+      'Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.';
+
+  @override
+  String get aboutTemplateCareerBalanceBody =>
+      'I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.';
+
+  @override
+  String get aboutTemplateTraditionBody =>
+      'I respect traditions and still value practical, open-minded conversations when important decisions need to be made.';
+
+  @override
+  String get aboutTemplateHonestyBody =>
+      'Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.';
+
+  @override
+  String get aboutTemplateCalmSteadyBody =>
+      'I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.';
+
+  @override
+  String aboutFactAge(int age) {
+    return 'Age is $age years.';
+  }
+
+  @override
+  String aboutFactHeight(int feet, int inches) {
+    return 'Height is about $feet ft $inches in.';
+  }
+
+  @override
+  String aboutFactMaritalStatus(String label) {
+    return 'Marital status: $label.';
+  }
+
+  @override
+  String aboutFactCommunity(String labels) {
+    return 'Community background: $labels.';
+  }
+
+  @override
+  String aboutFactEducation(String labels) {
+    return 'Education: $labels.';
+  }
+
+  @override
+  String aboutFactCareer(String label) {
+    return 'Professionally connected with $label.';
+  }
+
+  @override
+  String get aboutFamilyTemplateFamilyFirstBody =>
+      'Family values and mutual respect are important to me. I believe in a balanced life with clear communication, patience, and support from both families.';
+
+  @override
+  String get aboutFamilyTemplateCareerBalanceBody =>
+      'I take responsibilities seriously and like keeping a healthy balance between work, family, and personal growth. I value honesty and steady understanding.';
+
+  @override
+  String get aboutFamilyTemplateTraditionBody =>
+      'I respect traditions while staying open to practical modern thinking. I am looking for a relationship built on trust, kindness, and shared decisions.';
+
+  @override
+  String aboutFactFamilyBackground(String status) {
+    return 'Family background is $status.';
+  }
+
+  @override
+  String aboutFactFamilyValues(String values) {
+    return 'Family values are $values.';
+  }
+
+  @override
+  String get termsAndConditionsShort => 'T & C';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get reviewInProgress => 'Review in progress';
+
+  @override
+  String selectedFileName(String name) {
+    return 'Selected file: $name';
+  }
+
+  @override
+  String get incomeUnitLakh => 'L';
+
+  @override
+  String get incomeUnitCrore => 'Cr';
+
+  @override
+  String get incomeUnitThousand => 'K';
+
+  @override
+  String get heightBelowMin => 'Below 4ft 6in (136 cm)';
+
+  @override
+  String get heightAboveMax => 'Above 7ft (214 cm)';
+
+  @override
+  String get countryIndia => 'India';
+
+  @override
+  String get locationGroupCity => 'City';
+
+  @override
+  String get locationGroupSuburban => 'Suburban';
+
+  @override
+  String get remove => 'Remove';
+
+  @override
+  String get unlimitedDownloads => 'Unlimited downloads';
+
+  @override
+  String downloadQuotaLine(String used, String limit, String remaining) {
+    return '$used / $limit, $remaining remaining';
+  }
+
+  @override
+  String optionalFieldLabel(String label) {
+    return '$label (Optional)';
+  }
+
+  @override
+  String get notSelected => 'Not selected';
+
+  @override
+  String get manage => 'Manage';
+
+  @override
+  String get saveChanges => 'Save changes';
+
+  @override
+  String get discardChanges => 'Discard';
+
+  @override
+  String get unsavedChanges => 'Unsaved changes';
+
+  @override
+  String get savedLabel => 'Saved';
+
+  @override
+  String get missingLabel => 'Missing';
+
+  @override
+  String get needsDetails => 'Needs details';
+
+  @override
+  String get partialLabel => 'Partial';
+
+  @override
+  String get toggleOn => 'ON';
+
+  @override
+  String get toggleOff => 'OFF';
+
+  @override
+  String get optionsUnavailable => 'Options unavailable';
+
+  @override
+  String get add => 'Add';
+
+  @override
+  String get profileSaveFailed => 'Profile save failed';
+
+  @override
+  String get notAddedYet => 'Not added yet';
+
+  @override
+  String get editAllProfileTitle => 'Edit All Profile';
+
+  @override
+  String get editProfileSections => 'Edit profile sections';
+
+  @override
+  String get addressTypeCurrent => 'Current';
+
+  @override
+  String get addressTypePermanent => 'Permanent';
+
+  @override
+  String get addressTypeNative => 'Native';
+
+  @override
+  String get addressTypeWork => 'Work';
+
+  @override
+  String get cardMaritalStatusAndChildren => 'Marital status and children';
+
+  @override
+  String get cardBirthDetails => 'Birth details';
+
+  @override
+  String get cardPhysicalDetails => 'Physical details';
+
+  @override
+  String get cardFatherContactNumbers => 'Father contact numbers';
+
+  @override
+  String get cardMotherContactNumbers => 'Mother contact numbers';
+
+  @override
+  String get cardFamilyOverview => 'Family overview';
+
+  @override
+  String get cardPersonalIncome => 'Personal income';
+
+  @override
+  String get cardFamilyRelatives => 'Family relatives';
+
+  @override
+  String get cardAllianceDetails => 'Alliance details';
+
+  @override
+  String get smokingStatus => 'Smoking status';
+
+  @override
+  String get drinkingStatus => 'Drinking status';
+
+  @override
+  String get marriageYear => 'Marriage year';
+
+  @override
+  String get annulmentYear => 'Annulment year';
+
+  @override
+  String get divorceYear => 'Divorce year';
+
+  @override
+  String get separationYear => 'Separation year';
+
+  @override
+  String get spouseDeathYear => 'Spouse death year';
+
+  @override
+  String get legalStatus => 'Legal status';
+
+  @override
+  String get annulmentDetails => 'Annulment details';
+
+  @override
+  String get separationDetails => 'Separation details';
+
+  @override
+  String get widowhoodDetails => 'Widowhood details';
+
+  @override
+  String get divorceDetails => 'Divorce details';
+
+  @override
+  String get noChildrenAdded => 'No children added.';
+
+  @override
+  String get addAddress => 'Add address';
+
+  @override
+  String addressNumbered(int number) {
+    return 'Address $number';
+  }
+
+  @override
+  String get removeAddress => 'Remove address';
+
+  @override
+  String get addressLabel => 'Address';
+
+  @override
+  String get addressType => 'Address type';
+
+  @override
+  String get searchCityOrVillage => 'Search city or village';
+
+  @override
+  String get fullNameLabel => 'Full name';
+
+  @override
+  String get selectReligionFirst => 'Select religion first';
+
+  @override
+  String get selectCasteFirst => 'Select caste first';
+
+  @override
+  String get birthTimeHint => 'HH:MM';
+
+  @override
+  String get clearBirthTime => 'Clear birth time';
+
+  @override
+  String get clearOccupation => 'Clear occupation';
+
+  @override
+  String customOptionLabel(String label) {
+    return '$label (Custom)';
+  }
+
+  @override
+  String get periodLabel => 'Period';
+
+  @override
+  String exactPeriodIncome(String period) {
+    return 'Exact $period income';
+  }
+
+  @override
+  String approximatePeriodIncome(String period) {
+    return 'Approximate $period income';
+  }
+
+  @override
+  String get minimumAmount => 'Minimum amount';
+
+  @override
+  String get maximumAmount => 'Maximum amount';
+
+  @override
+  String keepFieldPrivate(String title) {
+    return 'Keep $title private';
+  }
+
+  @override
+  String get currencyLabel => 'Currency';
+
+  @override
+  String get incomeTypeApproximate => 'Approximate';
+
+  @override
+  String get incomePeriodWeekly => 'Weekly';
+
+  @override
+  String get addIncomeDetails => 'Add income details';
+
+  @override
+  String get approximateIncome => 'Approximate income';
+
+  @override
+  String get searchOrTypeEducation => 'Search or type education';
+
+  @override
+  String get searchCityOrTypeWorkLocation =>
+      'Search city or type work location';
+
+  @override
+  String get selectWeight => 'Select weight';
+
+  @override
+  String get addAnotherContact => 'Add another contact';
+
+  @override
+  String get removeThisContact => 'Remove this contact';
+
+  @override
+  String contactNumbered(int number) {
+    return 'Contact $number';
+  }
+
+  @override
+  String get fatherName => 'Father name';
+
+  @override
+  String get fatherOccupationCategory => 'Father occupation category';
+
+  @override
+  String get fatherOccupationDetails => 'Father occupation details';
+
+  @override
+  String get fatherExtraInfo => 'Father extra info';
+
+  @override
+  String get motherName => 'Mother name';
+
+  @override
+  String get motherOccupationCategory => 'Mother occupation category';
+
+  @override
+  String get motherOccupationDetails => 'Mother occupation details';
+
+  @override
+  String get motherExtraInfo => 'Mother extra info';
+
+  @override
+  String get addBrother => 'Add brother';
+
+  @override
+  String get addSister => 'Add sister';
+
+  @override
+  String siblingNumbered(int number) {
+    return 'Sibling $number';
+  }
+
+  @override
+  String get relationLabel => 'Relation';
+
+  @override
+  String get addressOrCity => 'Address / City';
+
+  @override
+  String get notesLabel => 'Notes';
+
+  @override
+  String get addPaternal => 'Add paternal';
+
+  @override
+  String get addMaternal => 'Add maternal';
+
+  @override
+  String relativeNumbered(int number) {
+    return 'Relative $number';
+  }
+
+  @override
+  String get relativeDetails => 'Relative details';
+
+  @override
+  String get relativeDetailsHint =>
+      'Name, occupation, address and other details';
+
+  @override
+  String get addAllianceFamily => 'Add alliance family';
+
+  @override
+  String allianceFamilyNumbered(int number) {
+    return 'Alliance family $number';
+  }
+
+  @override
+  String get surnameLabel => 'Surname';
+
+  @override
+  String get cityOrLocation => 'City / Location';
+
+  @override
+  String get publicSafeSummaryOnly => 'Public-safe summary only.';
+
+  @override
+  String get mangalDoshType => 'Mangal dosh type';
+
+  @override
+  String get noProfilePhotoUploadedYet => 'No profile photo uploaded yet.';
+
+  @override
+  String get profilePhotoUploaded => 'Profile photo uploaded.';
+
+  @override
+  String get manageProfilePhoto => 'Manage profile photo';
+
+  @override
+  String get yourTaluka => 'Your taluka';
+
+  @override
+  String distanceKm(String distance) {
+    return '$distance km';
+  }
+
+  @override
+  String get preferredLocations => 'Preferred locations';
+
+  @override
+  String get noLocationsSelected => 'No locations selected.';
+
+  @override
+  String get locationSuggestionsUnavailable =>
+      'Location suggestions are not available yet.';
+
+  @override
+  String get resetToSuggestedLocations => 'Reset to suggested locations';
+
+  @override
+  String get preferredReligionsLabel => 'Preferred religions';
+
+  @override
+  String get preferredCastesLabel => 'Preferred castes';
+
+  @override
+  String get openToIntercasteMatches => 'Open to intercaste matches';
+
+  @override
+  String get preferredMotherTongues => 'Preferred mother tongues';
+
+  @override
+  String get preferredOccupationsLabel => 'Preferred occupations';
+
+  @override
+  String get marriageTypePreference => 'Marriage type preference';
+
+  @override
+  String get preferredMaritalStatuses => 'Preferred marital statuses';
+
+  @override
+  String get withChildren => 'With children';
+
+  @override
+  String get preferredProfileManagedBy => 'Preferred profile managed by';
+
+  @override
+  String get managedBy => 'Managed by';
+
+  @override
+  String agePreferenceRange(String min, String max) {
+    return 'Age $min-$max';
+  }
+
+  @override
+  String agePreferenceMin(String min) {
+    return 'Age $min+';
+  }
+
+  @override
+  String agePreferenceMax(String max) {
+    return 'Age up to $max';
+  }
+
+  @override
+  String incomePreferenceRange(String min, String max) {
+    return 'Income $min-$max';
+  }
+
+  @override
+  String incomePreferenceMin(String min) {
+    return 'Income $min+';
+  }
+
+  @override
+  String incomePreferenceMax(String max) {
+    return 'Income up to $max';
+  }
+
+  @override
+  String get siblingsAdded => 'Siblings added';
+
+  @override
+  String get otherRelativesAdded => 'Other relatives added';
+
+  @override
+  String get propertyAdded => 'Property added';
+
+  @override
+  String get photoNotUploadedYet => 'Photo not uploaded yet';
+
+  @override
+  String get heightBelowMinCompact => 'Below 4\' 6\" (136 cm)';
+
+  @override
+  String get heightAboveMaxCompact => 'Above 7\' 0\" (214 cm)';
+
+  @override
+  String heightFeetInchesCm(int feet, int inches, int cm) {
+    return '$feet\' $inches\" ($cm cm)';
+  }
+
+  @override
+  String weightKg(int kg) {
+    return '$kg kg';
+  }
+
+  @override
+  String locationsCount(int count) {
+    return '$count locations';
+  }
+
+  @override
+  String locationPlusNearby(String label, int count) {
+    return '$label +$count nearby';
+  }
+
+  @override
+  String get addressCountOne => '1 address';
+
+  @override
+  String addressCountOther(int count) {
+    return '$count addresses';
+  }
+
+  @override
+  String get childDetailCountOne => '1 child detail';
+
+  @override
+  String childDetailCountOther(int count) {
+    return '$count child details';
+  }
+
+  @override
+  String get relativeCountOne => '1 relative';
+
+  @override
+  String relativeCountOther(int count) {
+    return '$count relatives';
+  }
+
+  @override
+  String get allianceFamilyCountOne => '1 alliance family';
+
+  @override
+  String allianceFamilyCountOther(int count) {
+    return '$count alliance families';
+  }
+
+  @override
+  String ageYearsRange(String start, String end) {
+    return '$start - $end years';
+  }
+
+  @override
+  String sectionProgressShort(String label, int filled, int total) {
+    return '$label $filled/$total';
+  }
+
+  @override
+  String get clearCharan => 'Clear charan';
+
+  @override
+  String heightPreferenceRange(String min, String max) {
+    return 'Height $min-$max';
+  }
+
+  @override
+  String heightPreferenceMin(String min) {
+    return 'Height $min+';
+  }
+
+  @override
+  String heightPreferenceMax(String max) {
+    return 'Height up to $max';
+  }
 }

@@ -80,11 +80,11 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
 
   static final List<OnboardingOption> _laravelHeightOptions =
       List<OnboardingOption>.unmodifiable(<OnboardingOption>[
-        const OnboardingOption(
+        OnboardingOption(
           id: 136,
           key: '136',
-          label: 'Below 4ft 6in (136 cm)',
-          meta: <String, dynamic>{'cm': 136},
+          label: appText.heightBelowMin,
+          meta: const <String, dynamic>{'cm': 136},
         ),
         ...List<OnboardingOption>.generate(31, (index) {
           final totalInches = 54 + index;
@@ -96,11 +96,11 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
             meta: <String, dynamic>{'cm': cm, 'total_inches': totalInches},
           );
         }),
-        const OnboardingOption(
+        OnboardingOption(
           id: 214,
           key: '214',
-          label: 'Above 7ft (214 cm)',
-          meta: <String, dynamic>{'cm': 214},
+          label: appText.heightAboveMax,
+          meta: const <String, dynamic>{'cm': 214},
         ),
       ]);
 
@@ -205,19 +205,19 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
         option.metaInt('cm') ?? option.intId ?? onboardingInt(option.key);
     if (cm == null) return option;
     if (cm <= 136) {
-      return const OnboardingOption(
+      return OnboardingOption(
         id: 136,
         key: '136',
-        label: 'Below 4ft 6in (136 cm)',
-        meta: <String, dynamic>{'cm': 136},
+        label: appText.heightBelowMin,
+        meta: const <String, dynamic>{'cm': 136},
       );
     }
     if (cm >= 214) {
-      return const OnboardingOption(
+      return OnboardingOption(
         id: 214,
         key: '214',
-        label: 'Above 7ft (214 cm)',
-        meta: <String, dynamic>{'cm': 214},
+        label: appText.heightAboveMax,
+        meta: const <String, dynamic>{'cm': 214},
       );
     }
     final totalInches = (cm / 2.54).round().clamp(54, 84);
