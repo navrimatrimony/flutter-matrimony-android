@@ -571,6 +571,7 @@
   "optional": "Optional",
   "optional2": "Optional",
   "optionalButUsefulForBetterSuggestions": "Optional, but useful for better suggestions",
+  "optionalYouCanAddThisLater": "Optional — you can add this later",
   "optionsNotLoaded": "Options not loaded.",
   "other": "Other",
   "otherPreferences": "Other Preferences",

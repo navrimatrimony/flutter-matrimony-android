@@ -1843,6 +1843,9 @@ class AppLocalizationsMr extends AppLocalizations {
       'ऐच्छिक, पण अधिक चांगल्या सूचनांसाठी उपयुक्त';
 
   @override
+  String get optionalYouCanAddThisLater => 'ऐच्छिक — तुम्ही हे नंतरही भरू शकता';
+
+  @override
   String get optionsNotLoaded => 'पर्याय उघडले नाहीत.';
 
   @override

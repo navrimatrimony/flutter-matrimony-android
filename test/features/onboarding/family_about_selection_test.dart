@@ -211,6 +211,82 @@ void main() {
     expect(harness.sentAboutText, isNotEmpty);
   });
 
+  testWidgets('Continue is allowed with nothing filled at all', (tester) async {
+    // SMART_ONBOARDING_BLUEPRINT.md §11 makes this step optional — "These
+    // fields should not block onboarding" — and every key of the server's
+    // `family` step is `sometimes|nullable`. The step used to refuse Continue
+    // without a family status and an about text, which contradicted both.
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const _ParentHarness());
+    await tester.pump();
+
+    // The step seeds the about box from a template, so "filled nothing" means
+    // a member who clears it and taps no pills.
+    await tester.enterText(find.byType(TextField), '');
+    await tester.pump();
+
+    await tester.tap(find.text('Complete registration'));
+    await tester.pump();
+
+    final harness = tester.state<_ParentHarnessState>(
+      find.byType(_ParentHarness),
+    );
+    expect(
+      harness.sentFamilyData,
+      isEmpty,
+      reason: 'the step must hand control on, with an empty payload',
+    );
+    expect(harness.sentAboutText, isEmpty);
+  });
+
+  testWidgets('neither panel is labelled Required any more', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const _ParentHarness());
+    await tester.pump();
+
+    expect(find.text('Required'), findsNothing);
+    expect(
+      find.text('Optional — you can add this later'),
+      findsNWidgets(2),
+      reason: 'family status and about profile both read as optional',
+    );
+  });
+
+  testWidgets('a partly filled step still sends exactly what was filled', (
+    tester,
+  ) async {
+    // Making the step skippable must not become "skip the save".
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(const _ParentHarness());
+    await tester.pump();
+
+    await tester.tap(find.text('Simple'));
+    await tester.pump();
+    await tester.enterText(find.byType(TextField), 'A short intro.');
+    await tester.pump();
+
+    await tester.tap(find.text('Complete registration'));
+    await tester.pump();
+
+    final harness = tester.state<_ParentHarnessState>(
+      find.byType(_ParentHarness),
+    );
+    // family_values was never touched, so it must not travel as a null key.
+    expect(harness.sentFamilyData, <String, dynamic>{
+      'family_status': 'simple',
+    });
+    expect(harness.sentAboutText, 'A short intro.');
+  });
+
   test('AboutTemplateSuggestion compares by value, not identity', () {
     // `listEquals` in `didUpdateWidget` is only meaningful if this holds; the
     // parent allocates a fresh list of fresh instances on every build.

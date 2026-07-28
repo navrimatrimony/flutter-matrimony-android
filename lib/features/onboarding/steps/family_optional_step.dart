@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
-import '../widgets/onboarding_error_highlight.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
 import '../../../core/app_language.dart';
@@ -65,9 +64,6 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   String? _familyStatus;
   String? _familyValues;
   bool _optionsLoading = false;
-  String? _localError;
-  String? _familyStatusError;
-  String? _aboutError;
   int? _selectedSuggestionIndex;
 
   /// Set the moment the member touches anything on this step. Same guard
@@ -165,8 +161,6 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
       _edited = true;
       _selectedSuggestionIndex = index;
       _aboutController.text = _suggestionText(suggestions[index]);
-      _aboutError = null;
-      _localError = null;
     });
   }
 
@@ -177,8 +171,6 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
         selectedIndex >= 0 &&
         selectedIndex < suggestions.length) {
       _aboutController.text = _suggestionText(suggestions[selectedIndex]);
-      _aboutError = null;
-      _localError = null;
       return;
     }
     if (_aboutController.text.trim().isNotEmpty || suggestions.isEmpty) {
@@ -186,8 +178,6 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     }
     _selectedSuggestionIndex = 0;
     _aboutController.text = _suggestionText(suggestions.first);
-    _aboutError = null;
-    _localError = null;
   }
 
   Future<void> _loadFamilyOptions() async {
@@ -218,33 +208,26 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     }
   }
 
+  /// This step never blocks Continue.
+  ///
+  /// `SMART_ONBOARDING_BLUEPRINT.md` §11 marks Family Optional as optional —
+  /// "These fields should not block onboarding" — and its Required Fields
+  /// Policy forbids Flutter from hardcoding activation-required fields. The
+  /// server says the same thing independently: every key of the `family` step
+  /// is `sometimes|nullable` in `MobileProfileStepSnapshotService`, and
+  /// `narrative_about_me` is not required to create a profile.
+  ///
+  /// So there is no client-side validator here on purpose. Making the step
+  /// skippable must not become "skip the save": whatever the member did fill
+  /// is still handed up exactly as before, and only the genuinely empty case
+  /// travels as an empty payload.
   Future<void> _save() async {
-    final about = _aboutController.text.trim();
-    if (_familyStatus == null || about.isEmpty) {
-      setState(() {
-        _familyStatusError = _familyStatus == null
-            ? appText.selectFamilyStatus
-            : null;
-        _aboutError = about.isEmpty
-            ? appText.writeAShortAboutSection
-            : null;
-        _localError = appText.selectFamilyStatusAndWriteA;
-      });
-      return;
-    }
-
-    setState(() {
-      _localError = null;
-      _familyStatusError = null;
-      _aboutError = null;
-    });
-
     await widget.onSaveFamilyAbout(
       compactPayload({
         'family_status': _familyStatus,
         'family_values': _familyValues,
       }),
-      about,
+      _aboutController.text.trim(),
     );
   }
 
@@ -258,45 +241,29 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
       onContinue: _save,
       continueLabel: appText.completeRegistration,
       children: [
-        OnboardingErrorHighlight(
-          hasError: _familyStatusError != null,
-          pulseKey: 'family_status:$_familyStatusError:$_familyStatus',
-          child: _FamilyPanel(
-            title: appText.familyStatus,
-            subtitle: appText.required,
-            trailing: _optionsLoading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : null,
-            child: _ChoiceWrap(
-              options: _statusOptions,
-              selectedKey: _familyStatus,
-              locale: widget.locale,
-              onChanged: widget.loading
-                  ? null
-                  : (key) => setState(() {
-                      _edited = true;
-                      _familyStatus = key;
-                      _familyStatusError = null;
-                      _localError = null;
-                      _maybePrefillAboutFromSuggestion();
-                    }),
-            ),
+        _FamilyPanel(
+          title: appText.familyStatus,
+          subtitle: appText.optionalYouCanAddThisLater,
+          trailing: _optionsLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : null,
+          child: _ChoiceWrap(
+            options: _statusOptions,
+            selectedKey: _familyStatus,
+            locale: widget.locale,
+            onChanged: widget.loading
+                ? null
+                : (key) => setState(() {
+                    _edited = true;
+                    _familyStatus = key;
+                    _maybePrefillAboutFromSuggestion();
+                  }),
           ),
         ),
-        if (_familyStatusError != null) ...[
-          const SizedBox(height: 8),
-          Text(
-            _familyStatusError!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.red.shade700,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
         const SizedBox(height: 14),
         _FamilyPanel(
           title: appText.familyValues,
@@ -310,60 +277,42 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
                 : (key) => setState(() {
                     _edited = true;
                     _familyValues = _familyValues == key ? null : key;
-                    _localError = null;
                     _maybePrefillAboutFromSuggestion();
                   }),
           ),
         ),
         const SizedBox(height: 14),
-        OnboardingErrorHighlight(
-          hasError: _aboutError != null,
-          pulseKey: 'about_profile:$_aboutError',
-          child: _FamilyPanel(
-            title: appText.aboutProfile,
-            subtitle: appText.required,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _AboutSuggestionChips(
-                  suggestions: _aboutSuggestions,
-                  selectedIndex: _selectedSuggestionIndex,
-                  onSelected: widget.loading ? null : _applySuggestion,
+        _FamilyPanel(
+          title: appText.aboutProfile,
+          subtitle: appText.optionalYouCanAddThisLater,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _AboutSuggestionChips(
+                suggestions: _aboutSuggestions,
+                selectedIndex: _selectedSuggestionIndex,
+                onSelected: widget.loading ? null : _applySuggestion,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _aboutController,
+                enabled: !widget.loading,
+                minLines: 4,
+                maxLines: 7,
+                maxLength: 500,
+                textInputAction: TextInputAction.newline,
+                onChanged: (_) => setState(() {
+                  _edited = true;
+                  _selectedSuggestionIndex = null;
+                }),
+                decoration: InputDecoration(
+                  hintText: appText.writeANaturalIntroductionFamilyBackground,
+                  alignLabelWithHint: true,
                 ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _aboutController,
-                  enabled: !widget.loading,
-                  minLines: 4,
-                  maxLines: 7,
-                  maxLength: 500,
-                  textInputAction: TextInputAction.newline,
-                  onChanged: (_) => setState(() {
-                    _edited = true;
-                    _selectedSuggestionIndex = null;
-                    _aboutError = null;
-                    _localError = null;
-                  }),
-                  decoration: InputDecoration(
-                    hintText: appText.writeANaturalIntroductionFamilyBackground,
-                    errorText: _aboutError,
-                    alignLabelWithHint: true,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-        if (_localError != null) ...[
-          const SizedBox(height: 10),
-          Text(
-            _localError!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Colors.red.shade700,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
       ],
     );
   }

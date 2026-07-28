@@ -1853,6 +1853,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Optional, but useful for better suggestions';
 
   @override
+  String get optionalYouCanAddThisLater => 'Optional — you can add this later';
+
+  @override
   String get optionsNotLoaded => 'Options not loaded.';
 
   @override

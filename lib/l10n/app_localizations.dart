@@ -3524,6 +3524,12 @@ abstract class AppLocalizations {
   /// **'Optional, but useful for better suggestions'**
   String get optionalButUsefulForBetterSuggestions;
 
+  /// No description provided for @optionalYouCanAddThisLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — you can add this later'**
+  String get optionalYouCanAddThisLater;
+
   /// No description provided for @optionsNotLoaded.
   ///
   /// In en, this message translates to:

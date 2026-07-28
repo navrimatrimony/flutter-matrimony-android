@@ -571,6 +571,7 @@
   "optional": "ऐच्छिक",
   "optional2": "ऐच्छिक",
   "optionalButUsefulForBetterSuggestions": "ऐच्छिक, पण अधिक चांगल्या सूचनांसाठी उपयुक्त",
+  "optionalYouCanAddThisLater": "ऐच्छिक — तुम्ही हे नंतरही भरू शकता",
   "optionsNotLoaded": "पर्याय उघडले नाहीत.",
   "other": "इतर",
   "otherPreferences": "इतर अपेक्षा",

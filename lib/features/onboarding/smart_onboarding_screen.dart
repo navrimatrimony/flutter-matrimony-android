@@ -1669,23 +1669,31 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     return _stepFromServerName(serverStep);
   }
 
+  /// Bounces back to mobile OTP when the session is gone.
+  ///
+  /// Extracted so the optional-step path, which may legitimately skip
+  /// `_saveOnboardingStep` entirely, can reuse this guard instead of carrying
+  /// a second copy of it.
+  bool _requireOnboardingSession() {
+    if (_isAuthenticated) return true;
+    setState(() {
+      _step = _SmartOnboardingStep.mobileOtp;
+      _error = appText.pleaseVerifyMobileFirst;
+      _profileForWhomError = null;
+      _warmupGenderError = null;
+      _motherTongueError = null;
+      _fieldErrors = const <String, String>{};
+    });
+    return false;
+  }
+
   Future<bool> _saveOnboardingStep(
     String step,
     Map<String, dynamic> data, {
     bool saveProfile = true,
     bool advance = true,
   }) async {
-    if (!_isAuthenticated) {
-      setState(() {
-        _step = _SmartOnboardingStep.mobileOtp;
-        _error = appText.pleaseVerifyMobileFirst;
-        _profileForWhomError = null;
-        _warmupGenderError = null;
-        _motherTongueError = null;
-        _fieldErrors = const <String, String>{};
-      });
-      return false;
-    }
+    if (!_requireOnboardingSession()) return false;
 
     final payloadData = await _dataForOnboardingStep(
       step,
@@ -1880,17 +1888,38 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     await _saveLocalDraft();
   }
 
+  /// Saves the Family/About step, which the blueprint (§11) defines as optional.
+  ///
+  /// A member may arrive here and press Continue having filled nothing, so both
+  /// writes are conditional. That is not "skipping the save": each write fires
+  /// whenever there is something to write, and only genuinely empty input is
+  /// left out.
+  ///
+  /// The family write in particular *must* be skipped when empty rather than
+  /// posted as `{}`. `MobileOnboardingController` validates the step body as
+  /// `'data' => ['required', 'array']`, and Laravel's `required` rejects an
+  /// empty array — so posting an empty family payload would 422 the member out
+  /// of a step they are explicitly allowed to skip.
   Future<bool> _saveFamilyStatusAboutStep(
     Map<String, dynamic> familyData,
     String aboutText,
   ) async {
-    final saved = await _saveOnboardingStep(
-      'family',
-      familyData,
-      saveProfile: true,
-      advance: false,
-    );
-    if (!mounted || !saved) return false;
+    if (!_requireOnboardingSession()) return false;
+
+    if (familyData.isNotEmpty) {
+      final saved = await _saveOnboardingStep(
+        'family',
+        familyData,
+        saveProfile: true,
+        advance: false,
+      );
+      if (!mounted || !saved) return false;
+    }
+
+    final about = aboutText.trim();
+    // Send an empty about only when it would clear text the profile already
+    // has; otherwise there is nothing to write.
+    final writeAbout = about.isNotEmpty || _profileAboutText() != null;
 
     setState(() {
       _loading = true;
@@ -1900,19 +1929,21 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     });
 
     try {
-      final response = await ApiClient.updateMatrimonyProfile({
-        'narrative_about_me': aboutText.trim(),
-      });
-      if (!mounted) return false;
-      if (response['success'] != true) {
-        setState(() {
-          _loading = false;
-          _error = readableApiError(
-            response,
-            appText.couldNotSaveTheAboutSection,
-          );
+      if (writeAbout) {
+        final response = await ApiClient.updateMatrimonyProfile({
+          'narrative_about_me': about,
         });
-        return false;
+        if (!mounted) return false;
+        if (response['success'] != true) {
+          setState(() {
+            _loading = false;
+            _error = readableApiError(
+              response,
+              appText.couldNotSaveTheAboutSection,
+            );
+          });
+          return false;
+        }
       }
 
       await _loadStatus(goToStatus: false);
