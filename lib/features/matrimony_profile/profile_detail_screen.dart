@@ -8,7 +8,7 @@ import '../../core/api_client.dart';
 import '../../core/api_error_text.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_network_image.dart';
-import '../../core/profile_photo_hero.dart';
+import '../../core/profile_card_hero.dart';
 import '../../main.dart';
 import '../chat/chat_screen.dart';
 import 'profile_album_blur.dart';
@@ -25,22 +25,23 @@ class ProfileDetailScreen extends StatefulWidget {
   final List<int> profileIds;
   final Map<String, dynamic>? initialProfile;
 
-  /// Ties this screen's header photo to the exact list photo that was tapped,
-  /// so it grows out of that card and shrinks back into it.
+  /// Ties this screen's header to the exact list card that was tapped, so the
+  /// photo and the name printed on it grow out of that card together and shrink
+  /// back into it.
   ///
   /// Passed in rather than derived from [profileId] on purpose: the same profile
   /// can be on screen in several lists at once, so only the caller knows *which*
-  /// of those photos was tapped. Callers with no photo on screen — a push
+  /// of those cards was tapped. Callers with no card on screen — a push
   /// notification, an interest list, a suggested profile on another detail
   /// screen — leave it null and the screen simply cuts in with no flight.
-  final String? photoHeroTag;
+  final ProfileCardHeroTags? heroTags;
 
   const ProfileDetailScreen({
     super.key,
     required this.profileId,
     this.profileIds = const <int>[],
     this.initialProfile,
-    this.photoHeroTag,
+    this.heroTags,
   });
 
   @override
@@ -675,6 +676,26 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
         final detailsOpacity = (1 - ((progress - 0.18) / 0.58))
             .clamp(0.0, 1.0)
             .toDouble();
+        final titleStyle = TextStyle(
+          color: Colors.white,
+          fontSize: titleSize,
+          fontWeight: FontWeight.w800,
+          height: 1.08,
+        );
+        final subtitleStyle = TextStyle(
+          color: Colors.white.withValues(alpha: 0.92),
+          fontSize: subtitleSize,
+          fontWeight: FontWeight.w600,
+          height: 1.18,
+        );
+        final subtitleGap = _lerpValue(8, 3, progress);
+        final verifiedTick = isVerified
+            ? Icon(
+                Icons.verified,
+                color: const Color(0xFF4DA3FF),
+                size: _lerpValue(24, 18, progress),
+              )
+            : null;
 
         return Positioned(
           top: top,
@@ -688,46 +709,52 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          heroName,
-                          maxLines: titleMaxLines,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: titleSize,
-                            fontWeight: FontWeight.w800,
-                            height: 1.08,
+                  // The tapped card printed this same headline and detail line
+                  // on the same photo, so they arrive with it instead of cutting
+                  // in underneath it. The occupation, location and chips below
+                  // are this screen's own wording and stay out of the flight.
+                  ProfileIdentityHero(
+                    tag: _heroTags()?.identity,
+                    title: heroName,
+                    titleStyle: titleStyle,
+                    titleMaxLines: titleMaxLines,
+                    trailing: verifiedTick,
+                    subtitle: compactLine,
+                    subtitleStyle: subtitleStyle,
+                    subtitleGap: subtitleGap,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                heroName,
+                                maxLines: titleMaxLines,
+                                overflow: TextOverflow.ellipsis,
+                                style: titleStyle,
+                              ),
+                            ),
+                            if (verifiedTick != null) ...[
+                              const SizedBox(width: 8),
+                              verifiedTick,
+                            ],
+                          ],
+                        ),
+                        if (compactLine != null) ...[
+                          SizedBox(height: subtitleGap),
+                          Text(
+                            compactLine,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: subtitleStyle,
                           ),
-                        ),
-                      ),
-                      if (isVerified) ...[
-                        const SizedBox(width: 8),
-                        Icon(
-                          Icons.verified,
-                          color: const Color(0xFF4DA3FF),
-                          size: _lerpValue(24, 18, progress),
-                        ),
+                        ],
                       ],
-                    ],
-                  ),
-                  if (compactLine != null) ...[
-                    SizedBox(height: _lerpValue(8, 3, progress)),
-                    Text(
-                      compactLine,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.92),
-                        fontSize: subtitleSize,
-                        fontWeight: FontWeight.w600,
-                        height: 1.18,
-                      ),
                     ),
-                  ],
+                  ),
                   if (showHeroDetails && occupationLabel != null) ...[
                     const SizedBox(height: 5),
                     Opacity(
@@ -846,7 +873,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
           child: _buildHeroPhoto(
             photoUrl: photoUrl,
             blur: heroPhotoBlur,
-            heroTag: _photoHeroTag(),
+            heroTag: _heroTags()?.photo,
           ),
         ),
         ListView(
@@ -1024,16 +1051,16 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
         .toDouble();
   }
 
-  /// The tag of the list photo this screen was opened from, while it is still
+  /// The tags of the list card this screen was opened from, while it is still
   /// showing that profile.
   ///
   /// A horizontal swipe moves to the next profile in place, without a route
-  /// change ([_openAdjacentProfile]). Keeping the original tag past that point
-  /// would make Back fly a stranger's photo into the tapped card's slot, so the
-  /// flight is given up as soon as the screen stops showing what it was opened
-  /// with.
-  String? _photoHeroTag() {
-    return _currentProfileId == widget.profileId ? widget.photoHeroTag : null;
+  /// change ([_openAdjacentProfile]). Keeping the original tags past that point
+  /// would make Back fly a stranger's photo and name into the tapped card's
+  /// slot, so the flight is given up as soon as the screen stops showing what it
+  /// was opened with.
+  ProfileCardHeroTags? _heroTags() {
+    return _currentProfileId == widget.profileId ? widget.heroTags : null;
   }
 
   Widget _buildHeroPhoto({

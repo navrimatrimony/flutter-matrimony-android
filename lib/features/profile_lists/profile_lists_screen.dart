@@ -5,7 +5,7 @@ import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_network_image.dart';
-import '../../core/profile_photo_hero.dart';
+import '../../core/profile_card_hero.dart';
 import '../matrimony_profile/profile_detail_screen.dart';
 import '../../core/app_language.dart';
 
@@ -220,8 +220,8 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
     // time. So the list kind is part of the scope, not just the row position.
     // A row the viewer is not allowed to open never flies — there is no
     // destination for it.
-    final photoHeroTag = canOpen
-        ? ProfilePhotoHero.tagFor(
+    final heroTags = canOpen
+        ? ProfileCardHeroTags.of(
             profileId: profileId,
             scope: '${kind.name}:$index',
             photoUrl: photoUrl,
@@ -245,7 +245,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
       onTap: profileId == null
           ? null
           : () {
-              _openProfile(row, visibleRows, photoHeroTag: photoHeroTag);
+              _openProfile(row, visibleRows, heroTags: heroTags);
             },
       child: Card(
         elevation: 0,
@@ -263,7 +263,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildAvatar(photoUrl, photoHeroTag),
+                  _buildAvatar(photoUrl, heroTags?.photo),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -377,7 +377,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
   Future<void> _openProfile(
     Map<String, dynamic> row,
     List<Map<String, dynamic>> visibleRows, {
-    String? photoHeroTag,
+    ProfileCardHeroTags? heroTags,
   }) async {
     final profileId = _profileId(row);
     if (profileId == null) return;
@@ -397,7 +397,7 @@ class _ProfileListsScreenState extends State<ProfileListsScreen> {
           profileId: profileId,
           profileIds: _openableIds(visibleRows),
           initialProfile: row,
-          photoHeroTag: photoHeroTag,
+          heroTags: heroTags,
         ),
       ),
     );

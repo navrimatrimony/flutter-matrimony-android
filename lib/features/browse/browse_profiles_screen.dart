@@ -8,7 +8,7 @@ import '../../core/api_client.dart';
 import '../../core/app_storage.dart';
 import '../../core/locked_teaser.dart';
 import '../../core/profile_network_image.dart';
-import '../../core/profile_photo_hero.dart';
+import '../../core/profile_card_hero.dart';
 import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../contact/contact_inbox_screen.dart';
@@ -2185,7 +2185,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     String? photoHeroScope,
   }) {
     final data = _cardData(profile);
-    final photoHeroTag = ProfilePhotoHero.tagFor(
+    final heroTags = ProfileCardHeroTags.of(
       profileId: data.profileId,
       scope: photoHeroScope,
       photoUrl: data.photoUrl,
@@ -2201,7 +2201,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
+        onTap: () => _openProfile(profile, heroTags: heroTags),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -2211,7 +2211,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 children: [
                   data.photoUrl != null
                       ? ProfilePhotoHero(
-                          tag: photoHeroTag,
+                          tag: heroTags?.photo,
                           borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(18),
                           ),
@@ -2409,7 +2409,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     String? photoHeroScope,
   }) {
     final data = _cardData(profile);
-    final photoHeroTag = ProfilePhotoHero.tagFor(
+    final heroTags = ProfileCardHeroTags.of(
       profileId: data.profileId,
       scope: photoHeroScope,
       photoUrl: data.photoUrl,
@@ -2427,7 +2427,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         borderRadius: BorderRadius.circular(18),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
+          onTap: () => _openProfile(profile, heroTags: heroTags),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -2435,7 +2435,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 height: 118,
                 child: data.photoUrl != null
                     ? ProfilePhotoHero(
-                        tag: photoHeroTag,
+                        tag: heroTags?.photo,
                         borderRadius: const BorderRadius.vertical(
                           top: Radius.circular(18),
                         ),
@@ -2515,7 +2515,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     String? photoHeroScope,
   }) {
     final data = _cardData(profile);
-    final photoHeroTag = ProfilePhotoHero.tagFor(
+    final heroTags = ProfileCardHeroTags.of(
       profileId: data.profileId,
       scope: photoHeroScope,
       photoUrl: data.photoUrl,
@@ -2525,7 +2525,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       width: 148,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
+        onTap: () => _openProfile(profile, heroTags: heroTags),
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
@@ -2535,7 +2535,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           ),
           child: Column(
             children: [
-              _buildCircularPhoto(data.photoUrl, 58, heroTag: photoHeroTag),
+              _buildCircularPhoto(data.photoUrl, 58, heroTag: heroTags?.photo),
               const SizedBox(height: 8),
               Text(
                 data.name,
@@ -2601,7 +2601,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     String? photoHeroScope,
   }) {
     final data = _cardData(profile);
-    final photoHeroTag = ProfilePhotoHero.tagFor(
+    final heroTags = ProfileCardHeroTags.of(
       profileId: data.profileId,
       scope: photoHeroScope,
       photoUrl: data.photoUrl,
@@ -2615,7 +2615,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
-      onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
+      onTap: () => _openProfile(profile, heroTags: heroTags),
       child: Container(
         height: 164,
         decoration: BoxDecoration(
@@ -2641,7 +2641,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                 height: double.infinity,
                 child: data.photoUrl != null
                     ? ProfilePhotoHero(
-                        tag: photoHeroTag,
+                        tag: heroTags?.photo,
                         borderRadius: const BorderRadius.horizontal(
                           left: Radius.circular(20),
                         ),
@@ -2734,7 +2734,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     String? photoHeroScope,
   }) {
     final data = _cardData(profile);
-    final photoHeroTag = ProfilePhotoHero.tagFor(
+    final heroTags = ProfileCardHeroTags.of(
       profileId: data.profileId,
       scope: photoHeroScope,
       photoUrl: data.photoUrl,
@@ -2744,7 +2744,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       width: 196,
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
-        onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
+        onTap: () => _openProfile(profile, heroTags: heroTags),
         child: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -2757,7 +2757,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             children: [
               Row(
                 children: [
-                  _buildCircularPhoto(data.photoUrl, 50, heroTag: photoHeroTag),
+                  _buildCircularPhoto(data.photoUrl, 50, heroTag: heroTags?.photo),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -2823,14 +2823,14 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         itemBuilder: (context, index) {
           final profile = suggestions[index];
           final data = _cardData(profile);
-          final photoHeroTag = ProfilePhotoHero.tagFor(
+          final heroTags = ProfileCardHeroTags.of(
             profileId: data.profileId,
             scope: '$scope:$index',
             photoUrl: data.photoUrl,
           );
           return InkWell(
             borderRadius: BorderRadius.circular(18),
-            onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
+            onTap: () => _openProfile(profile, heroTags: heroTags),
             child: Container(
               width: 126,
               padding: const EdgeInsets.all(10),
@@ -2848,7 +2848,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               ),
               child: Column(
                 children: [
-                  _buildCircularPhoto(data.photoUrl, 54, heroTag: photoHeroTag),
+                  _buildCircularPhoto(data.photoUrl, 54, heroTag: heroTags?.photo),
                   const SizedBox(height: 8),
                   Text(
                     data.name,
@@ -2884,7 +2884,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     String? photoHeroScope,
   }) {
     final data = _cardData(profile);
-    final photoHeroTag = ProfilePhotoHero.tagFor(
+    final heroTags = ProfileCardHeroTags.of(
       profileId: data.profileId,
       scope: photoHeroScope,
       photoUrl: data.photoUrl,
@@ -2916,11 +2916,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         borderRadius: BorderRadius.circular(22),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => _openProfile(profile, photoHeroTag: photoHeroTag),
+          onTap: () => _openProfile(profile, heroTags: heroTags),
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _buildCardPhoto(data, photoHeroTag),
+              _buildCardPhoto(data, heroTags?.photo),
               const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -2949,6 +2949,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
                   profile,
                   data,
                   showActionStrip: showActionStrip,
+                  identityHeroTag: heroTags?.identity,
                 ),
               ),
             ],
@@ -3068,10 +3069,21 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
+  /// Style of the headline this card prints on the photo. Shared with the
+  /// flight so the detail screen's header can be interpolated from exactly what
+  /// the card was drawing, rather than from a second copy of these numbers.
+  static const TextStyle _cardTitleStyle = TextStyle(
+    color: Colors.white,
+    fontSize: 28,
+    fontWeight: FontWeight.w900,
+    height: 1.05,
+  );
+
   Widget _buildCardOverlay(
     Map<String, dynamic> profile,
     _MatchCardData data, {
     bool showActionStrip = true,
+    String? identityHeroTag,
   }) {
     final communityLine = _joinNonEmpty([
       data.heightLabel,
@@ -3084,20 +3096,35 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          data.titleLine,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 28,
-            fontWeight: FontWeight.w900,
-            height: 1.05,
+        // The headline and the height/community line under it are worded the
+        // same way on the profile detail screen, so they travel with the photo.
+        // Everything below stays put: the work and location lines, the chips and
+        // the action strip either say something else there or do not exist there
+        // at all, and text that has to change words cannot be animated.
+        ProfileIdentityHero(
+          tag: identityHeroTag,
+          title: data.titleLine,
+          titleStyle: _cardTitleStyle,
+          subtitle: communityLine,
+          subtitleStyle: _overlayLineStyle(fontWeight: FontWeight.w800),
+          // 8 below the headline plus the 4 every overlay line carries.
+          subtitleGap: 12,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                data.titleLine,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: _cardTitleStyle,
+              ),
+              const SizedBox(height: 8),
+              if (communityLine != null)
+                _buildOverlayLine(communityLine, fontWeight: FontWeight.w800),
+            ],
           ),
         ),
-        const SizedBox(height: 8),
-        if (communityLine != null)
-          _buildOverlayLine(communityLine, fontWeight: FontWeight.w800),
         if (workLine != null) _buildOverlayLine(workLine),
         if (data.locationLabel != null)
           _buildOverlayLine(data.locationLabel!, icon: Icons.place),
@@ -3110,6 +3137,16 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           _buildCardActionStrip(profile, data),
         ],
       ],
+    );
+  }
+
+  static TextStyle _overlayLineStyle({
+    FontWeight fontWeight = FontWeight.w600,
+  }) {
+    return TextStyle(
+      color: Colors.white.withValues(alpha: 0.94),
+      fontWeight: fontWeight,
+      fontSize: 15,
     );
   }
 
@@ -3131,11 +3168,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
               text,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.94),
-                fontWeight: fontWeight,
-                fontSize: 15,
-              ),
+              style: _overlayLineStyle(fontWeight: fontWeight),
             ),
           ),
         ],
@@ -3376,7 +3409,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
   Future<void> _openProfile(
     Map<String, dynamic> profile, {
-    String? photoHeroTag,
+    ProfileCardHeroTags? heroTags,
   }) async {
     final profileId = _displayInt(profile['id']);
     if (profileId == null) return;
@@ -3388,7 +3421,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           profileId: profileId,
           profileIds: _visibleProfileIds(),
           initialProfile: profile,
-          photoHeroTag: photoHeroTag,
+          heroTags: heroTags,
         ),
       ),
     );
