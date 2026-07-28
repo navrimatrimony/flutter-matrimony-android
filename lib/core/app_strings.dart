@@ -72,6 +72,59 @@ class AppStrings {
   static String get loginRegisterPrompt =>
       appText.loginRegisterPrompt;
 
+  // Mobile-OTP login. Registration has always signed members in with an OTP;
+  // these are the strings that let the login screen offer the same door.
+
+  static String get loginMobileHint => appText.loginMobileHint;
+
+  static String get loginOtpSentHint => appText.loginOtpSentHint;
+
+  static String get loginOtpWhatsappHint => appText.loginOtpWhatsappHint;
+
+  static String get loginOtpAutoFillHint => appText.loginOtpAutoFillHint;
+
+  static String get loginTestOtpBanner => appText.loginTestOtpBanner;
+
+  static String get loginChangeMobile => appText.loginChangeMobile;
+
+  static String get loginPickFromSim => appText.loginPickFromSim;
+
+  static String get loginNetworkError => appText.loginNetworkError;
+
+  static String get loginUseOtpInstead => appText.loginUseOtpInstead;
+
+  static String get loginUsePasswordInstead => appText.loginUsePasswordInstead;
+
+  static String get loginMobileLabel => appText.mobileNumber2;
+
+  static String get loginOtpLabel => appText.enterThe6DigitOtp2;
+
+  static String get loginSendOtp => appText.getOtp;
+
+  static String get loginVerifyOtp => appText.verifyOtp;
+
+  static String get loginOtpInvalidLength => appText.enterThe6DigitOtp;
+
+  static String get loginMobileInvalid => appText.enterAValid10DigitMobile;
+
+  static String get loginOtpSendFailed => appText.couldNotSendOtp;
+
+  static String get loginOtpVerifyFailed => appText.otpVerificationFailed;
+
+  static String get loginConsentPrefix => appText.byContinuingIAgreeToThe;
+
+  static String get loginConsentAnd => appText.and;
+
+  static String get loginConsentSuffix => appText.str;
+
+  static String loginResendInSeconds(int seconds) =>
+      // Latin digits, always. `seconds.toString()` is deliberate — an int
+      // placeholder would go through intl's locale-aware number formatter and
+      // render ३० for a Marathi member.
+      appText.loginResendInSeconds(seconds.toString());
+
+  static String loginTestOtpLabel(String otp) => appText.testOtpLabel(otp);
+
   static String get logoutToExit => appText.logoutToExit;
 
   static String get dashboard => appText.dashboard;

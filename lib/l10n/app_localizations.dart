@@ -758,6 +758,12 @@ abstract class AppLocalizations {
   /// **'Explore suitable matrimony profiles'**
   String get browseProfilesSubtitle;
 
+  /// No description provided for @byContinuingIAgreeToThe.
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, I agree to the '**
+  String get byContinuingIAgreeToThe;
+
   /// No description provided for @byRegisteringIAgreeToThe.
   ///
   /// In en, this message translates to:
@@ -2834,6 +2840,12 @@ abstract class AppLocalizations {
   /// **'Login'**
   String get login;
 
+  /// No description provided for @loginChangeMobile.
+  ///
+  /// In en, this message translates to:
+  /// **'Change mobile number'**
+  String get loginChangeMobile;
+
   /// No description provided for @loginFailed.
   ///
   /// In en, this message translates to:
@@ -2870,11 +2882,47 @@ abstract class AppLocalizations {
   /// **'Enter login and password.'**
   String get loginMissingFields;
 
+  /// No description provided for @loginMobileHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your mobile number. We will send you a one-time code.'**
+  String get loginMobileHint;
+
+  /// No description provided for @loginNetworkError.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not reach the server. Check your internet and try again.'**
+  String get loginNetworkError;
+
+  /// No description provided for @loginOtpAutoFillHint.
+  ///
+  /// In en, this message translates to:
+  /// **'If the code arrives on this phone it fills in by itself.'**
+  String get loginOtpAutoFillHint;
+
+  /// No description provided for @loginOtpSentHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code we sent to your mobile number.'**
+  String get loginOtpSentHint;
+
+  /// No description provided for @loginOtpWhatsappHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The code was sent on WhatsApp.'**
+  String get loginOtpWhatsappHint;
+
   /// No description provided for @loginPasswordLabel.
   ///
   /// In en, this message translates to:
   /// **'Password'**
   String get loginPasswordLabel;
+
+  /// No description provided for @loginPickFromSim.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick from SIM'**
+  String get loginPickFromSim;
 
   /// No description provided for @loginProfileCheckFailed.
   ///
@@ -2905,6 +2953,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Login successful. Welcome back.'**
   String get loginSuccess;
+
+  /// No description provided for @loginTestOtpBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Test mode. This code is shown only because real messages are not being sent yet.'**
+  String get loginTestOtpBanner;
+
+  /// No description provided for @loginUseOtpInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Use OTP instead'**
+  String get loginUseOtpInstead;
+
+  /// No description provided for @loginUsePasswordInstead.
+  ///
+  /// In en, this message translates to:
+  /// **'Use password instead'**
+  String get loginUsePasswordInstead;
 
   /// No description provided for @loginWelcomeSubtitle.
   ///
@@ -6307,6 +6373,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Test OTP: {otp}'**
   String testOtpLabel(String otp);
+
+  /// Resend cooldown. `seconds` is a String on purpose so no locale-aware number formatter can turn the digits into Devanagari.
+  ///
+  /// In en, this message translates to:
+  /// **'Send OTP again in {seconds}s'**
+  String loginResendInSeconds(String seconds);
 
   /// No description provided for @nearbyTalukasCount.
   ///

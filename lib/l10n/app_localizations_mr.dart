@@ -371,6 +371,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get browseProfilesSubtitle => 'तुमच्यासाठी योग्य स्थळे शोधा';
 
   @override
+  String get byContinuingIAgreeToThe => 'पुढे जाऊन मी ';
+
+  @override
   String get byRegisteringIAgreeToThe => 'नोंदणी करून मी ';
 
   @override
@@ -1472,6 +1475,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get login => 'लॉगिन करा';
 
   @override
+  String get loginChangeMobile => 'मोबाइल नंबर बदला';
+
+  @override
   String get loginFailed => 'लॉगिन झाले नाही. लॉगिन किंवा पासवर्ड तपासा.';
 
   @override
@@ -1491,7 +1497,27 @@ class AppLocalizationsMr extends AppLocalizations {
   String get loginMissingFields => 'लॉगिन आणि पासवर्ड भरा.';
 
   @override
+  String get loginMobileHint =>
+      'तुमचा मोबाइल नंबर टाका. आम्ही तुम्हाला एकदाच वापरायचा OTP पाठवू.';
+
+  @override
+  String get loginNetworkError =>
+      'सर्व्हरशी संपर्क होऊ शकला नाही. तुमचे इंटरनेट तपासा आणि पुन्हा प्रयत्न करा.';
+
+  @override
+  String get loginOtpAutoFillHint => 'कोड याच फोनवर आला तर तो आपोआप भरला जाईल.';
+
+  @override
+  String get loginOtpSentHint => 'तुमच्या मोबाइल नंबरवर पाठवलेला कोड टाका.';
+
+  @override
+  String get loginOtpWhatsappHint => 'कोड WhatsApp वर पाठवला आहे.';
+
+  @override
   String get loginPasswordLabel => 'पासवर्ड';
+
+  @override
+  String get loginPickFromSim => 'SIM मधून निवडा';
 
   @override
   String get loginProfileCheckFailed =>
@@ -1508,6 +1534,16 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get loginSuccess => 'लॉगिन यशस्वी. पुन्हा स्वागत आहे.';
+
+  @override
+  String get loginTestOtpBanner =>
+      'चाचणी मोड. खरे संदेश अजून पाठवले जात नसल्यानेच हा कोड इथे दिसतो आहे.';
+
+  @override
+  String get loginUseOtpInstead => 'त्याऐवजी OTP वापरा';
+
+  @override
+  String get loginUsePasswordInstead => 'त्याऐवजी पासवर्ड वापरा';
 
   @override
   String get loginWelcomeSubtitle =>
@@ -3353,6 +3389,11 @@ class AppLocalizationsMr extends AppLocalizations {
   @override
   String testOtpLabel(String otp) {
     return 'चाचणी OTP: $otp';
+  }
+
+  @override
+  String loginResendInSeconds(String seconds) {
+    return '$seconds सेकंदांनी OTP पुन्हा पाठवा';
   }
 
   @override

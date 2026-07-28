@@ -110,6 +110,7 @@
   "brotherSFullName": "Brother’s full name *",
   "browseProfiles": "Matches",
   "browseProfilesSubtitle": "Explore suitable matrimony profiles",
+  "byContinuingIAgreeToThe": "By continuing, I agree to the ",
   "byRegisteringIAgreeToThe": "By registering, I agree to the ",
   "calmSteady": "Calm & steady",
   "camera": "Camera",
@@ -456,18 +457,28 @@
   "lockedProfile": "Locked profile",
   "lockedVisitor": "Locked visitor",
   "login": "Login",
+  "loginChangeMobile": "Change mobile number",
   "loginFailed": "Login failed. Check login or password.",
   "loginHidePassword": "Hide password",
   "loginIdentifierLabel": "Mobile / Email / Username",
   "loginKeepSignedIn": "Keep me signed in",
   "loginKeepSignedInSubtitle": "Open the app next time without entering your password.",
   "loginMissingFields": "Enter login and password.",
+  "loginMobileHint": "Enter your mobile number. We will send you a one-time code.",
+  "loginNetworkError": "Could not reach the server. Check your internet and try again.",
+  "loginOtpAutoFillHint": "If the code arrives on this phone it fills in by itself.",
+  "loginOtpSentHint": "Enter the code we sent to your mobile number.",
+  "loginOtpWhatsappHint": "The code was sent on WhatsApp.",
   "loginPasswordLabel": "Password",
+  "loginPickFromSim": "Pick from SIM",
   "loginProfileCheckFailed": "Profile check failed. Please try again.",
   "loginProfileMissing": "Profile not found. Create your profile.",
   "loginRegisterPrompt": "New user? Register here",
   "loginShowPassword": "Show password",
   "loginSuccess": "Login successful. Welcome back.",
+  "loginTestOtpBanner": "Test mode. This code is shown only because real messages are not being sent yet.",
+  "loginUseOtpInstead": "Use OTP instead",
+  "loginUsePasswordInstead": "Use password instead",
   "loginWelcomeSubtitle": "Continue your matrimony journey securely.",
   "loginWelcomeTitle": "Welcome back",
   "logout": "Logout",
@@ -1069,6 +1080,13 @@
   "@testOtpLabel": {
     "placeholders": {
       "otp": { "type": "String" }
+    }
+  },
+  "loginResendInSeconds": "Send OTP again in {seconds}s",
+  "@loginResendInSeconds": {
+    "description": "Resend cooldown. `seconds` is a String on purpose so no locale-aware number formatter can turn the digits into Devanagari.",
+    "placeholders": {
+      "seconds": { "type": "String" }
     }
   },
   "nearbyTalukasCount": "{count} nearby talukas",

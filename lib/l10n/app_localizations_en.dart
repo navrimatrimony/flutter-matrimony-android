@@ -372,6 +372,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get browseProfilesSubtitle => 'Explore suitable matrimony profiles';
 
   @override
+  String get byContinuingIAgreeToThe => 'By continuing, I agree to the ';
+
+  @override
   String get byRegisteringIAgreeToThe => 'By registering, I agree to the ';
 
   @override
@@ -1478,6 +1481,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get login => 'Login';
 
   @override
+  String get loginChangeMobile => 'Change mobile number';
+
+  @override
   String get loginFailed => 'Login failed. Check login or password.';
 
   @override
@@ -1497,7 +1503,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginMissingFields => 'Enter login and password.';
 
   @override
+  String get loginMobileHint =>
+      'Enter your mobile number. We will send you a one-time code.';
+
+  @override
+  String get loginNetworkError =>
+      'Could not reach the server. Check your internet and try again.';
+
+  @override
+  String get loginOtpAutoFillHint =>
+      'If the code arrives on this phone it fills in by itself.';
+
+  @override
+  String get loginOtpSentHint =>
+      'Enter the code we sent to your mobile number.';
+
+  @override
+  String get loginOtpWhatsappHint => 'The code was sent on WhatsApp.';
+
+  @override
   String get loginPasswordLabel => 'Password';
+
+  @override
+  String get loginPickFromSim => 'Pick from SIM';
 
   @override
   String get loginProfileCheckFailed =>
@@ -1514,6 +1542,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loginSuccess => 'Login successful. Welcome back.';
+
+  @override
+  String get loginTestOtpBanner =>
+      'Test mode. This code is shown only because real messages are not being sent yet.';
+
+  @override
+  String get loginUseOtpInstead => 'Use OTP instead';
+
+  @override
+  String get loginUsePasswordInstead => 'Use password instead';
 
   @override
   String get loginWelcomeSubtitle =>
@@ -3368,6 +3406,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String testOtpLabel(String otp) {
     return 'Test OTP: $otp';
+  }
+
+  @override
+  String loginResendInSeconds(String seconds) {
+    return 'Send OTP again in ${seconds}s';
   }
 
   @override
