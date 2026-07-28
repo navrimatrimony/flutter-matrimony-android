@@ -660,11 +660,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                   : AppStrings.loginUseOtpInstead,
                             ),
                           ),
-                          // Only offered beside the password door. An OTP
-                          // member has no password to have forgotten, and
-                          // pointing them at an email reset would be a dead end
-                          // — the reset link only ever goes to an email
-                          // address, which an OTP-only account may not have.
+                          // Only offered beside the password door, because an
+                          // OTP member has no password to have forgotten —
+                          // she is already standing at the door that screen
+                          // would send her back to.
                           if (_method == _LoginMethod.password)
                             TextButton(
                               onPressed: isLoading
