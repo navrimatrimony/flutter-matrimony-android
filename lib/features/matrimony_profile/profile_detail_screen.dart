@@ -1879,15 +1879,18 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     final occupation =
         _displayString(hero?['occupation_label']) ??
         ApiClient.profileOccupationLabel(profile);
+    // Every fragment goes through l10n. This sentence is the first thing drawn
+    // after a card is tapped, before the fetch returns, so an English clause
+    // here is the first thing a Marathi member reads on the screen.
     final parts = <String>[
       if (education != null) education,
-      if (occupation != null) 'working as $occupation',
-      if (location != null) 'based in $location',
+      if (occupation != null) appText.aboutSummaryWorkingAs(occupation),
+      if (location != null) appText.aboutSummaryBasedIn(location),
     ];
 
     if (parts.isEmpty) return null;
 
-    return '$name is ${parts.join(', ')}.';
+    return appText.aboutSummarySentence(name, parts.join(', '));
   }
 
   List<Widget> _buildFallbackProfileDetails(

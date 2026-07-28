@@ -6536,6 +6536,24 @@ abstract class AppLocalizations {
   /// **'About {name}'**
   String aboutName(String name);
 
+  /// No description provided for @aboutSummaryWorkingAs.
+  ///
+  /// In en, this message translates to:
+  /// **'working as {occupation}'**
+  String aboutSummaryWorkingAs(String occupation);
+
+  /// No description provided for @aboutSummaryBasedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'based in {location}'**
+  String aboutSummaryBasedIn(String location);
+
+  /// No description provided for @aboutSummarySentence.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} is {details}.'**
+  String aboutSummarySentence(String name, String details);
+
   /// No description provided for @photosCounter.
   ///
   /// In en, this message translates to:

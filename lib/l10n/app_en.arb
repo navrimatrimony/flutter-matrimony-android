@@ -1078,6 +1078,25 @@
       "name": { "type": "String" }
     }
   },
+  "aboutSummaryWorkingAs": "working as {occupation}",
+  "@aboutSummaryWorkingAs": {
+    "placeholders": {
+      "occupation": { "type": "String" }
+    }
+  },
+  "aboutSummaryBasedIn": "based in {location}",
+  "@aboutSummaryBasedIn": {
+    "placeholders": {
+      "location": { "type": "String" }
+    }
+  },
+  "aboutSummarySentence": "{name} is {details}.",
+  "@aboutSummarySentence": {
+    "placeholders": {
+      "name": { "type": "String" },
+      "details": { "type": "String" }
+    }
+  },
   "photosCounter": "Photos {current}/{total}",
   "@photosCounter": {
     "placeholders": {

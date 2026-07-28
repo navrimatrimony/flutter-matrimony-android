@@ -3479,6 +3479,21 @@ class AppLocalizationsMr extends AppLocalizations {
   }
 
   @override
+  String aboutSummaryWorkingAs(String occupation) {
+    return '$occupation म्हणून काम करतात';
+  }
+
+  @override
+  String aboutSummaryBasedIn(String location) {
+    return '$location येथे राहतात';
+  }
+
+  @override
+  String aboutSummarySentence(String name, String details) {
+    return '$name — $details.';
+  }
+
+  @override
   String photosCounter(int current, int total) {
     return 'फोटो $current/$total';
   }
