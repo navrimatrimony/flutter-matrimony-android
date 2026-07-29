@@ -97,6 +97,16 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   /// Card the matches PageView is currently resting on.
   int _matchesPageIndex = 0;
 
+  /// Drives the matches PageView. Held here (rather than left implicit) so the
+  /// swipe-in scale below can read the live scroll offset every frame.
+  final PageController _matchesPageController = PageController();
+
+  /// How small an off-centre matches card starts before it grows in. The
+  /// resting card is always exactly 1.0 — the settled layout must stay
+  /// pixel-identical to what it was before the animation existed.
+  static const double _matchesCardMinScale = 0.92;
+  static const double _matchesCardMinOpacity = 0.85;
+
   /// Identifies the feed the last warm-up was scheduled for, so the post-frame
   /// pass runs once per real feed change instead of once per build.
   String? _photoPrefetchSignature;
@@ -177,6 +187,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   void dispose() {
     _recommendationCompletionTimer?.cancel();
     _recommendationHintController.dispose();
+    _matchesPageController.dispose();
     super.dispose();
   }
 
@@ -1629,6 +1640,7 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
         return PageView.builder(
           scrollDirection: Axis.vertical,
+          controller: _matchesPageController,
           physics: const PageScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
@@ -1660,16 +1672,56 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
 
             final profile = profiles[index];
 
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-              child: _buildMatchCard(
-                profile,
-                height: cardHeight.toDouble(),
-                margin: EdgeInsets.zero,
-                photoHeroScope: 'matches:$index',
+            return _buildSwipeScaledMatchCard(
+              index: index,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+                child: _buildMatchCard(
+                  profile,
+                  height: cardHeight.toDouble(),
+                  margin: EdgeInsets.zero,
+                  photoHeroScope: 'matches:$index',
+                ),
               ),
             );
           },
+        );
+      },
+    );
+  }
+
+  /// Grows a matches card in as it swipes towards the centre.
+  ///
+  /// Driven by the live scroll offset rather than a timer, so the card tracks
+  /// the finger: drag halfway and let go and the growth reverses by itself.
+  /// The whole card scales, not just the photo — the photo alone would have to
+  /// shrink inside its own frame and expose gaps at the edges, since it is
+  /// drawn with `BoxFit.cover`. A card resting at the centre is always exactly
+  /// scale 1.0 / opacity 1.0, so the settled screen looks the way it always did.
+  Widget _buildSwipeScaledMatchCard({required int index, required Widget child}) {
+    return AnimatedBuilder(
+      animation: _matchesPageController,
+      child: child,
+      builder: (context, builtChild) {
+        // Before the first layout the controller has no offset to read; treat
+        // the initial card as already resting so it does not flash in small.
+        final hasOffset = _matchesPageController.hasClients &&
+            _matchesPageController.position.hasContentDimensions;
+        final page = hasOffset
+            ? (_matchesPageController.page ?? index.toDouble())
+            : index.toDouble();
+
+        // 1 when this card is centred, 0 once it is a full page away.
+        final closeness = (1 - (page - index).abs()).clamp(0.0, 1.0);
+        final eased = Curves.easeOutCubic.transform(closeness);
+
+        return Opacity(
+          opacity: _matchesCardMinOpacity +
+              (1 - _matchesCardMinOpacity) * eased,
+          child: Transform.scale(
+            scale: _matchesCardMinScale + (1 - _matchesCardMinScale) * eased,
+            child: builtChild,
+          ),
         );
       },
     );
