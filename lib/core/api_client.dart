@@ -2472,41 +2472,6 @@ class ApiClient {
     return data;
   }
 
-  static Future<Map<String, dynamic>> uploadProfilePhoto(File imageFile) async {
-    if (authToken == null) {
-      throw Exception('Auth token is missing. User not logged in.');
-    }
-
-    final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.matrimonyProfilePhoto);
-
-    final request = http.MultipartRequest('POST', url);
-    request.headers['Accept'] = 'application/json';
-    request.headers['Authorization'] = 'Bearer $authToken';
-
-    request.files.add(
-      await http.MultipartFile.fromPath('profile_photo', imageFile.path),
-    );
-
-    final streamedResponse = await request.send();
-    final response = await http.Response.fromStream(streamedResponse);
-    final data = _decodeResponse(response);
-
-    if (response.statusCode == 200 && data['success'] == true) {
-      final uploadData = data['data'];
-      if (uploadData is Map) {
-        final profile = currentUserProfile ??= <String, dynamic>{};
-        profile['profile_photo'] = uploadData['profile_photo'];
-        final photoUrl = resolveProfilePhotoUrl(profile);
-        if (photoUrl != null) {
-          profile['profile_photo_url'] = photoUrl;
-        }
-        _invalidateProfileCache();
-      }
-    }
-
-    return data;
-  }
-
   static Future<Map<String, dynamic>> getProfilePhotos() {
     return _getJson(ApiRoutes.profilePhotos, authenticated: true);
   }
