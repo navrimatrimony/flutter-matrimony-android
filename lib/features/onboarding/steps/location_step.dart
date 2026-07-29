@@ -146,8 +146,7 @@ class _LocationStepState extends State<LocationStep>
   }
 
   String _t(String en, String mr) => _mr ? mr : en;
-  String get _addLocationLabel =>
-      appText.addNewLocation;
+  String get _addLocationLabel => appText.addNewLocation;
 
   String _locationNotFoundTitle(String query) {
     final text = query.trim();
@@ -167,19 +166,13 @@ class _LocationStepState extends State<LocationStep>
       <SmartPickerFilterOption>[
         SmartPickerFilterOption(key: 'all', label: appText.chatAll),
         SmartPickerFilterOption(key: 'taluka', label: appText.taluka),
-        SmartPickerFilterOption(
-          key: 'urban',
-          label: appText.citySuburban,
-        ),
+        SmartPickerFilterOption(key: 'urban', label: appText.citySuburban),
       ];
 
   List<SmartPickerFilterOption> get _talukaLevelFilters =>
       <SmartPickerFilterOption>[
         SmartPickerFilterOption(key: 'all', label: appText.chatAll),
-        SmartPickerFilterOption(
-          key: 'urban',
-          label: appText.citySuburban,
-        ),
+        SmartPickerFilterOption(key: 'urban', label: appText.citySuburban),
         SmartPickerFilterOption(key: 'rural', label: appText.rural),
       ];
 
@@ -395,19 +388,48 @@ class _LocationStepState extends State<LocationStep>
     return null;
   }
 
+  /// Every spelling of a location's own name the server sent.
+  ///
+  /// `label` is whatever the request's locale asked for, so on a Marathi phone
+  /// it is Devanagari. The device geocoder answers in Latin, and the two never
+  /// match. Matching has to see both scripts, and the payload carries them.
+  List<String> _optionNameVariants(OnboardingOption option) {
+    final variants = <String>[];
+    for (final value in [
+      option.label,
+      option.metaText('name_en'),
+      option.metaText('name_mr'),
+      option.metaText('name'),
+      option.metaText('display_name'),
+    ]) {
+      final text = value?.trim();
+      if (text != null && text.isNotEmpty && !variants.contains(text)) {
+        variants.add(text);
+      }
+    }
+
+    return variants;
+  }
+
   OnboardingOption? _findNamedOption(
     List<OnboardingOption> options,
     String name,
   ) {
     final wanted = name.trim().toLowerCase();
     for (final option in options) {
-      if (option.label.trim().toLowerCase() == wanted) return option;
+      for (final variant in _optionNameVariants(option)) {
+        if (variant.toLowerCase() == wanted) return option;
+      }
     }
     for (final option in options) {
-      if (_locationTextMatches(option.label, name)) return option;
+      for (final variant in _optionNameVariants(option)) {
+        if (_locationTextMatches(variant, name)) return option;
+      }
     }
     for (final option in options) {
-      if (option.label.trim().toLowerCase().contains(wanted)) return option;
+      for (final variant in _optionNameVariants(option)) {
+        if (variant.toLowerCase().contains(wanted)) return option;
+      }
     }
     return null;
   }
@@ -683,10 +705,7 @@ class _LocationStepState extends State<LocationStep>
         return;
       }
       if (_district == null) {
-        _showLocationFieldError(
-          'district',
-          appText.selectDistrictAndLocation,
-        );
+        _showLocationFieldError('district', appText.selectDistrictAndLocation);
         return;
       }
       if (_showVillagePicker) {
@@ -798,9 +817,7 @@ class _LocationStepState extends State<LocationStep>
           });
       if (!mounted) return;
       if (data == null) {
-        widget.onMessage(
-          appText.couldNotReadMobileLocation,
-        );
+        widget.onMessage(appText.couldNotReadMobileLocation);
         return;
       }
 
@@ -831,18 +848,14 @@ class _LocationStepState extends State<LocationStep>
           );
           return;
         }
-        widget.onMessage(
-          appText.couldNotReadMobileLocation,
-        );
+        widget.onMessage(appText.couldNotReadMobileLocation);
         return;
       }
 
       await _applyLocationOption(match, mobileData: data);
       _fillMobileAddressLine(data);
       if (!mounted) return;
-      widget.onMessage(
-        appText.mobileLocationMatchedPleaseReviewIt,
-      );
+      widget.onMessage(appText.mobileLocationMatchedPleaseReviewIt);
     } on PlatformException catch (error) {
       if (!mounted) return;
       if (error.code == 'LOCATION_DISABLED') {
@@ -855,9 +868,7 @@ class _LocationStepState extends State<LocationStep>
       widget.onMessage(_nativeLocationErrorMessage(error));
     } catch (_) {
       if (!mounted) return;
-      widget.onMessage(
-        appText.couldNotUseMobileLocation,
-      );
+      widget.onMessage(appText.couldNotUseMobileLocation);
     } finally {
       if (mounted) setState(() => _usingMobileLocation = false);
     }
@@ -926,9 +937,12 @@ class _LocationStepState extends State<LocationStep>
   ) {
     final stateTexts = _mobileLocationTexts(data, const ['state_en', 'state']);
     if (stateTexts.isNotEmpty) {
-      final stateLabel = _parentLabel(option, 'state');
-      if (stateLabel == null ||
-          !stateTexts.any((text) => _locationTextMatches(stateLabel, text))) {
+      final stateLabels = _parentLabelVariants(option, 'state');
+      if (stateLabels.isEmpty ||
+          !stateTexts.any(
+            (text) =>
+                stateLabels.any((label) => _locationTextMatches(label, text)),
+          )) {
         return false;
       }
     }
@@ -938,10 +952,12 @@ class _LocationStepState extends State<LocationStep>
       'district',
     ]);
     if (districtTexts.isNotEmpty) {
-      final districtLabel = _parentLabel(option, 'district');
-      if (districtLabel == null ||
+      final districtLabels = _parentLabelVariants(option, 'district');
+      if (districtLabels.isEmpty ||
           !districtTexts.any(
-            (text) => _locationTextMatches(districtLabel, text),
+            (text) => districtLabels.any(
+              (label) => _locationTextMatches(label, text),
+            ),
           )) {
         return false;
       }
@@ -956,7 +972,7 @@ class _LocationStepState extends State<LocationStep>
     String searchTerm,
   ) {
     final haystack = [
-      option.label,
+      ..._optionNameVariants(option),
       option.metaText('display_hierarchy'),
       option.metaText('type'),
       option.metaText('tag'),
@@ -1254,13 +1270,34 @@ class _LocationStepState extends State<LocationStep>
   }
 
   String? _parentLabel(OnboardingOption option, String key) {
+    final variants = _parentLabelVariants(option, key);
+    return variants.isEmpty ? null : variants.first;
+  }
+
+  /// Both spellings of an ancestor's name, for the same reason as
+  /// [_optionNameVariants]: the label follows the request locale, the device
+  /// geocoder does not.
+  List<String> _parentLabelVariants(OnboardingOption option, String key) {
     final parent = option.raw['parent'];
-    if (parent is! Map) return null;
+    if (parent is! Map) return const <String>[];
     final value = parent[key];
-    if (value is Map) {
-      return onboardingText(value['label'] ?? value['name']);
+    if (value is! Map) {
+      final text = onboardingText(value);
+      return text == null ? const <String>[] : <String>[text];
     }
-    return onboardingText(value);
+
+    final variants = <String>[];
+    for (final candidate in [
+      value['label'],
+      value['name_en'],
+      value['name_mr'],
+      value['name'],
+    ]) {
+      final text = onboardingText(candidate);
+      if (text != null && !variants.contains(text)) variants.add(text);
+    }
+
+    return variants;
   }
 
   String? _mobileLocationText(dynamic value) {
@@ -1422,9 +1459,7 @@ class _LocationStepState extends State<LocationStep>
           return StatefulBuilder(
             builder: (context, dialogSetState) {
               return AlertDialog(
-                title: Text(
-                  appText.createAddYourLocation,
-                ),
+                title: Text(appText.createAddYourLocation),
                 content: SingleChildScrollView(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1569,7 +1604,8 @@ class _LocationStepState extends State<LocationStep>
                                 parent == null ||
                                 name.length < 2) {
                               dialogSetState(() {
-                                dialogError = appText.selectCountryStateDistrictAndEnter;
+                                dialogError =
+                                    appText.selectCountryStateDistrictAndEnter;
                               });
                               return;
                             }
@@ -1996,9 +2032,7 @@ class _LocationStepState extends State<LocationStep>
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.my_location_outlined),
-            label: Text(
-              appText.useMobileLocation,
-            ),
+            label: Text(appText.useMobileLocation),
           ),
         ),
         const SizedBox(height: 12),
@@ -2106,17 +2140,14 @@ class _LocationStepState extends State<LocationStep>
         const SizedBox(height: 12),
         TextField(
           controller: _addressLineController,
-          decoration: InputDecoration(
-            labelText: appText.addressLineOptional,
-          ),
+          decoration: InputDecoration(labelText: appText.addressLineOptional),
         ),
       ],
     );
   }
 
   Widget _pendingLocationCard(BuildContext context) {
-    final label =
-        _pendingLocationLabel ?? appText.requestedLocation;
+    final label = _pendingLocationLabel ?? appText.requestedLocation;
     final type = _pendingLocationType;
     final requestId = _pendingLocationRequestId;
 
