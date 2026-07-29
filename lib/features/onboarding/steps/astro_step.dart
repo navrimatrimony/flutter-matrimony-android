@@ -143,7 +143,7 @@ class _AstroStepState extends State<AstroStep> {
   List<OnboardingOption> get _nakshatraOptionsForSelection {
     return _optionsMatchingIds(
       widget.bootstrap.nakshatras,
-      _rules.allowedNakshatraIds(_rashi?.intId),
+      _rules.nakshatraIdsFor(rashiId: _rashi?.intId, charan: _charan),
     );
   }
 

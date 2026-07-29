@@ -3562,7 +3562,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   List<Map<String, dynamic>> _nakshatraOptionsForSelection() {
     return _optionsMatchingIds(
       _nakshatraOptions,
-      _horoscopeRules.allowedNakshatraIds(_selectedRashiId),
+      _horoscopeRules.nakshatraIdsFor(
+        rashiId: _selectedRashiId,
+        charan: _selectedCharan,
+      ),
     );
   }
 

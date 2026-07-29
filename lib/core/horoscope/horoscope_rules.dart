@@ -243,6 +243,30 @@ class HoroscopeRules {
     return yoniId == null ? const <int>[] : <int>[yoniId];
   }
 
+  /// Nakshatra ids that can carry [charan] inside [rashiId].
+  ///
+  /// [allowedNakshatraIds] answers "which nakshatras live in this rashi"; this
+  /// narrows further by the pada, which is what makes rashi + charan able to
+  /// name the nakshatra on its own. Empty means "no restriction".
+  List<int> nakshatraIdsFor({int? rashiId, int? charan}) {
+    if (rashiId == null) return const <int>[];
+    if (charan == null) return allowedNakshatraIds(rashiId);
+
+    final ids = ruleRows('rashi_rules')
+        .where(
+          (row) =>
+              readInt(row['rashi_id']) == rashiId &&
+              readInt(row['charan']) == charan,
+        )
+        .map((row) => readInt(row['nakshatra_id']))
+        .whereType<int>()
+        .toSet()
+        .toList();
+    ids.sort();
+
+    return ids.isEmpty ? allowedNakshatraIds(rashiId) : ids;
+  }
+
   List<Map<String, dynamic>> ruleRows(String key) => _readRows(_raw[key]);
 
   // ---------------------------------------------------------------------
@@ -269,6 +293,23 @@ class HoroscopeRules {
     var ganId = selection.ganId;
     var nadiId = selection.nadiId;
     var yoniId = selection.yoniId;
+
+    // Any TWO of (nakshatra, rashi, charan) constrain the third, and often
+    // name it outright. Members arrive knowing different pairs — nakshatra and
+    // rashi far more often than the pada — so fill a missing field from the
+    // other two BEFORE validating, and only when exactly one option fits.
+    if (nakshatraId == null && rashiId != null && charan != null) {
+      final candidates = nakshatraIdsFor(rashiId: rashiId, charan: charan);
+      if (candidates.length == 1) {
+        nakshatraId = candidates.single;
+      }
+    }
+    if (charan == null && nakshatraId != null && rashiId != null) {
+      final charans = validCharans(nakshatraId: nakshatraId, rashiId: rashiId);
+      if (charans.length == 1) {
+        charan = charans.single;
+      }
+    }
 
     if (nakshatraId != null) {
       final attrs = attributesFor(nakshatraId);
