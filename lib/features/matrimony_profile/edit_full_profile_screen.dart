@@ -3576,10 +3576,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   List<int> _validCharansForSelection() {
-    return _horoscopeRules.validCharans(
-      nakshatraId: _selectedNakshatraId,
-      rashiId: _selectedRashiId,
-    );
+    return _horoscopeRules.charansForNakshatra(_selectedNakshatraId);
   }
 
   List<Map<String, dynamic>> _rashiOptionsForSelection() {
@@ -7592,7 +7589,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       decoration: InputDecoration(
         labelText: _optionalLabel(appText.charan),
         hintText: appText.optional,
-        prefixIcon: const Icon(Icons.filter_4),
         suffixIcon: _selectedCharan == null || _saving
             ? null
             : IconButton(
