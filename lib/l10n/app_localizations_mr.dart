@@ -4834,6 +4834,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get manageProfilePhoto => 'प्रोफाइल फोटो सांभाळा';
 
   @override
+  String get managePhotos => 'फोटो सांभाळा';
+
+  @override
   String get yourTaluka => 'तुमचा तालुका';
 
   @override

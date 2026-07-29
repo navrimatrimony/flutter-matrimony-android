@@ -8,7 +8,7 @@ import '../../core/app_loading.dart';
 import '../../core/app_language.dart';
 import '../../core/app_strings.dart';
 import '../../core/profile_network_image.dart';
-import '../photo/photo_upload_screen.dart';
+import '../photo/photo_gallery_screen.dart';
 
 /// Around sixty labels on this screen are the same field name with an
 /// "(Optional)" marker. Composing the marker once keeps the ARB holding one
@@ -5455,7 +5455,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const PhotoUploadScreen()),
+      MaterialPageRoute(builder: (_) => const PhotoGalleryScreen()),
     );
     if (!mounted) return;
 
@@ -8732,7 +8732,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             Expanded(
               child: Text(
                 photoUrl == null
-                    ? appText.noProfilePhotoUploadedYet
+                    ? appText.photoGalleryEmpty
                     : appText.profilePhotoUploaded,
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
@@ -8745,7 +8745,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           child: ElevatedButton.icon(
             onPressed: _saving ? null : _openPhotoManager,
             icon: const Icon(Icons.photo_camera_outlined),
-            label: Text(appText.manageProfilePhoto),
+            label: Text(appText.managePhotos),
           ),
         ),
       ],

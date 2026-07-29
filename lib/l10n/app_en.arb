@@ -1843,6 +1843,7 @@
   "noProfilePhotoUploadedYet": "No profile photo uploaded yet.",
   "profilePhotoUploaded": "Profile photo uploaded.",
   "manageProfilePhoto": "Manage profile photo",
+  "managePhotos": "Manage photos",
   "yourTaluka": "Your taluka",
   "distanceKm": "{distance} km",
   "@distanceKm": {

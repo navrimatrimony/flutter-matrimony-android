@@ -8960,6 +8960,12 @@ abstract class AppLocalizations {
   /// **'Manage profile photo'**
   String get manageProfilePhoto;
 
+  /// No description provided for @managePhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage photos'**
+  String get managePhotos;
+
   /// No description provided for @yourTaluka.
   ///
   /// In en, this message translates to:

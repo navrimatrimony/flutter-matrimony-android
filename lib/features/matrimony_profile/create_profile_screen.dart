@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_language.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
-import '../photo/photo_upload_screen.dart';
+import '../photo/photo_gallery_screen.dart';
 
 class CreateMatrimonyProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? existingProfile;
@@ -883,7 +883,7 @@ class _CreateMatrimonyProfileScreenState
       if (isCreate) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const PhotoUploadScreen()),
+          MaterialPageRoute(builder: (_) => const PhotoGalleryScreen()),
         );
       } else {
         Navigator.pushReplacementNamed(context, '/view-profile');

@@ -4853,6 +4853,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get manageProfilePhoto => 'Manage profile photo';
 
   @override
+  String get managePhotos => 'Manage photos';
+
+  @override
   String get yourTaluka => 'Your taluka';
 
   @override
