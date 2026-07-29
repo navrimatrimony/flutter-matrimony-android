@@ -242,42 +242,15 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     });
 
     try {
-      final response = await ApiClient.uploadProfilePhoto(_selectedImage!);
+      // Gallery transport: enforces admin photo rules (max upload size,
+      // max photos per profile, per-account upload suspension, lifecycle lock).
+      final response = await ApiClient.uploadProfilePhotos([_selectedImage!]);
       if (!mounted) return;
 
-      final statusCode = response['statusCode'];
-      if (statusCode == 401) {
-        _setFailure(
-          appText.sessionExpiredPleaseLoginAgain,
+      if (_uploadSucceeded(response)) {
+        final uploadStage = _stageFromUploadStatus(
+          _uploadedPhotoStatus(response),
         );
-        return;
-      }
-      if (statusCode == 403) {
-        _setFailure(
-          response['message']?.toString() ??
-              appText.photoUploadIsNotAllowedFor,
-        );
-        return;
-      }
-      if (statusCode == 404) {
-        _setFailure(
-          response['message']?.toString() ??
-              appText.profileWasNotFoundPleaseComplete,
-        );
-        return;
-      }
-      if (statusCode == 422) {
-        _setFailure(
-          response['message']?.toString() ??
-              appText.photoIsNotValidPleaseSelect,
-        );
-        return;
-      }
-
-      if (response['success'] == true && response['data'] is Map) {
-        final uploadData = Map<String, dynamic>.from(response['data'] as Map);
-        final status = uploadData['status']?.toString().trim().toLowerCase();
-        final uploadStage = _stageFromUploadStatus(status);
 
         setState(() {
           _stage = uploadStage;
@@ -292,10 +265,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         return;
       }
 
-      _setFailure(
-        response['message']?.toString() ??
-            appText.photoUploadFailedPleaseTryAgain,
-      );
+      _setFailure(_uploadFailureMessage(response));
     } catch (_) {
       _setFailure(
         appText.thereWasAProblemUploadingThe,
@@ -501,6 +471,73 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       _detailMessage = message;
     });
     _showMessage(message, _NoticeTone.error);
+  }
+
+  bool _uploadSucceeded(Map<String, dynamic> response) {
+    final status = response['statusCode'];
+    return status is int &&
+        status >= 200 &&
+        status < 300 &&
+        response['success'] != false;
+  }
+
+  /// The gallery endpoint returns `photos` + `meta`, not `data`. A freshly
+  /// queued photo is still being processed, so it may not be listed yet —
+  /// treat anything short of a fully approved gallery as pending review.
+  String? _uploadedPhotoStatus(Map<String, dynamic> response) {
+    final rows = response['photos'];
+    if (rows is! List || rows.isEmpty) return null;
+
+    final statuses = <String>[];
+    for (final row in rows) {
+      if (row is! Map) continue;
+      final status = row['status']?.toString().trim().toLowerCase();
+      if (status != null && status.isNotEmpty) statuses.add(status);
+    }
+    if (statuses.isEmpty) return null;
+    if (statuses.every((status) => status == 'approved')) return 'approved';
+    return 'pending';
+  }
+
+  /// Surfaces the real backend reason (file too large, photo limit reached,
+  /// uploads suspended, profile locked) instead of a generic failure.
+  String _uploadFailureMessage(Map<String, dynamic> response) {
+    if (response['statusCode'] == 401) {
+      return appText.sessionExpiredPleaseLoginAgain;
+    }
+
+    final serverMessage = _validationMessage(response) ?? _messageOf(response);
+    if (serverMessage != null) return serverMessage;
+
+    return switch (response['statusCode']) {
+      401 => appText.sessionExpiredPleaseLoginAgain,
+      403 => appText.photoUploadIsNotAllowedFor,
+      404 => appText.profileWasNotFoundPleaseComplete,
+      422 => appText.photoIsNotValidPleaseSelect,
+      _ => appText.photoUploadFailedPleaseTryAgain,
+    };
+  }
+
+  String? _messageOf(Map<String, dynamic> response) {
+    final message = response['message']?.toString().trim();
+    if (message == null || message.isEmpty) return null;
+    return message;
+  }
+
+  String? _validationMessage(Map<String, dynamic> response) {
+    final errors = response['errors'];
+    if (errors is! Map) return null;
+    for (final value in errors.values) {
+      if (value is List) {
+        for (final item in value) {
+          final text = item?.toString().trim();
+          if (text != null && text.isNotEmpty) return text;
+        }
+      }
+      final text = value?.toString().trim();
+      if (text != null && text.isNotEmpty) return text;
+    }
+    return null;
   }
 
   _PhotoStepState _stageFromUploadStatus(String? status) {
