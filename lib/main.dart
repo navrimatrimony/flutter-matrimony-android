@@ -44,6 +44,10 @@ const Color _screenBackground = Color(0xFFF8F4EF);
 const String _brandLogoAsset = 'assets/images/navri_logo.png';
 const String _startupHeroAsset = 'assets/images/landing_hero.jpg';
 
+/// Last entry of `MobileOnboardingDraftService::STEPS` on the server. Reaching
+/// it means the onboarding flow itself has nothing left to collect.
+const String _onboardingFinalStep = 'activation';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Never blocks startup: the service swallows its own failures, so the app
@@ -407,10 +411,29 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     return '${now.year}-$month-$day';
   }
 
+  /// Onboarding is the only place an unfinished member may land.
+  ///
+  /// This used to check `hasProfile` alone, but the profile row is created a
+  /// couple of steps INTO onboarding — so a member who filled two steps and
+  /// closed the app came back to the dashboard with no way back to the step
+  /// they abandoned, which is the opposite of the designed resume behaviour.
+  ///
+  /// The server already resolves where to resume and sends it as `next_step`
+  /// (see MobileOnboardingStatusService::nextStep). It never sends null: a
+  /// member with steps remaining gets that step, and one who has reached the
+  /// end of the flow gets `activation`. So "is there anything left to do" is
+  /// simply "is the next step something other than activation" — no second
+  /// copy of the step order on this side, and a member who is already through
+  /// the flow can never be pulled back into it.
   bool _needsSmartOnboarding(OnboardingStatus status) {
     if (!status.hasProfile) return true;
 
-    return false;
+    final nextStep = (status.nextStep ?? status.draft?.currentStep)
+        ?.trim()
+        .toLowerCase();
+    if (nextStep == null || nextStep.isEmpty) return false;
+
+    return nextStep != _onboardingFinalStep;
   }
 
   @override
