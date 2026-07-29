@@ -755,7 +755,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       <_AllianceNetworkEditRow>[];
   bool _preferredLocationsTouched = false;
   HoroscopeRules _horoscopeRules = HoroscopeRules.empty;
-  Map<String, dynamic> _rashiAshtakoota = <String, dynamic>{};
+  RashiAshtakootaRules _rashiAshtakoota = RashiAshtakootaRules.empty;
 
   @override
   void initState() {
@@ -2574,7 +2574,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _mangalDoshTypeOptions = _readRows(results['mangal_dosh_types']);
         _birthWeekdayOptions = _readRows(results['birth_weekdays']);
         _horoscopeRules = HoroscopeRules(_readMap(results['horoscope_rules']));
-        _rashiAshtakoota = _readMap(results['rashi_ashtakoota']);
+        _rashiAshtakoota = RashiAshtakootaRules(
+          _readMap(results[RashiAshtakootaRules.payloadKey]),
+        );
         _applyHoroscopeDependencies();
       });
     } catch (_) {
@@ -3530,12 +3532,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
-  Map<String, dynamic> _rashiAshtakootaFor(int? rashiId) {
-    if (rashiId == null) return <String, dynamic>{};
-
-    return _readMap(_rashiAshtakoota[rashiId.toString()]);
-  }
-
   List<Map<String, dynamic>> _optionsMatchingIds(
     List<Map<String, dynamic>> options,
     List<int> allowedIds,
@@ -3578,10 +3574,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   void _applyRashiAshtakootaSelection() {
-    final details = _rashiAshtakootaFor(_selectedRashiId);
-    _selectedVarnaId = _readInt(details['varna_id']);
-    _selectedVashyaId = _readInt(details['vashya_id']);
-    _selectedRashiLordId = _readInt(details['rashi_lord_id']);
+    final details = _rashiAshtakoota.forRashi(_selectedRashiId);
+    _selectedVarnaId = details.varnaId;
+    _selectedVashyaId = details.vashyaId;
+    _selectedRashiLordId = details.rashiLordId;
   }
 
   void _applyHoroscopeDependencies() {

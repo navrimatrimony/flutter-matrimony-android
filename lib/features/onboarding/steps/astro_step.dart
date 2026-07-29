@@ -44,7 +44,16 @@ class _AstroStepState extends State<AstroStep> {
   int? _nadiId;
   int? _yoniId;
 
+  // Derived from the rashi, same source of truth Edit Profile uses. Also never
+  // rendered here — onboarding shows nakshatra / rashi / charan / mangal dosh.
+  int? _varnaId;
+  int? _vashyaId;
+  int? _rashiLordId;
+
   HoroscopeRules get _rules => HoroscopeRules(widget.bootstrap.horoscopeRules);
+
+  RashiAshtakootaRules get _ashtakoota =>
+      RashiAshtakootaRules(widget.bootstrap.rashiAshtakoota);
 
   @override
   void initState() {
@@ -110,6 +119,11 @@ class _AstroStepState extends State<AstroStep> {
     _ganId = result.ganId;
     _nadiId = result.nadiId;
     _yoniId = result.yoniId;
+
+    final ashtakoota = _ashtakoota.forRashi(result.rashiId);
+    _varnaId = ashtakoota.varnaId;
+    _vashyaId = ashtakoota.vashyaId;
+    _rashiLordId = ashtakoota.rashiLordId;
   }
 
   List<OnboardingOption> _optionsMatchingIds(
@@ -120,7 +134,9 @@ class _AstroStepState extends State<AstroStep> {
     final allowed = allowedIds.toSet();
 
     return options
-        .where((option) => option.intId != null && allowed.contains(option.intId))
+        .where(
+          (option) => option.intId != null && allowed.contains(option.intId),
+        )
         .toList();
   }
 
@@ -145,12 +161,10 @@ class _AstroStepState extends State<AstroStep> {
     );
 
     if (widget.bootstrap.charanOptions.isNotEmpty) {
-      final filtered = widget.bootstrap.charanOptions
-          .where((option) {
-            final value = _charanValue(option);
-            return value != null && valid.contains(value);
-          })
-          .toList();
+      final filtered = widget.bootstrap.charanOptions.where((option) {
+        final value = _charanValue(option);
+        return value != null && valid.contains(value);
+      }).toList();
 
       return filtered.isEmpty ? widget.bootstrap.charanOptions : filtered;
     }
@@ -210,6 +224,11 @@ class _AstroStepState extends State<AstroStep> {
               'gan_id': _ganId,
               'nadi_id': _nadiId,
               'yoni_id': _yoniId,
+              // Derived behind the scenes from the rashi, same rule Edit
+              // Profile applies; also not rendered here.
+              'varna_id': _varnaId,
+              'vashya_id': _vashyaId,
+              'rashi_lord_id': _rashiLordId,
             }),
       saveProfile: !skip,
     );

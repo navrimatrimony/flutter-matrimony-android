@@ -67,6 +67,53 @@ class HoroscopeSelection {
   }
 }
 
+/// Varna / vashya / rashi-lord attributes derived from a rashi.
+class RashiAshtakoota {
+  const RashiAshtakoota({this.varnaId, this.vashyaId, this.rashiLordId});
+
+  final int? varnaId;
+  final int? vashyaId;
+  final int? rashiLordId;
+
+  /// Nothing derived — what an unknown or missing rashi yields.
+  static const RashiAshtakoota none = RashiAshtakoota();
+}
+
+/// UI-free reader over the server `rashi_ashtakoota` payload — a map keyed by
+/// rashi id (keys are strings) whose rows carry `varna_id`, `vashya_id` and
+/// `rashi_lord_id`. An empty payload degrades to [RashiAshtakoota.none], so no
+/// screen ever shows half-derived values.
+class RashiAshtakootaRules {
+  RashiAshtakootaRules(Map<String, dynamic>? raw)
+    : _raw = raw == null ? const <String, dynamic>{} : Map.of(raw);
+
+  /// The key this payload arrives under, in both the profile-setup options
+  /// response and the onboarding bootstrap.
+  static const String payloadKey = 'rashi_ashtakoota';
+
+  static final RashiAshtakootaRules empty = RashiAshtakootaRules(
+    const <String, dynamic>{},
+  );
+
+  final Map<String, dynamic> _raw;
+
+  bool get isEmpty => _raw.isEmpty;
+
+  /// Varna / vashya / rashi lord implied by [rashiId].
+  RashiAshtakoota forRashi(int? rashiId) {
+    if (rashiId == null) return RashiAshtakoota.none;
+
+    final row = HoroscopeRules.readMap(_raw[rashiId.toString()]);
+    if (row.isEmpty) return RashiAshtakoota.none;
+
+    return RashiAshtakoota(
+      varnaId: HoroscopeRules.readInt(row['varna_id']),
+      vashyaId: HoroscopeRules.readInt(row['vashya_id']),
+      rashiLordId: HoroscopeRules.readInt(row['rashi_lord_id']),
+    );
+  }
+}
+
 /// Gan / nadi / yoni attributes derived from a nakshatra.
 class HoroscopeAttributes {
   const HoroscopeAttributes({this.ganId, this.nadiId, this.yoniId});
@@ -94,9 +141,7 @@ class HoroscopeRules {
     : _raw = raw == null ? const <String, dynamic>{} : Map.of(raw);
 
   /// Rules-less instance: every lookup degrades to the unfiltered defaults.
-  static final HoroscopeRules empty = HoroscopeRules(
-    const <String, dynamic>{},
-  );
+  static final HoroscopeRules empty = HoroscopeRules(const <String, dynamic>{});
 
   /// Charans offered when the rules cannot narrow the list.
   static const List<int> defaultCharans = <int>[1, 2, 3, 4];
@@ -205,9 +250,18 @@ class HoroscopeRules {
   // ---------------------------------------------------------------------
 
   /// Given a selection whose nakshatra / rashi / charan may have just changed,
-  /// return the selection with every dependent value repaired: an invalid rashi
-  /// or charan is replaced, gan/nadi/yoni are derived from the nakshatra, and a
-  /// nakshatra that does not belong to the chosen rashi is cleared.
+  /// return the selection with every dependent value repaired.
+  ///
+  /// The repair never *guesses*:
+  ///
+  /// * gan / nadi / yoni are derived from the nakshatra.
+  /// * A value that is no longer valid is dropped. If exactly one valid option
+  ///   remains it is selected (that is a fact, not a guess); if several remain
+  ///   the field is cleared so the member picks it themselves. The old
+  ///   "snap to the first option" behaviour is gone — it invented choices.
+  /// * (nakshatra, charan) determines the rashi exactly, so whenever both are
+  ///   known the rashi is *derived* from the rule rather than kept or guessed.
+  /// * A nakshatra that does not belong to the chosen rashi is cleared.
   HoroscopeSelection reconcile(HoroscopeSelection selection) {
     var nakshatraId = selection.nakshatraId;
     var rashiId = selection.rashiId;
@@ -227,20 +281,26 @@ class HoroscopeRules {
         yoniId ??= attrs.yoniId;
       }
 
-      if (charan != null && charan >= 1 && charan <= 4 && rashiId == null) {
-        rashiId = rashiIdFor(nakshatraId: nakshatraId, charan: charan);
-      }
-
+      // Rashi must belong to the nakshatra. Only one option left => that is a
+      // fact; several left => clear and let the member choose.
       final allowedRashis = allowedRashiIds(nakshatraId);
       if (allowedRashis.isNotEmpty &&
           rashiId != null &&
           !allowedRashis.contains(rashiId)) {
-        rashiId = allowedRashis.first;
+        rashiId = allowedRashis.length == 1 ? allowedRashis.single : null;
       }
 
+      // Same principle for charan, judged against whatever rashi survived.
       final charans = validCharans(nakshatraId: nakshatraId, rashiId: rashiId);
       if (charan != null && charans.isNotEmpty && !charans.contains(charan)) {
-        charan = charans.first;
+        charan = charans.length == 1 ? charans.single : null;
+      }
+
+      // Deterministic derivation: 108 rules cover every (nakshatra, charan)
+      // pair, so the rashi is read from the rule, never left stale.
+      if (charan != null) {
+        rashiId =
+            rashiIdFor(nakshatraId: nakshatraId, charan: charan) ?? rashiId;
       }
     } else {
       ganId = null;

@@ -18,6 +18,7 @@ class OnboardingBootstrap {
     this.rashis = const <OnboardingOption>[],
     this.charanOptions = const <OnboardingOption>[],
     this.horoscopeRules = const <String, dynamic>{},
+    this.rashiAshtakoota = const <String, dynamic>{},
     this.childrenRules = const <String, dynamic>{},
     this.agePolicy = const <String, dynamic>{},
     this.steps = const <String>[],
@@ -39,6 +40,7 @@ class OnboardingBootstrap {
   final List<OnboardingOption> rashis;
   final List<OnboardingOption> charanOptions;
   final Map<String, dynamic> horoscopeRules;
+  final Map<String, dynamic> rashiAshtakoota;
   final Map<String, dynamic> childrenRules;
   final Map<String, dynamic> agePolicy;
   final List<String> steps;
@@ -97,6 +99,7 @@ class OnboardingBootstrap {
         source['charan_options'] ?? source['charans'] ?? source['charan'],
       ),
       horoscopeRules: _mapValue(source['horoscope_rules']),
+      rashiAshtakoota: _mapValue(source['rashi_ashtakoota']),
       childrenRules: _mapValue(source['children_rules']),
       agePolicy: _mapValue(source['age_policy']),
       steps: rawSteps is List
