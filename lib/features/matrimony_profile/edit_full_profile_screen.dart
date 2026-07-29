@@ -3576,7 +3576,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   List<int> _validCharansForSelection() {
-    return _horoscopeRules.charansForNakshatra(_selectedNakshatraId);
+    return _horoscopeRules.validCharans(
+      nakshatraId: _selectedNakshatraId,
+      rashiId: _selectedRashiId,
+    );
   }
 
   List<Map<String, dynamic>> _rashiOptionsForSelection() {
@@ -7589,6 +7592,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       decoration: InputDecoration(
         labelText: _optionalLabel(appText.charan),
         hintText: appText.optional,
+        prefixIcon: const Icon(Icons.filter_4),
         suffixIcon: _selectedCharan == null || _saving
             ? null
             : IconButton(
@@ -8570,27 +8574,17 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           onChanged: _selectNakshatra,
         ),
         const SizedBox(height: 14),
-        // Charan and mangal dosh are both short answers, so they share a row
-        // and keep the derived block visible without scrolling.
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: _charanDropdown()),
-            const SizedBox(width: 10),
-            Expanded(
-              flex: 2,
-              child: _intDropdown(
-                labelText: _optionalLabel(appText.mangalDoshType),
-                icon: Icons.warning,
-                options: _mangalDoshTypeOptions,
-                selectedId: _selectedMangalDoshTypeId,
-                fallbackPrefix: appText.mangalDosh,
-                loading: _remainingProfileOptionsLoading,
-                onChanged: (value) =>
-                    setState(() => _selectedMangalDoshTypeId = value),
-              ),
-            ),
-          ],
+        _charanDropdown(),
+        const SizedBox(height: 14),
+        _intDropdown(
+          labelText: _optionalLabel(appText.mangalDoshType),
+          icon: Icons.warning,
+          options: _mangalDoshTypeOptions,
+          selectedId: _selectedMangalDoshTypeId,
+          fallbackPrefix: appText.mangalDosh,
+          loading: _remainingProfileOptionsLoading,
+          onChanged: (value) =>
+              setState(() => _selectedMangalDoshTypeId = value),
         ),
         const SizedBox(height: 14),
         _derivedHoroscopeBlock(),

@@ -243,29 +243,6 @@ class HoroscopeRules {
     return yoniId == null ? const <int>[] : <int>[yoniId];
   }
 
-  /// Every charan the rules know for [nakshatraId] — what a charan picker may
-  /// offer.
-  ///
-  /// Deliberately NOT narrowed by the rashi. The rashi is derived from
-  /// (nakshatra, charan), so narrowing the charan list by it is circular: pick
-  /// Krittika pada 1 and the rashi becomes Mesha, and a rashi-narrowed list
-  /// would then offer pada 1 alone — the member could never reach pada 2.
-  /// Every nakshatra genuinely has four padas; which rashi each one falls in
-  /// is the answer, not the question.
-  List<int> charansForNakshatra(int? nakshatraId) {
-    if (nakshatraId == null) return defaultCharans;
-
-    final charans = ruleRows('rashi_rules')
-        .where((row) => readInt(row['nakshatra_id']) == nakshatraId)
-        .map((row) => readInt(row['charan']))
-        .whereType<int>()
-        .toSet()
-        .toList();
-    charans.sort();
-
-    return charans.isEmpty ? defaultCharans : charans;
-  }
-
   /// Nakshatra ids that can carry [charan] inside [rashiId].
   ///
   /// [allowedNakshatraIds] answers "which nakshatras live in this rashi"; this
@@ -327,12 +304,6 @@ class HoroscopeRules {
         nakshatraId = candidates.single;
       }
     }
-    if (charan == null && nakshatraId != null && rashiId != null) {
-      final charans = validCharans(nakshatraId: nakshatraId, rashiId: rashiId);
-      if (charans.length == 1) {
-        charan = charans.single;
-      }
-    }
 
     if (nakshatraId != null) {
       final attrs = attributesFor(nakshatraId);
@@ -354,27 +325,25 @@ class HoroscopeRules {
         rashiId = allowedRashis.length == 1 ? allowedRashis.single : null;
       }
 
-      // Deterministic derivation: 108 rules cover every (nakshatra, charan)
-      // pair, so the rashi is read from the rule, never left stale.
-      //
-      // The charan is NOT re-checked against the rashi first. It cannot be
-      // wrong — every nakshatra has all four padas — and checking would invert
-      // the dependency: with Krittika pada 1 the rashi becomes Mesha, and Mesha
-      // admits only pada 1, so moving to pada 2 would be undone on the spot.
-      // The charan the member picked wins; the rashi follows it.
+      // A rashi the member has NOT chosen follows from (nakshatra, charan).
+      // One they HAVE chosen is never overwritten — it is an input of its own,
+      // and the charan list right below is filtered by it. Overwriting it is
+      // what made the pair circular: the rashi followed the charan, the charan
+      // list followed the rashi, and the list collapsed to the pada already
+      // held so no other pada could be reached.
+      if (rashiId == null && charan != null) {
+        rashiId = rashiIdFor(nakshatraId: nakshatraId, charan: charan);
+      }
+
+      // Charan against the surviving rashi — the third corner. Only one option
+      // left => that is a fact; several left => clear and let the member pick.
+      final charans = validCharans(nakshatraId: nakshatraId, rashiId: rashiId);
       if (charan != null) {
-        rashiId =
-            rashiIdFor(nakshatraId: nakshatraId, charan: charan) ?? rashiId;
-      } else {
-        // No charan yet: if the chosen rashi leaves only one pada open, that is
-        // a fact worth filling in.
-        final charans = validCharans(
-          nakshatraId: nakshatraId,
-          rashiId: rashiId,
-        );
-        if (charans.length == 1) {
-          charan = charans.single;
+        if (charans.isNotEmpty && !charans.contains(charan)) {
+          charan = charans.length == 1 ? charans.single : null;
         }
+      } else if (charans.length == 1) {
+        charan = charans.single;
       }
     } else {
       ganId = null;

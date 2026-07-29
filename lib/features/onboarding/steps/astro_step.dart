@@ -155,7 +155,10 @@ class _AstroStepState extends State<AstroStep> {
   }
 
   List<OnboardingOption> get _charanOptions {
-    final valid = _rules.charansForNakshatra(_nakshatra?.intId);
+    final valid = _rules.validCharans(
+      nakshatraId: _nakshatra?.intId,
+      rashiId: _rashi?.intId,
+    );
 
     if (widget.bootstrap.charanOptions.isNotEmpty) {
       final filtered = widget.bootstrap.charanOptions.where((option) {
