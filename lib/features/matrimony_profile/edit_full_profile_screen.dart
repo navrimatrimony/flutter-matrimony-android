@@ -1264,20 +1264,47 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
 
   List<Map<String, dynamic>> _relativeRelationOptions() {
     return <Map<String, dynamic>>[
-      {'value': 'paternal_grandfather', 'label': appText.relationPaternalGrandfather},
-      {'value': 'paternal_grandmother', 'label': appText.relationPaternalGrandmother},
+      {
+        'value': 'paternal_grandfather',
+        'label': appText.relationPaternalGrandfather,
+      },
+      {
+        'value': 'paternal_grandmother',
+        'label': appText.relationPaternalGrandmother,
+      },
       {'value': 'paternal_uncle', 'label': appText.relationPaternalUncle},
-      {'value': 'wife_paternal_uncle', 'label': appText.relationPaternalUncleWife},
+      {
+        'value': 'wife_paternal_uncle',
+        'label': appText.relationPaternalUncleWife,
+      },
       {'value': 'paternal_aunt', 'label': appText.relationPaternalAunt},
-      {'value': 'husband_paternal_aunt', 'label': appText.relationPaternalAuntHusband},
+      {
+        'value': 'husband_paternal_aunt',
+        'label': appText.relationPaternalAuntHusband,
+      },
       {'value': 'Cousin', 'label': appText.relationCousin},
-      {'value': 'maternal_address_ajol', 'label': appText.relationMaternalAddressAjol},
-      {'value': 'maternal_grandfather', 'label': appText.relationMaternalGrandfather},
-      {'value': 'maternal_grandmother', 'label': appText.relationMaternalGrandmother},
+      {
+        'value': 'maternal_address_ajol',
+        'label': appText.relationMaternalAddressAjol,
+      },
+      {
+        'value': 'maternal_grandfather',
+        'label': appText.relationMaternalGrandfather,
+      },
+      {
+        'value': 'maternal_grandmother',
+        'label': appText.relationMaternalGrandmother,
+      },
       {'value': 'maternal_uncle', 'label': appText.relationMaternalUncle},
-      {'value': 'wife_maternal_uncle', 'label': appText.relationMaternalUncleWife},
+      {
+        'value': 'wife_maternal_uncle',
+        'label': appText.relationMaternalUncleWife,
+      },
       {'value': 'maternal_aunt', 'label': appText.relationMaternalAunt},
-      {'value': 'husband_maternal_aunt', 'label': appText.relationMaternalAuntHusband},
+      {
+        'value': 'husband_maternal_aunt',
+        'label': appText.relationMaternalAuntHusband,
+      },
       {'value': 'maternal_cousin', 'label': appText.relationCousin},
     ];
   }
@@ -2413,7 +2440,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           (row) => _readInt(row['id']) == selectedReligionId,
         );
         if (selected.isNotEmpty) {
-          _selectedReligionLabel = _optionLabel(selected.first, appText.religion);
+          _selectedReligionLabel = _optionLabel(
+            selected.first,
+            appText.religion,
+          );
           _religionController.text = _selectedReligionLabel ?? '';
         }
         await _loadCastes(selectedReligionId, preserveSelection: true);
@@ -3569,13 +3599,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
-  List<Map<String, dynamic>> _yoniOptionsForSelection() {
-    return _optionsMatchingIds(
-      _yoniOptions,
-      _horoscopeRules.allowedYoniIds(_selectedNakshatraId),
-    );
-  }
-
   void _applyRashiAshtakootaSelection() {
     final details = _rashiAshtakoota.forRashi(_selectedRashiId);
     _selectedVarnaId = details.varnaId;
@@ -4259,7 +4282,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       }
       return true;
     } else {
-      _showMessage(response['message']?.toString() ?? appText.profileSaveFailed);
+      _showMessage(
+        response['message']?.toString() ?? appText.profileSaveFailed,
+      );
       return false;
     }
   }
@@ -4447,9 +4472,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       );
     }
     if (min != null) {
-      return appText.heightPreferenceMin(
-        _heightLabel(min).split(' (').first,
-      );
+      return appText.heightPreferenceMin(_heightLabel(min).split(' (').first);
     }
     return appText.heightPreferenceMax(_heightLabel(max!).split(' (').first);
   }
@@ -4502,7 +4525,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     final max = _selectedPreferredIncomeMax;
     if (min == null && max == null) return null;
     if (min != null && max != null) {
-      return appText.incomePreferenceRange(_incomeLabel(min), _incomeLabel(max));
+      return appText.incomePreferenceRange(
+        _incomeLabel(min),
+        _incomeLabel(max),
+      );
     }
     if (min != null) return appText.incomePreferenceMin(_incomeLabel(min));
     return appText.incomePreferenceMax(_incomeLabel(max!));
@@ -4545,8 +4571,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   _boolSummary(_selectedHasChildren),
                   _selectedHasChildren == true && _childRows.isNotEmpty
                       ? (_childRows.length == 1
-                ? appText.childCountOne
-                : appText.childCountOther(_childRows.length))
+                            ? appText.childCountOne
+                            : appText.childCountOther(_childRows.length))
                       : null,
                 ], separator: ': ')
               : null,
@@ -4555,7 +4581,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return _summaryFromParts([
           _selectedHeightCm == null ? null : _heightLabel(_selectedHeightCm!),
           _selectedWeightKg == null ? null : _weightLabel(_selectedWeightKg!),
-          _labelForId(_complexionOptions, _selectedComplexionId, appText.labelComplexion),
+          _labelForId(
+            _complexionOptions,
+            _selectedComplexionId,
+            appText.labelComplexion,
+          ),
           _labelForId(_dietOptions, _selectedDietId, appText.diet),
           _joinSummaryParts([
             _labelForId(
@@ -4604,7 +4634,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             _selectedMotherOccupationLabel,
           ], separator: ': '),
           _addressRowsSummary(_parentsAddressRows),
-          _labelForId(_familyTypeOptions, _selectedFamilyTypeId, appText.labelFamilyType),
+          _labelForId(
+            _familyTypeOptions,
+            _selectedFamilyTypeId,
+            appText.labelFamilyType,
+          ),
           _labelForValue(
             _familyStatusOptions,
             _selectedFamilyStatus,
@@ -4628,21 +4662,21 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       case _EditProfileSection.siblings:
         return _summaryFromParts([
           _selectedHasSiblings == true
-          ? appText.siblingsAdded
-          : appText.valueNoSiblings,
+              ? appText.siblingsAdded
+              : appText.valueNoSiblings,
           _siblingRows.isEmpty
               ? null
               : (_siblingRows.length == 1
-                ? appText.siblingCountOne
-                : appText.siblingCountOther(_siblingRows.length)),
+                    ? appText.siblingCountOne
+                    : appText.siblingCountOther(_siblingRows.length)),
         ]);
       case _EditProfileSection.relatives:
         return _summaryFromParts([
           _relativeRows.isEmpty
               ? null
               : (_relativeRows.length == 1
-                ? appText.relativeCountOne
-                : appText.relativeCountOther(_relativeRows.length)),
+                    ? appText.relativeCountOne
+                    : appText.relativeCountOther(_relativeRows.length)),
           _relativeRows.isEmpty
               ? null
               : _labelForValue(
@@ -4656,8 +4690,10 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           _allianceNetworkRows.isEmpty
               ? null
               : (_allianceNetworkRows.length == 1
-                ? appText.allianceFamilyCountOne
-                : appText.allianceFamilyCountOther(_allianceNetworkRows.length)),
+                    ? appText.allianceFamilyCountOne
+                    : appText.allianceFamilyCountOther(
+                        _allianceNetworkRows.length,
+                      )),
           _allianceNetworkRows.isEmpty
               ? null
               : _controllerSummary(
@@ -4673,7 +4709,11 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       case _EditProfileSection.horoscope:
         return _summaryFromParts([
           _labelForId(_rashiOptions, _selectedRashiId, appText.rashi),
-          _labelForId(_nakshatraOptions, _selectedNakshatraId, appText.nakshatra),
+          _labelForId(
+            _nakshatraOptions,
+            _selectedNakshatraId,
+            appText.nakshatra,
+          ),
           _labelForId(_ganOptions, _selectedGanId, appText.labelGan),
         ]);
       case _EditProfileSection.aboutMe:
@@ -5192,9 +5232,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(appText.unsavedChanges),
-          content: Text(
-            appText.saveOrDiscardChangesInSection,
-          ),
+          content: Text(appText.saveOrDiscardChangesInSection),
           actions: [
             TextButton(
               onPressed: () =>
@@ -5378,11 +5416,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         ? appText.partialLabel
         : status.label;
     final label = status.total > 1
-        ? appText.sectionProgressShort(
-            shortLabel,
-            status.filled,
-            status.total,
-          )
+        ? appText.sectionProgressShort(shortLabel, status.filled, status.total)
         : shortLabel;
 
     return ConstrainedBox(
@@ -5532,7 +5566,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 const SizedBox(width: 8),
                 if (showSiblingsHeaderSwitch) ...[
                   Text(
-                    _selectedHasSiblings == true ? appText.toggleOn : appText.toggleOff,
+                    _selectedHasSiblings == true
+                        ? appText.toggleOn
+                        : appText.toggleOff,
                     style: theme.textTheme.labelMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                       color: _selectedHasSiblings == true
@@ -5707,7 +5743,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         labelText: labelText,
         hintText: isLoading
             ? AppStrings.loading
-            : _labelForId(options, selectedId, fallbackPrefix) ?? appText.optional,
+            : _labelForId(options, selectedId, fallbackPrefix) ??
+                  appText.optional,
         prefixIcon: Icon(icon),
         suffixIcon: selectedId == null || _saving
             ? null
@@ -5988,9 +6025,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         max: maxAge.toDouble(),
         divisions: maxAge - minAge,
         labels: RangeLabels(
-        appText.valueAgeYears(start.toString()),
-        appText.valueAgeYears(end.toString()),
-      ),
+          appText.valueAgeYears(start.toString()),
+          appText.valueAgeYears(end.toString()),
+        ),
         onChanged: _saving
             ? null
             : (next) {
@@ -6374,8 +6411,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                   },
             icon: const Icon(Icons.playlist_add_check),
             label: Text(
-        options.isEmpty ? appText.optionsUnavailable : appText.select,
-      ),
+              options.isEmpty ? appText.optionsUnavailable : appText.select,
+            ),
           ),
         ],
       ),
@@ -6407,8 +6444,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             title: appText.labelChildren,
             subtitle: _selectedHasChildren == true
                 ? (_childRows.length == 1
-                ? appText.childDetailCountOne
-                : appText.childDetailCountOther(_childRows.length))
+                      ? appText.childDetailCountOne
+                      : appText.childDetailCountOther(_childRows.length))
                 : appText.noChildren,
             icon: Icons.child_care_outlined,
             value: _selectedHasChildren == true,
@@ -6818,7 +6855,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
                 .map(
                   (option) => DropdownMenuItem<String>(
                     value: option['key'],
-                    child: Text(option['label'] ?? option['key'] ?? appText.addressLabel),
+                    child: Text(
+                      option['label'] ?? option['key'] ?? appText.addressLabel,
+                    ),
                   ),
                 )
                 .toList(),
@@ -6967,7 +7006,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           enabled: _selectedCasteId != null,
           decoration: InputDecoration(
             labelText: _optionalLabel(appText.subCaste),
-            hintText: _selectedCasteId == null ? appText.selectCasteFirst : null,
+            hintText: _selectedCasteId == null
+                ? appText.selectCasteFirst
+                : null,
             prefixIcon: const Icon(Icons.account_tree_outlined),
           ),
           onChanged: _searchSubCastes,
@@ -7069,9 +7110,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return DropdownMenuItem<String>(
           value: 'custom:$id',
           child: Text(
-        appText.customOptionLabel(label),
-        overflow: TextOverflow.ellipsis,
-      ),
+            appText.customOptionLabel(label),
+            overflow: TextOverflow.ellipsis,
+          ),
         );
       }).whereType<DropdownMenuItem<String>>(),
     ];
@@ -7127,9 +7168,9 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         return DropdownMenuItem<String>(
           value: 'custom:$id',
           child: Text(
-        appText.customOptionLabel(label),
-        overflow: TextOverflow.ellipsis,
-      ),
+            appText.customOptionLabel(label),
+            overflow: TextOverflow.ellipsis,
+          ),
         );
       }).whereType<DropdownMenuItem<String>>(),
     ];
@@ -7374,9 +7415,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
             controller: amountController,
             labelText: effectiveValueType == 'exact'
                 ? appText.exactPeriodIncome(periodLabel(effectivePeriod))
-                : appText.approximatePeriodIncome(
-                    periodLabel(effectivePeriod),
-                  ),
+                : appText.approximatePeriodIncome(periodLabel(effectivePeriod)),
           ),
         ],
         if (showRange) ...[
@@ -7408,6 +7447,122 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
               : (value) => setState(() => onPrivateChanged(value)),
         ),
       ],
+    );
+  }
+
+  /// The six values the rules derive: gan / nadi / yoni follow from the
+  /// nakshatra, varna / vashya / rashi lord from the rashi.
+  ///
+  /// Shown, not offered. A dropdown here would only invite the member to
+  /// contradict the rule that fills the field a moment later — the pickers
+  /// above are the whole input. A value stays blank until the rashi and
+  /// nakshatra it depends on are chosen.
+  Widget _derivedHoroscopeBlock() {
+    final theme = Theme.of(context);
+    final labelStyle = TextStyle(fontSize: 12, color: theme.hintColor);
+    const valueStyle = TextStyle(fontSize: 14);
+
+    Widget cell(String label, String? value) {
+      return Row(
+        children: [
+          SizedBox(
+            width: 56,
+            child: Text(
+              label,
+              style: labelStyle,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Container(
+            width: 1,
+            height: 13,
+            color: theme.dividerColor,
+            margin: const EdgeInsets.symmetric(horizontal: 8),
+          ),
+          Expanded(
+            child: Text(
+              value ?? '',
+              style: valueStyle,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget pair(Widget left, Widget right) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 5),
+        child: Row(
+          children: [
+            Expanded(child: left),
+            const SizedBox(width: 12),
+            Expanded(child: right),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, size: 14, color: theme.hintColor),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(appText.horoscopeDerivedTitle, style: labelStyle),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          pair(
+            cell(
+              appText.labelGan,
+              _labelForId(_ganOptions, _selectedGanId, appText.labelGan),
+            ),
+            cell(
+              appText.labelNadi,
+              _labelForId(_nadiOptions, _selectedNadiId, appText.labelNadi),
+            ),
+          ),
+          pair(
+            cell(
+              appText.labelYoni,
+              _labelForId(_yoniOptions, _selectedYoniId, appText.labelYoni),
+            ),
+            cell(
+              appText.labelVarna,
+              _labelForId(_varnaOptions, _selectedVarnaId, appText.labelVarna),
+            ),
+          ),
+          pair(
+            cell(
+              appText.labelVashya,
+              _labelForId(
+                _vashyaOptions,
+                _selectedVashyaId,
+                appText.labelVashya,
+              ),
+            ),
+            cell(
+              appText.labelRashiLord,
+              _labelForId(
+                _rashiLordOptions,
+                _selectedRashiLordId,
+                appText.labelRashiLord,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -8419,78 +8574,30 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           onChanged: _selectNakshatra,
         ),
         const SizedBox(height: 14),
-        _charanDropdown(),
-        const SizedBox(height: 14),
-        _intDropdown(
-          labelText: _optionalLabel(appText.labelGan),
-          icon: Icons.category,
-          options: _ganOptions,
-          selectedId: _selectedGanId,
-          fallbackPrefix: appText.labelGan,
-          loading: _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => _selectedGanId = value),
+        // Charan and mangal dosh are both short answers, so they share a row
+        // and keep the derived block visible without scrolling.
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _charanDropdown()),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: _intDropdown(
+                labelText: _optionalLabel(appText.mangalDoshType),
+                icon: Icons.warning,
+                options: _mangalDoshTypeOptions,
+                selectedId: _selectedMangalDoshTypeId,
+                fallbackPrefix: appText.mangalDosh,
+                loading: _remainingProfileOptionsLoading,
+                onChanged: (value) =>
+                    setState(() => _selectedMangalDoshTypeId = value),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 14),
-        _intDropdown(
-          labelText: _optionalLabel(appText.labelNadi),
-          icon: Icons.opacity,
-          options: _nadiOptions,
-          selectedId: _selectedNadiId,
-          fallbackPrefix: appText.labelNadi,
-          loading: _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => _selectedNadiId = value),
-        ),
-        const SizedBox(height: 14),
-        _intDropdown(
-          labelText: _optionalLabel(appText.labelYoni),
-          icon: Icons.spa,
-          options: _yoniOptionsForSelection(),
-          selectedId: _selectedYoniId,
-          fallbackPrefix: appText.labelYoni,
-          loading: _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => _selectedYoniId = value),
-        ),
-        const SizedBox(height: 14),
-        _intDropdown(
-          labelText: _optionalLabel(appText.labelVarna),
-          icon: Icons.layers,
-          options: _varnaOptions,
-          selectedId: _selectedVarnaId,
-          fallbackPrefix: appText.labelVarna,
-          loading: _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => _selectedVarnaId = value),
-        ),
-        const SizedBox(height: 14),
-        _intDropdown(
-          labelText: _optionalLabel(appText.labelVashya),
-          icon: Icons.device_hub,
-          options: _vashyaOptions,
-          selectedId: _selectedVashyaId,
-          fallbackPrefix: appText.labelVashya,
-          loading: _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => _selectedVashyaId = value),
-        ),
-        const SizedBox(height: 14),
-        _intDropdown(
-          labelText: _optionalLabel(appText.labelRashiLord),
-          icon: Icons.wb_sunny,
-          options: _rashiLordOptions,
-          selectedId: _selectedRashiLordId,
-          fallbackPrefix: appText.labelRashiLord,
-          loading: _remainingProfileOptionsLoading,
-          onChanged: (value) => setState(() => _selectedRashiLordId = value),
-        ),
-        const SizedBox(height: 14),
-        _intDropdown(
-          labelText: _optionalLabel(appText.mangalDoshType),
-          icon: Icons.warning,
-          options: _mangalDoshTypeOptions,
-          selectedId: _selectedMangalDoshTypeId,
-          fallbackPrefix: appText.mangalDosh,
-          loading: _remainingProfileOptionsLoading,
-          onChanged: (value) =>
-              setState(() => _selectedMangalDoshTypeId = value),
-        ),
+        _derivedHoroscopeBlock(),
         const SizedBox(height: 14),
         TextField(
           controller: _devakController,
@@ -8670,8 +8777,8 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     if (distance != null && distance > 0) {
       final rounded = distance.round();
       return rounded > 0
-        ? appText.distanceKm(rounded.toString())
-        : appText.distanceKm(distance.toStringAsFixed(1));
+          ? appText.distanceKm(rounded.toString())
+          : appText.distanceKm(distance.toStringAsFixed(1));
     }
     return null;
   }

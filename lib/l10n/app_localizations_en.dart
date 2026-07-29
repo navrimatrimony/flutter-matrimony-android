@@ -3966,6 +3966,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get labelGan => 'Gan';
 
   @override
+  String get horoscopeDerivedTitle => 'Filled automatically from the above';
+
+  @override
   String get labelNadi => 'Nadi';
 
   @override

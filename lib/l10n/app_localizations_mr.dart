@@ -3948,6 +3948,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get labelGan => 'गण';
 
   @override
+  String get horoscopeDerivedTitle => 'वरील माहितीवरून आपोआप';
+
+  @override
   String get labelNadi => 'नाडी';
 
   @override

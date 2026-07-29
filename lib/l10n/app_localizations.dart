@@ -7352,6 +7352,12 @@ abstract class AppLocalizations {
   /// **'Gan'**
   String get labelGan;
 
+  /// Heading above the read-only horoscope values derived from rashi and nakshatra.
+  ///
+  /// In en, this message translates to:
+  /// **'Filled automatically from the above'**
+  String get horoscopeDerivedTitle;
+
   /// No description provided for @labelNadi.
   ///
   /// In en, this message translates to:
