@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 /// The one low-level way this app draws a profile photo that comes from the
@@ -10,6 +11,12 @@ import 'package:flutter/material.dart';
 /// cross-fades the sharp photo in on top of it. It reuses that exact same
 /// fallback when the photo fails, so a slow photo and a broken photo look
 /// identical and neither can ever read as an error or a bare rectangle.
+///
+/// It also owns the app's photo caching. Every photo resolves through
+/// [providerFor], which is backed by an on-disk + in-memory cache, so a URL is
+/// downloaded from the server once and served locally on every later view,
+/// including after an app restart. Callers that know a photo is about to be
+/// needed can warm that same cache up front with [prefetch].
 ///
 /// It is deliberately NOT a blur-up ("WhatsApp style") loader. The API exposes
 /// a single full-size photo URL per profile — no thumbnail, no blurhash, no
@@ -60,13 +67,49 @@ class ProfileNetworkImage extends StatelessWidget {
   /// Called when the photo fails to load, for callers that remember bad URLs.
   final VoidCallback? onError;
 
+  /// The single image provider every profile photo in the app goes through.
+  ///
+  /// It is backed by the shared on-disk cache, so a photo is downloaded from
+  /// the server once and afterwards served locally — including across app
+  /// restarts. Both this widget and [prefetch] build the provider here so they
+  /// resolve to the same cache entry and a prefetched photo is genuinely
+  /// already decoded when its card arrives.
+  static ImageProvider providerFor(
+    BuildContext context,
+    String url, {
+    double? decodeWidth,
+  }) {
+    return ResizeImage.resizeIfNeeded(
+      _decodeCacheWidthFor(context, decodeWidth),
+      null,
+      CachedNetworkImageProvider(url),
+    );
+  }
+
+  /// Warms the cache for [url] so the photo is on disk and decoded before the
+  /// widget that draws it is ever built.
+  ///
+  /// Failures are swallowed on purpose: a photo that cannot be prefetched is
+  /// simply retried by the widget later, and a broken URL must never surface
+  /// as an error from a background warm-up.
+  static Future<void> prefetch(
+    BuildContext context,
+    String url, {
+    double? decodeWidth,
+  }) {
+    return precacheImage(
+      providerFor(context, url, decodeWidth: decodeWidth),
+      context,
+      onError: (_, _) {},
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final image = Image.network(
-      url,
+    final image = Image(
+      image: providerFor(context, url, decodeWidth: decodeWidth),
       fit: fit,
       alignment: alignment,
-      cacheWidth: _decodeCacheWidth(context),
       frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
         // Already decoded in the image cache: show it straight away. Fading
         // here would read as a flicker every time the widget rebuilds.
@@ -99,7 +142,7 @@ class ProfileNetworkImage extends StatelessWidget {
     return SizedBox(width: width, height: height, child: image);
   }
 
-  int? _decodeCacheWidth(BuildContext context) {
+  static int? _decodeCacheWidthFor(BuildContext context, double? decodeWidth) {
     final logicalWidth = decodeWidth;
     if (logicalWidth == null || logicalWidth <= 0) return null;
 

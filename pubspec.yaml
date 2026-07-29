@@ -39,6 +39,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   http: ^1.2.1
+  # Disk + memory cache for profile photos. Without it every card re-downloads
+  # its photo, so the card paints empty until the bytes land.
+  cached_network_image: ^3.4.1
   image_picker: ^1.1.2
   flutter_secure_storage: ^10.3.1
   share_plus: ^10.1.4
