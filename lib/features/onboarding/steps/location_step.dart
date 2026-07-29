@@ -833,43 +833,20 @@ class _LocationStepState extends State<LocationStep>
       }
       if (!mounted) return;
 
-      final resolvedLeaf =
-          _village != null ||
-          (_localArea != null && _locationEnabled(_localArea!));
-
-      // Only when the walk could not reach a leaf, fall back to searching the
-      // name across the country and validating its ancestors afterwards.
-      OnboardingOption? match;
-      if (!resolvedLeaf) {
-        try {
-          match = await _findMobileLocationMatch(data);
-        } catch (_) {
-          match = null;
-        }
-        if (!mounted) return;
-      }
-
-      if (match == null) {
-        final addressFilled = _fillMobileAddressLine(data);
-        if (hierarchyFilled || addressFilled) {
-          final hasFilledLocation =
-              _village != null ||
-              (_localArea != null && _locationEnabled(_localArea!));
-          widget.onMessage(
-            hasFilledLocation
-                ? appText.mobileLocationFilledPleaseReviewIt
-                : appText.weFoundYourMobileLocationPlease,
-          );
-          return;
-        }
-        widget.onMessage(appText.couldNotReadMobileLocation);
+      final addressFilled = _fillMobileAddressLine(data);
+      if (hierarchyFilled || addressFilled) {
+        final hasFilledLocation =
+            _village != null ||
+            (_localArea != null && _locationEnabled(_localArea!));
+        widget.onMessage(
+          hasFilledLocation
+              ? appText.mobileLocationFilledPleaseReviewIt
+              : appText.weFoundYourMobileLocationPlease,
+        );
         return;
       }
-
-      await _applyLocationOption(match, mobileData: data);
-      _fillMobileAddressLine(data);
-      if (!mounted) return;
-      widget.onMessage(appText.mobileLocationMatchedPleaseReviewIt);
+      widget.onMessage(appText.couldNotReadMobileLocation);
+      return;
     } on PlatformException catch (error) {
       if (!mounted) return;
       if (error.code == 'LOCATION_DISABLED') {
@@ -894,29 +871,6 @@ class _LocationStepState extends State<LocationStep>
     } catch (_) {
       // The message still tells the user what to do if Android settings cannot open.
     }
-  }
-
-  Future<OnboardingOption?> _findMobileLocationMatch(
-    Map<String, dynamic> data,
-  ) async {
-    final preferredState = await _mobileStateOption(data);
-    for (final term in _mobileLocationSearchTerms(data)) {
-      final page = await _locationPage(
-        term,
-        1,
-        20,
-        preferredStateId: preferredState?.intId,
-      );
-      final match = _bestMobileLocationMatch(
-        page.results,
-        data,
-        term,
-        requireHierarchyMatch: true,
-        minScore: 10,
-      );
-      if (match != null) return match;
-    }
-    return null;
   }
 
   OnboardingOption? _bestMobileLocationMatch(
@@ -1053,26 +1007,15 @@ class _LocationStepState extends State<LocationStep>
     return terms;
   }
 
-  Future<OnboardingOption?> _mobileStateOption(
-    Map<String, dynamic> data,
-  ) async {
-    final stateText =
-        _mobileLocationText(data['state_en']) ??
-        _mobileLocationText(data['state']);
-    if (stateText == null) return _state;
-    final states = await _ensureStates();
-    final countryId = _country?.intId;
-    return _findNamedOption(
-      states.where((option) {
-        if (countryId == null) return true;
-        return _parentId(option) == countryId;
-      }).toList(),
-      stateText,
-    );
-  }
-
+  /// Searches for the leaf strictly INSIDE [parent] — the district when one was
+  /// resolved, otherwise the state.
+  ///
+  /// Scope is the whole point. A village name looked up nationally competes
+  /// with millions of rows and can land in the wrong district; the same name
+  /// under one district is a choice among a few thousand, and the ancestors are
+  /// already known to be right because the walk established them.
   Future<OnboardingOption?> _findMobileFinalLocationUnderDistrict(
-    OnboardingOption district,
+    OnboardingOption parent,
     Map<String, dynamic> data,
   ) async {
     final terms = _mobileLocationSearchTerms(data);
@@ -1080,7 +1023,7 @@ class _LocationStepState extends State<LocationStep>
 
     for (final term in terms) {
       final direct = await _childrenPage(
-        parent: district,
+        parent: parent,
         query: term,
         page: 1,
         limit: 25,
@@ -1147,9 +1090,14 @@ class _LocationStepState extends State<LocationStep>
     final district = districtText == null
         ? null
         : _findNamedOption(districts, districtText);
-    final finalLocation = district == null
+    // Search the leaf under the deepest ancestor the walk reached. A district
+    // narrows it to a few thousand rows; the state is the widest this is ever
+    // allowed to go. Without either, nothing is searched — a national lookup
+    // would be a guess among millions, which is what the walk exists to avoid.
+    final leafParent = district ?? state;
+    final finalLocation = leafParent == null
         ? null
-        : await _findMobileFinalLocationUnderDistrict(district, data);
+        : await _findMobileFinalLocationUnderDistrict(leafParent, data);
 
     if (!mounted) return false;
     var changed = false;
