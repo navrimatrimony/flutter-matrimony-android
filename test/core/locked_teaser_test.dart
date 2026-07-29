@@ -261,7 +261,7 @@ void main() {
     /// `teaser_viewed_time`.
     Map<String, dynamic> productionRow() {
       return <String, dynamic>{
-        'headline': 'Kurhani तालुका हून एक स्त्री,',
+        'headline': 'Kurhani तालुका हून एक वधू,',
         'lines': <String>['Kurhani / Muzaffarpur / Bihar', '27 वर्षे'],
         'viewed_summary': 'पाहिले: 2 तासांपूर्वी',
         'photo_url':
@@ -270,7 +270,7 @@ void main() {
         'blur_photo_class': 'blur-md scale-110 opacity-90',
         'accent_line': null,
         'match_line': null,
-        'interest_hint': 'ही महिला तुमच्या प्रोफाइलमध्ये interested असू शकते.',
+        'interest_hint': 'ही वधू तुमच्या प्रोफाइलमध्ये interested असू शकते.',
       };
     }
 
@@ -304,7 +304,7 @@ void main() {
         host(LockedTeaserHeadline(text: teaser.headline!)),
       );
 
-      expect(find.text('Kurhani तालुका हून एक स्त्री,'), findsOneWidget);
+      expect(find.text('Kurhani तालुका हून एक वधू,'), findsOneWidget);
     });
 
     testWidgets('the attribute lines keep the location string the server '
@@ -321,7 +321,7 @@ void main() {
       );
       expect(find.text('पाहिले: 2 तासांपूर्वी'), findsOneWidget);
       expect(
-        find.text('ही महिला तुमच्या प्रोफाइलमध्ये interested असू शकते.'),
+        find.text('ही वधू तुमच्या प्रोफाइलमध्ये interested असू शकते.'),
         findsOneWidget,
       );
     });

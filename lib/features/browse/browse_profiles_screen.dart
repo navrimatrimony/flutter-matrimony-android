@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +7,6 @@ import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../../core/app_storage.dart';
-import '../../core/locked_teaser.dart';
 import '../../core/profile_network_image.dart';
 import '../../core/profile_card_hero.dart';
 import '../interests/received_interests_screen.dart';
@@ -2277,68 +2277,182 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     );
   }
 
-  /// A recent visitor the plan has not revealed. The photo fills the top of the
-  /// tile so the blurred person reads as a person, the server's headline sits
-  /// on the scrim as the loudest thing on the card, and the curiosity pills and
-  /// the single call to action stack underneath. Nothing here is invented — the
-  /// tile only ever draws keys the server sent, and it never routes into the
-  /// hidden profile.
-  Widget _buildRecentVisitorTeaserCard(Map<String, dynamic> rawTeaser) {
-    final teaser = LockedTeaser.fromJson(rawTeaser) ?? const LockedTeaser();
-    final headline = teaser.headline ?? appText.lockedVisitor;
-    final summary = teaser.viewedSummary;
-    void openUpgrade() => _showSnackBar(AppStrings.upgradeToSeeVisitors);
+  /// Recent-visitor teaser card as it worked before the shared LockedTeaser
+  /// rewrite (752057c / 856a70a). Kept local so the More tab keeps painting
+  /// blur + headline + lines even when the shared widgets fail closed.
+  Widget _buildRecentVisitorTeaserCard(Map<String, dynamic> teaser) {
+    final headline =
+        _displayString(teaser['headline']) ?? appText.lockedVisitor;
+    final lines = _teaserLines(teaser).take(2).toList();
+    final viewedSummary = _displayString(teaser['viewed_summary']);
+    final accentLine = _displayString(teaser['accent_line']);
+    final matchLine = _displayString(teaser['match_line']);
 
     return Material(
       color: Colors.white,
       borderRadius: BorderRadius.circular(18),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: openUpgrade,
+        onTap: () => _showSnackBar(AppStrings.upgradeToSeeVisitors),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Expanded(
-              child: LockedTeaserPhotoFrame(
-                teaser: teaser,
-                cornerRadius: 0,
-                scrim: true,
-                lockAlignment: Alignment.topRight,
-                topStartOverlay: summary == null
-                    ? null
-                    : LockedTeaserGlassChip(label: summary),
-                bottomOverlay: LockedTeaserHeadline(
-                  text: headline,
-                  onPhoto: true,
-                  fontSize: 14.5,
-                ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _buildTeaserPhoto(teaser),
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Color(0x99000000)],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 9,
+                    right: 9,
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.50),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.lock_outline,
+                        color: Colors.white,
+                        size: 17,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    left: 10,
+                    right: 10,
+                    bottom: 9,
+                    child: Text(
+                      headline,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                        height: 1.12,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  LockedTeaserLines(
-                    teaser: teaser,
-                    attributeMaxLines: 1,
-                    attributeFontSize: 11.5,
-                    showSummary: false,
-                    compactAccent: true,
-                  ),
-                  const SizedBox(height: 9),
-                  LockedTeaserUnlockButton(
-                    label: AppStrings.upgrade,
-                    dense: true,
-                    expand: true,
-                    onPressed: openUpgrade,
+                  for (final line in lines) ...[
+                    Text(
+                      line,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.grey.shade800,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                  ],
+                  if (viewedSummary != null)
+                    Text(
+                      viewedSummary,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  if (accentLine != null || matchLine != null) ...[
+                    const SizedBox(height: 5),
+                    Text(
+                      _joinNonEmpty([accentLine, matchLine])!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: _brandDark,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: () =>
+                          _showSnackBar(AppStrings.upgradeToSeeVisitors),
+                      icon: const Icon(Icons.lock_open_outlined, size: 13),
+                      label: Text(AppStrings.upgrade),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: _brandColor,
+                        side: BorderSide(
+                          color: _brandColor.withValues(alpha: 0.45),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: const Size(0, 28),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        textStyle: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTeaserPhoto(Map<String, dynamic> teaser) {
+    final avatarStyle = _displayString(teaser['avatar_style'])?.toLowerCase();
+    final photoUrl = _displayString(teaser['photo_url']);
+
+    if (avatarStyle == 'blur' && photoUrl != null) {
+      return ImageFiltered(
+        imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Image.network(
+          Uri.encodeFull(photoUrl),
+          fit: BoxFit.cover,
+          alignment: Alignment.topCenter,
+          errorBuilder: (_, _, _) => _buildTeaserPlaceholder(),
+        ),
+      );
+    }
+
+    return _buildTeaserPlaceholder();
+  }
+
+  Widget _buildTeaserPlaceholder() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF5E7E3), Color(0xFFFEE2E2)],
+        ),
+      ),
+      child: const Icon(
+        Icons.person,
+        color: _BrowseProfilesScreenState._brandColor,
+        size: 48,
       ),
     );
   }
@@ -3873,6 +3987,20 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   String _emptyProfilesMessage({bool prefixIcon = false}) {
     final message = appText.noProfilesFoundTryReducingFilters;
     return prefixIcon ? '❌ $message' : message;
+  }
+
+  List<String> _teaserLines(Map<String, dynamic> teaser) {
+    final lines = teaser['lines'];
+    if (lines is List) {
+      return lines
+          .map(_displayString)
+          .whereType<String>()
+          .where((line) => line.isNotEmpty)
+          .toList();
+    }
+
+    final singleLine = _displayString(lines);
+    return singleLine == null ? <String>[] : <String>[singleLine];
   }
 
   String? _targetGender() {
