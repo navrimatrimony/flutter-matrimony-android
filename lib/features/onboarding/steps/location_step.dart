@@ -821,21 +821,35 @@ class _LocationStepState extends State<LocationStep>
         return;
       }
 
-      OnboardingOption? match;
+      // Top-down first: country, then the state inside it, then the district
+      // inside that, then the leaf searched only under that district. Narrowing
+      // at every level means a village name that repeats elsewhere in the
+      // country can never be picked from the wrong district.
+      var hierarchyFilled = false;
       try {
-        match = await _findMobileLocationMatch(data);
+        hierarchyFilled = await _fillMobileKnownHierarchy(data);
       } catch (_) {
-        match = null;
+        hierarchyFilled = false;
       }
       if (!mounted) return;
-      if (match == null) {
-        var hierarchyFilled = false;
+
+      final resolvedLeaf =
+          _village != null ||
+          (_localArea != null && _locationEnabled(_localArea!));
+
+      // Only when the walk could not reach a leaf, fall back to searching the
+      // name across the country and validating its ancestors afterwards.
+      OnboardingOption? match;
+      if (!resolvedLeaf) {
         try {
-          hierarchyFilled = await _fillMobileKnownHierarchy(data);
+          match = await _findMobileLocationMatch(data);
         } catch (_) {
-          hierarchyFilled = false;
+          match = null;
         }
         if (!mounted) return;
+      }
+
+      if (match == null) {
         final addressFilled = _fillMobileAddressLine(data);
         if (hierarchyFilled || addressFilled) {
           final hasFilledLocation =
