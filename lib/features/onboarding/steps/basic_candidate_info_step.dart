@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../../../core/latin_date_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../models/onboarding_bootstrap.dart';
@@ -283,7 +284,6 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
     return '${feet}ft ${inch}in ($cm cm)';
   }
 
-
   String? get _genderMode =>
       widget.profileForWhom?.metaText('gender_mode') ??
       widget.profileForWhom?.raw['gender_mode']?.toString();
@@ -504,7 +504,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
   Future<void> _pickDob() async {
     final now = DateTime.now();
     final existing = _parseDob(_dobController.text);
-    final picked = await showDatePicker(
+    final picked = await showLatinDigitDatePicker(
       context: context,
       initialDate: existing ?? DateTime(now.year - 25, now.month, now.day),
       firstDate: DateTime(now.year - 100),
@@ -548,9 +548,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
       return;
     }
     if (_gender == null) {
-      widget.onMessage(
-        appText.chooseGenderBeforeContinuing,
-      );
+      widget.onMessage(appText.chooseGenderBeforeContinuing);
       return;
     }
 
@@ -600,9 +598,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
             textInputAction: TextInputAction.next,
             decoration: onboardingErrorInputDecoration(
               labelText: _nameFieldLabel,
-              errorText: _nameError
-                  ? appText.enterFullName
-                  : fullNameError,
+              errorText: _nameError ? appText.enterFullName : fullNameError,
             ),
             onChanged: (_) {
               setState(() {
@@ -627,9 +623,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
               decoration:
                   onboardingErrorInputDecoration(
                     labelText: _dobLabel,
-                    errorText: _dobError
-                        ? appText.selectDob
-                        : dobFieldError,
+                    errorText: _dobError ? appText.selectDob : dobFieldError,
                     suffixIcon: const Icon(Icons.calendar_today),
                   ).copyWith(
                     focusedBorder: OutlineInputBorder(
@@ -654,9 +648,7 @@ class _BasicCandidateInfoStepState extends State<BasicCandidateInfoStep> {
               label: _heightLabel,
               selectedItems: _height == null ? const [] : [_height!],
               placeholder: appText.selectHeight2,
-              errorText: _heightError
-                  ? appText.selectHeight
-                  : heightFieldError,
+              errorText: _heightError ? appText.selectHeight : heightFieldError,
               showDividers: true,
               initialScrollIndex: _heightInitialScrollIndex,
               loadPage: (query, page, limit) =>

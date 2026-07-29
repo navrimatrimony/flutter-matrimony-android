@@ -4,6 +4,7 @@ import '../../core/app_language.dart';
 import '../../core/app_strings.dart';
 import '../../core/api_client.dart';
 import '../photo/photo_gallery_screen.dart';
+import '../../core/latin_date_picker.dart';
 
 class CreateMatrimonyProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? existingProfile;
@@ -704,9 +705,7 @@ class _CreateMatrimonyProfileScreenState
       return true;
     }
 
-    _showMessage(
-      appText.selectSubCasteFromSuggestionsOrLeaveEmpty,
-    );
+    _showMessage(appText.selectSubCasteFromSuggestionsOrLeaveEmpty);
     return false;
   }
 
@@ -716,7 +715,8 @@ class _CreateMatrimonyProfileScreenState
       return false;
     }
 
-    if (_selectedCasteId == null || (_selectedCasteLabel?.trim().isEmpty ?? true)) {
+    if (_selectedCasteId == null ||
+        (_selectedCasteLabel?.trim().isEmpty ?? true)) {
       _showMessage(appText.pleaseSelectCasteFromSuggestions);
       return false;
     }
@@ -802,9 +802,7 @@ class _CreateMatrimonyProfileScreenState
         _selectedSubCasteLabel = _optionLabel(exactSubCaste!, 'Sub-caste');
         _subCasteController.text = _selectedSubCasteLabel ?? subCasteText;
       } else {
-        _showMessage(
-          appText.selectSubCasteFromSuggestionsOrLeaveEmpty,
-        );
+        _showMessage(appText.selectSubCasteFromSuggestionsOrLeaveEmpty);
         return;
       }
     }
@@ -874,7 +872,9 @@ class _CreateMatrimonyProfileScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isCreate ? appText.profileCreatedSuccessfully : appText.profileUpdatedSuccessfully,
+            isCreate
+                ? appText.profileCreatedSuccessfully
+                : appText.profileUpdatedSuccessfully,
           ),
           backgroundColor: Colors.green,
           duration: const Duration(seconds: 2),
@@ -1078,7 +1078,9 @@ class _CreateMatrimonyProfileScreenState
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
+              backgroundColor: theme.colorScheme.primary.withValues(
+                alpha: 0.12,
+              ),
             ),
           ),
         ],
@@ -1193,7 +1195,9 @@ class _CreateMatrimonyProfileScreenState
                 },
           decoration: InputDecoration(
             labelText: AppStrings.profileType,
-            hintText: _gendersLoading ? AppStrings.loading : AppStrings.brideGroom,
+            hintText: _gendersLoading
+                ? AppStrings.loading
+                : AppStrings.brideGroom,
             errorText: _genderLoadError,
             prefixIcon: const Icon(Icons.wc_outlined),
           ),
@@ -1208,7 +1212,7 @@ class _CreateMatrimonyProfileScreenState
             prefixIcon: Icon(Icons.calendar_today_outlined),
           ),
           onTap: () async {
-            final pickedDate = await showDatePicker(
+            final pickedDate = await showLatinDigitDatePicker(
               context: context,
               initialDate: DateTime(1995),
               firstDate: DateTime(1950),
@@ -1259,7 +1263,9 @@ class _CreateMatrimonyProfileScreenState
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
             labelText: 'Caste',
-            hintText: _selectedReligionId == null ? 'Select religion first' : null,
+            hintText: _selectedReligionId == null
+                ? 'Select religion first'
+                : null,
             prefixIcon: const Icon(Icons.group_outlined),
           ),
           onChanged: _onCasteChanged,
@@ -1400,7 +1406,9 @@ class _CreateMatrimonyProfileScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(_isEditMode ? 'Edit Profile' : 'Create Profile')),
+      appBar: AppBar(
+        title: Text(_isEditMode ? 'Edit Profile' : 'Create Profile'),
+      ),
       body: SafeArea(
         child: Column(
           children: [

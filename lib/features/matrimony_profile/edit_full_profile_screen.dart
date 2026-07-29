@@ -10,6 +10,7 @@ import '../../core/app_strings.dart';
 import '../../core/horoscope/horoscope_rules.dart';
 import '../../core/profile_network_image.dart';
 import '../photo/photo_gallery_screen.dart';
+import '../../core/latin_date_picker.dart';
 
 /// Around sixty labels on this screen are the same field name with an
 /// "(Optional)" marker. Composing the marker once keeps the ARB holding one
@@ -3303,7 +3304,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   Future<void> _pickDob() async {
-    final pickedDate = await showDatePicker(
+    final pickedDate = await showLatinDigitDatePicker(
       context: context,
       initialDate: DateTime.tryParse(_dobController.text) ?? DateTime(1995),
       firstDate: DateTime(1950),
