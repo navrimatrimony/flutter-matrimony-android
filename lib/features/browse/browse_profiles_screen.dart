@@ -84,6 +84,13 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   final Set<String> _failedPhotoUrls = <String>{};
   MatchesFilterState _filters = const MatchesFilterState();
   MatchesFilterState _nearbyFilters = const MatchesFilterState();
+
+  // Nearby feed paging. The backend widens outward from the member's own taluka and
+  // returns the nearest slice first, so the rest is fetched only as they keep scrolling.
+  static const int _nearbyPageSize = 20;
+  int _nearbyPage = 1;
+  bool _nearbyHasMore = false;
+  bool _nearbyLoadingMore = false;
   late final AnimationController _recommendationHintController;
   late final Animation<double> _recommendationHintOffset;
 
@@ -158,10 +165,17 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     MatchesFilterState? filters,
     String? feed,
   }) async {
+    final isNearby = feed == 'nearby';
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
       _failedPhotoUrls.clear();
+      if (isNearby) {
+        _nearbyPage = 1;
+        _nearbyHasMore = false;
+        _nearbyLoadingMore = false;
+      }
     });
 
     try {
@@ -185,6 +199,8 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         occupationId: activeFilters?.occupationId,
         maritalStatusId: activeFilters?.maritalStatusId,
         feed: feed,
+        page: isNearby ? 1 : null,
+        perPage: isNearby ? _nearbyPageSize : null,
       );
       if (!mounted) return;
 
@@ -210,6 +226,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         setState(() {
           _profiles = List<dynamic>.from(response['profiles']);
           _isLoading = false;
+          if (isNearby) {
+            _nearbyHasMore = _hasMoreFromPagination(response);
+          }
         });
         _scheduleRecommendationDeckCheck();
       } else {
@@ -224,6 +243,69 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       setState(() {
         _errorMessage = appText.unexpectedErrorOccurred(e.toString());
         _isLoading = false;
+      });
+    }
+  }
+
+  bool _hasMoreFromPagination(Map<String, dynamic> response) {
+    final pagination = _safeMap(response['pagination']);
+    return pagination?['has_more'] == true;
+  }
+
+  /// Appends the next slice of the nearby feed. The member keeps swiping and the
+  /// feed keeps widening outward — nothing further away is fetched until then.
+  Future<void> _loadMoreNearbyProfiles() async {
+    if (_nearbyLoadingMore || !_nearbyHasMore || _isLoading) return;
+
+    setState(() {
+      _nearbyLoadingMore = true;
+    });
+
+    final nextPage = _nearbyPage + 1;
+
+    try {
+      final activeFilters = _nearbyLocationOnlyFilters();
+      final response = await ApiClient.getProfileList(
+        countryId: activeFilters?.countryId,
+        stateId: activeFilters?.stateId,
+        districtId: activeFilters?.districtId,
+        locationId: activeFilters?.locationId,
+        feed: 'nearby',
+        page: nextPage,
+        perPage: _nearbyPageSize,
+      );
+      if (!mounted) return;
+
+      if (response['success'] == true && response['profiles'] is List) {
+        final incoming = List<dynamic>.from(response['profiles']);
+        final seen = _profiles
+            .map((profile) => _displayInt(_safeMap(profile)?['id']))
+            .whereType<int>()
+            .toSet();
+
+        setState(() {
+          _profiles = [
+            ..._profiles,
+            ...incoming.where((profile) {
+              final id = _displayInt(_safeMap(profile)?['id']);
+              return id != null && seen.add(id);
+            }),
+          ];
+          _nearbyPage = nextPage;
+          _nearbyHasMore = _hasMoreFromPagination(response);
+          _nearbyLoadingMore = false;
+        });
+        return;
+      }
+
+      setState(() {
+        _nearbyHasMore = false;
+        _nearbyLoadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _nearbyLoadingMore = false;
       });
     }
   }
@@ -303,17 +385,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       return;
     }
 
-    if (_selectedTabIndex == _tabNearMe &&
-        _nearbyLocationOnlyFilters()?.hasLocationFilter != true) {
-      setState(() {
-        _profiles = <dynamic>[];
-        _isLoading = false;
-        _errorMessage = null;
-        _failedPhotoUrls.clear();
-      });
-      return;
-    }
-
+    // The nearby feed no longer needs the member to pick a place first: the backend
+    // centres it on their own taluka and widens outward. A picked location only moves
+    // that origin.
     return _fetchProfileList(
       filters: _filtersForCurrentTab(),
       feed: _feedForTab(_selectedTabIndex),
@@ -1470,7 +1544,10 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
       return _buildPromptList(_buildSearchPromptCard());
     }
 
+    // Only prompt for a location when the feed genuinely came back empty — the tab
+    // itself works from the member's own residence.
     if (_selectedTabIndex == _tabNearMe &&
+        profiles.isEmpty &&
         _nearbyLocationOnlyFilters()?.hasLocationFilter != true) {
       return _buildPromptList(_buildNearMePromptCard());
     }
@@ -1512,6 +1589,9 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   }
 
   Widget _buildStandardMatchesList(List<Map<String, dynamic>> profiles) {
+    final paginated = _selectedTabIndex == _tabNearMe;
+    final showTrailingLoader = paginated && _nearbyHasMore;
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final pageHeight = constraints.maxHeight;
@@ -1521,10 +1601,27 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           physics: const PageScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
-          itemCount: profiles.length,
+          itemCount: profiles.length + (showTrailingLoader ? 1 : 0),
+          onPageChanged: paginated
+              ? (index) {
+                  // Fetch the next slice a couple of cards before the end, so the
+                  // widening never shows as a stall.
+                  if (index >= profiles.length - 3) {
+                    _loadMoreNearbyProfiles();
+                  }
+                }
+              : null,
           itemBuilder: (context, index) {
-            final profile = profiles[index];
             final cardHeight = (pageHeight - 34).clamp(360.0, 720.0);
+
+            if (index >= profiles.length) {
+              return SizedBox(
+                height: cardHeight.toDouble(),
+                child: const Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final profile = profiles[index];
 
             return Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),

@@ -2623,6 +2623,8 @@ class ApiClient {
     int? occupationId,
     int? maritalStatusId,
     String? feed,
+    int? page,
+    int? perPage,
   }) async {
     if (authToken == null) {
       throw Exception('Auth token is missing. User not logged in.');
@@ -2682,6 +2684,14 @@ class ApiClient {
     }
     if (feed != null && feed.isNotEmpty) {
       queryParams['feed'] = feed;
+    }
+    // Only the nearby feed paginates today; the response carries a `pagination`
+    // object when it does. Other feeds ignore these and return their full list.
+    if (page != null) {
+      queryParams['page'] = page.toString();
+    }
+    if (perPage != null) {
+      queryParams['per_page'] = perPage.toString();
     }
 
     final baseUrl = ApiRoutes.baseUrl + ApiRoutes.matrimonyProfiles;
