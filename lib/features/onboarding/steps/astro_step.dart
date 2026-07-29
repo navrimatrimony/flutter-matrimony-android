@@ -8,6 +8,7 @@ import '../widgets/onboarding_picker_field.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
 import '../../../core/app_language.dart';
+import '../../../core/horoscope/horoscope_rules.dart';
 
 class AstroStep extends StatefulWidget {
   const AstroStep({
@@ -36,6 +37,14 @@ class _AstroStepState extends State<AstroStep> {
   OnboardingOption? _nakshatra;
   OnboardingOption? _rashi;
   int? _charan;
+
+  // Derived from the nakshatra and sent with the step payload, but never
+  // rendered — only Edit Profile exposes gan/nadi/yoni pickers.
+  int? _ganId;
+  int? _nadiId;
+  int? _yoniId;
+
+  HoroscopeRules get _rules => HoroscopeRules(widget.bootstrap.horoscopeRules);
 
   @override
   void initState() {
@@ -66,15 +75,87 @@ class _AstroStepState extends State<AstroStep> {
         optionFromData(widget.data['rashi_option']) ??
         optionById(widget.bootstrap.rashis, widget.data['rashi_id']);
     _charan = onboardingInt(widget.data['charan']);
+    _ganId = onboardingInt(widget.data['gan_id']);
+    _nadiId = onboardingInt(widget.data['nadi_id']);
+    _yoniId = onboardingInt(widget.data['yoni_id']);
+    _reconcile();
   }
 
+  /// Repairs every dependent astro selection through the shared rule engine —
+  /// the exact same reconciliation Edit Profile runs.
+  void _reconcile() {
+    final result = _rules.reconcile(
+      HoroscopeSelection(
+        nakshatraId: _nakshatra?.intId,
+        rashiId: _rashi?.intId,
+        charan: _charan,
+        ganId: _ganId,
+        nadiId: _nadiId,
+        yoniId: _yoniId,
+      ),
+    );
+
+    if (result.nakshatraId != _nakshatra?.intId) {
+      _nakshatra = result.nakshatraId == null
+          ? null
+          : optionById(widget.bootstrap.nakshatras, result.nakshatraId) ??
+                _nakshatra;
+    }
+    if (result.rashiId != _rashi?.intId) {
+      _rashi = result.rashiId == null
+          ? null
+          : optionById(widget.bootstrap.rashis, result.rashiId) ?? _rashi;
+    }
+    _charan = result.charan;
+    _ganId = result.ganId;
+    _nadiId = result.nadiId;
+    _yoniId = result.yoniId;
+  }
+
+  List<OnboardingOption> _optionsMatchingIds(
+    List<OnboardingOption> options,
+    List<int> allowedIds,
+  ) {
+    if (allowedIds.isEmpty) return options;
+    final allowed = allowedIds.toSet();
+
+    return options
+        .where((option) => option.intId != null && allowed.contains(option.intId))
+        .toList();
+  }
+
+  List<OnboardingOption> get _nakshatraOptionsForSelection {
+    return _optionsMatchingIds(
+      widget.bootstrap.nakshatras,
+      _rules.allowedNakshatraIds(_rashi?.intId),
+    );
+  }
+
+  List<OnboardingOption> get _rashiOptionsForSelection {
+    return _optionsMatchingIds(
+      widget.bootstrap.rashis,
+      _rules.allowedRashiIds(_nakshatra?.intId),
+    );
+  }
 
   List<OnboardingOption> get _charanOptions {
+    final valid = _rules.validCharans(
+      nakshatraId: _nakshatra?.intId,
+      rashiId: _rashi?.intId,
+    );
+
     if (widget.bootstrap.charanOptions.isNotEmpty) {
-      return widget.bootstrap.charanOptions;
+      final filtered = widget.bootstrap.charanOptions
+          .where((option) {
+            final value = _charanValue(option);
+            return value != null && valid.contains(value);
+          })
+          .toList();
+
+      return filtered.isEmpty ? widget.bootstrap.charanOptions : filtered;
     }
 
-    return const [1, 2, 3, 4]
+    return valid
         .map(
           (charan) => OnboardingOption(
             key: charan.toString(),
@@ -124,6 +205,11 @@ class _AstroStepState extends State<AstroStep> {
               'rashi_id': _rashi?.intId,
               if (_rashi?.intId != null) 'rashi_option': _rashi!.toJson(),
               'charan': _charan,
+              // Derived behind the scenes from the nakshatra; not rendered
+              // here, but sent so onboarding and Edit Profile agree.
+              'gan_id': _ganId,
+              'nadi_id': _nadiId,
+              'yoni_id': _yoniId,
             }),
       saveProfile: !skip,
     );
@@ -148,15 +234,24 @@ class _AstroStepState extends State<AstroStep> {
         _picker(
           label: appText.nakshatra,
           selected: _nakshatra,
-          options: widget.bootstrap.nakshatras,
-          onChanged: (option) => setState(() => _nakshatra = option),
+          options: _nakshatraOptionsForSelection,
+          onChanged: (option) => setState(() {
+            _nakshatra = option;
+            if (option == null) {
+              _charan = null;
+            }
+            _reconcile();
+          }),
         ),
         const SizedBox(height: 12),
         _picker(
           label: appText.rashi,
           selected: _rashi,
-          options: widget.bootstrap.rashis,
-          onChanged: (option) => setState(() => _rashi = option),
+          options: _rashiOptionsForSelection,
+          onChanged: (option) => setState(() {
+            _rashi = option;
+            _reconcile();
+          }),
         ),
         const SizedBox(height: 14),
         _charanGroup(context),
@@ -221,7 +316,10 @@ class _AstroStepState extends State<AstroStep> {
               child: OnboardingSelectablePill(
                 label: option.label,
                 selected: _charan != null && _charan == _charanValue(option),
-                onTap: () => setState(() => _charan = _charanValue(option)),
+                onTap: () => setState(() {
+                  _charan = _charanValue(option);
+                  _reconcile();
+                }),
                 minHeight: 46,
                 fontSize: 15,
                 horizontalPadding: 10,
