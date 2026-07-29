@@ -82,6 +82,25 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
   Timer? _recommendationCompletionTimer;
   final Set<int> _sendingInterestIds = <int>{};
   final Set<String> _failedPhotoUrls = <String>{};
+
+  // Photo warm-up for the vertical matches feed. Cards are one-per-screen, so a
+  // photo that starts downloading only when its card is built is always late.
+  // Instead the window around the resting card is pushed into the shared image
+  // cache ahead of time, and the card then paints from cache instantly.
+  static const int _photoPrefetchAhead = 3;
+  static const int _photoPrefetchBehind = 1;
+
+  /// URLs already handed to the cache warm-up, so a rebuild or a re-entered
+  /// window never schedules the same download twice.
+  final Set<String> _prefetchedPhotoUrls = <String>{};
+
+  /// Card the matches PageView is currently resting on.
+  int _matchesPageIndex = 0;
+
+  /// Identifies the feed the last warm-up was scheduled for, so the post-frame
+  /// pass runs once per real feed change instead of once per build.
+  String? _photoPrefetchSignature;
+
   MatchesFilterState _filters = const MatchesFilterState();
   MatchesFilterState _nearbyFilters = const MatchesFilterState();
 
@@ -1592,6 +1611,18 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     final paginated = _selectedTabIndex == _tabNearMe;
     final showTrailingLoader = paginated && _nearbyHasMore;
 
+    // Warm the window around the resting card whenever the feed itself changes
+    // — first load, tab switch, or a newly paged-in slice — so the very first
+    // card and every freshly appended one are already cached before they show.
+    final signature = '$_selectedTabIndex:${profiles.length}';
+    if (_photoPrefetchSignature != signature) {
+      _photoPrefetchSignature = signature;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _prefetchMatchPhotos(profiles, _matchesPageIndex);
+      });
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final pageHeight = constraints.maxHeight;
@@ -1601,16 +1632,22 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
           physics: const PageScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
+          // Build the neighbouring card as well as the resting one, so the
+          // incoming photo is already painted while the swipe is in progress
+          // instead of popping in after the page settles. This keeps exactly one
+          // page of slack on either side, so a long feed cannot grow unbounded.
+          allowImplicitScrolling: true,
           itemCount: profiles.length + (showTrailingLoader ? 1 : 0),
-          onPageChanged: paginated
-              ? (index) {
-                  // Fetch the next slice a couple of cards before the end, so the
-                  // widening never shows as a stall.
-                  if (index >= profiles.length - 3) {
-                    _loadMoreNearbyProfiles();
-                  }
-                }
-              : null,
+          onPageChanged: (index) {
+            _matchesPageIndex = index;
+            _prefetchMatchPhotos(profiles, index);
+
+            // Fetch the next slice a couple of cards before the end, so the
+            // widening never shows as a stall.
+            if (paginated && index >= profiles.length - 3) {
+              _loadMoreNearbyProfiles();
+            }
+          },
           itemBuilder: (context, index) {
             final cardHeight = (pageHeight - 34).clamp(360.0, 720.0);
 
@@ -1636,6 +1673,31 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
         );
       },
     );
+  }
+
+  /// Pushes the photos around [index] into the shared image cache.
+  ///
+  /// Fire-and-forget by design: warming must never block the UI thread or the
+  /// swipe, and a photo that fails to warm is simply loaded by its card later.
+  /// Nothing needs cancelling on dispose — `precacheImage` reads the context
+  /// synchronously and everything after that only fills the cache.
+  void _prefetchMatchPhotos(List<Map<String, dynamic>> profiles, int index) {
+    if (!mounted || profiles.isEmpty) return;
+
+    // The big matches card is drawn full-bleed, so this matches the decode
+    // width `_buildCardPhoto` asks for and the warmed frame is reused as-is.
+    final decodeWidth = MediaQuery.sizeOf(context).width;
+    final last = profiles.length - 1;
+    final start = (index - _photoPrefetchBehind).clamp(0, last);
+    final end = (index + _photoPrefetchAhead).clamp(0, last);
+
+    for (var i = start; i <= end; i++) {
+      final url = _cardData(profiles[i]).photoUrl;
+      if (url == null || !_prefetchedPhotoUrls.add(url)) continue;
+      unawaited(
+        ProfileNetworkImage.prefetch(context, url, decodeWidth: decodeWidth),
+      );
+    }
   }
 
   Widget _buildSearchPromptCard() {
@@ -2525,11 +2587,11 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
     if (avatarStyle == 'blur' && photoUrl != null) {
       return ImageFiltered(
         imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Image.network(
-          Uri.encodeFull(photoUrl),
-          fit: BoxFit.cover,
-          alignment: Alignment.topCenter,
-          errorBuilder: (_, _, _) => _buildTeaserPlaceholder(),
+        // Same cached path as every other profile photo — the blur is applied
+        // on top of it, it is not a different kind of image.
+        child: ProfileNetworkImage(
+          url: Uri.encodeFull(photoUrl),
+          placeholder: _buildTeaserPlaceholder(),
         ),
       );
     }
