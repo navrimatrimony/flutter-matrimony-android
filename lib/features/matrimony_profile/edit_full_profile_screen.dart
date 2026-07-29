@@ -7,6 +7,7 @@ import '../../core/api_client.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_language.dart';
 import '../../core/app_strings.dart';
+import '../../core/horoscope/horoscope_rules.dart';
 import '../../core/profile_network_image.dart';
 import '../photo/photo_gallery_screen.dart';
 
@@ -753,7 +754,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   final List<_AllianceNetworkEditRow> _allianceNetworkRows =
       <_AllianceNetworkEditRow>[];
   bool _preferredLocationsTouched = false;
-  Map<String, dynamic> _horoscopeRules = <String, dynamic>{};
+  HoroscopeRules _horoscopeRules = HoroscopeRules.empty;
   Map<String, dynamic> _rashiAshtakoota = <String, dynamic>{};
 
   @override
@@ -2572,7 +2573,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
         _rashiLordOptions = _readRows(results['rashi_lords']);
         _mangalDoshTypeOptions = _readRows(results['mangal_dosh_types']);
         _birthWeekdayOptions = _readRows(results['birth_weekdays']);
-        _horoscopeRules = _readMap(results['horoscope_rules']);
+        _horoscopeRules = HoroscopeRules(_readMap(results['horoscope_rules']));
         _rashiAshtakoota = _readMap(results['rashi_ashtakoota']);
         _applyHoroscopeDependencies();
       });
@@ -3529,47 +3530,6 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
     );
   }
 
-  List<Map<String, dynamic>> _horoscopeRuleRows(String key) {
-    return _readRows(_horoscopeRules[key]);
-  }
-
-  List<int> _horoscopeIdList(String groupKey, int? id) {
-    if (id == null) return <int>[];
-
-    final group = _readMap(_horoscopeRules[groupKey]);
-    return _readIntList(group[id.toString()]);
-  }
-
-  Map<String, dynamic>? _nakshatraAttributesFor(int? nakshatraId) {
-    if (nakshatraId == null) return null;
-
-    for (final row in _horoscopeRuleRows('nakshatra_attributes')) {
-      if (_readInt(row['nakshatra_id']) == nakshatraId) {
-        return row;
-      }
-    }
-
-    return null;
-  }
-
-  Map<String, dynamic>? _rashiRuleFor({
-    required int? nakshatraId,
-    int? charan,
-    int? rashiId,
-  }) {
-    if (nakshatraId == null) return null;
-
-    for (final row in _horoscopeRuleRows('rashi_rules')) {
-      if (_readInt(row['nakshatra_id']) != nakshatraId) continue;
-      if (charan != null && _readInt(row['charan']) != charan) continue;
-      if (rashiId != null && _readInt(row['rashi_id']) != rashiId) continue;
-
-      return row;
-    }
-
-    return null;
-  }
-
   Map<String, dynamic> _rashiAshtakootaFor(int? rashiId) {
     if (rashiId == null) return <String, dynamic>{};
 
@@ -3590,45 +3550,30 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   List<int> _validCharansForSelection() {
-    if (_selectedNakshatraId == null || _selectedRashiId == null) {
-      return const [1, 2, 3, 4];
-    }
-
-    final charans = _horoscopeRuleRows('rashi_rules')
-        .where((row) {
-          return _readInt(row['nakshatra_id']) == _selectedNakshatraId &&
-              _readInt(row['rashi_id']) == _selectedRashiId;
-        })
-        .map((row) => _readInt(row['charan']))
-        .whereType<int>()
-        .toSet()
-        .toList();
-    charans.sort();
-
-    return charans.isEmpty ? const [1, 2, 3, 4] : charans;
+    return _horoscopeRules.validCharans(
+      nakshatraId: _selectedNakshatraId,
+      rashiId: _selectedRashiId,
+    );
   }
 
   List<Map<String, dynamic>> _rashiOptionsForSelection() {
     return _optionsMatchingIds(
       _rashiOptions,
-      _horoscopeIdList('distinct_rashi_ids_by_nakshatra', _selectedNakshatraId),
+      _horoscopeRules.allowedRashiIds(_selectedNakshatraId),
     );
   }
 
   List<Map<String, dynamic>> _nakshatraOptionsForSelection() {
     return _optionsMatchingIds(
       _nakshatraOptions,
-      _horoscopeIdList('nakshatra_ids_by_rashi', _selectedRashiId),
+      _horoscopeRules.allowedNakshatraIds(_selectedRashiId),
     );
   }
 
   List<Map<String, dynamic>> _yoniOptionsForSelection() {
-    final attrs = _nakshatraAttributesFor(_selectedNakshatraId);
-    final yoniId = _readInt(attrs?['yoni_id']);
-
     return _optionsMatchingIds(
       _yoniOptions,
-      yoniId == null ? <int>[] : [yoniId],
+      _horoscopeRules.allowedYoniIds(_selectedNakshatraId),
     );
   }
 
@@ -3640,77 +3585,23 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
   }
 
   void _applyHoroscopeDependencies() {
-    final selectedNakshatra = _selectedNakshatraId;
-    final selectedCharan = _selectedCharan;
+    final reconciled = _horoscopeRules.reconcile(
+      HoroscopeSelection(
+        nakshatraId: _selectedNakshatraId,
+        rashiId: _selectedRashiId,
+        charan: _selectedCharan,
+        ganId: _selectedGanId,
+        nadiId: _selectedNadiId,
+        yoniId: _selectedYoniId,
+      ),
+    );
 
-    if (selectedNakshatra != null) {
-      final attrs = _nakshatraAttributesFor(selectedNakshatra);
-      if (attrs != null) {
-        final ganId = _readInt(attrs['gan_id']);
-        final nadiId = _readInt(attrs['nadi_id']);
-        final yoniId = _readInt(attrs['yoni_id']);
-        _selectedGanId ??= ganId;
-        _selectedNadiId ??= nadiId;
-        if (yoniId != null &&
-            _selectedYoniId != null &&
-            _selectedYoniId != yoniId) {
-          _selectedYoniId = null;
-        }
-        _selectedYoniId ??= yoniId;
-      }
-
-      if (selectedCharan != null &&
-          selectedCharan >= 1 &&
-          selectedCharan <= 4) {
-        final rule = _rashiRuleFor(
-          nakshatraId: selectedNakshatra,
-          charan: selectedCharan,
-        );
-        if (rule != null && _selectedRashiId == null) {
-          _selectedRashiId = _readInt(rule['rashi_id']);
-        }
-      }
-
-      final allowedRashiIds = _horoscopeIdList(
-        'distinct_rashi_ids_by_nakshatra',
-        selectedNakshatra,
-      );
-      final selectedRashi = _selectedRashiId;
-      if (allowedRashiIds.isNotEmpty &&
-          selectedRashi != null &&
-          !allowedRashiIds.contains(selectedRashi)) {
-        _selectedRashiId = allowedRashiIds.first;
-      }
-
-      final validCharans = _validCharansForSelection();
-      final selectedCharanNow = _selectedCharan;
-      if (selectedCharanNow != null &&
-          validCharans.isNotEmpty &&
-          !validCharans.contains(selectedCharanNow)) {
-        _selectedCharan = validCharans.first;
-      }
-    } else {
-      _selectedGanId = null;
-      _selectedNadiId = null;
-      _selectedYoniId = null;
-    }
-
-    if (_selectedRashiId != null) {
-      final allowedNakshatraIds = _horoscopeIdList(
-        'nakshatra_ids_by_rashi',
-        _selectedRashiId,
-      );
-      final selectedNakshatraNow = _selectedNakshatraId;
-      if (allowedNakshatraIds.isNotEmpty &&
-          selectedNakshatraNow != null &&
-          !allowedNakshatraIds.contains(selectedNakshatraNow)) {
-        _selectedNakshatraId = null;
-        _selectedCharan = null;
-        _selectedGanId = null;
-        _selectedNadiId = null;
-        _selectedYoniId = null;
-      }
-    }
+    _selectedNakshatraId = reconciled.nakshatraId;
+    _selectedRashiId = reconciled.rashiId;
+    _selectedCharan = reconciled.charan;
+    _selectedGanId = reconciled.ganId;
+    _selectedNadiId = reconciled.nadiId;
+    _selectedYoniId = reconciled.yoniId;
 
     _applyRashiAshtakootaSelection();
   }
