@@ -2264,6 +2264,12 @@ abstract class AppLocalizations {
   /// **'Extra note optional'**
   String get extraNoteOptional;
 
+  /// No description provided for @familyFeedsAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'These two answers get woven into the introduction below'**
+  String get familyFeedsAbout;
+
   /// No description provided for @familyAndAbout.
   ///
   /// In en, this message translates to:

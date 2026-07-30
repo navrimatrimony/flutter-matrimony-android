@@ -1175,6 +1175,10 @@ class AppLocalizationsMr extends AppLocalizations {
   String get extraNoteOptional => 'अतिरिक्त टीप (ऐच्छिक)';
 
   @override
+  String get familyFeedsAbout =>
+      'ही दोन उत्तरे खालच्या ओळखीत आपोआप जोडली जातात';
+
+  @override
   String get familyAndAbout => 'कुटुंब आणि ओळख';
 
   @override

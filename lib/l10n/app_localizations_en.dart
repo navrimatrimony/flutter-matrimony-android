@@ -1182,6 +1182,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get extraNoteOptional => 'Extra note optional';
 
   @override
+  String get familyFeedsAbout =>
+      'These two answers get woven into the introduction below';
+
+  @override
   String get familyAndAbout => 'Family and about';
 
   @override

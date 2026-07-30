@@ -235,15 +235,21 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
       title: appText.familyAndAbout,
-      subtitle: appText.oneFinalProfileDetailHelpsFamilies,
+      // Said once, at the top. It used to sit under all three panels, and the
+      // step still read like a form that had to be finished.
+      subtitle: appText.lifestyleAllOptional,
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
       continueLabel: appText.completeRegistration,
       children: [
+        // Status and values share one box because they are not independent:
+        // both feed the introduction underneath. Shown apart, that connection
+        // was invisible, and answering them looked like unrelated work.
         _FamilyPanel(
           title: appText.familyStatus,
-          subtitle: appText.optionalYouCanAddThisLater,
+          accent: true,
+          footnote: appText.familyFeedsAbout,
           trailing: _optionsLoading
               ? const SizedBox(
                   width: 18,
@@ -251,40 +257,48 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : null,
-          child: _ChoiceWrap(
-            options: _statusOptions,
-            selectedKey: _familyStatus,
-            locale: widget.locale,
-            onChanged: widget.loading
-                ? null
-                : (key) => setState(() {
-                    _edited = true;
-                    _familyStatus = key;
-                    _maybePrefillAboutFromSuggestion();
-                  }),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _ChoiceWrap(
+                options: _statusOptions,
+                selectedKey: _familyStatus,
+                locale: widget.locale,
+                onChanged: widget.loading
+                    ? null
+                    : (key) => setState(() {
+                        _edited = true;
+                        _familyStatus = key;
+                        _maybePrefillAboutFromSuggestion();
+                      }),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                appText.familyValues,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+              const SizedBox(height: 6),
+              _ChoiceWrap(
+                options: _valueOptions,
+                selectedKey: _familyValues,
+                locale: widget.locale,
+                onChanged: widget.loading
+                    ? null
+                    : (key) => setState(() {
+                        _edited = true;
+                        _familyValues = _familyValues == key ? null : key;
+                        _maybePrefillAboutFromSuggestion();
+                      }),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 14),
-        _FamilyPanel(
-          title: appText.familyValues,
-          subtitle: appText.optionalButUsefulForBetterSuggestions,
-          child: _ChoiceWrap(
-            options: _valueOptions,
-            selectedKey: _familyValues,
-            locale: widget.locale,
-            onChanged: widget.loading
-                ? null
-                : (key) => setState(() {
-                    _edited = true;
-                    _familyValues = _familyValues == key ? null : key;
-                    _maybePrefillAboutFromSuggestion();
-                  }),
-          ),
-        ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
         _FamilyPanel(
           title: appText.aboutProfile,
-          subtitle: appText.optionalYouCanAddThisLater,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -297,8 +311,8 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
               TextField(
                 controller: _aboutController,
                 enabled: !widget.loading,
-                minLines: 4,
-                maxLines: 7,
+                minLines: 3,
+                maxLines: 5,
                 maxLength: 500,
                 textInputAction: TextInputAction.newline,
                 onChanged: (_) => setState(() {
@@ -391,58 +405,66 @@ class _FamilyChoice {
 class _FamilyPanel extends StatelessWidget {
   const _FamilyPanel({
     required this.title,
-    required this.subtitle,
     required this.child,
     this.trailing,
+    this.accent = false,
+    this.footnote,
   });
 
   final String title;
-  final String subtitle;
   final Widget child;
   final Widget? trailing;
 
+  /// Marks the box whose answers feed something else on the screen.
+  final bool accent;
+
+  /// One line under the box saying what those answers do.
+  final String? footnote;
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
+        color: accent ? Colors.blue.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: accent ? Colors.blue.shade200 : Colors.grey.shade200,
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: Colors.grey.shade900,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade600,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    title,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: accent
+                          ? Colors.blue.shade800
+                          : Colors.grey.shade900,
+                    ),
                   ),
                 ),
                 if (trailing != null) trailing!,
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
             child,
+            if (footnote != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                footnote!,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.blue.shade700,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -467,27 +489,22 @@ class _ChoiceWrap extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final itemWidth = constraints.maxWidth >= 280
-            ? (constraints.maxWidth - 8) / 2
-            : constraints.maxWidth;
+        // Each pill takes the width of its own label instead of half the
+        // row, so four short answers use one or two lines rather than four.
         return Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 6,
+          runSpacing: 6,
           children: options
               .map(
-                (option) => SizedBox(
-                  width: itemWidth,
-                  child: OnboardingSelectablePill(
-                    label: option.label(locale),
-                    selected: selectedKey == option.key,
-                    onTap: onChanged == null
-                        ? null
-                        : () => onChanged!(option.key),
-                    minHeight: 48,
-                    maxLines: 2,
-                    horizontalPadding: 10,
-                    verticalPadding: 10,
-                  ),
+                (option) => OnboardingSelectablePill(
+                  label: option.label(locale),
+                  selected: selectedKey == option.key,
+                  onTap: onChanged == null ? null : () => onChanged!(option.key),
+                  minHeight: 36,
+                  fontSize: 13,
+                  maxLines: 1,
+                  horizontalPadding: 12,
+                  verticalPadding: 6,
                 ),
               )
               .toList(),
