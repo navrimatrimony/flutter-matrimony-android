@@ -126,6 +126,21 @@ class AppLocalizationsMr extends AppLocalizations {
   String get approx => 'अंदाजे';
 
   @override
+  String get astroAllOptional => 'सर्व ऐच्छिक · माहीत असेल तेवढेच';
+
+  @override
+  String get astroTriangleHint => 'यापैकी कोणतेही दोन भरा — तिसरा आपोआप येईल';
+
+  @override
+  String get astroDerivedRashi => 'नक्षत्रावरून राशी आपोआप आली';
+
+  @override
+  String get astroDerivedNakshatra => 'राशी आणि चरणावरून नक्षत्र आपोआप आले';
+
+  @override
+  String get astroDerivedCharan => 'नक्षत्र आणि राशीवरून चरण आपोआप आले';
+
+  @override
   String get astroDetails => 'ज्योतिष माहिती';
 
   @override

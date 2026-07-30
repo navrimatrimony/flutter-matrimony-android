@@ -92,7 +92,19 @@ class _AstroStepState extends State<AstroStep> {
 
   /// Repairs every dependent astro selection through the shared rule engine —
   /// the exact same reconciliation Edit Profile runs.
+  /// Which corner the last reconciliation filled in by itself.
+  ///
+  /// Only meaningful right after [_reconcile]; the note above the box reads
+  /// them so a value the member never typed never appears unexplained.
+  bool _nakshatraWasDerived = false;
+  bool _rashiWasDerived = false;
+  bool _charanWasDerived = false;
+
   void _reconcile() {
+    final beforeNakshatra = _nakshatra?.intId;
+    final beforeRashi = _rashi?.intId;
+    final beforeCharan = _charan;
+
     final result = _rules.reconcile(
       HoroscopeSelection(
         nakshatraId: _nakshatra?.intId,
@@ -119,6 +131,11 @@ class _AstroStepState extends State<AstroStep> {
     _ganId = result.ganId;
     _nadiId = result.nadiId;
     _yoniId = result.yoniId;
+
+    _nakshatraWasDerived =
+        result.nakshatraId != null && result.nakshatraId != beforeNakshatra;
+    _rashiWasDerived = result.rashiId != null && result.rashiId != beforeRashi;
+    _charanWasDerived = result.charan != null && result.charan != beforeCharan;
 
     final ashtakoota = _ashtakoota.forRashi(result.rashiId);
     _varnaId = ashtakoota.varnaId;
@@ -248,32 +265,18 @@ class _AstroStepState extends State<AstroStep> {
         child: Text(appText.skipAstroDetails),
       ),
       children: [
+        // Said once. It used to sit under each question, which cost lines and
+        // still left the step reading like something that must be completed.
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            appText.astroAllOptional,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
         _mangalDoshGroup(context),
-        const SizedBox(height: 14),
-        _picker(
-          label: appText.nakshatra,
-          selected: _nakshatra,
-          options: _nakshatraOptionsForSelection,
-          onChanged: (option) => setState(() {
-            _nakshatra = option;
-            if (option == null) {
-              _charan = null;
-            }
-            _reconcile();
-          }),
-        ),
-        const SizedBox(height: 12),
-        _picker(
-          label: appText.rashi,
-          selected: _rashi,
-          options: _rashiOptionsForSelection,
-          onChanged: (option) => setState(() {
-            _rashi = option;
-            _reconcile();
-          }),
-        ),
-        const SizedBox(height: 14),
-        _charanGroup(context),
+        const SizedBox(height: 10),
+        _triangleGroup(context),
       ],
     );
   }
@@ -291,62 +294,128 @@ class _AstroStepState extends State<AstroStep> {
 
     return _AstroSectionCard(
       title: appText.mangalDosh,
-      subtitle: appText.selectIfKnown,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final itemWidth = width >= 300 ? (width - 10) / 2 : width;
-          return Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              for (final option in options)
-                SizedBox(
-                  width: itemWidth,
-                  child: OnboardingSelectablePill(
-                    label: option.label,
-                    selected: _mangalDosh?.identity == option.identity,
-                    onTap: () => setState(() => _mangalDosh = option),
-                    minHeight: 48,
-                    fontSize: 14,
-                    maxLines: 2,
-                    horizontalPadding: 12,
-                    verticalPadding: 10,
-                  ),
-                ),
-            ],
-          );
-        },
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (final option in options)
+            OnboardingSelectablePill(
+              label: option.label,
+              selected: _mangalDosh?.identity == option.identity,
+              onTap: () => setState(() => _mangalDosh = option),
+              minHeight: 36,
+              fontSize: 13,
+              maxLines: 1,
+              horizontalPadding: 12,
+              verticalPadding: 6,
+            ),
+        ],
       ),
     );
   }
 
-  Widget _charanGroup(BuildContext context) {
+  /// Nakshatra, rashi and charan in one box, because they are one question
+  /// asked three ways — any two of them name the third.
+  ///
+  /// They used to sit apart, looking exactly as independent as mangal dosh
+  /// above them. The rules engine has known the relationship since the start;
+  /// nothing on screen ever said so, so nobody knew they could stop after two.
+  Widget _triangleGroup(BuildContext context) {
+    final theme = Theme.of(context);
+    final derived = _derivedNote();
+
     return _AstroSectionCard(
-      title: appText.charan,
-      subtitle: appText.optional,
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
+      title: appText.astroTriangleHint,
+      accent: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          for (final option in _charanOptions)
-            SizedBox(
-              width: 64,
-              child: OnboardingSelectablePill(
-                label: option.label,
-                selected: _charan != null && _charan == _charanValue(option),
-                onTap: () => setState(() {
-                  _charan = _charanValue(option);
-                  _reconcile();
-                }),
-                minHeight: 46,
-                fontSize: 15,
-                horizontalPadding: 10,
-                verticalPadding: 8,
+          _picker(
+            label: appText.nakshatra,
+            selected: _nakshatra,
+            options: _nakshatraOptionsForSelection,
+            onChanged: (option) => setState(() {
+              _nakshatra = option;
+              if (option == null) {
+                _charan = null;
+              }
+              _reconcile();
+            }),
+          ),
+          const SizedBox(height: 8),
+          _picker(
+            label: appText.rashi,
+            selected: _rashi,
+            options: _rashiOptionsForSelection,
+            onChanged: (option) => setState(() {
+              _rashi = option;
+              _reconcile();
+            }),
+          ),
+          const SizedBox(height: 8),
+          _charanRow(context),
+          if (derived != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              derived,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.blue.shade800,
               ),
             ),
+          ],
         ],
       ),
+    );
+  }
+
+  /// Names whichever corner the rules just filled in.
+  ///
+  /// Without it a value appears in a field the member never touched, and the
+  /// app looks like it is changing their answers behind their back.
+  String? _derivedNote() {
+    if (_rashiWasDerived) return appText.astroDerivedRashi;
+    if (_nakshatraWasDerived) return appText.astroDerivedNakshatra;
+    if (_charanWasDerived) return appText.astroDerivedCharan;
+    return null;
+  }
+
+  Widget _charanRow(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(
+          width: 58,
+          child: Text(
+            appText.charan,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
+        Expanded(
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final option in _charanOptions)
+                SizedBox(
+                  width: 52,
+                  child: OnboardingSelectablePill(
+                    label: option.label,
+                    selected:
+                        _charan != null && _charan == _charanValue(option),
+                    onTap: () => setState(() {
+                      _charan = _charanValue(option);
+                      _reconcile();
+                    }),
+                    minHeight: 34,
+                    fontSize: 13,
+                    horizontalPadding: 6,
+                    verticalPadding: 6,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -372,48 +441,40 @@ class _AstroStepState extends State<AstroStep> {
 class _AstroSectionCard extends StatelessWidget {
   const _AstroSectionCard({
     required this.title,
-    required this.subtitle,
     required this.child,
+    this.accent = false,
   });
 
   final String title;
-  final String subtitle;
   final Widget child;
+
+  /// Marks the box holding fields that depend on each other, so it reads as one
+  /// question rather than three unrelated ones.
+  final bool accent;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        color: accent ? Colors.blue.shade50 : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: accent ? Colors.blue.shade200 : Colors.grey.shade200,
+        ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: Colors.grey.shade900,
-                    ),
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: accent ? Colors.blue.shade800 : Colors.grey.shade900,
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             child,
           ],
         ),

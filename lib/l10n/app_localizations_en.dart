@@ -126,6 +126,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get approx => 'Approx';
 
   @override
+  String get astroAllOptional => 'All optional · only what you know';
+
+  @override
+  String get astroTriangleHint => 'Fill any two — the third fills itself';
+
+  @override
+  String get astroDerivedRashi => 'Rashi came from the nakshatra';
+
+  @override
+  String get astroDerivedNakshatra =>
+      'Nakshatra came from the rashi and charan';
+
+  @override
+  String get astroDerivedCharan => 'Charan came from the nakshatra and rashi';
+
+  @override
   String get astroDetails => 'Astro details';
 
   @override

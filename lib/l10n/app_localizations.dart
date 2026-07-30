@@ -308,6 +308,36 @@ abstract class AppLocalizations {
   /// **'Approx'**
   String get approx;
 
+  /// No description provided for @astroAllOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'All optional · only what you know'**
+  String get astroAllOptional;
+
+  /// No description provided for @astroTriangleHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill any two — the third fills itself'**
+  String get astroTriangleHint;
+
+  /// No description provided for @astroDerivedRashi.
+  ///
+  /// In en, this message translates to:
+  /// **'Rashi came from the nakshatra'**
+  String get astroDerivedRashi;
+
+  /// No description provided for @astroDerivedNakshatra.
+  ///
+  /// In en, this message translates to:
+  /// **'Nakshatra came from the rashi and charan'**
+  String get astroDerivedNakshatra;
+
+  /// No description provided for @astroDerivedCharan.
+  ///
+  /// In en, this message translates to:
+  /// **'Charan came from the nakshatra and rashi'**
+  String get astroDerivedCharan;
+
   /// No description provided for @astroDetails.
   ///
   /// In en, this message translates to:
