@@ -5906,6 +5906,12 @@ abstract class AppLocalizations {
   /// **'Use nearby keeps backend suggested country/state/district. Open removes location filters.'**
   String get useNearbyKeepsBackendSuggestedCountry;
 
+  /// No description provided for @lifestyleAllOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'All optional · you can fill these later'**
+  String get lifestyleAllOptional;
+
   /// No description provided for @usefulForDayToDayCompatibility.
   ///
   /// In en, this message translates to:

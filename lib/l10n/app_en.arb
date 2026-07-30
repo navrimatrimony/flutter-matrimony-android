@@ -968,6 +968,7 @@
   "useMobileLocation": "Use mobile location",
   "useNearby": "Use nearby",
   "useNearbyKeepsBackendSuggestedCountry": "Use nearby keeps backend suggested country/state/district. Open removes location filters.",
+  "lifestyleAllOptional": "All optional · you can fill these later",
   "usefulForDayToDayCompatibility": "Useful for day-to-day compatibility.",
   "v1": "<1",
   "v10kTo30k": "10K to 30K",

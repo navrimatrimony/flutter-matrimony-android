@@ -149,48 +149,53 @@ class _LifestyleStepState extends State<LifestyleStep> {
       onBack: widget.onBack,
       onContinue: _save,
       children: [
+        // Said once, at the top. Repeating "optional" under all five questions
+        // cost five lines and still left the step reading like a form that has
+        // to be finished.
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            appText.lifestyleAllOptional,
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+        ),
         _optionGroup(
           label: appText.diet,
-          helper: appText.usefulForDayToDayCompatibility,
           options: widget.bootstrap.diets,
           lookupType: 'diet',
           selected: _diet,
-          compactTwoColumn: true,
           onChanged: (option) => setState(() => _diet = option),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
+        // Was a dropdown. Three answers do not need a sheet that has to be
+        // opened, read, chosen from and closed — four taps where the answers
+        // fit on the screen already.
         _optionGroup(
           label: appText.smoking,
-          helper: appText.optional,
           options: widget.bootstrap.smokingOptions,
           lookupType: 'smoking',
           selected: _smoking,
-          useSelectField: true,
           onChanged: (option) => setState(() => _smoking = option),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         _optionGroup(
           label: appText.drinking,
-          helper: appText.optional,
           options: widget.bootstrap.drinkingOptions,
           lookupType: 'drinking',
           selected: _drinking,
-          useSelectField: true,
           onChanged: (option) => setState(() => _drinking = option),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         _optionGroup(
           label: appText.physicalBuild,
-          helper: appText.optional,
           options: widget.bootstrap.physicalBuilds,
           lookupType: 'physical-builds',
           selected: _physicalBuild,
           onChanged: (option) => setState(() => _physicalBuild = option),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 10),
         _optionGroup(
           label: appText.spectaclesLens,
-          helper: appText.optional,
           options: widget.bootstrap.spectaclesLensOptions,
           lookupType: 'spectacles-lens',
           selected: _spectaclesLens,
@@ -202,15 +207,14 @@ class _LifestyleStepState extends State<LifestyleStep> {
 
   Widget _optionGroup({
     required String label,
-    required String helper,
     required List<OnboardingOption> options,
     required String lookupType,
     required OnboardingOption? selected,
     required ValueChanged<OnboardingOption?> onChanged,
-    bool compactTwoColumn = false,
-    bool useSelectField = false,
   }) {
-    if (useSelectField || options.isEmpty) {
+    // Only when the server sent nothing to show. Everything here has a short,
+    // fixed list, so a searchable sheet is never the right shape for it.
+    if (options.isEmpty) {
       return _picker(
         label: label,
         selected: selected,
@@ -222,36 +226,25 @@ class _LifestyleStepState extends State<LifestyleStep> {
 
     return _OptionGroupShell(
       title: label,
-      helper: helper,
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final available = constraints.maxWidth;
-            final spacing = compactTwoColumn ? 8.0 : 10.0;
-            final twoColumn = available >= (compactTwoColumn ? 260 : 300);
-            final itemWidth = twoColumn ? (available - spacing) / 2 : available;
-
-            return Wrap(
-              spacing: spacing,
-              runSpacing: compactTwoColumn ? 8 : 10,
-              children: [
-                for (final option in options)
-                  SizedBox(
-                    width: itemWidth,
-                    child: OnboardingSelectablePill(
-                      label: option.label,
-                      selected: selected?.identity == option.identity,
-                      onTap: () => onChanged(option),
-                      minHeight: compactTwoColumn ? 44 : 48,
-                      fontSize: compactTwoColumn ? 13 : 14,
-                      maxLines: 2,
-                      horizontalPadding: compactTwoColumn ? 10 : 12,
-                      verticalPadding: compactTwoColumn ? 8 : 10,
-                    ),
-                  ),
-              ],
-            );
-          },
+        // Each pill takes the width of its own text rather than half the row,
+        // so three short answers sit on one line instead of two.
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final option in options)
+              OnboardingSelectablePill(
+                label: option.label,
+                selected: selected?.identity == option.identity,
+                onTap: () => onChanged(option),
+                minHeight: 36,
+                fontSize: 13,
+                maxLines: 1,
+                horizontalPadding: 12,
+                verticalPadding: 6,
+              ),
+          ],
         ),
       ],
     );
@@ -274,14 +267,9 @@ class _LifestyleStepState extends State<LifestyleStep> {
 }
 
 class _OptionGroupShell extends StatelessWidget {
-  const _OptionGroupShell({
-    required this.title,
-    required this.helper,
-    required this.children,
-  });
+  const _OptionGroupShell({required this.title, required this.children});
 
   final String title;
-  final String helper;
   final List<Widget> children;
 
   @override
@@ -293,31 +281,18 @@ class _OptionGroupShell extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade200),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: Colors.grey.shade900,
-                    ),
-                  ),
-                ),
-                Text(
-                  helper,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey.shade600,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: Colors.grey.shade900,
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 6),
             ...children,
           ],
         ),

@@ -3147,6 +3147,9 @@ class AppLocalizationsMr extends AppLocalizations {
       'जवळपास वापरल्यास सर्व्हरने सुचवलेला देश/राज्य/जिल्हा राहतो. खुले केल्यास ठिकाणाची गाळणी काढली जाते.';
 
   @override
+  String get lifestyleAllOptional => 'सर्व ऐच्छिक · नंतरही भरता येईल';
+
+  @override
   String get usefulForDayToDayCompatibility => 'दैनंदिन जुळवणीसाठी उपयोगी.';
 
   @override

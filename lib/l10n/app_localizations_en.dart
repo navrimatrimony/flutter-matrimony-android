@@ -3164,6 +3164,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Use nearby keeps backend suggested country/state/district. Open removes location filters.';
 
   @override
+  String get lifestyleAllOptional => 'All optional · you can fill these later';
+
+  @override
   String get usefulForDayToDayCompatibility =>
       'Useful for day-to-day compatibility.';
 
