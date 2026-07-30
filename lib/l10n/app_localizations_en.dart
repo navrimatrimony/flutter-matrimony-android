@@ -3544,6 +3544,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseTryAgain => 'Please try again.';
 
   @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
+  String get googleSignInFailed =>
+      'Google sign-in did not go through. Try again, or come in another way.';
+
+  @override
   String get signUpWithGoogle => 'Sign Up with Google';
 
   @override

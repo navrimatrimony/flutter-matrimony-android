@@ -2283,23 +2283,60 @@ class ApiClient {
       return data;
     }
 
-    final token = data['token']?.toString();
-    if (token != null && token.isNotEmpty) {
-      ApiCache.instance.clear();
-      currentUserProfile = null;
-      sentInterestProfileIds.clear();
-      authToken = token;
-      await AppStorage.instance.saveAuthToken(token);
-      // Two independent calls on purpose. The device token must reach the
-      // server even when the member denies the notification dialog — a device
-      // the server does not know can never be reached, not even after
-      // notifications are switched on later.
-      unawaited(PushNotificationService.instance.registerToken());
-      unawaited(NotificationPermissionService.ensureRequested(force: true));
+    if (await _adoptSession(data)) {
       return data;
     }
 
     data['message'] ??= 'Login failed: No token received';
+    return data;
+  }
+
+  /// Takes over the session a sign-in response carries, if it carries one.
+  ///
+  /// Every door into the app — password, mobile OTP, Google — ends here, so the
+  /// stale-state clearing and the push registration happen exactly once and
+  /// identically. A member who signs in with Google must be as reachable by
+  /// push as one who typed a password; that only stays true while there is one
+  /// implementation of this.
+  static Future<bool> _adoptSession(Map<String, dynamic> data) async {
+    final token = data['token']?.toString();
+    if (token == null || token.isEmpty) {
+      return false;
+    }
+
+    ApiCache.instance.clear();
+    currentUserProfile = null;
+    sentInterestProfileIds.clear();
+    authToken = token;
+    await AppStorage.instance.saveAuthToken(token);
+    // Two independent calls on purpose. The device token must reach the
+    // server even when the member denies the notification dialog — a device
+    // the server does not know can never be reached, not even after
+    // notifications are switched on later.
+    unawaited(PushNotificationService.instance.registerToken());
+    unawaited(NotificationPermissionService.ensureRequested(force: true));
+
+    return true;
+  }
+
+  /// Signs in — or signs up — with a Google ID token.
+  ///
+  /// The token is the whole request. The email is deliberately not sent
+  /// alongside it: the server reads the address out of the token it verified
+  /// with Google, so there is no caller-supplied address for it to have to
+  /// trust. The reply carries `is_new_user` for wording, but routing afterwards
+  /// is the ordinary profile check, exactly as after a password login.
+  static Future<Map<String, dynamic>> signInWithGoogle({
+    required String idToken,
+  }) async {
+    final data = await _postJson(ApiRoutes.authGoogle, {'id_token': idToken});
+
+    if (await _adoptSession(data)) {
+      return data;
+    }
+
+    data['message'] ??= 'Google sign-in failed.';
+    data['success'] = false;
     return data;
   }
 

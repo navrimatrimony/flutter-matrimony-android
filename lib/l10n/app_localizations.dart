@@ -6608,6 +6608,18 @@ abstract class AppLocalizations {
   /// **'Please try again.'**
   String get pleaseTryAgain;
 
+  /// No description provided for @signInWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get signInWithGoogle;
+
+  /// No description provided for @googleSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in did not go through. Try again, or come in another way.'**
+  String get googleSignInFailed;
+
   /// No description provided for @signUpWithGoogle.
   ///
   /// In en, this message translates to:

@@ -1085,6 +1085,8 @@
   "photoNotAddedYet": "फोटो अजून जोडलेला नाही",
   "nameNotAvailable": "नाव उपलब्ध नाही",
   "pleaseTryAgain": "कृपया पुन्हा प्रयत्न करा.",
+  "signInWithGoogle": "Google ने साइन इन करा",
+  "googleSignInFailed": "Google साइन इन झाले नाही. पुन्हा प्रयत्न करा किंवा दुसऱ्या मार्गाने आत या.",
   "signUpWithGoogle": "Google ने सुरू करा",
   "signUpWithMobile": "मोबाइल नंबरने सुरू करा",
   "unexpectedErrorOccurred": "एक अनपेक्षित एरर आली: {error}",

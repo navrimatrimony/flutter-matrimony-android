@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_strings.dart';
 import '../../core/email_hint_service.dart';
+import '../../core/google_auth_flow.dart';
+import '../../core/google_brand_mark.dart';
 import '../../core/phone_number_hint_service.dart';
 import '../onboarding/smart_onboarding_screen.dart';
 import '../../core/app_language.dart';
@@ -14,6 +16,13 @@ class LandingScreen extends StatelessWidget {
 
   String _copy(String english, String marathi) {
     return AppStrings.isMarathi ? marathi : english;
+  }
+
+  /// Signing up with Google is the same journey as signing in with it — see
+  /// [runGoogleAuthFlow]. A member who taps this having already registered gets
+  /// let straight in rather than told they exist.
+  Future<void> _signUpWithGoogle(BuildContext context) async {
+    await runGoogleAuthFlow(context);
   }
 
   Future<void> _captureEmailAndStartMobile(BuildContext context) async {
@@ -179,11 +188,9 @@ class LandingScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 18),
                         _AuthChoiceButton(
-                          icon: const _GoogleMark(),
+                          icon: const GoogleBrandMark(),
                           label: appText.signUpWithGoogle,
-                          onPressed: () => _captureEmailAndStartMobile(
-                            context,
-                          ),
+                          onPressed: () => _signUpWithGoogle(context),
                         ),
                         const SizedBox(height: 12),
                         _AuthChoiceButton(
@@ -322,19 +329,3 @@ class _AuthChoiceButton extends StatelessWidget {
   }
 }
 
-class _GoogleMark extends StatelessWidget {
-  const _GoogleMark();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'G',
-      style: TextStyle(
-        color: Color(0xFF4285F4),
-        fontSize: 22,
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0,
-      ),
-    );
-  }
-}

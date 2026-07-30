@@ -3,6 +3,9 @@ class ApiRoutes {
   static const String rootApiBaseUrl = 'https://navrimilenavryala.com/api';
   static const String login = '/login';
   static const String register = '/register';
+  // One route for both signing in and signing up with Google — the app cannot
+  // tell which it is, and the server settles it from the verified address.
+  static const String authGoogle = '/auth/google';
   static const String mobileOtpSend = '/auth/mobile-otp/send';
   static const String mobileOtpVerify = '/auth/mobile-otp/verify';
   static const String passwordForgot = '/auth/password/forgot';

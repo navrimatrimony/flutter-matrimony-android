@@ -3527,6 +3527,13 @@ class AppLocalizationsMr extends AppLocalizations {
   String get pleaseTryAgain => 'कृपया पुन्हा प्रयत्न करा.';
 
   @override
+  String get signInWithGoogle => 'Google ने साइन इन करा';
+
+  @override
+  String get googleSignInFailed =>
+      'Google साइन इन झाले नाही. पुन्हा प्रयत्न करा किंवा दुसऱ्या मार्गाने आत या.';
+
+  @override
   String get signUpWithGoogle => 'Google ने सुरू करा';
 
   @override

@@ -9,13 +9,15 @@ import '../../core/app_consent.dart';
 import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
 import '../../core/app_strings.dart';
+import '../../core/google_auth_flow.dart';
+import '../../core/google_brand_mark.dart';
+import '../../core/post_auth_router.dart';
 import '../../core/mobile_number.dart';
 import '../../core/phone_number_hint_service.dart';
 // Reused, not re-declared: registration already parses these two responses, and
 // the mobile-OTP contract has exactly one shape. A second copy of it here is the
 // duplicate that eventually drifts.
 import '../onboarding/models/mobile_otp_models.dart';
-import '../../main.dart';
 
 /// How the member proves who they are.
 ///
@@ -382,6 +384,21 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// The Google door. [runGoogleAuthFlow] handles the chooser, the server and
+  /// the routing, so this only has to keep the screen from being used twice at
+  /// once and clear any message left over from an earlier attempt.
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    await runGoogleAuthFlow(context);
+
+    if (!mounted) return;
+    setState(() => isLoading = false);
+  }
+
   // ---------------------------------------------------------------------------
   // Shared post-login handling — one path for every door
   // ---------------------------------------------------------------------------
@@ -408,11 +425,10 @@ class _LoginScreenState extends State<LoginScreen> {
     );
 
     try {
-      final profileResult = await ApiClient.getMyProfile();
+      final outcome = await resolvePostAuthDestination();
       if (!mounted) return;
-      final statusCode = profileResult['statusCode'];
 
-      if (statusCode == 404) {
+      if (outcome.destination == PostAuthDestination.onboarding) {
         setState(() => isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -421,23 +437,20 @@ class _LoginScreenState extends State<LoginScreen> {
             duration: const Duration(seconds: 2),
           ),
         );
-        enterMemberApp(Navigator.of(context), '/smart-onboarding');
+        navigateAfterAuth(context, outcome.route!);
         return;
       }
 
-      if (statusCode == 200 && profileResult['success'] == true) {
+      if (outcome.destination == PostAuthDestination.home) {
         setState(() => isLoading = false);
-        final route = await _completedProfileRoute();
-        if (!mounted) return;
-        enterMemberApp(Navigator.of(context), route);
+        navigateAfterAuth(context, outcome.route!);
         return;
       }
 
       setState(() {
         isLoading = false;
         errorMessage =
-            profileResult['message']?.toString() ??
-            AppStrings.loginProfileCheckFailed;
+            outcome.failureMessage ?? AppStrings.loginProfileCheckFailed;
       });
     } catch (error) {
       if (!mounted) return;
@@ -446,19 +459,6 @@ class _LoginScreenState extends State<LoginScreen> {
         errorMessage = _networkMessage(error);
       });
     }
-  }
-
-  Future<String> _completedProfileRoute() async {
-    final shownDate = await AppStorage.instance
-        .readDailyRecommendationShownDate();
-    return shownDate == _todayKey() ? '/home' : '/matches';
-  }
-
-  String _todayKey() {
-    final now = DateTime.now();
-    final month = now.month.toString().padLeft(2, '0');
-    final day = now.day.toString().padLeft(2, '0');
-    return '${now.year}-$month-$day';
   }
 
   /// The server words its own failures (wrong OTP, expired challenge, attempt
@@ -640,6 +640,24 @@ class _LoginScreenState extends State<LoginScreen> {
                                         fontWeight: FontWeight.w800,
                                       ),
                                     ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // A member who signed up with Google has no password
+                          // and may not remember which number they used, so the
+                          // Google door has to exist on this screen too — not
+                          // only on the sign-up screen where they first met it.
+                          OutlinedButton.icon(
+                            onPressed: isLoading ? null : _signInWithGoogle,
+                            icon: const GoogleBrandMark(),
+                            label: Text(appText.signInWithGoogle),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                              side: const BorderSide(color: Color(0xFFDADCE0)),
+                              foregroundColor: const Color(0xFF3C4043),
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                           const SizedBox(height: 4),
