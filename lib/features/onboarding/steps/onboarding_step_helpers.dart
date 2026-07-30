@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../models/onboarding_option.dart';
+import 'package:navri_location_engine/navri_location_engine.dart';
+
+
+// The engine reads the same API payloads, so how a value is read out of one is
+// its business, not a second opinion kept here. Re-exported so every existing
+// caller of these three keeps working through this file.
+export 'package:navri_location_engine/navri_location_engine.dart'
+    show onboardingBool, onboardingInt, onboardingText;
 
 typedef OnboardingStepSaver =
     Future<bool> Function(
@@ -10,27 +17,6 @@ typedef OnboardingStepSaver =
       bool advance,
     });
 
-int? onboardingInt(dynamic value) {
-  if (value is int) return value;
-  if (value is num) return value.toInt();
-  return int.tryParse(value?.toString() ?? '');
-}
-
-String? onboardingText(dynamic value) {
-  final text = value?.toString().trim();
-  if (text == null || text.isEmpty) return null;
-  return text;
-}
-
-bool? onboardingBool(dynamic value) {
-  if (value is bool) return value;
-  if (value is num) return value != 0;
-  final text = value?.toString().trim().toLowerCase();
-  if (text == null || text.isEmpty) return null;
-  if (text == '1' || text == 'true' || text == 'yes') return true;
-  if (text == '0' || text == 'false' || text == 'no') return false;
-  return null;
-}
 
 String onboardingSelectedLoadingLabel(String locale) {
   return locale == 'mr'

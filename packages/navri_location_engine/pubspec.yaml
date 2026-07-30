@@ -1,0 +1,15 @@
+name: navri_location_engine
+description: >
+  Resolves free-form place text — a device GPS fix today, a scanned address
+  later — to a row in the Navri location hierarchy. Shared by the member app,
+  the Suchak app, and anything else that has to answer "which location is this".
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+
+dev_dependencies:
+  test: ^1.25.0

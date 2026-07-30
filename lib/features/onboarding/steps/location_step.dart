@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:navri_location_engine/navri_location_engine.dart';
 
 import '../../../core/api_client.dart';
-import '../models/onboarding_option.dart';
-import '../models/paged_lookup_response.dart';
+import '../../../core/location/api_client_location_api.dart';
 import '../widgets/onboarding_error_highlight.dart';
 import '../widgets/onboarding_picker_field.dart';
 import '../widgets/smart_picker_panel.dart';
@@ -41,6 +41,12 @@ class _LocationStepState extends State<LocationStep>
   );
 
   final TextEditingController _addressLineController = TextEditingController();
+
+  /// Every lookup, every name match and the whole GPS walk live here, shared
+  /// with the Suchak app. This widget owns what the member sees; the engine
+  /// owns what counts as an answer.
+  late LocationEngine _engine = _buildEngine();
+  late String _engineLocale = widget.locale;
 
   OnboardingOption? _country;
   OnboardingOption? _state;
@@ -82,6 +88,10 @@ class _LocationStepState extends State<LocationStep>
   @override
   void didUpdateWidget(covariant LocationStep oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.locale != _engineLocale) {
+      _engineLocale = widget.locale;
+      _engine = _buildEngine();
+    }
     if (!mapEquals(oldWidget.data, widget.data)) {
       _prefill();
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -102,6 +112,13 @@ class _LocationStepState extends State<LocationStep>
     if (state != AppLifecycleState.resumed) return;
     if (!_retryMobileLocationOnResume) return;
     _retryMobileLocationAfterSettings();
+  }
+
+  LocationEngine _buildEngine() {
+    return LocationEngine(
+      api: ApiClientLocationApi(locale: widget.locale),
+      unknownLabel: () => onboardingSelectedFailureLabel(widget.locale),
+    );
   }
 
   Future<void> _retryMobileLocationAfterSettings() async {
@@ -197,31 +214,17 @@ class _LocationStepState extends State<LocationStep>
     _talukasForDistrictId = null;
   }
 
-  bool _locationEnabled(OnboardingOption option) {
-    if (_isPendingLocationOption(option)) return true;
-    return option.metaBool('is_final_node') == true &&
-        option.metaText('status') == 'approved';
-  }
+  bool _locationEnabled(OnboardingOption option) =>
+      LocationEngine.isSelectable(option);
 
-  bool _isPendingLocationOption(OnboardingOption option) {
-    return option.metaBool('is_pending_location') == true ||
-        option.metaBool('is_custom_location') == true ||
-        option.metaText('status') == 'pending';
-  }
+  bool _isPendingLocationOption(OnboardingOption option) =>
+      LocationEngine.isPending(option);
 
-  String? _locationType(OnboardingOption? option) {
-    if (option == null) return null;
-    return option.metaText('type') ??
-        option.metaText('hierarchy') ??
-        onboardingText(option.raw['hierarchy']);
-  }
+  String? _locationType(OnboardingOption? option) =>
+      LocationEngine.typeOf(option);
 
-  bool _isApprovedRow(OnboardingOption option) {
-    final status = option.metaText('status');
-    return status == null || status == 'approved';
-  }
-
-  int? _parentId(OnboardingOption? option) => option?.metaInt('parent_id');
+  int? _parentId(OnboardingOption? option) =>
+      LocationEngine.parentIdOf(option);
 
   Future<void> _loadDefaultCountryState() async {
     try {
@@ -282,11 +285,7 @@ class _LocationStepState extends State<LocationStep>
 
   Future<List<OnboardingOption>> _ensureStates() async {
     if (_allStates.isNotEmpty) return _allStates;
-    final rows = await ApiClient.getInternalLocationStates();
-    final options = rows
-        .map((row) => _hierarchyOption(row, 'state'))
-        .where((option) => option.intId != null)
-        .toList();
+    final options = await _engine.states();
     if (mounted) {
       setState(() => _allStates = options);
     } else {
@@ -302,11 +301,7 @@ class _LocationStepState extends State<LocationStep>
     if (stateId == null) return const <OnboardingOption>[];
     if (_districtsForStateId == stateId) return _districts;
 
-    final rows = await ApiClient.getInternalLocationDistricts(stateId: stateId);
-    final options = rows
-        .map((row) => _hierarchyOption(row, 'district'))
-        .where((option) => option.intId != null)
-        .toList();
+    final options = await _engine.districtsForState(state);
     if (mounted) {
       setState(() {
         _districts = options;
@@ -326,13 +321,7 @@ class _LocationStepState extends State<LocationStep>
     if (districtId == null) return const <OnboardingOption>[];
     if (_talukasForDistrictId == districtId) return _talukas;
 
-    final rows = await ApiClient.getInternalLocationTalukas(
-      districtId: districtId,
-    );
-    final options = rows
-        .map((row) => _hierarchyOption(row, 'taluka'))
-        .where((option) => option.intId != null)
-        .toList();
+    final options = await _engine.talukasForDistrict(district);
     if (mounted) {
       setState(() {
         _talukas = options;
@@ -345,141 +334,20 @@ class _LocationStepState extends State<LocationStep>
     return options;
   }
 
-  OnboardingOption _hierarchyOption(Map<String, dynamic> row, String type) {
-    final id = onboardingInt(row['id'] ?? row['location_id']);
-    final label =
-        onboardingText(row['label'] ?? row['name'] ?? row['display_label']) ??
-        onboardingSelectedFailureLabel(widget.locale);
-    final parentId = onboardingInt(row['parent_id']);
-
-    return OnboardingOption(
-      id: id,
-      key: onboardingText(row['slug'] ?? row['key']),
-      label: label,
-      meta: <String, dynamic>{
-        'type': type,
-        'hierarchy': type,
-        'status': 'approved',
-        'is_final_node': false,
-        if (parentId != null) 'parent_id': parentId,
-      },
-      raw: <String, dynamic>{
-        ...row,
-        'id': id,
-        'location_id': id,
-        'label': label,
-        'type': type,
-        'hierarchy': type,
-        if (parentId != null) 'parent_id': parentId,
-      },
-    );
-  }
-
-  Future<OnboardingOption?> _findLocationByType(
-    String query,
-    String type,
-  ) async {
-    final page = await _locationPage(query, 1, 20);
-    for (final option in page.results) {
-      if (_locationType(option) == type && _isApprovedRow(option)) {
-        return option;
-      }
-    }
-    return null;
-  }
-
-  /// Every spelling of a location's own name the server sent.
-  ///
-  /// `label` is whatever the request's locale asked for, so on a Marathi phone
-  /// it is Devanagari. The device geocoder answers in Latin, and the two never
-  /// match. Matching has to see both scripts, and the payload carries them.
-  List<String> _optionNameVariants(OnboardingOption option) {
-    final variants = <String>[];
-    for (final value in [
-      option.label,
-      option.metaText('name_en'),
-      option.metaText('name_mr'),
-      option.metaText('name'),
-      option.metaText('display_name'),
-    ]) {
-      final text = value?.trim();
-      if (text != null && text.isNotEmpty && !variants.contains(text)) {
-        variants.add(text);
-      }
-    }
-
-    return variants;
-  }
+  Future<OnboardingOption?> _findLocationByType(String query, String type) =>
+      _engine.findByType(query, type);
 
   OnboardingOption? _findNamedOption(
     List<OnboardingOption> options,
     String name,
-  ) {
-    final wanted = name.trim().toLowerCase();
-    for (final option in options) {
-      for (final variant in _optionNameVariants(option)) {
-        if (variant.toLowerCase() == wanted) return option;
-      }
-    }
-    for (final option in options) {
-      for (final variant in _optionNameVariants(option)) {
-        if (_locationTextMatches(variant, name)) return option;
-      }
-    }
-    for (final option in options) {
-      for (final variant in _optionNameVariants(option)) {
-        if (variant.toLowerCase().contains(wanted)) return option;
-      }
-    }
-    return null;
-  }
-
-  bool _locationTextMatches(String? left, String? right) {
-    final a = _normalizeLocationCompareText(left);
-    final b = _normalizeLocationCompareText(right);
-    if (a == null || b == null) return false;
-    if (a == b) return true;
-    if (a.length >= 4 && b.length >= 4) {
-      return a.contains(b) || b.contains(a);
-    }
-    return false;
-  }
-
-  String? _normalizeLocationCompareText(String? value) {
-    final text = value?.trim().toLowerCase();
-    if (text == null || text.isEmpty) return null;
-    final normalized = text
-        .replaceAll(RegExp(r'[^a-z0-9\s]'), ' ')
-        .replaceAll(
-          RegExp(
-            r'\b(district|dist|division|state|taluka|tehsil|city|village)\b',
-          ),
-          ' ',
-        )
-        .replaceAll(RegExp(r'\s+'), ' ')
-        .trim();
-    return normalized.isEmpty ? null : normalized;
-  }
+  ) => LocationEngine.findNamed(options, name);
 
   Future<PagedLookupResponse> _locationPage(
     String query,
     int page,
     int limit, {
     int? preferredStateId,
-  }) async {
-    if (query.trim().length < 2) {
-      return PagedLookupResponse.fromOptions(const []);
-    }
-    return PagedLookupResponse.fromJson(
-      await ApiClient.searchLocationsForOnboarding(
-        query: query,
-        page: page,
-        limit: limit,
-        locale: widget.locale,
-        preferredStateId: preferredStateId,
-      ),
-    );
-  }
+  }) => _engine.search(query, page, limit, preferredStateId: preferredStateId);
 
   Future<PagedLookupResponse> _childrenPage({
     required OnboardingOption parent,
@@ -487,21 +355,13 @@ class _LocationStepState extends State<LocationStep>
     required int page,
     required int limit,
     String? filter,
-  }) async {
-    final parentId = parent.intId;
-    if (parentId == null) return PagedLookupResponse.fromOptions(const []);
-
-    return PagedLookupResponse.fromJson(
-      await ApiClient.getInternalLocationChildren(
-        parentId: parentId,
-        query: query.trim().length < 2 ? null : query.trim(),
-        page: page,
-        limit: limit,
-        locale: widget.locale,
-        filter: filter == null || filter == 'all' ? null : filter,
-      ),
-    );
-  }
+  }) => _engine.childrenOf(
+    parent: parent,
+    query: query,
+    page: page,
+    limit: limit,
+    filter: filter,
+  );
 
   Future<PagedLookupResponse> _countryPage(
     String query,
@@ -624,37 +484,10 @@ class _LocationStepState extends State<LocationStep>
     String query,
     int page,
     int limit,
-  ) {
-    final q = query.trim().toLowerCase();
-    final rows = options.where((option) {
-      return q.isEmpty ||
-          option.label.toLowerCase().startsWith(q) ||
-          (option.key?.toLowerCase().startsWith(q) ?? false);
-    }).toList();
-    final start = (page - 1) * limit;
-    final pageRows = start >= rows.length
-        ? <OnboardingOption>[]
-        : rows.skip(start).take(limit).toList();
-    return PagedLookupResponse(
-      success: true,
-      results: pageRows,
-      pagination: LookupPagination(
-        page: page,
-        perPage: limit,
-        total: rows.length,
-        hasMore: start + pageRows.length < rows.length,
-      ),
-    );
-  }
+  ) => LocationEngine.pageOf(options, query, page, limit);
 
-  List<OnboardingOption> _uniqueOptions(List<OnboardingOption> options) {
-    final seen = <String>{};
-    final out = <OnboardingOption>[];
-    for (final option in options) {
-      if (seen.add(option.identity)) out.add(option);
-    }
-    return out;
-  }
+  List<OnboardingOption> _uniqueOptions(List<OnboardingOption> options) =>
+      LocationEngine.unique(options);
 
   String? _locationErrorFor(String field) {
     return _locationErrorField == field ? _locationFieldError : null;
@@ -873,231 +706,20 @@ class _LocationStepState extends State<LocationStep>
     }
   }
 
-  OnboardingOption? _bestMobileLocationMatch(
-    List<OnboardingOption> options,
-    Map<String, dynamic> data,
-    String searchTerm, {
-    bool requireHierarchyMatch = true,
-    int minScore = 1,
-  }) {
-    final approved = options.where((option) {
-      if (!_locationEnabled(option)) return false;
-      if (!requireHierarchyMatch) return true;
-      return _mobileLocationHierarchyMatches(option, data);
-    }).toList();
-    if (approved.isEmpty) return null;
-    approved.sort(
-      (a, b) => _mobileLocationScore(
-        b,
-        data,
-        searchTerm,
-      ).compareTo(_mobileLocationScore(a, data, searchTerm)),
-    );
-    final best = approved.first;
-    return _mobileLocationScore(best, data, searchTerm) >= minScore
-        ? best
-        : null;
-  }
-
-  bool _mobileLocationHierarchyMatches(
-    OnboardingOption option,
-    Map<String, dynamic> data,
-  ) {
-    final stateTexts = _mobileLocationTexts(data, const ['state_en', 'state']);
-    if (stateTexts.isNotEmpty) {
-      final stateLabels = _parentLabelVariants(option, 'state');
-      if (stateLabels.isEmpty ||
-          !stateTexts.any(
-            (text) =>
-                stateLabels.any((label) => _locationTextMatches(label, text)),
-          )) {
-        return false;
-      }
-    }
-
-    final districtTexts = _mobileLocationTexts(data, const [
-      'district_en',
-      'district',
-    ]);
-    if (districtTexts.isNotEmpty) {
-      final districtLabels = _parentLabelVariants(option, 'district');
-      if (districtLabels.isEmpty ||
-          !districtTexts.any(
-            (text) => districtLabels.any(
-              (label) => _locationTextMatches(label, text),
-            ),
-          )) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  int _mobileLocationScore(
-    OnboardingOption option,
-    Map<String, dynamic> data,
-    String searchTerm,
-  ) {
-    final haystack = [
-      ..._optionNameVariants(option),
-      option.metaText('display_hierarchy'),
-      option.metaText('type'),
-      option.metaText('tag'),
-      _parentLabel(option, 'state'),
-      _parentLabel(option, 'district'),
-      _parentLabel(option, 'taluka'),
-      _parentLabel(option, 'city'),
-    ].whereType<String>().join(' ').toLowerCase();
-
-    var score = 0;
-    final normalizedSearchTerm = searchTerm.trim().toLowerCase();
-    if (normalizedSearchTerm.isNotEmpty &&
-        haystack.contains(normalizedSearchTerm)) {
-      score += 6;
-    }
-    for (final entry in const [
-      MapEntry('locality_en', 5),
-      MapEntry('locality', 5),
-      MapEntry('sub_locality_en', 5),
-      MapEntry('sub_locality', 5),
-      MapEntry('feature_name_en', 4),
-      MapEntry('feature_name', 4),
-      MapEntry('district_en', 3),
-      MapEntry('district', 3),
-      MapEntry('state_en', 2),
-      MapEntry('state', 2),
-    ]) {
-      final text = _mobileLocationText(data[entry.key])?.toLowerCase();
-      if (text != null && haystack.contains(text)) score += entry.value;
-    }
-    return score;
-  }
-
-  List<String> _mobileLocationSearchTerms(Map<String, dynamic> data) {
-    final seen = <String>{};
-    final terms = <String>[];
-    void addTerm(dynamic value) {
-      final text = _mobileLocationText(value);
-      if (text == null || text.length < 2) return;
-      if (seen.add(text.toLowerCase())) terms.add(text);
-    }
-
-    for (final value in [
-      data['sub_locality_en'],
-      data['sub_locality'],
-      data['locality_en'],
-      data['locality'],
-      data['feature_name_en'],
-      data['feature_name'],
-      data['district_en'],
-      data['district'],
-    ]) {
-      addTerm(value);
-    }
-
-    for (final key in const ['address_line_en', 'address_line']) {
-      final addressLine = _mobileLocationText(data[key]);
-      if (addressLine == null) continue;
-      for (final part in addressLine.split(',')) {
-        addTerm(part);
-      }
-    }
-
-    return terms;
-  }
-
-  /// Searches for the leaf strictly INSIDE [parent] — the district when one was
-  /// resolved, otherwise the state.
-  ///
-  /// Scope is the whole point. A village name looked up nationally competes
-  /// with millions of rows and can land in the wrong district; the same name
-  /// under one district is a choice among a few thousand, and the ancestors are
-  /// already known to be right because the walk established them.
-  Future<OnboardingOption?> _findMobileFinalLocationUnderDistrict(
-    OnboardingOption parent,
-    Map<String, dynamic> data,
-  ) async {
-    final terms = _mobileLocationSearchTerms(data);
-    if (terms.isEmpty) return null;
-
-    for (final term in terms) {
-      final direct = await _childrenPage(
-        parent: parent,
-        query: term,
-        page: 1,
-        limit: 25,
-      );
-      final directMatch = _bestMobileLocationMatch(
-        direct.results,
-        data,
-        term,
-        requireHierarchyMatch: false,
-        minScore: 5,
-      );
-      if (directMatch != null) return directMatch;
-
-      for (final area in direct.results) {
-        if (_locationType(area) != 'taluka') continue;
-        final nested = await _childrenPage(
-          parent: area,
-          query: term,
-          page: 1,
-          limit: 25,
-        );
-        final nestedMatch = _bestMobileLocationMatch(
-          nested.results,
-          data,
-          term,
-          requireHierarchyMatch: false,
-          minScore: 5,
-        );
-        if (nestedMatch != null) return nestedMatch;
-      }
-    }
-
-    return null;
-  }
-
   Future<bool> _fillMobileKnownHierarchy(Map<String, dynamic> data) async {
-    final countryText =
-        _mobileLocationText(data['country_en']) ??
-        _mobileLocationText(data['country']);
-    final stateText =
-        _mobileLocationText(data['state_en']) ??
-        _mobileLocationText(data['state']);
-    final districtText =
-        _mobileLocationText(data['district_en']) ??
-        _mobileLocationText(data['district']);
+    final resolved = await _engine.resolvePlace(data, fallbackCountry: _country);
+    final country = resolved.country;
+    final state = resolved.state;
+    final district = resolved.district;
+    final finalLocation = resolved.leaf;
 
-    final country = countryText == null
-        ? _country
-        : await _findLocationByType(countryText, 'country');
-    final states = await _ensureStates();
-    final countryId = country?.intId;
-    final state = stateText == null
-        ? null
-        : _findNamedOption(
-            states.where((option) {
-              if (countryId == null) return true;
-              return _parentId(option) == countryId;
-            }).toList(),
-            stateText,
-          );
-    final districts = state == null
-        ? const <OnboardingOption>[]
-        : await _ensureDistrictsForState(state);
-    final district = districtText == null
-        ? null
-        : _findNamedOption(districts, districtText);
-    // Search the leaf under the deepest ancestor the walk reached. A district
-    // narrows it to a few thousand rows; the state is the widest this is ever
-    // allowed to go. Without either, nothing is searched — a national lookup
-    // would be a guess among millions, which is what the walk exists to avoid.
-    final leafParent = district ?? state;
-    final finalLocation = leafParent == null
-        ? null
-        : await _findMobileFinalLocationUnderDistrict(leafParent, data);
+    // The engine keeps its own caches; these two fill the widget's copies so
+    // the state and district pickers open already populated, exactly as they
+    // did when the walk loaded them itself. Both are cache hits by now.
+    await _ensureStates();
+    if (state != null) {
+      await _ensureDistrictsForState(state);
+    }
 
     if (!mounted) return false;
     var changed = false;
@@ -1203,84 +825,10 @@ class _LocationStepState extends State<LocationStep>
     }
   }
 
-  OnboardingOption? _parentOption(OnboardingOption option, String key) {
-    final parent = option.raw['parent'];
-    if (parent is! Map) return null;
-    final value = parent[key];
-    if (value is! Map) return null;
-    final id = onboardingInt(value['id']);
-    final label = onboardingText(value['label'] ?? value['name']);
-    if (id == null || label == null) return null;
-    return OnboardingOption(
-      id: id,
-      label: label,
-      meta: <String, dynamic>{
-        'type': key,
-        'hierarchy': key,
-        'status': 'approved',
-        'is_final_node': false,
-      },
-      raw: <String, dynamic>{
-        'id': id,
-        'location_id': id,
-        'label': label,
-        'name': label,
-        'type': key,
-        'hierarchy': key,
-      },
-    );
-  }
+  OnboardingOption? _parentOption(OnboardingOption option, String key) =>
+      LocationEngine.parentOption(option, key);
 
-  String? _parentLabel(OnboardingOption option, String key) {
-    final variants = _parentLabelVariants(option, key);
-    return variants.isEmpty ? null : variants.first;
-  }
-
-  /// Both spellings of an ancestor's name, for the same reason as
-  /// [_optionNameVariants]: the label follows the request locale, the device
-  /// geocoder does not.
-  List<String> _parentLabelVariants(OnboardingOption option, String key) {
-    final parent = option.raw['parent'];
-    if (parent is! Map) return const <String>[];
-    final value = parent[key];
-    if (value is! Map) {
-      final text = onboardingText(value);
-      return text == null ? const <String>[] : <String>[text];
-    }
-
-    final variants = <String>[];
-    for (final candidate in [
-      value['label'],
-      value['name_en'],
-      value['name_mr'],
-      value['name'],
-    ]) {
-      final text = onboardingText(candidate);
-      if (text != null && !variants.contains(text)) variants.add(text);
-    }
-
-    return variants;
-  }
-
-  String? _mobileLocationText(dynamic value) {
-    final text = value?.toString().trim();
-    if (text == null || text.isEmpty) return null;
-    return text;
-  }
-
-  List<String> _mobileLocationTexts(
-    Map<String, dynamic> data,
-    List<String> keys,
-  ) {
-    final seen = <String>{};
-    final values = <String>[];
-    for (final key in keys) {
-      final text = _mobileLocationText(data[key]);
-      if (text == null) continue;
-      if (seen.add(text.toLowerCase())) values.add(text);
-    }
-    return values;
-  }
+  String? _mobileLocationText(dynamic value) => LocationEngine.placeText(value);
 
   bool _fillMobileAddressLine(Map<String, dynamic> data) {
     if (_addressLineController.text.trim().isNotEmpty) return false;
