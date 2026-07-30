@@ -1760,11 +1760,15 @@ class ApiClient {
     required String mobile,
     required String otp,
   }) async {
+    // Sent authenticated whenever there IS a session, so the server can tell
+    // "this member is verifying their own number" from "someone is signing in
+    // with it". Without the header it only ever saw the second, and a member
+    // finishing onboarding was moved onto a fresh empty account.
     final data = await _postJson(ApiRoutes.mobileOtpVerify, {
       'challenge_id': challengeId,
       'mobile': mobile,
       'otp': otp,
-    });
+    }, authenticated: authToken != null && authToken!.isNotEmpty);
 
     final token =
         data['token']?.toString() ??
