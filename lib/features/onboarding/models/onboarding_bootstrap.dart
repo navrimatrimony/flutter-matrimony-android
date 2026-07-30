@@ -40,6 +40,60 @@ class OnboardingBootstrap {
   final List<OnboardingOption> rashis;
   final List<OnboardingOption> charanOptions;
   final Map<String, dynamic> horoscopeRules;
+
+  /// Returns this bootstrap with only the named fields replaced.
+  ///
+  /// Exists because the alternative — listing every field by hand at each call
+  /// site — quietly loses whichever ones the author forgot. That is not
+  /// hypothetical: rebuilding this to inject the gender list dropped
+  /// [horoscopeRules], and the astro step's nakshatra / rashi / charan
+  /// filtering went dead without a single error.
+  OnboardingBootstrap copyWith({
+    List<OnboardingOption>? profileForWhom,
+    List<OnboardingOption>? genders,
+    List<OnboardingOption>? motherTongues,
+    List<OnboardingOption>? maritalStatuses,
+    List<OnboardingOption>? heightOptions,
+    List<OnboardingOption>? diets,
+    List<OnboardingOption>? smokingOptions,
+    List<OnboardingOption>? drinkingOptions,
+    List<OnboardingOption>? physicalBuilds,
+    List<OnboardingOption>? spectaclesLensOptions,
+    List<OnboardingOption>? mangalDoshTypes,
+    List<OnboardingOption>? nakshatras,
+    List<OnboardingOption>? rashis,
+    List<OnboardingOption>? charanOptions,
+    Map<String, dynamic>? horoscopeRules,
+    Map<String, dynamic>? rashiAshtakoota,
+    Map<String, dynamic>? childrenRules,
+    Map<String, dynamic>? agePolicy,
+    List<String>? steps,
+    Map<String, dynamic>? raw,
+  }) {
+    return OnboardingBootstrap(
+      profileForWhom: profileForWhom ?? this.profileForWhom,
+      genders: genders ?? this.genders,
+      motherTongues: motherTongues ?? this.motherTongues,
+      maritalStatuses: maritalStatuses ?? this.maritalStatuses,
+      heightOptions: heightOptions ?? this.heightOptions,
+      diets: diets ?? this.diets,
+      smokingOptions: smokingOptions ?? this.smokingOptions,
+      drinkingOptions: drinkingOptions ?? this.drinkingOptions,
+      physicalBuilds: physicalBuilds ?? this.physicalBuilds,
+      spectaclesLensOptions:
+          spectaclesLensOptions ?? this.spectaclesLensOptions,
+      mangalDoshTypes: mangalDoshTypes ?? this.mangalDoshTypes,
+      nakshatras: nakshatras ?? this.nakshatras,
+      rashis: rashis ?? this.rashis,
+      charanOptions: charanOptions ?? this.charanOptions,
+      horoscopeRules: horoscopeRules ?? this.horoscopeRules,
+      rashiAshtakoota: rashiAshtakoota ?? this.rashiAshtakoota,
+      childrenRules: childrenRules ?? this.childrenRules,
+      agePolicy: agePolicy ?? this.agePolicy,
+      steps: steps ?? this.steps,
+      raw: raw ?? this.raw,
+    );
+  }
   final Map<String, dynamic> rashiAshtakoota;
   final Map<String, dynamic> childrenRules;
   final Map<String, dynamic> agePolicy;

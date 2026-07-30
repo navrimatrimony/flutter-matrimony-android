@@ -1164,26 +1164,10 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     OnboardingBootstrap source,
     List<OnboardingOption> genders,
   ) {
-    return OnboardingBootstrap(
-      profileForWhom: source.profileForWhom,
-      genders: genders,
-      motherTongues: source.motherTongues,
-      maritalStatuses: source.maritalStatuses,
-      heightOptions: source.heightOptions,
-      diets: source.diets,
-      smokingOptions: source.smokingOptions,
-      drinkingOptions: source.drinkingOptions,
-      physicalBuilds: source.physicalBuilds,
-      spectaclesLensOptions: source.spectaclesLensOptions,
-      mangalDoshTypes: source.mangalDoshTypes,
-      nakshatras: source.nakshatras,
-      rashis: source.rashis,
-      charanOptions: source.charanOptions,
-      childrenRules: source.childrenRules,
-      agePolicy: source.agePolicy,
-      steps: source.steps,
-      raw: source.raw,
-    );
+    // One field replaced, the rest carried. Listing them by hand here is what
+    // dropped horoscopeRules and rashiAshtakoota, which silently turned off the
+    // astro step's nakshatra / rashi / charan filtering.
+    return source.copyWith(genders: genders);
   }
 
   Future<List<OnboardingOption>> _loadGenderOptions() async {
