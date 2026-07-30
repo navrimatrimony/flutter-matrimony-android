@@ -324,13 +324,30 @@ class _AstroStepState extends State<AstroStep> {
     final theme = Theme.of(context);
     final derived = _derivedNote();
 
+    final anyFilled =
+        _nakshatra != null || _rashi != null || _charan != null;
+
     return _AstroSectionCard(
-      title: appText.astroTriangleHint,
+      title: appText.astroTriangleLabel,
       accent: true,
+      // Offered only once something is filled: a clear button over three empty
+      // fields is noise, and it is the one action that always works — see
+      // [_clearTriangle].
+      trailing: anyFilled
+          ? TextButton.icon(
+              onPressed: _clearTriangle,
+              icon: const Icon(Icons.refresh, size: 16),
+              label: Text(appText.astroClearAll),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                visualDensity: VisualDensity.compact,
+              ),
+            )
+          : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _picker(
+          _pickerRow(
             label: appText.nakshatra,
             selected: _nakshatra,
             options: _nakshatraOptionsForSelection,
@@ -341,9 +358,10 @@ class _AstroStepState extends State<AstroStep> {
               }
               _reconcile();
             }),
+            onClear: () => setState(() => _nakshatra = null),
           ),
           const SizedBox(height: 8),
-          _picker(
+          _pickerRow(
             label: appText.rashi,
             selected: _rashi,
             options: _rashiOptionsForSelection,
@@ -351,6 +369,7 @@ class _AstroStepState extends State<AstroStep> {
               _rashi = option;
               _reconcile();
             }),
+            onClear: () => setState(() => _rashi = null),
           ),
           const SizedBox(height: 8),
           _charanRow(context),
@@ -365,6 +384,62 @@ class _AstroStepState extends State<AstroStep> {
           ],
         ],
       ),
+    );
+  }
+
+  /// Empties all three corners at once.
+  ///
+  /// The only clear that is guaranteed to hold. Clearing a single corner while
+  /// the other two remain leaves the rules able to derive it straight back, so
+  /// a member who filled the set wrongly needs this to start over.
+  ///
+  /// Deliberately does not run the reconciler afterwards — with nothing left to
+  /// reason from it has nothing to restore, and calling it would only invite
+  /// the question of what it might put back.
+  void _clearTriangle() {
+    setState(() {
+      _nakshatra = null;
+      _rashi = null;
+      _charan = null;
+      _nakshatraWasDerived = false;
+      _rashiWasDerived = false;
+      _charanWasDerived = false;
+    });
+  }
+
+  /// A picker with a clear button once it holds something.
+  ///
+  /// Clearing one field does NOT reconcile: reconciling here would use the
+  /// remaining two to put the value straight back, and the field would look
+  /// like it refused to be emptied.
+  Widget _pickerRow({
+    required String label,
+    required OnboardingOption? selected,
+    required List<OnboardingOption> options,
+    required ValueChanged<OnboardingOption?> onChanged,
+    required VoidCallback onClear,
+  }) {
+    final field = _picker(
+      label: label,
+      selected: selected,
+      options: options,
+      onChanged: onChanged,
+    );
+
+    if (selected == null) return field;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(child: field),
+        IconButton(
+          onPressed: onClear,
+          icon: const Icon(Icons.close, size: 18),
+          tooltip: appText.astroClearField,
+          visualDensity: VisualDensity.compact,
+          constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+        ),
+      ],
     );
   }
 
@@ -443,10 +518,14 @@ class _AstroSectionCard extends StatelessWidget {
     required this.title,
     required this.child,
     this.accent = false,
+    this.trailing,
   });
 
   final String title;
   final Widget child;
+
+  /// Sits beside the title — the clear action for the box.
+  final Widget? trailing;
 
   /// Marks the box holding fields that depend on each other, so it reads as one
   /// question rather than three unrelated ones.
@@ -467,12 +546,21 @@ class _AstroSectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w800,
-                color: accent ? Colors.blue.shade800 : Colors.grey.shade900,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: accent
+                          ? Colors.blue.shade800
+                          : Colors.grey.shade900,
+                    ),
+                  ),
+                ),
+                if (trailing != null) trailing!,
+              ],
             ),
             const SizedBox(height: 6),
             child,

@@ -142,6 +142,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get astroDerivedCharan => 'Charan came from the nakshatra and rashi';
 
   @override
+  String get astroTriangleLabel => 'Nakshatra · rashi · charan';
+
+  @override
+  String get astroClearAll => 'Clear all';
+
+  @override
+  String get astroClearField => 'Clear this';
+
+  @override
+  String get aboutTemplateGrowthTogether => 'Growing together';
+
+  @override
+  String get aboutTemplateGrowthTogetherBody =>
+      'Looking for a partner to understand each other and move forward together.';
+
+  @override
   String get astroDetails => 'Astro details';
 
   @override

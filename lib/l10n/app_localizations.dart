@@ -338,6 +338,36 @@ abstract class AppLocalizations {
   /// **'Charan came from the nakshatra and rashi'**
   String get astroDerivedCharan;
 
+  /// No description provided for @astroTriangleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Nakshatra · rashi · charan'**
+  String get astroTriangleLabel;
+
+  /// No description provided for @astroClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear all'**
+  String get astroClearAll;
+
+  /// No description provided for @astroClearField.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear this'**
+  String get astroClearField;
+
+  /// No description provided for @aboutTemplateGrowthTogether.
+  ///
+  /// In en, this message translates to:
+  /// **'Growing together'**
+  String get aboutTemplateGrowthTogether;
+
+  /// No description provided for @aboutTemplateGrowthTogetherBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking for a partner to understand each other and move forward together.'**
+  String get aboutTemplateGrowthTogetherBody;
+
   /// No description provided for @astroDetails.
   ///
   /// In en, this message translates to:

@@ -531,12 +531,16 @@ class _AboutSuggestionChips extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) {
-        final itemWidth = constraints.maxWidth >= 320
-            ? (constraints.maxWidth - 8) / 2
-            : constraints.maxWidth;
+        // Three across, so six templates make two even rows instead of three
+        // uneven ones. Falls back to two columns on a narrow phone, where three
+        // would cut the labels.
+        final columns = constraints.maxWidth >= 340 ? 3 : 2;
+        final spacing = 6.0;
+        final itemWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
         return Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: spacing,
+          runSpacing: 6,
           children: [
             for (var i = 0; i < suggestions.length; i++)
               SizedBox(
@@ -560,8 +564,8 @@ class _AboutSuggestionChips extends StatelessWidget {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 9,
+                        horizontal: 8,
+                        vertical: 7,
                       ),
                       child: Row(
                         children: [

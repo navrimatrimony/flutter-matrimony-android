@@ -1451,6 +1451,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           appText.aboutTemplateCalmSteadyBody,
         ),
       ),
+      // Sixth, so the chips fill two rows of three instead of leaving a gap.
+      AboutTemplateSuggestion(
+        label: appText.aboutTemplateGrowthTogether,
+        text: body(appText.aboutTemplateGrowthTogetherBody),
+      ),
     ];
   }
 

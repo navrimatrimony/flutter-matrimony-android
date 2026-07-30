@@ -141,6 +141,22 @@ class AppLocalizationsMr extends AppLocalizations {
   String get astroDerivedCharan => 'नक्षत्र आणि राशीवरून चरण आपोआप आले';
 
   @override
+  String get astroTriangleLabel => 'नक्षत्र · राशी · चरण';
+
+  @override
+  String get astroClearAll => 'सर्व पुसा';
+
+  @override
+  String get astroClearField => 'हे पुसा';
+
+  @override
+  String get aboutTemplateGrowthTogether => 'एकत्र वाटचाल';
+
+  @override
+  String get aboutTemplateGrowthTogetherBody =>
+      'एकमेकांना समजून घेत, एकत्र पुढे जाणाऱ्या सोबत्याच्या शोधात आहे.';
+
+  @override
   String get astroDetails => 'ज्योतिष माहिती';
 
   @override
