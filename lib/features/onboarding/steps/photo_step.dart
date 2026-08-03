@@ -594,21 +594,19 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       continueLabel: stickyUploads || !_canProceedAfterUpload
           ? (_uploading ? appText.uploadingPhoto : appText.uploadSelectedPhoto)
           : appText.continueToPartnerPreference,
-      secondary: TextButton.icon(
+      titleAction: IconButton(
+        tooltip: appText.refreshPhotoStatus,
         onPressed: busy ? null : () async => _refreshProfileStatus(),
         icon: _checkingStatus
             ? const SizedBox(
-                width: 16,
-                height: 16,
+                width: 18,
+                height: 18,
                 child: CircularProgressIndicator(strokeWidth: 2),
               )
             : const Icon(Icons.refresh),
-        label: Text(appText.refreshPhotoStatus),
-        style: TextButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          minimumSize: Size.zero,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
+        visualDensity: VisualDensity.compact,
+        padding: EdgeInsets.zero,
+        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
       ),
       children: [
         _PhotoHero(
@@ -866,28 +864,12 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                             child: GestureDetector(
                               onScaleStart: onScaleStart,
                               onScaleUpdate: onScaleUpdate,
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  CustomPaint(
-                                    painter: _CropPreviewPainter(
-                                      image: image,
-                                      sourceRect: cropRect,
-                                    ),
-                                  ),
-                                  IgnorePointer(
-                                    child: DecoratedBox(
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.white.withValues(
-                                            alpha: 0.85,
-                                          ),
-                                          width: 2,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              child: CustomPaint(
+                                painter: _CropPreviewPainter(
+                                  image: image,
+                                  sourceRect: cropRect,
+                                  showOutsideDim: true,
+                                ),
                               ),
                             ),
                           ),
@@ -1288,20 +1270,93 @@ class _PhotoStatusPanel extends StatelessWidget {
 }
 
 class _CropPreviewPainter extends CustomPainter {
-  const _CropPreviewPainter({required this.image, required this.sourceRect});
+  const _CropPreviewPainter({
+    required this.image,
+    required this.sourceRect,
+    this.showOutsideDim = false,
+  });
 
   final ui.Image image;
   final Rect sourceRect;
+  final bool showOutsideDim;
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()..filterQuality = FilterQuality.high;
-    canvas.drawImageRect(image, sourceRect, Offset.zero & size, paint);
+    final full = Offset.zero & size;
+    final imageRect = Rect.fromLTWH(
+      0,
+      0,
+      image.width.toDouble(),
+      image.height.toDouble(),
+    );
+
+    if (!showOutsideDim) {
+      canvas.drawImageRect(image, sourceRect, full, paint);
+      return;
+    }
+
+    // Inset window is the kept crop; margins show more of the photo dimmed.
+    final cropWindow = full.deflate(18);
+    final scale = cropWindow.width / sourceRect.width;
+    final imageDest = Rect.fromLTWH(
+      cropWindow.left - sourceRect.left * scale,
+      cropWindow.top - sourceRect.top * scale,
+      imageRect.width * scale,
+      imageRect.height * scale,
+    );
+
+    canvas.drawImageRect(image, imageRect, imageDest, paint);
+
+    final outside = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(full)
+      ..addRect(cropWindow);
+    canvas.drawPath(
+      outside,
+      Paint()..color = Colors.black.withValues(alpha: 0.55),
+    );
+
+    canvas.save();
+    canvas.clipRect(cropWindow);
+    canvas.drawImageRect(image, imageRect, imageDest, paint);
+    canvas.restore();
+
+    _drawCropFrame(canvas, cropWindow);
+  }
+
+  void _drawCropFrame(Canvas canvas, Rect crop) {
+    final border = Paint()
+      ..color = Colors.white.withValues(alpha: 0.95)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawRect(crop, border);
+
+    final handle = Paint()
+      ..color = Colors.white
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.square
+      ..style = PaintingStyle.stroke;
+    const arm = 18.0;
+    final corners = <Offset>[
+      crop.topLeft,
+      crop.topRight,
+      crop.bottomLeft,
+      crop.bottomRight,
+    ];
+    for (final corner in corners) {
+      final inwardX = corner.dx == crop.left ? arm : -arm;
+      final inwardY = corner.dy == crop.top ? arm : -arm;
+      canvas.drawLine(corner, Offset(corner.dx + inwardX, corner.dy), handle);
+      canvas.drawLine(corner, Offset(corner.dx, corner.dy + inwardY), handle);
+    }
   }
 
   @override
   bool shouldRepaint(covariant _CropPreviewPainter oldDelegate) {
-    return oldDelegate.image != image || oldDelegate.sourceRect != sourceRect;
+    return oldDelegate.image != image ||
+        oldDelegate.sourceRect != sourceRect ||
+        oldDelegate.showOutsideDim != showOutsideDim;
   }
 }
 
@@ -1318,22 +1373,31 @@ class _PhotoGuidelines extends StatelessWidget {
       Icons.light_mode_outlined,
       Icons.verified_user_outlined,
     ];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (var i = 0; i < labels.length; i++)
-          _GuidelineChip(icon: icons[i], label: labels[i]),
-      ],
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (var i = 0; i < labels.length; i++) ...[
+            if (i > 0) const SizedBox(width: 8),
+            _GuidelineChip(icon: icons[i], label: labels[i], compact: true),
+          ],
+        ],
+      ),
     );
   }
 }
 
 class _GuidelineChip extends StatelessWidget {
-  const _GuidelineChip({required this.icon, required this.label});
+  const _GuidelineChip({
+    required this.icon,
+    required this.label,
+    this.compact = false,
+  });
 
   final IconData icon;
   final String label;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -1344,17 +1408,23 @@ class _GuidelineChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+        padding: EdgeInsets.symmetric(
+          horizontal: compact ? 8 : 10,
+          vertical: compact ? 6 : 7,
+        ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: colors.onSurfaceVariant),
-            const SizedBox(width: 6),
+            Icon(icon, size: compact ? 14 : 16, color: colors.onSurfaceVariant),
+            SizedBox(width: compact ? 4 : 6),
             Text(
               label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: colors.onSurfaceVariant,
                 fontWeight: FontWeight.w700,
+                fontSize: compact ? 11 : 13,
               ),
             ),
           ],

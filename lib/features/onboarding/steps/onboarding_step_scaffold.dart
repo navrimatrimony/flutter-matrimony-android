@@ -60,6 +60,7 @@ class OnboardingStepScaffold extends StatelessWidget {
     this.subtitle,
     this.continueLabel,
     this.secondary,
+    this.titleAction,
     this.titleStyle,
     this.contentPadding = const EdgeInsets.fromLTRB(16, 16, 16, 8),
   });
@@ -73,6 +74,7 @@ class OnboardingStepScaffold extends StatelessWidget {
   final bool continueEnabled;
   final String? continueLabel;
   final Widget? secondary;
+  final Widget? titleAction;
   final TextStyle? titleStyle;
   final EdgeInsetsGeometry contentPadding;
 
@@ -81,21 +83,38 @@ class OnboardingStepScaffold extends StatelessWidget {
     final titleText = title.trim();
     final subtitleText = subtitle?.trim();
     final hasHeader =
-        titleText.isNotEmpty || (subtitleText?.isNotEmpty ?? false);
+        titleText.isNotEmpty ||
+        (subtitleText?.isNotEmpty ?? false) ||
+        titleAction != null;
 
     final headerAndFields = <Widget>[
       if (hasHeader) ...[
-        if (titleText.isNotEmpty)
-          Text(
-            titleText,
-            style:
-                titleStyle ??
-                Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        if (titleText.isNotEmpty || titleAction != null)
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (titleText.isNotEmpty)
+                Expanded(
+                  child: Text(
+                    titleText,
+                    style:
+                        titleStyle ??
+                        Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                )
+              else
+                const Spacer(),
+              if (titleAction != null) ...[
+                const SizedBox(width: 8),
+                titleAction!,
+              ],
+            ],
           ),
         if (subtitleText != null && subtitleText.isNotEmpty) ...[
-          if (titleText.isNotEmpty) const SizedBox(height: 6),
+          if (titleText.isNotEmpty || titleAction != null)
+            const SizedBox(height: 6),
           Text(
             subtitleText,
             style: Theme.of(
