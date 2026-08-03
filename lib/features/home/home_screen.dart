@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _inactiveCoachmarkHandledThisVisit = false;
   List<Map<String, dynamic>> _activationChecklist = const [];
   final GlobalKey _nextBestActionKey = GlobalKey();
-  final GlobalKey _heroPhotoKey = GlobalKey();
+  final GlobalKey _photoUploadCtaKey = GlobalKey();
 
   /// Checklist keys that actually gate [is_searchable] on Laravel.
   /// Excludes `account_details_complete` (creator name) — onboarding never
@@ -354,12 +354,22 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     _scrollToInactiveCoachmarkTarget(alignment: 0.15);
   }
 
+  /// Spotlight the hero "Upload photo" CTA when photo is the live-search gap.
   GlobalKey get _inactiveCoachmarkTargetKey {
+    if (_photoBlocksSearch) return _photoUploadCtaKey;
     final key = _stringValue(_firstBlockingActivationItem()?['key']);
     if (key == 'photo_uploaded' || key == 'photo_approved') {
-      return _heroPhotoKey;
+      return _photoUploadCtaKey;
     }
     return _nextBestActionKey;
+  }
+
+  /// Local photo truth for inactive guidance — do not trust checklist order
+  /// (account_details is listed before photo but does not gate search).
+  bool get _photoBlocksSearch {
+    final profile = _effectiveProfile;
+    if (_profileMissing || profile == null) return false;
+    return !_hasPhoto(profile) || _photoPending(profile);
   }
 
   void _scrollToInactiveCoachmarkTarget({required double alignment}) {
@@ -780,28 +790,26 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             end: Alignment.bottomRight,
           );
 
-    return KeyedSubtree(
-      key: _heroPhotoKey,
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: _brandDark.withValues(alpha: 0.18),
-              blurRadius: 18,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildHeroAvatar(photoUrl, hasPhoto),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: [
+          BoxShadow(
+            color: _brandDark.withValues(alpha: 0.18),
+            blurRadius: 18,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeroAvatar(photoUrl, hasPhoto),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -880,37 +888,45 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _profileMissing
-                      ? () => _safePushNamed('/create-profile')
-                      : () => _safePushNamed(
-                          hasPhoto ? '/view-profile' : '/photo-gallery',
-                        ),
-                  icon: Icon(
-                    hasPhoto ? Icons.person_outline : Icons.photo_camera,
-                  ),
-                  label: Text(
-                    _profileMissing
-                        ? AppStrings.dashboardCreateProfile
-                        : hasPhoto
-                        ? AppStrings.myProfile
-                        : AppStrings.uploadPhoto,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: BorderSide(
-                      color: Colors.white.withValues(alpha: 0.72),
+                child: KeyedSubtree(
+                  key: _photoUploadCtaKey,
+                  child: OutlinedButton.icon(
+                    onPressed: _profileMissing
+                        ? () => _safePushNamed('/create-profile')
+                        : () => _safePushNamed(
+                            !hasPhoto || _photoPending(profile)
+                                ? '/photo-gallery'
+                                : '/view-profile',
+                          ),
+                    icon: Icon(
+                      !hasPhoto || _photoPending(profile)
+                          ? Icons.photo_camera
+                          : Icons.person_outline,
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    label: Text(
+                      _profileMissing
+                          ? AppStrings.dashboardCreateProfile
+                          : !hasPhoto
+                          ? AppStrings.uploadPhoto
+                          : _photoPending(profile)
+                          ? AppStrings.photosVerification
+                          : AppStrings.myProfile,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.72),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                    ),
                   ),
                 ),
               ),
             ],
           ),
         ],
-      ),
       ),
     );
   }
@@ -1976,16 +1992,34 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       );
     }
 
-    // Inactive / not searchable: tell why and drive the user to fix it.
-    final blocking = _firstBlockingActivationItem();
-    if (!_isSearchable && blocking != null) {
-      return _DashboardAction(
-        title: _activationTitle(blocking),
-        subtitle: _activationSubtitle(blocking),
-        icon: _activationIcon(blocking),
-        color: _warning,
-        onTap: () => _openActivationFix(blocking),
-      );
+    // Inactive / not searchable: photo CTA first (hero already shows it),
+    // never creator-name / account_details which do not gate search.
+    if (!_isSearchable) {
+      if (_photoBlocksSearch) {
+        final profile = _effectiveProfile;
+        final missing = !_hasPhoto(profile);
+        return _DashboardAction(
+          title: missing ? AppStrings.uploadPhoto : AppStrings.photosVerification,
+          subtitle: missing
+              ? AppStrings.dashboardUploadPhotoPrompt
+              : AppStrings.dashboardPhotoPendingSubtitle,
+          icon: missing
+              ? Icons.add_a_photo_outlined
+              : Icons.pending_actions_outlined,
+          color: _warning,
+          onTap: () => _safePushNamed('/photo-gallery'),
+        );
+      }
+      final blocking = _firstBlockingActivationItem();
+      if (blocking != null) {
+        return _DashboardAction(
+          title: _activationTitle(blocking),
+          subtitle: _activationSubtitle(blocking),
+          icon: _activationIcon(blocking),
+          color: _warning,
+          onTap: () => _openActivationFix(blocking),
+        );
+      }
     }
 
     if (!_hasPhoto(profile)) {
@@ -2078,9 +2112,24 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Map<String, dynamic>? _firstBlockingActivationItem() {
+    // Prefer photo when the dashboard already shows a photo gap — checklist
+    // lists account_details before photo, but searchable ignores creator name.
+    if (_photoBlocksSearch) {
+      for (final item in _activationChecklist) {
+        final key = _stringValue(item['key']);
+        if (key != 'photo_uploaded' && key != 'photo_approved') continue;
+        if (!_boolValue(item['complete'])) return item;
+      }
+      return {
+        'key': !_hasPhoto(_effectiveProfile) ? 'photo_uploaded' : 'photo_approved',
+        'blocking': true,
+        'complete': false,
+      };
+    }
+
     for (final item in _activationChecklist) {
       final key = _stringValue(item['key']);
-      if (!_searchVisibilityKeys.contains(key)) continue;
+      if (key == null || !_searchVisibilityKeys.contains(key)) continue;
       final blocking = _boolValue(item['blocking']);
       final complete = _boolValue(item['complete']);
       if (blocking && !complete) return item;
