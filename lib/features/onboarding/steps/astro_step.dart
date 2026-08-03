@@ -262,6 +262,9 @@ class _AstroStepState extends State<AstroStep> {
       continueLabel: appText.saveAndContinue2,
       secondary: TextButton(
         onPressed: widget.loading ? null : () => _save(skip: true),
+        style: TextButton.styleFrom(
+          foregroundColor: Colors.grey.shade700,
+        ),
         child: Text(appText.skipAstroDetails),
       ),
       children: [

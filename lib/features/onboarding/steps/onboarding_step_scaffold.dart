@@ -32,12 +32,12 @@ class OnboardingStickyCtaBar extends StatelessWidget {
           top: false,
           minimum: EdgeInsets.zero,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (top != null) ...[top!, const SizedBox(height: 10)],
+                if (top != null) ...[top!, const SizedBox(height: 6)],
                 child,
               ],
             ),
@@ -153,7 +153,40 @@ class OnboardingStepScaffold extends StatelessWidget {
             enabled: continueEnabled,
             onPressed: onContinue,
           ),
-          if (secondary != null) ...[const SizedBox(height: 10), secondary!],
+          if (secondary != null) ...[
+            const SizedBox(height: 2),
+            // Text/Outlined secondary links used to keep Material's default
+            // 48px tap target + 10px gap, which made skip/refresh feel like a
+            // second CTA band under Continue. Compact both here so every step
+            // (astro skip, education request, partner refresh, …) stays tight.
+            Theme(
+              data: Theme.of(context).copyWith(
+                textButtonTheme: TextButtonThemeData(
+                  style: TextButton.styleFrom(
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                  ),
+                ),
+                outlinedButtonTheme: OutlinedButtonThemeData(
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(40),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                  ),
+                ),
+              ),
+              child: secondary!,
+            ),
+          ],
         ],
       ),
     );
