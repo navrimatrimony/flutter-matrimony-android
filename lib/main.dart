@@ -6,6 +6,7 @@ import 'core/app_language.dart';
 import 'core/app_storage.dart';
 import 'core/api_client.dart';
 import 'core/app_strings.dart';
+import 'core/member_entry_route.dart';
 import 'core/notification_permission_service.dart';
 import 'core/push_notification_service.dart';
 import 'features/auth/language_choice_screen.dart';
@@ -398,17 +399,8 @@ class _BootstrapScreenState extends State<BootstrapScreen> {
     return _completedProfileRoute();
   }
 
-  Future<String> _completedProfileRoute() async {
-    final shownDate = await AppStorage.instance
-        .readDailyRecommendationShownDate();
-    return shownDate == _todayKey() ? '/home' : '/matches';
-  }
-
-  String _todayKey() {
-    final now = DateTime.now();
-    final month = now.month.toString().padLeft(2, '0');
-    final day = now.day.toString().padLeft(2, '0');
-    return '${now.year}-$month-$day';
+  Future<String> _completedProfileRoute() {
+    return resolveCompletedMemberRoute();
   }
 
   /// Onboarding is the only place an unfinished member may land.

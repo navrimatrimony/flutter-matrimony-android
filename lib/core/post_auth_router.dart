@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../main.dart';
 import 'api_client.dart';
-import 'app_storage.dart';
+import 'member_entry_route.dart';
 
 /// Where a member lands once they are authenticated.
 ///
@@ -53,7 +53,7 @@ Future<PostAuthOutcome> resolvePostAuthDestination() async {
   if (statusCode == 200 && profileResult['success'] == true) {
     return PostAuthOutcome(
       PostAuthDestination.home,
-      route: await _completedProfileRoute(),
+      route: await resolveCompletedMemberRoute(),
     );
   }
 
@@ -66,18 +66,4 @@ Future<PostAuthOutcome> resolvePostAuthDestination() async {
 /// Sends the member to [route], clearing the auth screens behind them.
 void navigateAfterAuth(BuildContext context, String route) {
   enterMemberApp(Navigator.of(context), route);
-}
-
-/// The daily recommendation is worth showing once a day, not on every sign-in,
-/// so a member who has already seen today's goes straight home instead.
-Future<String> _completedProfileRoute() async {
-  final shownDate = await AppStorage.instance.readDailyRecommendationShownDate();
-  return shownDate == _todayKey() ? '/home' : '/matches';
-}
-
-String _todayKey() {
-  final now = DateTime.now();
-  final month = now.month.toString().padLeft(2, '0');
-  final day = now.day.toString().padLeft(2, '0');
-  return '${now.year}-$month-$day';
 }

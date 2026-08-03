@@ -11,6 +11,7 @@ import '../../core/app_language.dart';
 import '../../core/app_storage.dart';
 import '../../core/email_hint_service.dart';
 import '../../core/mobile_number.dart';
+import '../../core/member_entry_route.dart';
 import '../../main.dart';
 import 'models/mobile_otp_models.dart';
 import 'models/onboarding_field_error_map.dart';
@@ -2030,10 +2031,14 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   Future<void> _finishOnboardingAfterPasswordStep() async {
     await AppStorage.instance.clearOnboardingDraftJson();
     if (!mounted) return;
+    final route = await resolveCompletedMemberRoute();
+    if (!mounted) return;
     enterMemberApp(
       Navigator.of(context),
-      '/matches',
-      arguments: const {'showRecommendationDeck': true},
+      route,
+      arguments: route == '/matches'
+          ? const {'showRecommendationDeck': true}
+          : null,
     );
   }
 

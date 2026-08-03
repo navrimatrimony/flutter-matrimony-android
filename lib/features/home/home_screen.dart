@@ -12,6 +12,7 @@ import '../../main.dart';
 import '../interests/received_interests_screen.dart';
 import '../interests/sent_interests_screen.dart';
 import '../matrimony_profile/edit_full_profile_screen.dart';
+import 'inactive_activation_coachmark.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -44,7 +45,10 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   Map<String, dynamic>? _profile;
   Map<String, dynamic>? _currentPlanResponse;
   bool _isSearchable = true;
+  bool _showInactiveCoachmark = false;
+  bool _inactiveCoachmarkHandledThisVisit = false;
   List<Map<String, dynamic>> _activationChecklist = const [];
+  final GlobalKey _nextBestActionKey = GlobalKey();
 
   int _sentTotal = 0;
   int _sentPending = 0;
@@ -181,6 +185,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       setState(() {
         _activationChecklist = checklist;
         _isSearchable = searchable;
+        if (!searchable && !_inactiveCoachmarkHandledThisVisit) {
+          _showInactiveCoachmark = true;
+        }
+        if (searchable) {
+          _showInactiveCoachmark = false;
+        }
       });
     } catch (_) {
       if (!mounted || serial != _loadSerial) return;
@@ -304,11 +314,55 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   void _safePushNamed(String routeName) {
+    if (routeName == '/matches' && !_isSearchable) {
+      _blockMatchesAndShowCoachmark();
+      return;
+    }
     try {
       Navigator.pushNamed(context, routeName);
     } catch (_) {
       _showSnackBar(AppStrings.featureNotAvailable);
     }
+  }
+
+  void _blockMatchesAndShowCoachmark() {
+    setState(() {
+      _showInactiveCoachmark = true;
+      _inactiveCoachmarkHandledThisVisit = false;
+    });
+    _showSnackBar(
+      _mr
+          ? 'प्रोफाइल सक्रिय झाल्यावरच जोड्या पाहता येतील.'
+          : 'Complete activation before browsing matches.',
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _nextBestActionKey.currentContext;
+      if (target != null) {
+        Scrollable.ensureVisible(
+          target,
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          alignment: 0.15,
+        );
+      }
+    });
+  }
+
+  void _dismissInactiveCoachmark() {
+    setState(() {
+      _showInactiveCoachmark = false;
+      _inactiveCoachmarkHandledThisVisit = true;
+    });
+  }
+
+  void _runInactiveCoachmarkAction() {
+    final blocking = _firstBlockingActivationItem();
+    _dismissInactiveCoachmark();
+    if (blocking != null) {
+      _openActivationFix(blocking);
+      return;
+    }
+    _safePushNamed('/photo-gallery');
   }
 
   void _openSentInterests() {
@@ -358,53 +412,79 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     final profile = _effectiveProfile;
     final photoUrl = ApiClient.resolveProfilePhotoUrl(profile);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.dashboard),
-        automaticallyImplyLeading: true,
-        actions: [
-          IconButton(
-            tooltip: AppStrings.refresh,
-            onPressed: _refreshing ? null : () => _loadDashboard(silent: true),
-            icon: _refreshing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.refresh),
-          ),
-        ],
-      ),
-      drawer: _buildDrawer(photoUrl),
-      body: RefreshIndicator(
-        onRefresh: () => _loadDashboard(silent: true),
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildPremiumHero(profile, photoUrl),
-              const SizedBox(height: 12),
-              _buildPlanStatusBand(),
-              const SizedBox(height: 16),
-              _buildNextBestActionCard(),
-              const SizedBox(height: 18),
-              _buildQuickActions(),
-              const SizedBox(height: 20),
-              _buildReadinessChecklist(),
-              const SizedBox(height: 20),
-              _buildActivitySection(),
-              const SizedBox(height: 20),
-              _buildAccountToolsGrid(),
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Text(AppStrings.dashboard),
+            automaticallyImplyLeading: true,
+            actions: [
+              IconButton(
+                tooltip: AppStrings.refresh,
+                onPressed: _refreshing
+                    ? null
+                    : () => _loadDashboard(silent: true),
+                icon: _refreshing
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.refresh),
+              ),
             ],
           ),
+          drawer: _buildDrawer(photoUrl),
+          body: RefreshIndicator(
+            onRefresh: () => _loadDashboard(silent: true),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildPremiumHero(profile, photoUrl),
+                  const SizedBox(height: 12),
+                  _buildPlanStatusBand(),
+                  const SizedBox(height: 16),
+                  KeyedSubtree(
+                    key: _nextBestActionKey,
+                    child: _buildNextBestActionCard(),
+                  ),
+                  const SizedBox(height: 18),
+                  _buildQuickActions(),
+                  const SizedBox(height: 20),
+                  _buildReadinessChecklist(),
+                  const SizedBox(height: 20),
+                  _buildActivitySection(),
+                  const SizedBox(height: 20),
+                  _buildAccountToolsGrid(),
+                ],
+              ),
+            ),
+          ),
         ),
-      ),
+        if (_showInactiveCoachmark && !_isSearchable && !_profileMissing)
+          InactiveActivationCoachmark(
+            targetKey: _nextBestActionKey,
+            title: AppStrings.dashboardProfileInactive,
+            message: () {
+              final blocking = _firstBlockingActivationItem();
+              if (blocking != null) return _activationSubtitle(blocking);
+              return AppStrings.dashboardFixToGoLive;
+            }(),
+            actionLabel: () {
+              final blocking = _firstBlockingActivationItem();
+              if (blocking != null) return _activationTitle(blocking);
+              return AppStrings.dashboardFixToGoLive;
+            }(),
+            onAction: _runInactiveCoachmarkAction,
+            onDismiss: _dismissInactiveCoachmark,
+          ),
+      ],
     );
   }
 

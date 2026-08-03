@@ -158,6 +158,26 @@ class _BrowseProfilesScreenState extends State<BrowseProfilesScreen>
             curve: Curves.easeInOutCubic,
           ),
         );
+    unawaited(_guardInactiveThenLoad());
+  }
+
+  Future<void> _guardInactiveThenLoad() async {
+    try {
+      final data = await ApiClient.getOnboardingStatus(
+        locale: appLanguageCode(currentAppLanguage),
+      );
+      final profile = data['profile'];
+      final searchable = data['is_searchable'] == true ||
+          (profile is Map && profile['is_searchable'] == true);
+      if (!searchable) {
+        if (!mounted) return;
+        Navigator.of(context).pushNamedAndRemoveUntil('/home', (route) => false);
+        return;
+      }
+    } catch (_) {
+      // Soft-fail: still load browse if status cannot be checked.
+    }
+    if (!mounted) return;
     _fetchProfileList(feed: _feedForTab(_selectedTabIndex));
     _loadNotificationUnreadCount();
   }
