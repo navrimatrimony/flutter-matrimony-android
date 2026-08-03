@@ -166,7 +166,23 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         return;
       }
 
-      await _setSelectedImage(File(pickedFile.path), cropped: false);
+      final picked = File(pickedFile.path);
+      // Open crop immediately so adjustment happens on the photo, not via
+      // later sliders on the main step.
+      ui.Image? sourceImage;
+      try {
+        sourceImage = await _decodeUiImage(await picked.readAsBytes());
+        if (!mounted) return;
+        final croppedFile = await _showCropDialog(sourceImage);
+        if (!mounted) return;
+        if (croppedFile != null) {
+          await _setSelectedImage(croppedFile, cropped: true);
+        } else {
+          await _setSelectedImage(picked, cropped: false);
+        }
+      } finally {
+        sourceImage?.dispose();
+      }
     } catch (error) {
       _showMessage(
         appText.thereWasAProblemSelectingThe,
@@ -548,27 +564,36 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     return _PhotoStepState.pending;
   }
 
+  bool get _hasSelectedPendingUpload =>
+      _selectedImage != null &&
+      (_stage == _PhotoStepState.selected ||
+          _stage == _PhotoStepState.error ||
+          _stage == _PhotoStepState.rejected);
+
+  bool get _canProceedAfterUpload =>
+      _stage == _PhotoStepState.pending || _stage == _PhotoStepState.approved;
+
   @override
   Widget build(BuildContext context) {
     final rawProfile = _profileSnapshot();
     final photoUrl =
         _approvedPhotoUrl ?? ApiClient.resolveProfilePhotoUrl(rawProfile);
     final currentStage = _stage;
-    final approved = currentStage == _PhotoStepState.approved;
     final busy =
         widget.loading || _uploading || _checkingStatus || _autoContinuing;
+    final stickyUploads = _hasSelectedPendingUpload;
+    final stickyContinues = !stickyUploads && _canProceedAfterUpload;
 
     return OnboardingStepScaffold(
       title: appText.profilePhoto2,
       subtitle: appText.addAClearPhotoCropIt,
       loading: busy,
-      continueEnabled:
-          !_uploading &&
-          !_autoContinuing &&
-          currentStage != _PhotoStepState.rejected,
+      continueEnabled: !busy && (stickyUploads || stickyContinues),
       onBack: widget.onBack,
-      onContinue: _continue,
-      continueLabel: appText.continueToPartnerPreference,
+      onContinue: stickyUploads ? _uploadImage : _continue,
+      continueLabel: stickyUploads || !_canProceedAfterUpload
+          ? (_uploading ? appText.uploadingPhoto : appText.uploadSelectedPhoto)
+          : appText.continueToPartnerPreference,
       secondary: TextButton.icon(
         onPressed: busy ? null : () async => _refreshProfileStatus(),
         icon: _checkingStatus
@@ -579,14 +604,29 @@ class _PhotoStepControllerState extends State<PhotoStep> {
               )
             : const Icon(Icons.refresh),
         label: Text(appText.refreshPhotoStatus),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
       ),
       children: [
         _PhotoHero(
           photoUrl: photoUrl,
           selectedImage: _selectedImage,
           state: currentStage,
+          onTap: busy
+              ? null
+              : () => _pickImage(ImageSource.gallery),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 10),
+        _PhotoStatusPanel(
+          state: currentStage,
+          title: _statusTitle(currentStage),
+          message: _detailMessage ?? _statusMessage(currentStage),
+          fileInfo: _fileInfo,
+        ),
+        const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
@@ -595,7 +635,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                 icon: const Icon(Icons.photo_camera_outlined),
                 label: Text(appText.camera),
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
+                  minimumSize: const Size.fromHeight(44),
                 ),
               ),
             ),
@@ -606,67 +646,25 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                 icon: const Icon(Icons.photo_library_outlined),
                 label: Text(appText.gallery),
                 style: OutlinedButton.styleFrom(
-                  minimumSize: const Size.fromHeight(48),
+                  minimumSize: const Size.fromHeight(44),
                 ),
               ),
             ),
           ],
         ),
         if (_selectedImage != null) ...[
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
+          const SizedBox(height: 8),
+          TextButton.icon(
             onPressed: busy ? null : _cropSelectedImage,
-            icon: const Icon(Icons.crop),
+            icon: const Icon(Icons.crop, size: 18),
             label: Text(appText.cropAdjustPhoto),
-            style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(48),
-            ),
-          ),
-          const SizedBox(height: 10),
-          FilledButton.icon(
-            onPressed: busy ? null : _uploadImage,
-            icon: _uploading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.cloud_upload_outlined),
-            label: Text(
-              _uploading
-                  ? appText.uploadingPhoto
-                  : appText.uploadSelectedPhoto,
-            ),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(52),
-            ),
-          ),
-        ] else ...[
-          const SizedBox(height: 10),
-          FilledButton.icon(
-            onPressed: busy ? null : () => _pickImage(ImageSource.gallery),
-            icon: Icon(
-              approved
-                  ? Icons.swap_horiz_outlined
-                  : Icons.add_photo_alternate_outlined,
-            ),
-            label: Text(
-              approved
-                  ? appText.replaceApprovedPhoto
-                  : appText.selectPhoto,
-            ),
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(52),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
         ],
-        const SizedBox(height: 14),
-        _PhotoStatusPanel(
-          state: currentStage,
-          title: _statusTitle(currentStage),
-          message: _detailMessage ?? _statusMessage(currentStage),
-          fileInfo: _fileInfo,
-        ),
         const SizedBox(height: 12),
         _PhotoGuidelines(
           labels: [
@@ -769,6 +767,11 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     var centerX = 0.5;
     var centerY = 0.5;
     var saving = false;
+    var baseZoom = 1.0;
+    var baseCenterX = 0.5;
+    var baseCenterY = 0.5;
+    var panAccumX = 0.0;
+    var panAccumY = 0.0;
     const aspectRatio = 3 / 4;
 
     return showDialog<File?>(
@@ -801,15 +804,39 @@ class _PhotoStepControllerState extends State<PhotoStep> {
               }
             }
 
+            void onScaleStart(ScaleStartDetails details) {
+              baseZoom = zoom;
+              baseCenterX = centerX;
+              baseCenterY = centerY;
+              panAccumX = 0;
+              panAccumY = 0;
+            }
+
+            void onScaleUpdate(ScaleUpdateDetails details) {
+              if (saving) return;
+              final boxWidth = math.max(MediaQuery.sizeOf(context).width, 1.0);
+              final boxHeight = math.max(
+                MediaQuery.sizeOf(context).height,
+                1.0,
+              );
+              panAccumX += details.focalPointDelta.dx;
+              panAccumY += details.focalPointDelta.dy;
+              setDialogState(() {
+                zoom = (baseZoom * details.scale).clamp(1.0, 3.0);
+                centerX = (baseCenterX - panAccumX / boxWidth).clamp(0.0, 1.0);
+                centerY = (baseCenterY - panAccumY / boxHeight).clamp(0.0, 1.0);
+              });
+            }
+
             return Dialog(
-              insetPadding: const EdgeInsets.all(16),
+              insetPadding: const EdgeInsets.all(12),
               child: ConstrainedBox(
                 constraints: BoxConstraints(
                   maxWidth: 420,
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.86,
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.9,
                 ),
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -819,7 +846,14 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w800),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 6),
+                      Text(
+                        appText.photoSelectedCropItIfNeeded,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
                       AspectRatio(
                         aspectRatio: aspectRatio,
                         child: DecoratedBox(
@@ -829,56 +863,37 @@ class _PhotoStepControllerState extends State<PhotoStep> {
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: CustomPaint(
-                              painter: _CropPreviewPainter(
-                                image: image,
-                                sourceRect: cropRect,
+                            child: GestureDetector(
+                              onScaleStart: onScaleStart,
+                              onScaleUpdate: onScaleUpdate,
+                              child: Stack(
+                                fit: StackFit.expand,
+                                children: [
+                                  CustomPaint(
+                                    painter: _CropPreviewPainter(
+                                      image: image,
+                                      sourceRect: cropRect,
+                                    ),
+                                  ),
+                                  IgnorePointer(
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.white.withValues(
+                                            alpha: 0.85,
+                                          ),
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      _CropSlider(
-                        label: appText.zoom,
-                        value: zoom,
-                        min: 1,
-                        max: 3,
-                        onChanged: saving
-                            ? null
-                            : (value) {
-                                setDialogState(() {
-                                  zoom = value;
-                                });
-                              },
-                      ),
-                      _CropSlider(
-                        label: appText.leftRight,
-                        value: centerX,
-                        min: 0,
-                        max: 1,
-                        onChanged: saving
-                            ? null
-                            : (value) {
-                                setDialogState(() {
-                                  centerX = value;
-                                });
-                              },
-                      ),
-                      _CropSlider(
-                        label: appText.upDown,
-                        value: centerY,
-                        min: 0,
-                        max: 1,
-                        onChanged: saving
-                            ? null
-                            : (value) {
-                                setDialogState(() {
-                                  centerY = value;
-                                });
-                              },
-                      ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Row(
                         children: [
                           Expanded(
@@ -1003,11 +1018,13 @@ class _PhotoHero extends StatelessWidget {
     required this.photoUrl,
     required this.selectedImage,
     required this.state,
+    this.onTap,
   });
 
   final String? photoUrl;
   final File? selectedImage;
   final _PhotoStepState state;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -1017,33 +1034,75 @@ class _PhotoHero extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 330),
         child: AspectRatio(
           aspectRatio: 3 / 4,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: colors.surfaceContainerHighest.withValues(alpha: 0.55),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: colors.outlineVariant),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  if (selectedImage != null)
-                    Image.file(selectedImage!, fit: BoxFit.cover)
-                  else if (photoUrl == null)
-                    _PhotoPlaceholder(state: state)
-                  else
-                    ProfileNetworkImage(
-                      url: photoUrl!,
-                      placeholder: _PhotoPlaceholder(state: state),
-                      alignment: Alignment.center,
+          child: Material(
+            color: colors.surfaceContainerHighest.withValues(alpha: 0.55),
+            borderRadius: BorderRadius.circular(8),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  border: Border.all(color: colors.outlineVariant),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (selectedImage != null)
+                      Image.file(selectedImage!, fit: BoxFit.cover)
+                    else if (photoUrl == null)
+                      _PhotoPlaceholder(state: state)
+                    else
+                      ProfileNetworkImage(
+                        url: photoUrl!,
+                        placeholder: _PhotoPlaceholder(state: state),
+                        alignment: Alignment.center,
+                      ),
+                    if (selectedImage == null && photoUrl == null)
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 18),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.55),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 7,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.photo_library_outlined,
+                                    size: 16,
+                                    color: Colors.white,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    appText.gallery,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    Positioned(
+                      left: 12,
+                      top: 12,
+                      child: _PhotoBadge(state: state),
                     ),
-                  Positioned(
-                    left: 12,
-                    top: 12,
-                    child: _PhotoBadge(state: state),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -1115,13 +1174,13 @@ class _PhotoBadge extends StatelessWidget {
       _PhotoStepState.selected || _PhotoStepState.missing => colors.primary,
     };
     final label = switch (state) {
-      _PhotoStepState.approved => appText.approved,
-      _PhotoStepState.rejected => appText.rejected,
+      _PhotoStepState.approved => appText.photoApproved,
+      _PhotoStepState.rejected => appText.photoNotApproved,
       _PhotoStepState.error => appText.retry,
-      _PhotoStepState.pending => appText.pending,
+      _PhotoStepState.pending => appText.approvalPending,
       _PhotoStepState.uploading => appText.badgeUploading,
-      _PhotoStepState.selected => appText.badgeSelected,
-      _PhotoStepState.missing => appText.dashboardPhoto,
+      _PhotoStepState.selected => appText.readyToUpload,
+      _PhotoStepState.missing => appText.photoNotUploaded,
     };
 
     return DecoratedBox(
@@ -1224,38 +1283,6 @@ class _PhotoStatusPanel extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _CropSlider extends StatelessWidget {
-  const _CropSlider({
-    required this.label,
-    required this.value,
-    required this.min,
-    required this.max,
-    required this.onChanged,
-  });
-
-  final String label;
-  final double value;
-  final double min;
-  final double max;
-  final ValueChanged<double>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        Slider(value: value, min: min, max: max, onChanged: onChanged),
-      ],
     );
   }
 }
