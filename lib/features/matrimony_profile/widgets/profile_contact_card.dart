@@ -139,6 +139,7 @@ class ProfileContactCard extends StatelessWidget {
   final void Function(ProfileContactCtaData cta) onPrimaryAction;
   final VoidCallback onWhatsAppResponse;
   final VoidCallback? onCallSuchak;
+  final String? candidateDisplayName;
   final bool primaryActionLoading;
   final bool callActionLoading;
 
@@ -149,6 +150,7 @@ class ProfileContactCard extends StatelessWidget {
     required this.onPrimaryAction,
     required this.onWhatsAppResponse,
     this.onCallSuchak,
+    this.candidateDisplayName,
     this.primaryActionLoading = false,
     this.callActionLoading = false,
   });
@@ -195,6 +197,7 @@ class ProfileContactCard extends StatelessWidget {
             const SizedBox(height: 14),
             _SuchakPanel(
               suchak: suchak,
+              candidateDisplayName: candidateDisplayName,
               messageCta: contact.primaryCta,
               messageLoading: primaryActionLoading,
               callLoading: callActionLoading,
@@ -537,10 +540,11 @@ class _WhatsAppResponseAction extends StatelessWidget {
   }
 }
 
-/// The Suchak identity block: who manages this profile, their own masked
-/// (or revealed) number, and Call + Message icon actions on one row.
+/// The Suchak identity block — original structure kept, with Call + Message
+/// icons mixed in at the bottom instead of a single full-width CTA.
 class _SuchakPanel extends StatelessWidget {
   final ProfileContactSuchakData suchak;
+  final String? candidateDisplayName;
   final ProfileContactCtaData? messageCta;
   final bool messageLoading;
   final bool callLoading;
@@ -549,6 +553,7 @@ class _SuchakPanel extends StatelessWidget {
 
   const _SuchakPanel({
     required this.suchak,
+    this.candidateDisplayName,
     this.messageCta,
     this.messageLoading = false,
     this.callLoading = false,
@@ -562,10 +567,17 @@ class _SuchakPanel extends StatelessWidget {
     final statusLabel = request?.statusLabel;
     final answeredBy = request?.answeredByLabel;
     final phoneDisplay = suchak.revealedPhone ?? suchak.maskedPhone;
+    final showLock = suchak.revealedPhone == null && suchak.maskedPhone != null;
     final messageAction = messageCta?.action.trim().toLowerCase() ?? '';
     final messageEnabled = messageCta != null &&
         !messageLoading &&
         (messageCta!.enabled || messageAction == 'upgrade');
+    final candidateRaw = candidateDisplayName?.trim() ?? '';
+    final candidateName = candidateRaw.isNotEmpty
+        ? candidateRaw
+        : (currentAppLanguage == AppLanguage.marathi
+              ? 'उमेदवार'
+              : 'this candidate');
 
     return Container(
       width: double.infinity,
@@ -579,7 +591,7 @@ class _SuchakPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            appText.suchakLabel,
+            appText.suchakManagedProfileTitle,
             style: const TextStyle(
               color: Color(0xFF9B1B46),
               fontSize: 11.5,
@@ -607,37 +619,64 @@ class _SuchakPanel extends StatelessWidget {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    if (phoneDisplay != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        phoneDisplay,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: suchak.revealedPhone == null ? 1 : 0.2,
-                        ),
+                    const SizedBox(height: 2),
+                    Text(
+                      suchak.subtitle ?? appText.suchakContactSubtitleFallback,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: Colors.grey.shade700,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
                       ),
-                    ] else ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        suchak.subtitle ?? appText.suchakContactSubtitleFallback,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                    ),
                   ],
                 ),
               ),
             ],
           ),
+          if (phoneDisplay != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(
+                  Icons.phone_outlined,
+                  size: 18,
+                  color: Color(0xFF9B1B46),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${appText.suchakContactNumberLabel}: ',
+                  style: const TextStyle(
+                    color: Color(0xFF594044),
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Flexible(
+                  child: Text(
+                    phoneDisplay,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: const Color(0xFF171717),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: showLock ? 1 : 0.2,
+                    ),
+                  ),
+                ),
+                if (showLock) ...[
+                  const SizedBox(width: 6),
+                  Icon(
+                    Icons.lock_outline,
+                    size: 18,
+                    color: Colors.grey.shade600,
+                  ),
+                ],
+              ],
+            ),
+          ],
           if (statusLabel != null || answeredBy != null) ...[
             const SizedBox(height: 10),
             Wrap(
@@ -652,6 +691,16 @@ class _SuchakPanel extends StatelessWidget {
               ],
             ),
           ],
+          const SizedBox(height: 10),
+          Text(
+            appText.suchakContactWhyNote(candidateName, suchak.name),
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontSize: 12.5,
+              height: 1.35,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 14),
           Row(
             children: [
@@ -682,16 +731,6 @@ class _SuchakPanel extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 10),
-          Text(
-            appText.suchakContactPrivacyNote,
-            style: TextStyle(
-              color: Colors.grey.shade700,
-              fontSize: 12,
-              height: 1.3,
-              fontWeight: FontWeight.w600,
-            ),
           ),
         ],
       ),

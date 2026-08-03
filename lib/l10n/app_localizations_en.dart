@@ -3677,6 +3677,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'The candidate\'s own number is never shown. Everything goes through the Suchak.';
 
   @override
+  String suchakContactWhyNote(String candidateName, String suchakName) {
+    return 'If $candidateName\'s profile looks right, tell $suchakName. They will show your profile to $candidateName/their family and convey their reply to you free of charge.';
+  }
+
+  @override
   String get suchakContactNumberLabel => 'Suchak\'s number';
 
   @override

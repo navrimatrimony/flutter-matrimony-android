@@ -2067,8 +2067,19 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
   }
 
   Widget _buildContactCard(ProfileContactData contact) {
+    final profile = _profile;
+    final candidateName = profile == null
+        ? null
+        : (_firstText(profile, const ['full_name', 'name']) ??
+              _firstText(_safeMap(_display?['hero']), const [
+                'name',
+                'full_name',
+                'display_name',
+              ]));
+
     return ProfileContactCard(
       contact: contact,
+      candidateDisplayName: candidateName,
       onCopy: _copyContactValue,
       onPrimaryAction: _handleContactPrimaryAction,
       onWhatsAppResponse: _handleWhatsAppResponseAction,

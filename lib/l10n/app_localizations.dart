@@ -6830,6 +6830,12 @@ abstract class AppLocalizations {
   /// **'The candidate\'s own number is never shown. Everything goes through the Suchak.'**
   String get suchakContactPrivacyNote;
 
+  /// No description provided for @suchakContactWhyNote.
+  ///
+  /// In en, this message translates to:
+  /// **'If {candidateName}\'s profile looks right, tell {suchakName}. They will show your profile to {candidateName}/their family and convey their reply to you free of charge.'**
+  String suchakContactWhyNote(String candidateName, String suchakName);
+
   /// No description provided for @suchakContactNumberLabel.
   ///
   /// In en, this message translates to:

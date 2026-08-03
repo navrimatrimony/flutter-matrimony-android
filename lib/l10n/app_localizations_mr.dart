@@ -3658,6 +3658,11 @@ class AppLocalizationsMr extends AppLocalizations {
       'उमेदवाराचा स्वतःचा नंबर कधीही दाखवला जात नाही. सर्व संपर्क सूचकांमार्फतच होतो.';
 
   @override
+  String suchakContactWhyNote(String candidateName, String suchakName) {
+    return 'आपल्याला $candidateName यांचे स्थळ योग्य वाटत असल्यास $suchakName यांना सांगा. ते तुमचे प्रोफाइल $candidateName/पालकांना दाखवून त्यांचा निरोप तुम्हाला मोफत कळवतील.';
+  }
+
+  @override
   String get suchakContactNumberLabel => 'सूचकांचा नंबर';
 
   @override

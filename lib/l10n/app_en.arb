@@ -1200,6 +1200,13 @@
   "suchakManagedProfileTitle": "Profile added by a Suchak",
   "suchakContactSubtitleFallback": "Experienced marriage facilitator",
   "suchakContactPrivacyNote": "The candidate's own number is never shown. Everything goes through the Suchak.",
+  "suchakContactWhyNote": "If {candidateName}'s profile looks right, tell {suchakName}. They will show your profile to {candidateName}/their family and convey their reply to you free of charge.",
+  "@suchakContactWhyNote": {
+    "placeholders": {
+      "candidateName": { "type": "String" },
+      "suchakName": { "type": "String" }
+    }
+  },
   "suchakContactNumberLabel": "Suchak's number",
   "suchakCallAction": "Call",
   "suchakMessageAction": "Message",

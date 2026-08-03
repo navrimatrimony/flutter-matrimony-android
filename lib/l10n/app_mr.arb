@@ -1122,6 +1122,13 @@
   "suchakManagedProfileTitle": "सूचकांकडून जोडलेले स्थळ",
   "suchakContactSubtitleFallback": "अनुभवी विवाह-सूचक",
   "suchakContactPrivacyNote": "उमेदवाराचा स्वतःचा नंबर कधीही दाखवला जात नाही. सर्व संपर्क सूचकांमार्फतच होतो.",
+  "suchakContactWhyNote": "आपल्याला {candidateName} यांचे स्थळ योग्य वाटत असल्यास {suchakName} यांना सांगा. ते तुमचे प्रोफाइल {candidateName}/पालकांना दाखवून त्यांचा निरोप तुम्हाला मोफत कळवतील.",
+  "@suchakContactWhyNote": {
+    "placeholders": {
+      "candidateName": { "type": "String" },
+      "suchakName": { "type": "String" }
+    }
+  },
   "suchakContactNumberLabel": "सूचकांचा नंबर",
   "suchakCallAction": "कॉल",
   "suchakMessageAction": "मेसेज",
