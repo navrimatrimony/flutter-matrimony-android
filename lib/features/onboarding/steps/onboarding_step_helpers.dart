@@ -145,6 +145,7 @@ class OnboardingSelectablePill extends StatelessWidget {
     this.horizontalPadding = 14,
     this.verticalPadding = 12,
     this.muted = false,
+    this.cornerRadius = 999,
   });
 
   final String label;
@@ -157,6 +158,7 @@ class OnboardingSelectablePill extends StatelessWidget {
   final double horizontalPadding;
   final double verticalPadding;
   final bool muted;
+  final double cornerRadius;
 
   @override
   Widget build(BuildContext context) {
@@ -165,11 +167,12 @@ class OnboardingSelectablePill extends StatelessWidget {
         : muted
         ? Colors.grey.shade500
         : Colors.grey.shade900;
+    final radius = BorderRadius.circular(cornerRadius);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: radius,
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
@@ -185,7 +188,7 @@ class OnboardingSelectablePill extends StatelessWidget {
                 : muted
                 ? Colors.grey.shade100
                 : Colors.white,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: radius,
             border: Border.all(
               color: selected ? Colors.white : Colors.grey.shade300,
               width: selected ? 1.8 : 1,

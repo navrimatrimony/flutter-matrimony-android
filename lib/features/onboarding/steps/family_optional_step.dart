@@ -2,35 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../../core/api_client.dart';
+import '../about_voice_ssot.dart';
 import 'onboarding_step_helpers.dart';
 import 'onboarding_step_scaffold.dart';
 import '../../../core/app_language.dart';
 
 typedef FamilyAboutStepSaver =
     Future<bool> Function(Map<String, dynamic> familyData, String aboutText);
-
-class AboutTemplateSuggestion {
-  const AboutTemplateSuggestion({required this.label, required this.text});
-
-  final String label;
-  final String text;
-
-  // Value equality is load-bearing, not tidiness. `SmartOnboardingScreen`
-  // rebuilds this list from scratch on every build, so without this
-  // `listEquals` in `didUpdateWidget` compares object identities, never
-  // matches, and the step re-seeds itself from the draft on every parent
-  // rebuild — silently discarding whatever the member had just selected.
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    return other is AboutTemplateSuggestion &&
-        other.label == label &&
-        other.text == text;
-  }
-
-  @override
-  int get hashCode => Object.hash(label, text);
-}
 
 class FamilyOptionalStep extends StatefulWidget {
   const FamilyOptionalStep({
@@ -42,6 +20,7 @@ class FamilyOptionalStep extends StatefulWidget {
     required this.loading,
     required this.onSaveFamilyAbout,
     required this.onBack,
+    this.aboutVoice,
   });
 
   final Map<String, dynamic> data;
@@ -51,6 +30,7 @@ class FamilyOptionalStep extends StatefulWidget {
   final bool loading;
   final FamilyAboutStepSaver onSaveFamilyAbout;
   final VoidCallback onBack;
+  final AboutVoice? aboutVoice;
 
   @override
   State<FamilyOptionalStep> createState() => _FamilyOptionalStepState();
@@ -101,33 +81,30 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     _familyStatus = onboardingText(widget.data['family_status']);
     _familyValues = onboardingText(widget.data['family_values']);
     final about = widget.initialAbout?.trim();
+    // Optional step: never auto-pick a suggestion chip. Only restore saved text.
     if (about != null && about.isNotEmpty && _aboutController.text.isEmpty) {
       _aboutController.text = about;
-    } else if (_aboutController.text.isEmpty && _aboutSuggestions.isNotEmpty) {
-      _selectedSuggestionIndex = 0;
-      _aboutController.text = _suggestionText(_aboutSuggestions.first);
     }
+    _selectedSuggestionIndex = null;
   }
 
   List<AboutTemplateSuggestion> get _aboutSuggestions {
     if (widget.aboutSuggestions.isNotEmpty) return widget.aboutSuggestions;
-    return <AboutTemplateSuggestion>[
-      AboutTemplateSuggestion(
-        label: appText.simpleFamilyFirst2,
-        text:
-            appText.aboutFamilyTemplateFamilyFirstBody,
-      ),
-      AboutTemplateSuggestion(
-        label: appText.careerWithBalance2,
-        text:
-            appText.aboutFamilyTemplateCareerBalanceBody,
-      ),
-      AboutTemplateSuggestion(
-        label: appText.traditionOpenMind2,
-        text:
-            appText.aboutFamilyTemplateTraditionBody,
-      ),
-    ];
+    return widget.aboutVoice?.templates(factText: '') ??
+        <AboutTemplateSuggestion>[
+          AboutTemplateSuggestion(
+            label: appText.simpleFamilyFirst2,
+            text: appText.aboutFamilyTemplateFamilyFirstBody,
+          ),
+          AboutTemplateSuggestion(
+            label: appText.careerWithBalance2,
+            text: appText.aboutFamilyTemplateCareerBalanceBody,
+          ),
+          AboutTemplateSuggestion(
+            label: appText.traditionOpenMind2,
+            text: appText.aboutFamilyTemplateTraditionBody,
+          ),
+        ];
   }
 
   String? _choiceLabel(List<_FamilyChoice> options, String? key) {
@@ -142,11 +119,18 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
     final additions = <String>[];
     final status = _choiceLabel(_statusOptions, _familyStatus);
     final values = _choiceLabel(_valueOptions, _familyValues);
+    final voice = widget.aboutVoice;
     if (status != null) {
-      additions.add(appText.aboutFactFamilyBackground(status));
+      additions.add(
+        voice?.familyBackgroundFact(status) ??
+            appText.aboutFactFamilyBackground(status),
+      );
     }
     if (values != null) {
-      additions.add(appText.aboutFactFamilyValues(values));
+      additions.add(
+        voice?.familyValuesFact(values) ??
+            appText.aboutFactFamilyValues(values),
+      );
     }
     return [
       ...<String>[suggestion.text],
@@ -167,17 +151,12 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   void _maybePrefillAboutFromSuggestion() {
     final suggestions = _aboutSuggestions;
     final selectedIndex = _selectedSuggestionIndex;
+    // Only refresh composed text when a chip is already chosen — never auto-select.
     if (selectedIndex != null &&
         selectedIndex >= 0 &&
         selectedIndex < suggestions.length) {
       _aboutController.text = _suggestionText(suggestions[selectedIndex]);
-      return;
     }
-    if (_aboutController.text.trim().isNotEmpty || suggestions.isEmpty) {
-      return;
-    }
-    _selectedSuggestionIndex = 0;
-    _aboutController.text = _suggestionText(suggestions.first);
   }
 
   Future<void> _loadFamilyOptions() async {
@@ -241,7 +220,7 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
       loading: widget.loading,
       onBack: widget.onBack,
       onContinue: _save,
-      continueLabel: appText.completeRegistration,
+      continueLabel: appText.continueLabel,
       children: [
         // Status and values share one box because they are not independent:
         // both feed the introduction underneath. Shown apart, that connection
@@ -505,6 +484,8 @@ class _ChoiceWrap extends StatelessWidget {
                   maxLines: 1,
                   horizontalPadding: 12,
                   verticalPadding: 6,
+                  // Match about-suggestion chips (square-ish), not pill ovals.
+                  cornerRadius: 8,
                 ),
               )
               .toList(),

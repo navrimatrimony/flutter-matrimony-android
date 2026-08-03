@@ -22,6 +22,7 @@ import 'steps/astro_step.dart';
 import 'steps/basic_candidate_info_step.dart';
 import 'steps/education_career_step.dart';
 import 'steps/family_optional_step.dart';
+import 'about_voice_ssot.dart';
 import 'steps/lifestyle_step.dart';
 import 'steps/location_step.dart';
 import 'steps/marital_status_step.dart';
@@ -1406,7 +1407,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
         onboardingText(ApiClient.currentUserProfile?['narrative_about_me']);
   }
 
+  AboutVoice get _aboutVoice => AboutVoice.resolve(
+        profileForWhom: _profileForWhomKey,
+        genderKey: _effectiveProfileGenderKey(),
+      );
+
   List<AboutTemplateSuggestion> _aboutTemplateSuggestions() {
+    final voice = _aboutVoice;
     final facts = <String>[
       if (_ageFact() case final value?) value,
       if (_heightFact() case final value?) value,
@@ -1416,48 +1423,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       if (_careerFact() case final value?) value,
     ];
     final factText = facts.take(4).join(' ');
-
-    String body(String seed) {
-      return [seed, factText].where((part) => part.trim().isNotEmpty).join(' ');
-    }
-
-    return <AboutTemplateSuggestion>[
-      AboutTemplateSuggestion(
-        label: appText.simpleFamilyFirst,
-        text: body(
-          appText.aboutTemplateFamilyFirstBody,
-        ),
-      ),
-      AboutTemplateSuggestion(
-        label: appText.careerWithBalance,
-        text: body(
-          appText.aboutTemplateCareerBalanceBody,
-        ),
-      ),
-      AboutTemplateSuggestion(
-        label: appText.traditionOpenMind,
-        text: body(
-          appText.aboutTemplateTraditionBody,
-        ),
-      ),
-      AboutTemplateSuggestion(
-        label: appText.honestyRespect,
-        text: body(
-          appText.aboutTemplateHonestyBody,
-        ),
-      ),
-      AboutTemplateSuggestion(
-        label: appText.calmSteady,
-        text: body(
-          appText.aboutTemplateCalmSteadyBody,
-        ),
-      ),
-      // Sixth, so the chips fill two rows of three instead of leaving a gap.
-      AboutTemplateSuggestion(
-        label: appText.aboutTemplateGrowthTogether,
-        text: body(appText.aboutTemplateGrowthTogetherBody),
-      ),
-    ];
+    return voice.templates(factText: factText);
   }
 
   String? _optionLabelFromDraft(Map<String, dynamic> data, String key) {
@@ -1476,7 +1442,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       age--;
     }
     if (age < 18 || age > 90) return null;
-    return appText.aboutFactAge(age);
+    return _aboutVoice.ageFact(age);
   }
 
   String? _heightFact() {
@@ -1524,7 +1490,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     final occupation = _optionLabelFromDraft(career, 'occupation_option');
     final workingWith = _optionLabelFromDraft(career, 'working_with_option');
     final label = occupation ?? workingWith;
-    return label == null ? null : appText.aboutFactCareer(label);
+    return label == null ? null : _aboutVoice.careerFact(label);
   }
 
   bool _hasReviewedPartnerPreference() {
@@ -3071,6 +3037,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
           data: _draftStepData('family'),
           initialAbout: _profileAboutText(),
           aboutSuggestions: _aboutTemplateSuggestions(),
+          aboutVoice: _aboutVoice,
           locale: _localeCode,
           loading: _loading,
           onSaveFamilyAbout: _saveFamilyStatusAboutStep,

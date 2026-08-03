@@ -20,6 +20,7 @@ The production registration route must lead to Smart Onboarding. The old simple 
 - Phase 1 may collect one governed mother tongue value as `mother_tongue_id`; it must not add astrology, horoscope, family type, biodata upload, or OCR.
 - Onboarding must not include a long partner preference form. Partner preferences should be generated as an editable draft from onboarding data.
 - Final summary screen must not be shown. Show only the Activation Checklist/status screen after profile creation.
+- About / introduction copy voice (locked 2026-08-03): `profile_for_whom=self` uses candidate first person (gender-aware). Any other relation uses **parent/elder voice** (e.g. "आमची मुलगी…"). Implementation SSOT: `lib/features/onboarding/about_voice_ssot.dart`.
 
 Phase 7A mother tongue addendum:
 
