@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../core/app_language.dart';
 import 'onboarding_step_helpers.dart';
 
-/// Shared sticky bottom strip for primary onboarding CTAs.
+/// Bottom primary CTA only — not a raised "footer card".
+///
+/// Matches photo-step feel: one Continue button, no elevated band and no
+/// secondary actions stacked underneath creating a second section.
 class OnboardingStickyCtaBar extends StatelessWidget {
   const OnboardingStickyCtaBar({
     super.key,
@@ -18,29 +21,20 @@ class OnboardingStickyCtaBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Material(
+    return ColoredBox(
       color: colorScheme.surface,
-      elevation: 8,
-      shadowColor: Colors.black.withValues(alpha: 0.18),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Colors.grey.shade300),
-          ),
-        ),
-        child: SafeArea(
-          top: false,
-          minimum: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (top != null) ...[top!, const SizedBox(height: 6)],
-                child,
-              ],
-            ),
+      child: SafeArea(
+        top: false,
+        minimum: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (top != null) ...[top!, const SizedBox(height: 6)],
+              child,
+            ],
           ),
         ),
       ),
@@ -78,6 +72,30 @@ class OnboardingStepScaffold extends StatelessWidget {
   final TextStyle? titleStyle;
   final EdgeInsetsGeometry contentPadding;
 
+  Widget _compactSecondary(BuildContext context, Widget child) {
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(40),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+        ),
+      ),
+      child: child,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final titleText = title.trim();
@@ -88,6 +106,8 @@ class OnboardingStepScaffold extends StatelessWidget {
         titleAction != null ||
         onBack != null;
 
+    // Secondary (skip / refresh / request) lives in scroll content — never
+    // under the Continue button, so the sticky strip is only the CTA like photo.
     final headerAndFields = <Widget>[
       if (hasHeader) ...[
         if (titleText.isNotEmpty || titleAction != null || onBack != null)
@@ -140,54 +160,18 @@ class OnboardingStepScaffold extends StatelessWidget {
         const SizedBox(height: 14),
       ],
       ...children,
+      if (secondary != null) ...[
+        const SizedBox(height: 12),
+        Center(child: _compactSecondary(context, secondary!)),
+      ],
     ];
 
     final sticky = OnboardingStickyCtaBar(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          OnboardingContinueButton(
-            label: continueLabel ?? appText.continueLabel,
-            loading: loading,
-            enabled: continueEnabled,
-            onPressed: onContinue,
-          ),
-          if (secondary != null) ...[
-            const SizedBox(height: 2),
-            // Text/Outlined secondary links used to keep Material's default
-            // 48px tap target + 10px gap, which made skip/refresh feel like a
-            // second CTA band under Continue. Compact both here so every step
-            // (astro skip, education request, partner refresh, …) stays tight.
-            Theme(
-              data: Theme.of(context).copyWith(
-                textButtonTheme: TextButtonThemeData(
-                  style: TextButton.styleFrom(
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                  ),
-                ),
-                outlinedButtonTheme: OutlinedButtonThemeData(
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(40),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                ),
-              ),
-              child: secondary!,
-            ),
-          ],
-        ],
+      child: OnboardingContinueButton(
+        label: continueLabel ?? appText.continueLabel,
+        loading: loading,
+        enabled: continueEnabled,
+        onPressed: onContinue,
       ),
     );
 
