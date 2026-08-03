@@ -26,6 +26,7 @@ import 'steps/lifestyle_step.dart';
 import 'steps/location_step.dart';
 import 'steps/marital_status_step.dart';
 import 'steps/onboarding_step_helpers.dart';
+import 'steps/onboarding_step_scaffold.dart';
 import 'steps/partner_preference_review_step.dart';
 import 'steps/photo_step.dart';
 import 'steps/religion_caste_step.dart';
@@ -2684,43 +2685,44 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
               )
             : null,
         body: SafeArea(
-          child: Stack(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ListView(
-                padding: EdgeInsets.fromLTRB(
-                  16,
-                  16,
-                  16,
-                  _step == _SmartOnboardingStep.profileForWhom ? 72 : 16,
+              // The header band is the ONLY place any step reports an
+              // error. The mobile/OTP step hides the chrome on purpose, so
+              // it was setting `_error` and showing nothing whatsoever: a
+              // failed send or a rejected code simply re-enabled the button
+              // with no explanation of what had gone wrong.
+              if (showChrome || _error != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+                  child: _buildHeader(context),
+                )
+              else
+                const SizedBox(height: 8),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    _step == _SmartOnboardingStep.mobileOtp ||
+                            _isPostRegistrationStep
+                        ? 0
+                        : 16,
+                    0,
+                    _step == _SmartOnboardingStep.mobileOtp ||
+                            _isPostRegistrationStep
+                        ? 0
+                        : 16,
+                    0,
+                  ),
+                  child: _buildStepCard(context),
                 ),
-                children: [
-                  // The header band is the ONLY place any step reports an
-                  // error. The mobile/OTP step hides the chrome on purpose, so
-                  // it was setting `_error` and showing nothing whatsoever: a
-                  // failed send or a rejected code simply re-enabled the button
-                  // with no explanation of what had gone wrong.
-                  if (showChrome || _error != null) ...[
-                    _buildHeader(context),
-                    const SizedBox(height: 10),
-                  ],
-                  _buildStepCard(context),
-                  if (_step == _SmartOnboardingStep.mobileOtp &&
-                      _otpChallenge?.challengeId == null) ...[
-                    const SizedBox(height: 28),
-                    _TermsPrivacyFooter(
-                      isMarathi: _language == AppLanguage.marathi,
-                    ),
-                  ],
-                ],
               ),
-              if (_step == _SmartOnboardingStep.profileForWhom)
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 10,
-                  child: _AlreadyRegisteredLink(
-                    text: appText.alreadyRegisteredVerifyMobileToContinue,
-                    onPressed: _loading ? null : _startExistingMobileFlow,
+              if (_step == _SmartOnboardingStep.mobileOtp &&
+                  _otpChallenge?.challengeId == null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                  child: _TermsPrivacyFooter(
+                    isMarathi: _language == AppLanguage.marathi,
                   ),
                 ),
             ],
@@ -3116,28 +3118,23 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     return Card(
       elevation: 0,
+      clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(color: Colors.grey.shade300),
       ),
-      child: Padding(padding: const EdgeInsets.all(16), child: stepContent),
+      child: SizedBox.expand(child: stepContent),
     );
   }
 
   Widget _buildMobileOtpStep(BuildContext context) {
     final otpSent = _otpChallenge?.challengeId != null;
-    final media = MediaQuery.of(context);
-    final screenHeight = media.size.height - media.padding.vertical - 32;
-    final panelHeight = screenHeight < 680 ? 680.0 : screenHeight;
 
-    return SizedBox(
-      height: panelHeight,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(2, 8, 2, 24),
-        child: otpSent
-            ? _buildOtpVerificationStep(context)
-            : _buildMobileNumberEntryStep(context),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: otpSent
+          ? _buildOtpVerificationStep(context)
+          : _buildMobileNumberEntryStep(context),
     );
   }
 
@@ -3609,12 +3606,19 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       ],
     ];
 
-    return _StepContent(
+    return OnboardingStepScaffold(
       key: const ValueKey('profile_for_whom'),
       title: appText.iAmCreatingThisProfileFor,
       titleStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
         color: Colors.grey.shade800,
         fontWeight: FontWeight.w800,
+      ),
+      loading: _loading,
+      continueLabel: appText.continueLabel,
+      onContinue: _continueFromProfileForWhom,
+      secondary: _AlreadyRegisteredLink(
+        text: appText.alreadyRegisteredVerifyMobileToContinue,
+        onPressed: _loading ? null : _startExistingMobileFlow,
       ),
       children: [
         OnboardingErrorHighlight(
@@ -3671,23 +3675,20 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                 )
               : const SizedBox.shrink(),
         ),
-        const SizedBox(height: 16),
-        OnboardingContinueButton(
-          label: appText.continueLabel,
-          loading: _loading,
-          onPressed: _continueFromProfileForWhom,
-        ),
       ],
     );
   }
 
   Widget _buildMotherTongueStep(BuildContext context) {
-    return _StepContent(
+    return OnboardingStepScaffold(
       key: const ValueKey('mother_tongue'),
       title: _motherTongueLabel(),
       titleStyle: Theme.of(
         context,
       ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+      loading: _loading,
+      continueLabel: appText.continueLabel,
+      onContinue: _continueFromMotherTongue,
       children: [
         OnboardingErrorHighlight(
           hasError: _motherTongueError != null,
@@ -3719,12 +3720,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
               _saveLocalDraft();
             },
           ),
-        ),
-        const SizedBox(height: 16),
-        OnboardingContinueButton(
-          label: appText.continueLabel,
-          loading: _loading,
-          onPressed: _continueFromMotherTongue,
         ),
       ],
     );
@@ -4475,39 +4470,6 @@ class _AlreadyRegisteredLink extends StatelessWidget {
         ),
         child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1)),
       ),
-    );
-  }
-}
-
-class _StepContent extends StatelessWidget {
-  const _StepContent({
-    super.key,
-    required this.title,
-    required this.children,
-    this.titleStyle,
-  });
-
-  final String title;
-  final List<Widget> children;
-  final TextStyle? titleStyle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      key: key,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          title,
-          style:
-              titleStyle ??
-              Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 14),
-        ...children,
-      ],
     );
   }
 }
