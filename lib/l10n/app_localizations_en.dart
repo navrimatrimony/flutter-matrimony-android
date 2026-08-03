@@ -2286,6 +2286,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pleaseEnterFullName => 'Please enter full name.';
 
   @override
+  String get pleaseLogin => 'Please login';
+
+  @override
   String get pleaseSelectAPhotoFirst => 'Please select a photo first.';
 
   @override

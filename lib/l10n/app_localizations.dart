@@ -4292,6 +4292,12 @@ abstract class AppLocalizations {
   /// **'Please enter full name.'**
   String get pleaseEnterFullName;
 
+  /// No description provided for @pleaseLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Please login'**
+  String get pleaseLogin;
+
   /// No description provided for @pleaseSelectAPhotoFirst.
   ///
   /// In en, this message translates to:
@@ -8105,7 +8111,7 @@ abstract class AppLocalizations {
   /// No description provided for @adjustCrop34.
   ///
   /// In en, this message translates to:
-  /// **'Adjust 3:4 crop'**
+  /// **'Adjust photo'**
   String get adjustCrop34;
 
   /// No description provided for @dragFramePullCorners.

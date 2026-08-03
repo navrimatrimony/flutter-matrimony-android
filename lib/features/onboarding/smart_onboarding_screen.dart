@@ -3601,8 +3601,13 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       continueLabel: appText.continueLabel,
       onContinue: _continueFromProfileForWhom,
       secondary: _AlreadyRegisteredLink(
-        text: appText.alreadyRegisteredVerifyMobileToContinue,
-        onPressed: _loading ? null : _startExistingMobileFlow,
+        prompt: appText.pleaseLogin,
+        linkLabel: appText.login,
+        onPressed: _loading
+            ? null
+            : () {
+                Navigator.of(context).pushNamed('/login');
+              },
       ),
       children: [
         OnboardingErrorHighlight(
@@ -4437,22 +4442,47 @@ class _LanguageToggleItem extends StatelessWidget {
 }
 
 class _AlreadyRegisteredLink extends StatelessWidget {
-  const _AlreadyRegisteredLink({required this.text, required this.onPressed});
+  const _AlreadyRegisteredLink({
+    required this.prompt,
+    required this.linkLabel,
+    required this.onPressed,
+  });
 
-  final String text;
+  final String prompt;
+  final String linkLabel;
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: TextButton(
-        onPressed: onPressed,
-        style: TextButton.styleFrom(
-          foregroundColor: Colors.grey.shade600,
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-        ),
-        child: FittedBox(fit: BoxFit.scaleDown, child: Text(text, maxLines: 1)),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        alignment: WrapAlignment.center,
+        children: [
+          Text(
+            prompt,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          TextButton(
+            onPressed: onPressed,
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                decoration: TextDecoration.underline,
+              ),
+            ),
+            child: Text(linkLabel),
+          ),
+        ],
       ),
     );
   }

@@ -2274,6 +2274,9 @@ class AppLocalizationsMr extends AppLocalizations {
   String get pleaseEnterFullName => 'कृपया पूर्ण नाव भरा.';
 
   @override
+  String get pleaseLogin => 'कृपया लॉगिन करा';
+
+  @override
   String get pleaseSelectAPhotoFirst => 'कृपया आधी फोटो निवडा.';
 
   @override
