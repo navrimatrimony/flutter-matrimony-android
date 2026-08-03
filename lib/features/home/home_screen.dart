@@ -192,6 +192,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           _showInactiveCoachmark = false;
         }
       });
+      if (!searchable && !_inactiveCoachmarkHandledThisVisit) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final target = _nextBestActionKey.currentContext;
+          if (target != null) {
+            Scrollable.ensureVisible(
+              target,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOutCubic,
+              alignment: 0.2,
+            );
+          }
+        });
+      }
     } catch (_) {
       if (!mounted || serial != _loadSerial) return;
       // Keep previous activation state on soft failure.
@@ -470,16 +483,14 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         if (_showInactiveCoachmark && !_isSearchable && !_profileMissing)
           InactiveActivationCoachmark(
             targetKey: _nextBestActionKey,
-            title: AppStrings.dashboardProfileInactive,
-            message: () {
+            tip: () {
               final blocking = _firstBlockingActivationItem();
-              if (blocking != null) return _activationSubtitle(blocking);
-              return AppStrings.dashboardFixToGoLive;
-            }(),
-            actionLabel: () {
-              final blocking = _firstBlockingActivationItem();
-              if (blocking != null) return _activationTitle(blocking);
-              return AppStrings.dashboardFixToGoLive;
+              final reason = blocking == null
+                  ? AppStrings.dashboardFixToGoLive
+                  : _activationSubtitle(blocking);
+              return _mr
+                  ? 'इथे पूर्ण करा — प्रोफाइल सक्रिय होईल.\n$reason'
+                  : 'Complete this — your profile will go live.\n$reason';
             }(),
             onAction: _runInactiveCoachmarkAction,
             onDismiss: _dismissInactiveCoachmark,
