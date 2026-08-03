@@ -760,195 +760,409 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     return frame.image;
   }
 
-  Future<File?> _showCropDialog(ui.Image image) async {
-    var zoom = 1.0;
-    var centerX = 0.5;
-    var centerY = 0.5;
-    var saving = false;
-    var baseZoom = 1.0;
-    var baseCenterX = 0.5;
-    var baseCenterY = 0.5;
-    var panAccumX = 0.0;
-    var panAccumY = 0.0;
-    const aspectRatio = 3 / 4;
-
-    return showDialog<File?>(
+  Future<File?> _showCropDialog(ui.Image image) {
+    return showModalBottomSheet<File?>(
       context: context,
-      barrierDismissible: !saving,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final cropRect = _sourceCropRect(
-              image: image,
-              aspectRatio: aspectRatio,
-              zoom: zoom,
-              centerX: centerX,
-              centerY: centerY,
-            );
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => _OnboardingPhotoCropSheet(image: image),
+    );
+  }
+}
 
-            Future<void> applyCrop() async {
-              setDialogState(() {
-                saving = true;
-              });
-              try {
-                final file = await _writeCroppedImage(image, cropRect);
-                if (dialogContext.mounted) {
-                  Navigator.of(dialogContext).pop(file);
-                }
-              } catch (_) {
-                if (dialogContext.mounted) {
-                  Navigator.of(dialogContext).pop(null);
-                }
-              }
-            }
+enum _NoticeTone { success, warning, error, info }
 
-            void onScaleStart(ScaleStartDetails details) {
-              baseZoom = zoom;
-              baseCenterX = centerX;
-              baseCenterY = centerY;
-              panAccumX = 0;
-              panAccumY = 0;
-            }
+enum _OnboardingCropDragMode {
+  none,
+  move,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
+}
 
-            void onScaleUpdate(ScaleUpdateDetails details) {
-              if (saving) return;
-              final boxWidth = math.max(MediaQuery.sizeOf(context).width, 1.0);
-              final boxHeight = math.max(
-                MediaQuery.sizeOf(context).height,
-                1.0,
-              );
-              panAccumX += details.focalPointDelta.dx;
-              panAccumY += details.focalPointDelta.dy;
-              setDialogState(() {
-                zoom = (baseZoom * details.scale).clamp(1.0, 3.0);
-                centerX = (baseCenterX - panAccumX / boxWidth).clamp(0.0, 1.0);
-                centerY = (baseCenterY - panAccumY / boxHeight).clamp(0.0, 1.0);
-              });
-            }
+class _OnboardingPhotoCropSheet extends StatefulWidget {
+  const _OnboardingPhotoCropSheet({required this.image});
 
-            return Dialog(
-              insetPadding: const EdgeInsets.all(12),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: 420,
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Text(
-                        appText.cropPhoto,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        appText.photoSelectedCropItIfNeeded,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      AspectRatio(
-                        aspectRatio: aspectRatio,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: GestureDetector(
-                              onScaleStart: onScaleStart,
-                              onScaleUpdate: onScaleUpdate,
-                              child: CustomPaint(
-                                painter: _CropPreviewPainter(
-                                  image: image,
-                                  sourceRect: cropRect,
-                                  showOutsideDim: true,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextButton(
-                              onPressed: saving
-                                  ? null
-                                  : () => Navigator.of(dialogContext).pop(),
-                              child: Text(appText.cancel2),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: FilledButton.icon(
-                              onPressed: saving ? null : applyCrop,
-                              icon: saving
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.check),
-                              label: Text(appText.applyCrop),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+  final ui.Image image;
+
+  @override
+  State<_OnboardingPhotoCropSheet> createState() =>
+      _OnboardingPhotoCropSheetState();
+}
+
+class _OnboardingPhotoCropSheetState extends State<_OnboardingPhotoCropSheet> {
+  static const double _targetAspectRatio = 3 / 4;
+
+  late Rect _cropRect;
+  Rect? _dragStartRect;
+  _OnboardingCropDragMode _dragMode = _OnboardingCropDragMode.none;
+  bool _saving = false;
+
+  Size get _imageSize =>
+      Size(widget.image.width.toDouble(), widget.image.height.toDouble());
+
+  @override
+  void initState() {
+    super.initState();
+    _cropRect = _initialCropRect();
+  }
+
+  /// Largest 3:4 window, flush to the top of the photo (existing product rule).
+  Rect _initialCropRect() {
+    final size = _imageSize;
+    var cropWidth = size.width;
+    var cropHeight = cropWidth / _targetAspectRatio;
+    if (cropHeight > size.height) {
+      cropHeight = size.height;
+      cropWidth = cropHeight * _targetAspectRatio;
+    }
+    return Rect.fromLTWH(
+      (size.width - cropWidth) / 2,
+      0,
+      cropWidth,
+      cropHeight,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      height: MediaQuery.sizeOf(context).height * 0.92,
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 10),
+          Container(
+            width: 42,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 10, 10),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    appText.adjustCrop34,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
+                IconButton(
+                  onPressed: _saving ? null : () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: _buildCropCanvas(),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+            child: Row(
+              children: [
+                const Icon(Icons.open_with, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    appText.dragFramePullCorners,
+                    style: TextStyle(
+                      color: Colors.grey.shade700,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                    child: Text(appText.cancel2),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _saving ? null : _saveCrop,
+                    icon: _saving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.check),
+                    label: Text(appText.applyCrop),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCropCanvas() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final imageAspect = widget.image.width / widget.image.height;
+        var width = constraints.maxWidth;
+        var height = width / imageAspect;
+        if (height > constraints.maxHeight) {
+          height = constraints.maxHeight;
+          width = height * imageAspect;
+        }
+        final viewSize = Size(width, height);
+        return Center(
+          child: SizedBox(
+            width: width,
+            height: height,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: (details) =>
+                  _startDrag(details.localPosition, viewSize),
+              onPanUpdate: (details) =>
+                  _updateDrag(details.localPosition, details.delta, viewSize),
+              onPanEnd: (_) => _endDrag(),
+              onPanCancel: _endDrag,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  RawImage(image: widget.image, fit: BoxFit.fill),
+                  CustomPaint(
+                    painter: _OnboardingCropOverlayPainter(
+                      image: widget.image,
+                      cropRect: _cropRect,
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ),
         );
       },
     );
   }
 
-  Rect _sourceCropRect({
-    required ui.Image image,
-    required double aspectRatio,
-    required double zoom,
-    required double centerX,
-    required double centerY,
-  }) {
-    final imageWidth = image.width.toDouble();
-    final imageHeight = image.height.toDouble();
-
-    var cropWidth = imageWidth;
-    var cropHeight = cropWidth / aspectRatio;
-    if (cropHeight > imageHeight) {
-      cropHeight = imageHeight;
-      cropWidth = cropHeight * aspectRatio;
-    }
-
-    cropWidth = cropWidth / zoom;
-    cropHeight = cropHeight / zoom;
-
-    final maxLeft = math.max(0.0, imageWidth - cropWidth);
-    final maxTop = math.max(0.0, imageHeight - cropHeight);
-    final left = (centerX * imageWidth - cropWidth / 2).clamp(0.0, maxLeft);
-    final top = (centerY * imageHeight - cropHeight / 2).clamp(0.0, maxTop);
-
-    return Rect.fromLTWH(left, top, cropWidth, cropHeight);
+  void _startDrag(Offset localPosition, Size viewSize) {
+    final viewRect = _toViewRect(_cropRect, viewSize);
+    _dragMode = _hitTest(localPosition, viewRect);
+    _dragStartRect = _cropRect;
   }
 
-  Future<File> _writeCroppedImage(ui.Image image, Rect sourceRect) async {
-    const targetSizes = <Size>[Size(720, 960), Size(600, 800), Size(480, 640)];
-    Uint8List? outputBytes;
+  void _updateDrag(Offset localPosition, Offset delta, Size viewSize) {
+    final startRect = _dragStartRect;
+    if (startRect == null || _dragMode == _OnboardingCropDragMode.none) {
+      return;
+    }
 
+    setState(() {
+      if (_dragMode == _OnboardingCropDragMode.move) {
+        final sourceDelta = Offset(
+          delta.dx * widget.image.width / viewSize.width,
+          delta.dy * widget.image.height / viewSize.height,
+        );
+        _cropRect = _clampRect(_cropRect.shift(sourceDelta));
+        return;
+      }
+
+      final sourcePoint = _toSourcePoint(localPosition, viewSize);
+      _cropRect = _resizeRect(startRect, sourcePoint, _dragMode);
+    });
+  }
+
+  void _endDrag() {
+    _dragMode = _OnboardingCropDragMode.none;
+    _dragStartRect = null;
+  }
+
+  _OnboardingCropDragMode _hitTest(Offset localPosition, Rect viewRect) {
+    const handleSize = 48.0;
+    final corners = <_OnboardingCropDragMode, Offset>{
+      _OnboardingCropDragMode.topLeft: viewRect.topLeft,
+      _OnboardingCropDragMode.topRight: viewRect.topRight,
+      _OnboardingCropDragMode.bottomLeft: viewRect.bottomLeft,
+      _OnboardingCropDragMode.bottomRight: viewRect.bottomRight,
+    };
+    for (final entry in corners.entries) {
+      final handle = Rect.fromCenter(
+        center: entry.value,
+        width: handleSize,
+        height: handleSize,
+      );
+      if (handle.contains(localPosition)) return entry.key;
+    }
+    if (viewRect.contains(localPosition)) {
+      return _OnboardingCropDragMode.move;
+    }
+    return _OnboardingCropDragMode.none;
+  }
+
+  Rect _resizeRect(
+    Rect startRect,
+    Offset sourcePoint,
+    _OnboardingCropDragMode mode,
+  ) {
+    final point = _clampPoint(sourcePoint);
+    return switch (mode) {
+      _OnboardingCropDragMode.topLeft =>
+        _rectFromBottomRight(startRect.bottomRight, point),
+      _OnboardingCropDragMode.topRight =>
+        _rectFromBottomLeft(startRect.bottomLeft, point),
+      _OnboardingCropDragMode.bottomLeft =>
+        _rectFromTopRight(startRect.topRight, point),
+      _OnboardingCropDragMode.bottomRight =>
+        _rectFromTopLeft(startRect.topLeft, point),
+      _ => startRect,
+    };
+  }
+
+  Rect _rectFromTopLeft(Offset origin, Offset point) {
+    final maxWidth = _imageSize.width - origin.dx;
+    final maxHeight = _imageSize.height - origin.dy;
+    final size = _fitCropSize(point.dx - origin.dx, maxWidth, maxHeight);
+    return Rect.fromLTWH(origin.dx, origin.dy, size.width, size.height);
+  }
+
+  Rect _rectFromTopRight(Offset origin, Offset point) {
+    final maxWidth = origin.dx;
+    final maxHeight = _imageSize.height - origin.dy;
+    final size = _fitCropSize(origin.dx - point.dx, maxWidth, maxHeight);
+    return Rect.fromLTWH(
+      origin.dx - size.width,
+      origin.dy,
+      size.width,
+      size.height,
+    );
+  }
+
+  Rect _rectFromBottomLeft(Offset origin, Offset point) {
+    final maxWidth = _imageSize.width - origin.dx;
+    final maxHeight = origin.dy;
+    final size = _fitCropSize(point.dx - origin.dx, maxWidth, maxHeight);
+    return Rect.fromLTWH(
+      origin.dx,
+      origin.dy - size.height,
+      size.width,
+      size.height,
+    );
+  }
+
+  Rect _rectFromBottomRight(Offset origin, Offset point) {
+    final maxWidth = origin.dx;
+    final maxHeight = origin.dy;
+    final size = _fitCropSize(origin.dx - point.dx, maxWidth, maxHeight);
+    return Rect.fromLTWH(
+      origin.dx - size.width,
+      origin.dy - size.height,
+      size.width,
+      size.height,
+    );
+  }
+
+  Size _fitCropSize(double rawWidth, double maxWidth, double maxHeight) {
+    final maxRatioWidth = math.max(
+      1.0,
+      math.min(maxWidth, maxHeight * _targetAspectRatio),
+    );
+    final minWidth = math.min(maxRatioWidth, _minimumCropWidth);
+    final width = rawWidth.abs().clamp(minWidth, maxRatioWidth);
+    return Size(width, width / _targetAspectRatio);
+  }
+
+  double get _minimumCropWidth {
+    final size = _imageSize;
+    final fullRatioWidth = math.min(
+      size.width,
+      size.height * _targetAspectRatio,
+    );
+    return fullRatioWidth * 0.28;
+  }
+
+  Rect _clampRect(Rect rect) {
+    final size = _imageSize;
+    final left = rect.left
+        .clamp(0.0, math.max(0.0, size.width - rect.width))
+        .toDouble();
+    final top = rect.top
+        .clamp(0.0, math.max(0.0, size.height - rect.height))
+        .toDouble();
+    return Rect.fromLTWH(left, top, rect.width, rect.height);
+  }
+
+  Offset _clampPoint(Offset point) {
+    return Offset(
+      point.dx.clamp(0.0, _imageSize.width).toDouble(),
+      point.dy.clamp(0.0, _imageSize.height).toDouble(),
+    );
+  }
+
+  Offset _toSourcePoint(Offset localPosition, Size viewSize) {
+    return _clampPoint(
+      Offset(
+        localPosition.dx * widget.image.width / viewSize.width,
+        localPosition.dy * widget.image.height / viewSize.height,
+      ),
+    );
+  }
+
+  Rect _toViewRect(Rect sourceRect, Size viewSize) {
+    return Rect.fromLTRB(
+      sourceRect.left * viewSize.width / widget.image.width,
+      sourceRect.top * viewSize.height / widget.image.height,
+      sourceRect.right * viewSize.width / widget.image.width,
+      sourceRect.bottom * viewSize.height / widget.image.height,
+    );
+  }
+
+  Future<void> _saveCrop() async {
+    setState(() => _saving = true);
+    try {
+      final file = await _writeCroppedImage();
+      if (!mounted) return;
+      Navigator.pop(context, file);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(appText.couldNotCropPhoto)));
+    }
+  }
+
+  Future<File> _writeCroppedImage() async {
+    const targetSizes = <Size>[
+      Size(720, 960),
+      Size(600, 800),
+      Size(480, 640),
+    ];
+    Uint8List? outputBytes;
     for (final size in targetSizes) {
-      outputBytes = await _renderCroppedPng(image, sourceRect, size);
+      outputBytes = await _renderCroppedPng(size);
       if (outputBytes.lengthInBytes <= 1900 * 1024 ||
           size == targetSizes.last) {
         break;
@@ -956,23 +1170,20 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     }
 
     final file = File(
-      '${Directory.systemTemp.path}${Platform.pathSeparator}matrimony_photo_crop_${DateTime.now().millisecondsSinceEpoch}.png',
+      '${Directory.systemTemp.path}${Platform.pathSeparator}'
+      'matrimony_photo_crop_${DateTime.now().millisecondsSinceEpoch}.png',
     );
     await file.writeAsBytes(outputBytes!, flush: true);
     return file;
   }
 
-  Future<Uint8List> _renderCroppedPng(
-    ui.Image image,
-    Rect sourceRect,
-    Size targetSize,
-  ) async {
+  Future<Uint8List> _renderCroppedPng(Size targetSize) async {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
     final paint = Paint()..filterQuality = FilterQuality.high;
     canvas.drawImageRect(
-      image,
-      sourceRect,
+      widget.image,
+      _cropRect,
       Rect.fromLTWH(0, 0, targetSize.width, targetSize.height),
       paint,
     );
@@ -993,7 +1204,85 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   }
 }
 
-enum _NoticeTone { success, warning, error, info }
+class _OnboardingCropOverlayPainter extends CustomPainter {
+  const _OnboardingCropOverlayPainter({
+    required this.image,
+    required this.cropRect,
+  });
+
+  final ui.Image image;
+  final Rect cropRect;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final viewRect = Rect.fromLTRB(
+      cropRect.left * size.width / image.width,
+      cropRect.top * size.height / image.height,
+      cropRect.right * size.width / image.width,
+      cropRect.bottom * size.height / image.height,
+    );
+
+    final overlayPath = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size)
+      ..addRect(viewRect);
+    canvas.drawPath(
+      overlayPath,
+      Paint()..color = Colors.black.withValues(alpha: 0.55),
+    );
+
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.4;
+    canvas.drawRect(viewRect, borderPaint);
+
+    // Perfect circle guide: diameter = crop width, flush to top of 3:4 frame.
+    final circleRadius = viewRect.width / 2;
+    final circleCenter = Offset(
+      viewRect.center.dx,
+      viewRect.top + circleRadius,
+    );
+    canvas.drawCircle(
+      circleCenter,
+      circleRadius,
+      Paint()..color = Colors.white.withValues(alpha: 0.08),
+    );
+    canvas.drawCircle(
+      circleCenter,
+      circleRadius,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.55)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.6,
+    );
+
+    final handlePaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    for (final corner in <Offset>[
+      viewRect.topLeft,
+      viewRect.topRight,
+      viewRect.bottomLeft,
+      viewRect.bottomRight,
+    ]) {
+      canvas.drawCircle(corner, 8, handlePaint);
+      canvas.drawCircle(
+        corner,
+        8,
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.18)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OnboardingCropOverlayPainter oldDelegate) {
+    return oldDelegate.image != image || oldDelegate.cropRect != cropRect;
+  }
+}
 
 class _PhotoHero extends StatelessWidget {
   const _PhotoHero({
@@ -1266,97 +1555,6 @@ class _PhotoStatusPanel extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class _CropPreviewPainter extends CustomPainter {
-  const _CropPreviewPainter({
-    required this.image,
-    required this.sourceRect,
-    this.showOutsideDim = false,
-  });
-
-  final ui.Image image;
-  final Rect sourceRect;
-  final bool showOutsideDim;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..filterQuality = FilterQuality.high;
-    final full = Offset.zero & size;
-    final imageRect = Rect.fromLTWH(
-      0,
-      0,
-      image.width.toDouble(),
-      image.height.toDouble(),
-    );
-
-    if (!showOutsideDim) {
-      canvas.drawImageRect(image, sourceRect, full, paint);
-      return;
-    }
-
-    // Inset window is the kept crop; margins show more of the photo dimmed.
-    final cropWindow = full.deflate(18);
-    final scale = cropWindow.width / sourceRect.width;
-    final imageDest = Rect.fromLTWH(
-      cropWindow.left - sourceRect.left * scale,
-      cropWindow.top - sourceRect.top * scale,
-      imageRect.width * scale,
-      imageRect.height * scale,
-    );
-
-    canvas.drawImageRect(image, imageRect, imageDest, paint);
-
-    final outside = Path()
-      ..fillType = PathFillType.evenOdd
-      ..addRect(full)
-      ..addRect(cropWindow);
-    canvas.drawPath(
-      outside,
-      Paint()..color = Colors.black.withValues(alpha: 0.55),
-    );
-
-    canvas.save();
-    canvas.clipRect(cropWindow);
-    canvas.drawImageRect(image, imageRect, imageDest, paint);
-    canvas.restore();
-
-    _drawCropFrame(canvas, cropWindow);
-  }
-
-  void _drawCropFrame(Canvas canvas, Rect crop) {
-    final border = Paint()
-      ..color = Colors.white.withValues(alpha: 0.95)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    canvas.drawRect(crop, border);
-
-    final handle = Paint()
-      ..color = Colors.white
-      ..strokeWidth = 4
-      ..strokeCap = StrokeCap.square
-      ..style = PaintingStyle.stroke;
-    const arm = 18.0;
-    final corners = <Offset>[
-      crop.topLeft,
-      crop.topRight,
-      crop.bottomLeft,
-      crop.bottomRight,
-    ];
-    for (final corner in corners) {
-      final inwardX = corner.dx == crop.left ? arm : -arm;
-      final inwardY = corner.dy == crop.top ? arm : -arm;
-      canvas.drawLine(corner, Offset(corner.dx + inwardX, corner.dy), handle);
-      canvas.drawLine(corner, Offset(corner.dx, corner.dy + inwardY), handle);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _CropPreviewPainter oldDelegate) {
-    return oldDelegate.image != image ||
-        oldDelegate.sourceRect != sourceRect ||
-        oldDelegate.showOutsideDim != showOutsideDim;
   }
 }
 
