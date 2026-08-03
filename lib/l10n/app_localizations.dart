@@ -6836,6 +6836,24 @@ abstract class AppLocalizations {
   /// **'Suchak\'s number'**
   String get suchakContactNumberLabel;
 
+  /// No description provided for @suchakCallAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get suchakCallAction;
+
+  /// No description provided for @suchakMessageAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Message'**
+  String get suchakMessageAction;
+
+  /// No description provided for @suchakCallFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not open the phone dialer.'**
+  String get suchakCallFailed;
+
   /// No description provided for @suchakLabel.
   ///
   /// In en, this message translates to:

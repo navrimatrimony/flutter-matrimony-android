@@ -2897,8 +2897,19 @@ class ApiClient {
     return _profileActionDelete(ApiRoutes.profileShortlist(profileId));
   }
 
-  static Future<Map<String, dynamic>> revealProfileContact(int profileId) {
-    return _profileActionPost(ApiRoutes.profileContactReveal(profileId));
+  static Future<Map<String, dynamic>> revealProfileContact(
+    int profileId, {
+    int? representationId,
+  }) {
+    if (representationId == null) {
+      return _profileActionPost(ApiRoutes.profileContactReveal(profileId));
+    }
+
+    return _postJson(
+      ApiRoutes.profileContactReveal(profileId),
+      <String, dynamic>{'representation_id': representationId},
+      authenticated: true,
+    );
   }
 
   static Future<Map<String, dynamic>> sendContactRequest({

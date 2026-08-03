@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
 import '../../core/api_error_text.dart';
@@ -83,6 +84,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
   bool _isContactRevealInFlight = false;
   bool _isContactRequestInFlight = false;
   bool _isSuchakRequestInFlight = false;
+  bool _isSuchakCallInFlight = false;
+  String? _suchakRevealedPhone;
   bool _isFetchingProfile = false;
   bool _showGunamilanDetails = false;
   bool _showScrolledStatusStrip = false;
@@ -237,6 +240,8 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
       _isContactRevealInFlight = false;
       _isContactRequestInFlight = false;
       _isSuchakRequestInFlight = false;
+      _isSuchakCallInFlight = false;
+      _suchakRevealedPhone = null;
       _showScrolledStatusStrip = false;
     });
 
@@ -2067,10 +2072,12 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
       onCopy: _copyContactValue,
       onPrimaryAction: _handleContactPrimaryAction,
       onWhatsAppResponse: _handleWhatsAppResponseAction,
+      onCallSuchak: contact.suchak == null ? null : _handleCallSuchak,
       primaryActionLoading:
           _isContactRevealInFlight ||
           _isContactRequestInFlight ||
           _isSuchakRequestInFlight,
+      callActionLoading: _isSuchakCallInFlight,
     );
   }
 
@@ -2875,6 +2882,73 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
     await Clipboard.setData(ClipboardData(text: value));
     if (!mounted) return;
     _showSnackBar(appText.contactValueCopied(label), Colors.black87);
+  }
+
+  /// Call the Suchak's business number. Reveal (credit/plan gated, same as web)
+  /// runs first when this session does not already hold the number.
+  Future<void> _handleCallSuchak() async {
+    if (_isSuchakCallInFlight) return;
+
+    final suchak = _contactData()?.suchak;
+    if (suchak == null) return;
+
+    var phone = _suchakRevealedPhone?.trim();
+    if (phone == null || phone.isEmpty) {
+      phone = suchak.revealedPhone?.trim();
+    }
+
+    if (phone == null || phone.isEmpty) {
+      final requestedProfileId = _currentProfileId;
+      setState(() => _isSuchakCallInFlight = true);
+      try {
+        final response = await ApiClient.revealProfileContact(
+          requestedProfileId,
+          representationId: suchak.representationId,
+        );
+        if (!mounted || requestedProfileId != _currentProfileId) return;
+
+        if (!_responseSuccess(response)) {
+          setState(() => _isSuchakCallInFlight = false);
+          _showSnackBar(
+            _backendMessage(response, appText.contactUnlockNotAvailable),
+            Colors.black87,
+          );
+          return;
+        }
+
+        final revealed = _displayString(
+          _safeMap(response['contact'])?['phone'],
+        );
+        if (revealed == null || revealed.trim().isEmpty) {
+          setState(() => _isSuchakCallInFlight = false);
+          _showSnackBar(appText.contactUnlockNotAvailable, Colors.black87);
+          return;
+        }
+
+        phone = revealed.trim();
+        setState(() {
+          _suchakRevealedPhone = phone;
+          _isSuchakCallInFlight = false;
+        });
+      } catch (e) {
+        if (!mounted) return;
+        setState(() => _isSuchakCallInFlight = false);
+        _showSnackBar(failureText(appText.contactUnlockNotAvailable, e), Colors.red);
+        return;
+      }
+    }
+
+    final digits = phone.replaceAll(RegExp(r'\D+'), '');
+    if (digits.isEmpty) {
+      _showSnackBar(appText.suchakCallFailed, Colors.black87);
+      return;
+    }
+
+    final uri = Uri(scheme: 'tel', path: digits);
+    final opened = await launchUrl(uri);
+    if (!opened && mounted) {
+      _showSnackBar(appText.suchakCallFailed, Colors.black87);
+    }
   }
 
   Future<void> _handleContactPrimaryAction(ProfileContactCtaData cta) async {
@@ -3955,6 +4029,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
       initial: _displayString(map['initial']),
       photoUrl: ApiClient.normalizeProfilePhotoUrl(map['photo_url']),
       maskedPhone: _suchakMaskedPhone(map['masked_phone']),
+      revealedPhone: _suchakRevealedPhone,
       canRequest: _displaySafeBool(map['can_request']) ?? false,
       request: _contactSuchakRequest(map['request']),
     );

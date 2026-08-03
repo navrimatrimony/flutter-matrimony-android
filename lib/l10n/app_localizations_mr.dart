@@ -3661,6 +3661,15 @@ class AppLocalizationsMr extends AppLocalizations {
   String get suchakContactNumberLabel => 'सूचकांचा नंबर';
 
   @override
+  String get suchakCallAction => 'कॉल';
+
+  @override
+  String get suchakMessageAction => 'मेसेज';
+
+  @override
+  String get suchakCallFailed => 'फोन डायलर उघडता आला नाही.';
+
+  @override
   String get suchakLabel => 'सूचक';
 
   @override

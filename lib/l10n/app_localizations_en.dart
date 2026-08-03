@@ -3680,6 +3680,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suchakContactNumberLabel => 'Suchak\'s number';
 
   @override
+  String get suchakCallAction => 'Call';
+
+  @override
+  String get suchakMessageAction => 'Message';
+
+  @override
+  String get suchakCallFailed => 'Could not open the phone dialer.';
+
+  @override
   String get suchakLabel => 'Suchak';
 
   @override
