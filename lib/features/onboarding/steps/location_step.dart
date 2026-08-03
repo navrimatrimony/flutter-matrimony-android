@@ -236,6 +236,8 @@ class _LocationStepState extends State<LocationStep>
         setState(() => _country = country);
       }
 
+      // Already have a state from draft/restore — only hydrate picker lists.
+      // Never clear district / local area / village here.
       if (_state != null) {
         final state = _state;
         if (state != null) {
@@ -249,9 +251,21 @@ class _LocationStepState extends State<LocationStep>
       }
 
       final states = await _ensureStates();
-      if (!mounted || _state != null) return;
+      if (!mounted) return;
+      // Another restore may have filled state while we awaited.
+      if (_state != null) {
+        final state = _state;
+        if (state != null) {
+          await _ensureDistrictsForState(state);
+        }
+        final district = _district;
+        if (district != null) {
+          await _ensureTalukasForDistrict(district);
+        }
+        return;
+      }
 
-      final countryId = country?.intId;
+      final countryId = country?.intId ?? _country?.intId;
       final state = _findNamedOption(
         states.where((option) {
           if (countryId == null) return true;
@@ -262,7 +276,7 @@ class _LocationStepState extends State<LocationStep>
 
       if (!mounted || state == null) return;
       setState(() {
-        _country =
+        _country ??=
             country ??
             OnboardingOption(
               id: _parentId(state),
@@ -273,11 +287,14 @@ class _LocationStepState extends State<LocationStep>
               },
             );
         _state = state;
-        _district = null;
-        _localArea = null;
-        _village = null;
+        // Do not wipe district+ — user may have restored them without state
+        // briefly, or defaults must not erase a filled hierarchy.
       });
       await _ensureDistrictsForState(state);
+      final district = _district;
+      if (district != null) {
+        await _ensureTalukasForDistrict(district);
+      }
     } catch (_) {
       // The pickers can still load on demand and display their own retry state.
     }
@@ -560,12 +577,36 @@ class _LocationStepState extends State<LocationStep>
       'address_line': isPendingLocation && addressLine.isEmpty
           ? pendingDisplayLabel
           : addressLine,
-      'location_option': selectedLocation.toJson(),
-      if (_country?.intId != null) 'country_option': _country!.toJson(),
-      if (_state?.intId != null) 'state_option': _state!.toJson(),
-      if (_district?.intId != null) 'district_option': _district!.toJson(),
-      if (_localArea != null) 'local_area_option': _localArea!.toJson(),
-      if (_village != null) 'village_option': _village!.toJson(),
+      // Keep raw (incl. parent chain) so hierarchy can rebuild if needed.
+      'location_option': <String, dynamic>{
+        ...selectedLocation.toJson(),
+        ...selectedLocation.raw,
+      },
+      if (_country != null)
+        'country_option': <String, dynamic>{
+          ..._country!.toJson(),
+          ..._country!.raw,
+        },
+      if (_state != null)
+        'state_option': <String, dynamic>{
+          ..._state!.toJson(),
+          ..._state!.raw,
+        },
+      if (_district != null)
+        'district_option': <String, dynamic>{
+          ..._district!.toJson(),
+          ..._district!.raw,
+        },
+      if (_localArea != null)
+        'local_area_option': <String, dynamic>{
+          ..._localArea!.toJson(),
+          ..._localArea!.raw,
+        },
+      if (_village != null)
+        'village_option': <String, dynamic>{
+          ..._village!.toJson(),
+          ..._village!.raw,
+        },
     });
     if (isPendingLocation) {
       payload['location_id'] = null;

@@ -1355,21 +1355,17 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
 
     if (step == 'location') {
-      final locationMatches = _clientOptionMatchesServer(
-        client,
-        server,
-        optionKey: 'location_option',
-        idKey: 'location_id',
-      );
-      if (!locationMatches) return const <String, dynamic>{};
+      // Keep client hierarchy for UI restore when navigating back. Previously
+      // a failed location_id match dropped district+ while country/state still
+      // showed via defaults — looking like "everything below district vanished".
       return <String, dynamic>{
-        'location_option': client['location_option'],
         for (final key in const [
           'country_option',
           'state_option',
           'district_option',
           'local_area_option',
           'village_option',
+          'location_option',
         ])
           if (client.containsKey(key)) key: client[key],
       };
