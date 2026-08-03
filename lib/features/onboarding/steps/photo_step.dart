@@ -125,19 +125,15 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     }
 
     final profile = widget.status?.profile;
-    final photoUrl =
-        _approvedPhotoUrl ??
-        ApiClient.resolveProfilePhotoUrl(_profileSnapshot());
     final approved =
-        profile?.photoApproved == true ||
-        _stage == _PhotoStepState.approved ||
-        photoUrl != null;
+        profile?.photoApproved == true || _stage == _PhotoStepState.approved;
     final uploaded =
         profile?.photoUploaded == true ||
         _stage == _PhotoStepState.selected ||
         _stage == _PhotoStepState.uploading ||
         _stage == _PhotoStepState.pending ||
-        approved ||
+        _stage == _PhotoStepState.approved ||
+        _remotePhotos.isNotEmpty ||
         _hasUploaded(_profileSnapshot());
 
     if (!uploaded) {
@@ -543,6 +539,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
             photos.every((photo) => photo.id != _selectedRemoteId)) {
           _selectedRemoteId = null;
         }
+        _applyRemoteGalleryStatus();
       });
     } catch (_) {
       if (!silent && mounted) {
@@ -552,6 +549,32 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         );
       }
     }
+  }
+
+  /// Prefer per-photo gallery statuses over a URL being present.
+  void _applyRemoteGalleryStatus() {
+    if (_drafts.isNotEmpty || _remotePhotos.isEmpty) return;
+
+    final statuses = _remotePhotos
+        .map((photo) => photo.status.trim().toLowerCase())
+        .where((status) => status.isNotEmpty)
+        .toList();
+    if (statuses.isEmpty) return;
+
+    if (statuses.any((status) => status.contains('reject'))) {
+      _stage = _PhotoStepState.rejected;
+      _detailMessage = appText.thisPhotoCouldNotBeApproved;
+      return;
+    }
+
+    if (statuses.every((status) => status == 'approved')) {
+      _stage = _PhotoStepState.approved;
+      _detailMessage = appText.approvedPhotoIsVisibleOnYour;
+      return;
+    }
+
+    _stage = _PhotoStepState.pending;
+    _detailMessage = appText.photoIsUploadedApprovalOrSafety;
   }
 
   void _applyProfileSnapshot(
@@ -578,19 +601,40 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         'photo_rejected_at',
         'rejected_at',
       ]);
-      final approved =
+
+      // A photo URL alone is NOT approval — pending uploads often still have a
+      // path/URL. Trust explicit approval flags / status, then gallery rows.
+      final explicitlyApproved =
           widget.status?.profile?.photoApproved == true ||
           _boolValue(profile['photo_approved']) == true ||
-          rawStatus == 'approved' ||
-          photoUrl != null;
+          rawStatus == 'approved';
+      final galleryPending =
+          _remotePhotos.isNotEmpty &&
+          !_remotePhotos.every(
+            (photo) => photo.status.trim().toLowerCase() == 'approved',
+          ) &&
+          !_remotePhotos.any(
+            (photo) => photo.status.toLowerCase().contains('reject'),
+          );
+      final galleryApproved =
+          _remotePhotos.isNotEmpty &&
+          _remotePhotos.every(
+            (photo) => photo.status.trim().toLowerCase() == 'approved',
+          );
+      final approved =
+          !galleryPending && (explicitlyApproved || galleryApproved);
       final rejected =
           rejectionReason != null ||
           rejectedAt != null ||
-          (rawStatus?.contains('reject') ?? false);
+          (rawStatus?.contains('reject') ?? false) ||
+          _remotePhotos.any(
+            (photo) => photo.status.toLowerCase().contains('reject'),
+          );
       final uploaded =
           widget.status?.profile?.photoUploaded == true ||
           _hasUploaded(profile) ||
-          _remotePhotos.isNotEmpty;
+          _remotePhotos.isNotEmpty ||
+          photoUrl != null;
 
       if (approved) {
         if (photoUrl != null) {
@@ -614,7 +658,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         return;
       }
 
-      if (uploaded) {
+      if (uploaded || galleryPending) {
         _stage = _PhotoStepState.pending;
         _detailMessage = appText.photoIsUploadedApprovalOrSafety;
         return;

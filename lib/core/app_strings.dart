@@ -262,6 +262,17 @@ class AppStrings {
   static String get dashboardProfileActive =>
       appText.dashboardProfileActive;
 
+  static String get dashboardProfileInactive =>
+      _mr ? 'प्रोफाइल निष्क्रिय' : 'Profile inactive';
+
+  static String get dashboardNotVisibleInSearch =>
+      _mr ? 'शोधात दिसत नाही' : 'Not visible in search';
+
+  static String get dashboardFixToGoLive =>
+      _mr
+          ? 'प्रोफाइल सक्रिय करण्यासाठी हे पूर्ण करा.'
+          : 'Complete this to make your profile visible.';
+
   static String get dashboardProfileMissing =>
       appText.dashboardProfileMissing;
 

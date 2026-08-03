@@ -43,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   Map<String, dynamic>? _profile;
   Map<String, dynamic>? _currentPlanResponse;
+  bool _isSearchable = true;
+  List<Map<String, dynamic>> _activationChecklist = const [];
 
   int _sentTotal = 0;
   int _sentPending = 0;
@@ -102,6 +104,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
     await Future.wait<void>([
       _loadProfile(serial, silent: silent),
+      _loadActivation(serial, silent: silent),
       _loadPlan(serial, silent: silent),
       _loadAttention(serial, silent: silent),
       _loadInterests(serial, silent: silent),
@@ -151,6 +154,37 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         _profile = _profile ?? _safeMap(ApiClient.currentUserProfile);
         _profileLoading = false;
       });
+    }
+  }
+
+  Future<void> _loadActivation(int serial, {required bool silent}) async {
+    try {
+      final response = await ApiClient.getOnboardingStatus(
+        locale: appLanguageCode(currentAppLanguage),
+      );
+      if (!mounted || serial != _loadSerial) return;
+
+      final checklist = <Map<String, dynamic>>[];
+      final rawItems = response['activation_checklist'];
+      if (rawItems is List) {
+        for (final item in rawItems) {
+          if (item is Map) {
+            checklist.add(Map<String, dynamic>.from(item));
+          }
+        }
+      }
+
+      final searchable =
+          _boolValue(response['is_searchable']) ||
+          _boolValue(_safeMap(response['profile'])?['is_searchable']);
+
+      setState(() {
+        _activationChecklist = checklist;
+        _isSearchable = searchable;
+      });
+    } catch (_) {
+      if (!mounted || serial != _loadSerial) return;
+      // Keep previous activation state on soft failure.
     }
   }
 
@@ -703,10 +737,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     : AppStrings.dashboardFreePlan,
                 hasPremium ? Icons.workspace_premium : Icons.lock_open,
               ),
-              _heroPill(
-                _photoStatusLabel(profile),
-                Icons.verified_user_outlined,
-              ),
+              if (_photoIssueLabel(profile) case final photoIssue?)
+                _heroPill(photoIssue, Icons.pending_actions_outlined),
+              if (!_profileMissing && !_isSearchable)
+                _heroPill(
+                  AppStrings.dashboardProfileInactive,
+                  Icons.visibility_off_outlined,
+                ),
               if (_profileMissing)
                 _heroPill(
                   AppStrings.dashboardProfileMissing,
@@ -1831,6 +1868,18 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       );
     }
 
+    // Inactive / not searchable: tell why and drive the user to fix it.
+    final blocking = _firstBlockingActivationItem();
+    if (!_isSearchable && blocking != null) {
+      return _DashboardAction(
+        title: _activationTitle(blocking),
+        subtitle: _activationSubtitle(blocking),
+        icon: _activationIcon(blocking),
+        color: _warning,
+        onTap: () => _openActivationFix(blocking),
+      );
+    }
+
     if (!_hasPhoto(profile)) {
       return _DashboardAction(
         title: AppStrings.uploadPhoto,
@@ -1919,6 +1968,107 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       onTap: () => _safePushNamed('/matches'),
     );
   }
+
+  Map<String, dynamic>? _firstBlockingActivationItem() {
+    for (final item in _activationChecklist) {
+      final blocking = _boolValue(item['blocking']);
+      final complete = _boolValue(item['complete']);
+      if (blocking && !complete) return item;
+    }
+    return null;
+  }
+
+  String _activationTitle(Map<String, dynamic> item) {
+    final key = _stringValue(item['key']);
+    return switch (key) {
+      'mobile_verified' =>
+        _mr ? 'मोबाइल पडताळा' : 'Verify mobile',
+      'account_details_complete' =>
+        _mr ? 'खाते तपशील पूर्ण करा' : 'Complete account details',
+      'required_fields_complete' => AppStrings.dashboardCompleteProfile,
+      'location_valid' =>
+        _mr ? 'स्थान जोडा / मंजुरीची वाट पहा' : 'Add or fix location',
+      'photo_uploaded' => AppStrings.uploadPhoto,
+      'photo_approved' => AppStrings.photosVerification,
+      'governance_clear' =>
+        _mr ? 'प्रोफाइल तपासणी प्रलंबित' : 'Profile review pending',
+      _ => AppStrings.dashboardProfileInactive,
+    };
+  }
+
+  String _activationSubtitle(Map<String, dynamic> item) {
+    final key = _stringValue(item['key']);
+    final reason = switch (key) {
+      'mobile_verified' =>
+        _mr
+            ? 'मोबाइल पडताळणीशिवाय प्रोफाइल शोधात दिसत नाही.'
+            : 'Your profile stays hidden until mobile is verified.',
+      'account_details_complete' =>
+        _mr
+            ? 'निर्माता नाव पूर्ण करा.'
+            : 'Add the creator name to continue.',
+      'required_fields_complete' =>
+        _mr
+            ? 'आवश्यक प्रोफाइल माहिती बाकी आहे.'
+            : 'Required profile fields are still missing.',
+      'location_valid' =>
+        _mr
+            ? 'मान्य स्थान नसल्याने प्रोफाइल निष्क्रिय आहे.'
+            : 'An approved location is required to go live.',
+      'photo_uploaded' =>
+        _mr
+            ? 'फोटो अपलोड केल्याशिवाय प्रोफाइल दिसणार नाही.'
+            : 'Upload a photo to make your profile visible.',
+      'photo_approved' =>
+        _mr
+            ? 'फोटो मंजुरी प्रलंबित असल्याने प्रोफाइल शोधात नाही.'
+            : 'Photo approval is pending, so your profile is hidden.',
+      'governance_clear' =>
+        _mr
+            ? 'तपासणी पूर्ण होईपर्यंत प्रोफाइल दिसणार नाही.'
+            : 'Your profile stays hidden until review is complete.',
+      _ => AppStrings.dashboardFixToGoLive,
+    };
+    return reason;
+  }
+
+  IconData _activationIcon(Map<String, dynamic> item) {
+    final key = _stringValue(item['key']);
+    return switch (key) {
+      'mobile_verified' => Icons.sms_outlined,
+      'account_details_complete' => Icons.badge_outlined,
+      'required_fields_complete' => Icons.edit_note,
+      'location_valid' => Icons.location_on_outlined,
+      'photo_uploaded' => Icons.add_a_photo_outlined,
+      'photo_approved' => Icons.pending_actions_outlined,
+      'governance_clear' => Icons.policy_outlined,
+      _ => Icons.visibility_off_outlined,
+    };
+  }
+
+  void _openActivationFix(Map<String, dynamic> item) {
+    final key = _stringValue(item['key']);
+    switch (key) {
+      case 'photo_uploaded':
+      case 'photo_approved':
+        _safePushNamed('/photo-gallery');
+        return;
+      case 'location_valid':
+        _openEditProfile(targetSection: EditProfileTargetSection.basic);
+        return;
+      case 'required_fields_complete':
+      case 'account_details_complete':
+        _openEditProfile();
+        return;
+      case 'mobile_verified':
+        _safePushNamed('/settings');
+        return;
+      default:
+        _openEditProfile();
+    }
+  }
+
+  bool get _mr => currentAppLanguage == AppLanguage.marathi;
 
   List<_ReadinessItem> get _readinessItems {
     final profile = _effectiveProfile;
@@ -2211,19 +2361,28 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _photoPending(Map<String, dynamic>? profile) {
     if (profile == null) return false;
     final status = _stringValue(profile['photo_status'])?.toLowerCase();
-    if (status == 'pending') return true;
-    return _boolValue(profile['photo_uploaded']) &&
-        !_boolValue(profile['photo_approved']);
+    if (status == 'pending' ||
+        status == 'review' ||
+        status == 'processing') {
+      return true;
+    }
+    if (_boolValue(profile['photo_approved'])) return false;
+    if (_boolValue(profile['photo_uploaded'])) return true;
+    for (final item in _activationChecklist) {
+      if (_stringValue(item['key']) == 'photo_approved' &&
+          _boolValue(item['blocking']) &&
+          !_boolValue(item['complete'])) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  String _photoStatusLabel(Map<String, dynamic>? profile) {
+  String? _photoIssueLabel(Map<String, dynamic>? profile) {
     if (!_hasPhoto(profile)) return AppStrings.dashboardPhotoMissing;
     if (_photoPending(profile)) return AppStrings.dashboardPhotoPending;
-    if (_boolValue(profile?['photo_approved']) ||
-        ApiClient.resolveProfilePhotoUrl(profile) != null) {
-      return AppStrings.dashboardPhotoApproved;
-    }
-    return AppStrings.dashboardProfileActive;
+    // Approved: do not show a success chip — only call out blockers.
+    return null;
   }
 
   String _profileName(Map<String, dynamic>? profile) {
