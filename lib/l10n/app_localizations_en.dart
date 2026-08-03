@@ -4376,7 +4376,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get upload => 'Upload';
 
   @override
-  String get adjustCrop34 => 'Adjust 3:4 crop';
+  String get adjustCrop34 => 'Adjust photo';
 
   @override
   String get dragFramePullCorners => 'Drag the frame. Pull corners to resize.';

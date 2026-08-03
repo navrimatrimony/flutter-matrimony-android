@@ -23,6 +23,27 @@ enum _PhotoStepState {
   error,
 }
 
+class _DraftPhoto {
+  const _DraftPhoto({required this.file, required this.cropped});
+
+  final File file;
+  final bool cropped;
+}
+
+class _RemotePhoto {
+  const _RemotePhoto({
+    required this.id,
+    required this.url,
+    required this.isPrimary,
+    required this.status,
+  });
+
+  final int? id;
+  final String? url;
+  final bool isPrimary;
+  final String status;
+}
+
 class PhotoStep extends StatefulWidget {
   const PhotoStep({
     super.key,
@@ -46,9 +67,15 @@ class PhotoStep extends StatefulWidget {
 }
 
 class _PhotoStepControllerState extends State<PhotoStep> {
+  static const int _defaultMaxPhotos = 5;
+
   final ImagePicker _picker = ImagePicker();
 
-  File? _selectedImage;
+  final List<_DraftPhoto> _drafts = <_DraftPhoto>[];
+  List<_RemotePhoto> _remotePhotos = <_RemotePhoto>[];
+  int _selectedDraftIndex = 0;
+  int? _selectedRemoteId;
+  int _maxPhotos = _defaultMaxPhotos;
   String? _approvedPhotoUrl;
   String? _fileInfo;
   String? _detailMessage;
@@ -57,13 +84,13 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   bool _autoContinuing = false;
   _PhotoStepState _stage = _PhotoStepState.missing;
 
-
   @override
   void initState() {
     super.initState();
     _applyProfileSnapshot(_profileSnapshot(), notify: false);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _refreshProfileStatus(silent: true);
+      _refreshGallery(silent: true);
     });
   }
 
@@ -125,7 +152,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       return;
     }
 
-    if (_stage == _PhotoStepState.selected) {
+    if (_stage == _PhotoStepState.selected || _drafts.isNotEmpty) {
       _showMessage(
         appText.uploadTheSelectedPhotoBeforeContinuing,
         _NoticeTone.warning,
@@ -149,39 +176,71 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    try {
-      final pickedFile = await _picker.pickImage(
-        source: source,
-        imageQuality: 92,
-        maxWidth: 1600,
-        maxHeight: 2134,
-        requestFullMetadata: false,
+    final remaining = _remainingSlots;
+    if (remaining <= 0) {
+      _showMessage(
+        appText.photoUploadIsNotAllowedFor,
+        _NoticeTone.warning,
       );
+      return;
+    }
 
-      if (pickedFile == null) {
-        _showMessage(
-          appText.photoSelectionCancelled,
-          _NoticeTone.info,
+    try {
+      final pickedFiles = <File>[];
+      if (source == ImageSource.gallery) {
+        final picked = await _picker.pickMultiImage(
+          imageQuality: 92,
+          maxWidth: 1600,
+          maxHeight: 2134,
+          requestFullMetadata: false,
+          limit: remaining,
         );
-        return;
+        if (picked.isEmpty) {
+          _showMessage(
+            appText.photoSelectionCancelled,
+            _NoticeTone.info,
+          );
+          return;
+        }
+        for (final item in picked.take(remaining)) {
+          pickedFiles.add(File(item.path));
+        }
+      } else {
+        final pickedFile = await _picker.pickImage(
+          source: source,
+          imageQuality: 92,
+          maxWidth: 1600,
+          maxHeight: 2134,
+          requestFullMetadata: false,
+        );
+        if (pickedFile == null) {
+          _showMessage(
+            appText.photoSelectionCancelled,
+            _NoticeTone.info,
+          );
+          return;
+        }
+        pickedFiles.add(File(pickedFile.path));
       }
 
-      final picked = File(pickedFile.path);
-      // Open crop immediately so adjustment happens on the photo, not via
-      // later sliders on the main step.
-      ui.Image? sourceImage;
-      try {
-        sourceImage = await _decodeUiImage(await picked.readAsBytes());
+      for (final picked in pickedFiles) {
         if (!mounted) return;
-        final croppedFile = await _showCropDialog(sourceImage);
-        if (!mounted) return;
-        if (croppedFile != null) {
-          await _setSelectedImage(croppedFile, cropped: true);
-        } else {
-          await _setSelectedImage(picked, cropped: false);
+        if (_remainingSlots <= 0) break;
+
+        ui.Image? sourceImage;
+        try {
+          sourceImage = await _decodeUiImage(await picked.readAsBytes());
+          if (!mounted) return;
+          final croppedFile = await _showCropDialog(sourceImage);
+          if (!mounted) return;
+          if (croppedFile != null) {
+            await _appendDraft(croppedFile, cropped: true);
+          } else {
+            await _appendDraft(picked, cropped: false);
+          }
+        } finally {
+          sourceImage?.dispose();
         }
-      } finally {
-        sourceImage?.dispose();
       }
     } catch (error) {
       _showMessage(
@@ -196,14 +255,18 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     }
   }
 
-  Future<void> _setSelectedImage(File file, {required bool cropped}) async {
+  Future<void> _appendDraft(File file, {required bool cropped}) async {
     final fileSize = await file.length();
     final fileSizeMB = (fileSize / (1024 * 1024)).toStringAsFixed(2);
-
     if (!mounted) return;
+
     setState(() {
-      _selectedImage = file;
-      _fileInfo = cropped ? '$fileSizeMB MB, cropped' : '$fileSizeMB MB';
+      _drafts.add(_DraftPhoto(file: file, cropped: cropped));
+      _selectedDraftIndex = _drafts.length - 1;
+      _selectedRemoteId = null;
+      _fileInfo = cropped
+          ? '${_drafts.length} · $fileSizeMB MB, cropped'
+          : '${_drafts.length} · $fileSizeMB MB';
       _detailMessage = cropped
           ? appText.croppedPhotoIsReadyUploadIt
           : appText.photoSelectedCropItIfNeeded;
@@ -212,8 +275,8 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   }
 
   Future<void> _cropSelectedImage() async {
-    final file = _selectedImage;
-    if (file == null) {
+    final draft = _selectedDraft;
+    if (draft == null) {
       _showMessage(
         appText.pleaseSelectAPhotoFirst,
         _NoticeTone.warning,
@@ -223,14 +286,25 @@ class _PhotoStepControllerState extends State<PhotoStep> {
 
     ui.Image? sourceImage;
     try {
-      final bytes = await file.readAsBytes();
+      final bytes = await draft.file.readAsBytes();
       sourceImage = await _decodeUiImage(bytes);
       if (!mounted) return;
 
       final croppedFile = await _showCropDialog(sourceImage);
       if (croppedFile == null) return;
 
-      await _setSelectedImage(croppedFile, cropped: true);
+      final fileSize = await croppedFile.length();
+      final fileSizeMB = (fileSize / (1024 * 1024)).toStringAsFixed(2);
+      if (!mounted) return;
+      setState(() {
+        _drafts[_selectedDraftIndex] = _DraftPhoto(
+          file: croppedFile,
+          cropped: true,
+        );
+        _fileInfo = '$fileSizeMB MB, cropped';
+        _detailMessage = appText.croppedPhotoIsReadyUploadIt;
+        _stage = _PhotoStepState.selected;
+      });
     } catch (_) {
       _showMessage(
         appText.photoCropPhoto,
@@ -242,7 +316,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   }
 
   Future<void> _uploadImage() async {
-    if (_selectedImage == null) {
+    if (_drafts.isEmpty) {
       _showMessage(
         appText.pleaseSelectAPhotoFirst,
         _NoticeTone.warning,
@@ -260,7 +334,10 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     try {
       // Gallery transport: enforces admin photo rules (max upload size,
       // max photos per profile, per-account upload suspension, lifecycle lock).
-      final response = await ApiClient.uploadProfilePhotos([_selectedImage!]);
+      // First file is sent as profile_photo (main when gallery is empty).
+      final response = await ApiClient.uploadProfilePhotos(
+        _drafts.map((draft) => draft.file).toList(growable: false),
+      );
       if (!mounted) return;
 
       if (_uploadSucceeded(response)) {
@@ -269,10 +346,15 @@ class _PhotoStepControllerState extends State<PhotoStep> {
         );
 
         setState(() {
+          _drafts.clear();
+          _selectedDraftIndex = 0;
+          _selectedRemoteId = null;
+          _fileInfo = null;
           _stage = uploadStage;
           _detailMessage = appText.photoReachedBackendQualityAndSafety;
         });
 
+        await _refreshGallery(silent: true);
         await _refreshProfileStatus(silent: true);
         await widget.onRefresh();
         if (!mounted) return;
@@ -316,7 +398,8 @@ class _PhotoStepControllerState extends State<PhotoStep> {
           _detailMessage ??
           appText.thisPhotoWasNotApprovedPlease;
       setState(() {
-        _selectedImage = null;
+        _drafts.clear();
+        _selectedDraftIndex = 0;
         _fileInfo = null;
         _detailMessage = message;
       });
@@ -399,6 +482,78 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     }
   }
 
+  Future<void> _refreshGallery({bool silent = false}) async {
+    if (ApiClient.authToken == null) return;
+
+    try {
+      final response = await ApiClient.getProfilePhotos();
+      if (!mounted) return;
+      if (!_uploadSucceeded(response) && response['success'] == false) {
+        if (!silent) {
+          _showMessage(
+            appText.photoStatusCouldNotBeRefreshed,
+            _NoticeTone.warning,
+          );
+        }
+        return;
+      }
+
+      final meta = response['meta'];
+      final maxPhotos = meta is Map
+          ? int.tryParse(meta['max_photos']?.toString() ?? '')
+          : null;
+      final rows = response['photos'];
+      final photos = <_RemotePhoto>[];
+      if (rows is List) {
+        for (final row in rows) {
+          if (row is! Map) continue;
+          final map = Map<String, dynamic>.from(row);
+          final id = int.tryParse(map['id']?.toString() ?? '');
+          final url = _firstNonEmpty(map, const [
+            'thumbnail_url',
+            'url',
+            'photo_url',
+            'profile_photo_url',
+          ]);
+          final status =
+              map['status']?.toString().trim().toLowerCase() ?? 'pending';
+          final isPrimary =
+              map['is_primary'] == true ||
+              map['primary'] == true ||
+              map['is_main'] == true;
+          photos.add(
+            _RemotePhoto(
+              id: id,
+              url: url == null
+                  ? null
+                  : ApiClient.normalizeProfilePhotoUrl(url),
+              isPrimary: isPrimary,
+              status: status,
+            ),
+          );
+        }
+      }
+
+      setState(() {
+        _remotePhotos = photos;
+        if (maxPhotos != null && maxPhotos > 0) {
+          _maxPhotos = maxPhotos;
+        }
+        if (_selectedRemoteId != null &&
+            photos.every((photo) => photo.id != _selectedRemoteId)) {
+          _selectedRemoteId = null;
+        }
+      });
+    } catch (_) {
+      if (!silent && mounted) {
+        _showMessage(
+          appText.photoStatusCouldNotBeRefreshed,
+          _NoticeTone.warning,
+        );
+      }
+    }
+  }
+
   void _applyProfileSnapshot(
     Map<String, dynamic>? profile, {
     bool notify = true,
@@ -406,10 +561,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     if (profile == null) return;
 
     void apply() {
-      final hasDraftSelection =
-          _selectedImage != null &&
-          (_stage == _PhotoStepState.selected ||
-              _stage == _PhotoStepState.uploading);
+      final hasDraftSelection = _drafts.isNotEmpty;
       final photoUrl = ApiClient.resolveProfilePhotoUrl(profile);
       final rawStatus = _firstNonEmpty(profile, const [
         'photo_status',
@@ -437,14 +589,14 @@ class _PhotoStepControllerState extends State<PhotoStep> {
           (rawStatus?.contains('reject') ?? false);
       final uploaded =
           widget.status?.profile?.photoUploaded == true ||
-          _hasUploaded(profile);
+          _hasUploaded(profile) ||
+          _remotePhotos.isNotEmpty;
 
       if (approved) {
         if (photoUrl != null) {
           _approvedPhotoUrl = photoUrl;
         }
         if (hasDraftSelection) return;
-        _selectedImage = null;
         _fileInfo = null;
         _stage = _PhotoStepState.approved;
         _detailMessage = appText.approvedPhotoIsVisibleOnYour;
@@ -455,7 +607,6 @@ class _PhotoStepControllerState extends State<PhotoStep> {
 
       if (rejected) {
         _stage = _PhotoStepState.rejected;
-        _selectedImage = null;
         _fileInfo = null;
         _detailMessage =
             rejectionReason ??
@@ -565,24 +716,208 @@ class _PhotoStepControllerState extends State<PhotoStep> {
   }
 
   bool get _hasSelectedPendingUpload =>
-      _selectedImage != null &&
+      _drafts.isNotEmpty &&
       (_stage == _PhotoStepState.selected ||
           _stage == _PhotoStepState.error ||
-          _stage == _PhotoStepState.rejected);
+          _stage == _PhotoStepState.rejected ||
+          _stage == _PhotoStepState.uploading);
 
   bool get _canProceedAfterUpload =>
-      _stage == _PhotoStepState.pending || _stage == _PhotoStepState.approved;
+      _drafts.isEmpty &&
+      (_stage == _PhotoStepState.pending || _stage == _PhotoStepState.approved);
+
+  int get _remainingSlots =>
+      math.max(0, _maxPhotos - _remotePhotos.length - _drafts.length);
+
+  _DraftPhoto? get _selectedDraft {
+    if (_selectedRemoteId != null) return null;
+    if (_drafts.isEmpty) return null;
+    if (_selectedDraftIndex < 0 || _selectedDraftIndex >= _drafts.length) {
+      return _drafts.first;
+    }
+    return _drafts[_selectedDraftIndex];
+  }
+
+  _RemotePhoto? get _selectedRemote {
+    final id = _selectedRemoteId;
+    if (id == null) return null;
+    for (final photo in _remotePhotos) {
+      if (photo.id == id) return photo;
+    }
+    return null;
+  }
+
+  String? get _heroPhotoUrl {
+    final remote = _selectedRemote;
+    if (remote?.url != null) return remote!.url;
+    if (_selectedDraft != null) return null;
+    if (_remotePhotos.isNotEmpty) {
+      for (final photo in _remotePhotos) {
+        if (photo.isPrimary && photo.url != null) return photo.url;
+      }
+      return _remotePhotos.first.url;
+    }
+    return _approvedPhotoUrl ??
+        ApiClient.resolveProfilePhotoUrl(_profileSnapshot());
+  }
+
+  String get _uploadContinueLabel {
+    if (_uploading) return appText.uploadingPhoto;
+    final count = _drafts.length;
+    if (isMarathiApp) {
+      return count <= 1 ? 'फोटो अपलोड करा' : '$count फोटो अपलोड करा';
+    }
+    return count <= 1 ? 'Upload photo' : 'Upload $count photos';
+  }
+
+  String get _makeMainPhotoLabel =>
+      isMarathiApp ? 'मुख्य फोटो करा' : 'Make main photo';
+
+  void _selectDraft(int index) {
+    if (index < 0 || index >= _drafts.length) return;
+    setState(() {
+      _selectedDraftIndex = index;
+      _selectedRemoteId = null;
+      if (_stage != _PhotoStepState.uploading) {
+        _stage = _PhotoStepState.selected;
+      }
+    });
+  }
+
+  void _selectRemote(_RemotePhoto photo) {
+    setState(() {
+      _selectedRemoteId = photo.id;
+    });
+  }
+
+  Future<void> _promptMakeMainDraft(int index) async {
+    if (index < 0 || index >= _drafts.length) return;
+    final alreadyMain = index == 0;
+    if (alreadyMain) {
+      _showMessage(
+        isMarathiApp
+            ? 'ही आधीच मुख्य फोटो आहे.'
+            : 'This is already the main photo.',
+        _NoticeTone.info,
+      );
+      return;
+    }
+
+    final confirmed = await _showMakeMainSheet();
+    if (confirmed != true || !mounted) return;
+    _makeDraftMain(index);
+    _showMessage(appText.primaryPhotoUpdated, _NoticeTone.success);
+  }
+
+  Future<void> _promptMakeMainRemote(_RemotePhoto photo) async {
+    if (photo.id == null) return;
+    if (photo.isPrimary) {
+      _showMessage(
+        isMarathiApp
+            ? 'ही आधीच मुख्य फोटो आहे.'
+            : 'This is already the main photo.',
+        _NoticeTone.info,
+      );
+      return;
+    }
+
+    final confirmed = await _showMakeMainSheet();
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final response = await ApiClient.setPrimaryProfilePhoto(photo.id!);
+      if (!mounted) return;
+      if (_uploadSucceeded(response) || response['success'] != false) {
+        await _refreshGallery(silent: true);
+        await _refreshProfileStatus(silent: true);
+        if (!mounted) return;
+        _showMessage(appText.primaryPhotoUpdated, _NoticeTone.success);
+        return;
+      }
+      _showMessage(
+        _uploadFailureMessage(response),
+        _NoticeTone.error,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _showMessage(
+        appText.thereWasAProblemUploadingThe,
+        _NoticeTone.error,
+      );
+    }
+  }
+
+  Future<bool?> _showMakeMainSheet() {
+    return showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
+            child: ListTile(
+              leading: Icon(
+                Icons.star,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: Text(
+                _makeMainPhotoLabel,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+              onTap: () => Navigator.pop(context, true),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _removeDraft(int index) {
+    if (index < 0 || index >= _drafts.length) return;
+    setState(() {
+      _drafts.removeAt(index);
+      if (_drafts.isEmpty) {
+        _selectedDraftIndex = 0;
+        _fileInfo = null;
+        if (_remotePhotos.isNotEmpty) {
+          _stage = _PhotoStepState.pending;
+          _detailMessage = appText.photoIsUploadedApprovalOrSafety;
+        } else {
+          _stage = _PhotoStepState.missing;
+          _detailMessage = appText.cameraGalleryProfilePhotoAdd;
+        }
+      } else {
+        _selectedDraftIndex = math.min(index, _drafts.length - 1);
+        _stage = _PhotoStepState.selected;
+        _detailMessage = appText.photoSelectedCropItIfNeeded;
+      }
+    });
+  }
+
+  void _makeDraftMain(int index) {
+    if (index <= 0 || index >= _drafts.length) return;
+    setState(() {
+      final draft = _drafts.removeAt(index);
+      _drafts.insert(0, draft);
+      _selectedDraftIndex = 0;
+      _selectedRemoteId = null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final rawProfile = _profileSnapshot();
-    final photoUrl =
-        _approvedPhotoUrl ?? ApiClient.resolveProfilePhotoUrl(rawProfile);
     final currentStage = _stage;
     final busy =
         widget.loading || _uploading || _checkingStatus || _autoContinuing;
-    final stickyUploads = _hasSelectedPendingUpload;
+    final stickyUploads = _hasSelectedPendingUpload && _drafts.isNotEmpty;
     final stickyContinues = !stickyUploads && _canProceedAfterUpload;
+    final selectedDraft = _selectedDraft;
+    final heroUrl = _heroPhotoUrl;
+    final showMainBadge =
+        selectedDraft != null
+            ? _selectedDraftIndex == 0
+            : (_selectedRemote?.isPrimary ??
+                  (_remotePhotos.isNotEmpty && _selectedRemoteId == null));
 
     return OnboardingStepScaffold(
       title: appText.profilePhoto2,
@@ -592,11 +927,16 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       onBack: widget.onBack,
       onContinue: stickyUploads ? _uploadImage : _continue,
       continueLabel: stickyUploads || !_canProceedAfterUpload
-          ? (_uploading ? appText.uploadingPhoto : appText.uploadSelectedPhoto)
+          ? _uploadContinueLabel
           : appText.continueToPartnerPreference,
       titleAction: IconButton(
         tooltip: appText.refreshPhotoStatus,
-        onPressed: busy ? null : () async => _refreshProfileStatus(),
+        onPressed: busy
+            ? null
+            : () async {
+                await _refreshProfileStatus();
+                await _refreshGallery();
+              },
         icon: _checkingStatus
             ? const SizedBox(
                 width: 18,
@@ -610,26 +950,49 @@ class _PhotoStepControllerState extends State<PhotoStep> {
       ),
       children: [
         _PhotoHero(
-          photoUrl: photoUrl,
-          selectedImage: _selectedImage,
+          photoUrl: heroUrl,
+          selectedImage: selectedDraft?.file,
           state: currentStage,
-          onTap: busy
-              ? null
-              : () => _pickImage(ImageSource.gallery),
+          showMainBadge: showMainBadge &&
+              (selectedDraft != null || heroUrl != null),
+          onTap: busy ? null : () => _pickImage(ImageSource.gallery),
         ),
         const SizedBox(height: 10),
         _PhotoStatusPanel(
           state: currentStage,
           title: _statusTitle(currentStage),
           message: _detailMessage ?? _statusMessage(currentStage),
-          fileInfo: _fileInfo,
+          fileInfo: _fileInfo ??
+              (_drafts.isNotEmpty
+                  ? appText.photosCounter(
+                      _drafts.length + _remotePhotos.length,
+                      _maxPhotos,
+                    )
+                  : null),
+        ),
+        const SizedBox(height: 12),
+        _PhotoThumbnailStrip(
+          drafts: _drafts,
+          remotes: _remotePhotos,
+          selectedDraftIndex:
+              _selectedRemoteId == null ? _selectedDraftIndex : null,
+          selectedRemoteId: _selectedRemoteId,
+          canAdd: !busy && _remainingSlots > 0,
+          onSelectDraft: _selectDraft,
+          onSelectRemote: _selectRemote,
+          onMakeMainDraft: busy ? null : _promptMakeMainDraft,
+          onMakeMainRemote: busy ? null : _promptMakeMainRemote,
+          onRemoveDraft: busy ? null : _removeDraft,
+          onAdd: () => _pickImage(ImageSource.gallery),
         ),
         const SizedBox(height: 12),
         Row(
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: busy ? null : () => _pickImage(ImageSource.camera),
+                onPressed: busy || _remainingSlots <= 0
+                    ? null
+                    : () => _pickImage(ImageSource.camera),
                 icon: const Icon(Icons.photo_camera_outlined),
                 label: Text(appText.camera),
                 style: OutlinedButton.styleFrom(
@@ -640,7 +1003,9 @@ class _PhotoStepControllerState extends State<PhotoStep> {
             const SizedBox(width: 10),
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: busy ? null : () => _pickImage(ImageSource.gallery),
+                onPressed: busy || _remainingSlots <= 0
+                    ? null
+                    : () => _pickImage(ImageSource.gallery),
                 icon: const Icon(Icons.photo_library_outlined),
                 label: Text(appText.gallery),
                 style: OutlinedButton.styleFrom(
@@ -650,7 +1015,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
             ),
           ],
         ),
-        if (_selectedImage != null) ...[
+        if (selectedDraft != null) ...[
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: busy ? null : _cropSelectedImage,
@@ -1284,17 +1649,224 @@ class _OnboardingCropOverlayPainter extends CustomPainter {
   }
 }
 
+class _PhotoThumbnailStrip extends StatelessWidget {
+  const _PhotoThumbnailStrip({
+    required this.drafts,
+    required this.remotes,
+    required this.selectedDraftIndex,
+    required this.selectedRemoteId,
+    required this.canAdd,
+    required this.onSelectDraft,
+    required this.onSelectRemote,
+    required this.onMakeMainDraft,
+    required this.onMakeMainRemote,
+    required this.onRemoveDraft,
+    required this.onAdd,
+  });
+
+  final List<_DraftPhoto> drafts;
+  final List<_RemotePhoto> remotes;
+  final int? selectedDraftIndex;
+  final int? selectedRemoteId;
+  final bool canAdd;
+  final ValueChanged<int> onSelectDraft;
+  final ValueChanged<_RemotePhoto> onSelectRemote;
+  final ValueChanged<int>? onMakeMainDraft;
+  final ValueChanged<_RemotePhoto>? onMakeMainRemote;
+  final ValueChanged<int>? onRemoveDraft;
+  final VoidCallback onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final itemCount = remotes.length + drafts.length + (canAdd ? 1 : 0);
+    if (itemCount == 0) return const SizedBox.shrink();
+
+    return SizedBox(
+      height: 88,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: itemCount,
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
+        itemBuilder: (context, index) {
+          if (index < remotes.length) {
+            final photo = remotes[index];
+            return _StripThumb(
+              selected: photo.id != null && photo.id == selectedRemoteId,
+              isMain: photo.isPrimary,
+              onTap: () => onSelectRemote(photo),
+              onLongPress: onMakeMainRemote == null
+                  ? null
+                  : () => onMakeMainRemote!(photo),
+              child: photo.url == null
+                  ? Icon(
+                      Icons.image_outlined,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    )
+                  : ProfileNetworkImage(
+                      url: photo.url!,
+                      placeholder: Icon(
+                        Icons.image_outlined,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+            );
+          }
+
+          final draftIndex = index - remotes.length;
+          if (draftIndex < drafts.length) {
+            final draft = drafts[draftIndex];
+            final selected =
+                selectedRemoteId == null && selectedDraftIndex == draftIndex;
+            return _StripThumb(
+              selected: selected,
+              isMain: draftIndex == 0 && remotes.isEmpty,
+              onTap: () => onSelectDraft(draftIndex),
+              onLongPress: onMakeMainDraft == null
+                  ? null
+                  : () => onMakeMainDraft!(draftIndex),
+              onRemove: onRemoveDraft == null
+                  ? null
+                  : () => onRemoveDraft!(draftIndex),
+              child: Image.file(draft.file, fit: BoxFit.cover),
+            );
+          }
+
+          return _StripThumb(
+            selected: false,
+            isMain: false,
+            onTap: onAdd,
+            dashed: true,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.add,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  appText.addPhotos,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _StripThumb extends StatelessWidget {
+  const _StripThumb({
+    required this.selected,
+    required this.isMain,
+    required this.onTap,
+    required this.child,
+    this.onLongPress,
+    this.onRemove,
+    this.dashed = false,
+  });
+
+  final bool selected;
+  final bool isMain;
+  final VoidCallback onTap;
+  final Widget child;
+  final VoidCallback? onLongPress;
+  final VoidCallback? onRemove;
+  final bool dashed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final borderColor = selected ? colors.primary : const Color(0xFFE7DDD8);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        width: 64,
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          color: dashed ? const Color(0xFFFFF8F4) : Colors.white,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: dashed ? colors.primary.withValues(alpha: 0.55) : borderColor,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              child,
+              if (isMain)
+                Positioned(
+                  left: 4,
+                  top: 4,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: colors.primary,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      child: Text(
+                        '1',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (onRemove != null)
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Material(
+                    color: Colors.black.withValues(alpha: 0.55),
+                    shape: const CircleBorder(),
+                    child: InkWell(
+                      customBorder: const CircleBorder(),
+                      onTap: onRemove,
+                      child: const Padding(
+                        padding: EdgeInsets.all(2),
+                        child: Icon(Icons.close, size: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _PhotoHero extends StatelessWidget {
   const _PhotoHero({
     required this.photoUrl,
     required this.selectedImage,
     required this.state,
+    required this.showMainBadge,
     this.onTap,
   });
 
   final String? photoUrl;
   final File? selectedImage;
   final _PhotoStepState state;
+  final bool showMainBadge;
   final VoidCallback? onTap;
 
   @override
@@ -1372,6 +1944,31 @@ class _PhotoHero extends StatelessWidget {
                       top: 12,
                       child: _PhotoBadge(state: state),
                     ),
+                    if (showMainBadge)
+                      Positioned(
+                        right: 12,
+                        top: 12,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: colors.primary,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            child: Text(
+                              appText.primaryPhoto,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),

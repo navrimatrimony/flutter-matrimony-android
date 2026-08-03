@@ -85,14 +85,29 @@ class OnboardingStepScaffold extends StatelessWidget {
     final hasHeader =
         titleText.isNotEmpty ||
         (subtitleText?.isNotEmpty ?? false) ||
-        titleAction != null;
+        titleAction != null ||
+        onBack != null;
 
     final headerAndFields = <Widget>[
       if (hasHeader) ...[
-        if (titleText.isNotEmpty || titleAction != null)
+        if (titleText.isNotEmpty || titleAction != null || onBack != null)
           Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              if (onBack != null) ...[
+                IconButton(
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  onPressed: loading ? null : onBack,
+                  icon: const Icon(Icons.arrow_back),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 40,
+                  ),
+                ),
+                const SizedBox(width: 4),
+              ],
               if (titleText.isNotEmpty)
                 Expanded(
                   child: Text(
@@ -113,7 +128,7 @@ class OnboardingStepScaffold extends StatelessWidget {
             ],
           ),
         if (subtitleText != null && subtitleText.isNotEmpty) ...[
-          if (titleText.isNotEmpty || titleAction != null)
+          if (titleText.isNotEmpty || titleAction != null || onBack != null)
             const SizedBox(height: 6),
           Text(
             subtitleText,

@@ -1551,7 +1551,7 @@
   "photoOrderUpdated": "Photo order updated.",
   "dashboardHome": "Dashboard",
   "upload": "Upload",
-  "adjustCrop34": "Adjust 3:4 crop",
+  "adjustCrop34": "Adjust photo",
   "dragFramePullCorners": "Drag the frame. Pull corners to resize.",
   "usePhoto": "Use photo",
   "cropEncodingFailed": "Crop encoding failed.",

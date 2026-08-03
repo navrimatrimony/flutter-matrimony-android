@@ -4356,7 +4356,7 @@ class AppLocalizationsMr extends AppLocalizations {
   String get upload => 'अपलोड करा';
 
   @override
-  String get adjustCrop34 => '3:4 प्रमाणात फोटो कापा';
+  String get adjustCrop34 => 'फोटो अॅडजस्ट करा';
 
   @override
   String get dragFramePullCorners => 'चौकट सरकवा. कोपरे ओढून आकार बदला.';
