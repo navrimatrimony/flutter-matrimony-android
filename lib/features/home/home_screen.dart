@@ -49,6 +49,19 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _inactiveCoachmarkHandledThisVisit = false;
   List<Map<String, dynamic>> _activationChecklist = const [];
   final GlobalKey _nextBestActionKey = GlobalKey();
+  final GlobalKey _heroPhotoKey = GlobalKey();
+
+  /// Checklist keys that actually gate [is_searchable] on Laravel.
+  /// Excludes `account_details_complete` (creator name) — onboarding never
+  /// collects it and [ActivationChecklistService::isSearchable] ignores it.
+  static const Set<String> _searchVisibilityKeys = {
+    'mobile_verified',
+    'required_fields_complete',
+    'location_valid',
+    'photo_uploaded',
+    'photo_approved',
+    'governance_clear',
+  };
 
   int _sentTotal = 0;
   int _sentPending = 0;
@@ -193,17 +206,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         }
       });
       if (!searchable && !_inactiveCoachmarkHandledThisVisit) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          final target = _nextBestActionKey.currentContext;
-          if (target != null) {
-            Scrollable.ensureVisible(
-              target,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOutCubic,
-              alignment: 0.2,
-            );
-          }
-        });
+        _scrollToInactiveCoachmarkTarget(alignment: 0.2);
       }
     } catch (_) {
       if (!mounted || serial != _loadSerial) return;
@@ -348,16 +351,27 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
           ? 'प्रोफाइल सक्रिय झाल्यावरच जोड्या पाहता येतील.'
           : 'Complete activation before browsing matches.',
     );
+    _scrollToInactiveCoachmarkTarget(alignment: 0.15);
+  }
+
+  GlobalKey get _inactiveCoachmarkTargetKey {
+    final key = _stringValue(_firstBlockingActivationItem()?['key']);
+    if (key == 'photo_uploaded' || key == 'photo_approved') {
+      return _heroPhotoKey;
+    }
+    return _nextBestActionKey;
+  }
+
+  void _scrollToInactiveCoachmarkTarget({required double alignment}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final target = _nextBestActionKey.currentContext;
-      if (target != null) {
-        Scrollable.ensureVisible(
-          target,
-          duration: const Duration(milliseconds: 280),
-          curve: Curves.easeOutCubic,
-          alignment: 0.15,
-        );
-      }
+      final target = _inactiveCoachmarkTargetKey.currentContext;
+      if (target == null) return;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+        alignment: alignment,
+      );
     });
   }
 
@@ -482,7 +496,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         ),
         if (_showInactiveCoachmark && !_isSearchable && !_profileMissing)
           InactiveActivationCoachmark(
-            targetKey: _nextBestActionKey,
+            targetKey: _inactiveCoachmarkTargetKey,
             tip: () {
               final blocking = _firstBlockingActivationItem();
               final reason = blocking == null
@@ -766,26 +780,28 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             end: Alignment.bottomRight,
           );
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: _brandDark.withValues(alpha: 0.18),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeroAvatar(photoUrl, hasPhoto),
+    return KeyedSubtree(
+      key: _heroPhotoKey,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(8),
+          boxShadow: [
+            BoxShadow(
+              color: _brandDark.withValues(alpha: 0.18),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeroAvatar(photoUrl, hasPhoto),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -894,6 +910,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             ],
           ),
         ],
+      ),
       ),
     );
   }
@@ -2062,6 +2079,8 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
   Map<String, dynamic>? _firstBlockingActivationItem() {
     for (final item in _activationChecklist) {
+      final key = _stringValue(item['key']);
+      if (!_searchVisibilityKeys.contains(key)) continue;
       final blocking = _boolValue(item['blocking']);
       final complete = _boolValue(item['complete']);
       if (blocking && !complete) return item;

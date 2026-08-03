@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-/// Spotlight coachmark for inactive members.
+/// Spotlight coachmark for inactive / not-searchable members.
 ///
-/// Dim overlay + clear hole on [targetKey] + bouncing yellow arrow + compact
-/// tip bubble. No full-screen white dialog (that looked like a duplicate card).
+/// Dim overlay with a clear hole on [targetKey], a bold animated arrow, and
+/// plain tip text (no white dialog card).
 class InactiveActivationCoachmark extends StatefulWidget {
   const InactiveActivationCoachmark({
     super.key,
@@ -36,7 +36,7 @@ class _InactiveActivationCoachmarkState
     super.initState();
     _pulse = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 850),
+      duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
     WidgetsBinding.instance.addPostFrameCallback((_) => _measureTarget());
   }
@@ -69,40 +69,37 @@ class _InactiveActivationCoachmarkState
     final media = MediaQuery.of(context);
     final fallback = Rect.fromLTWH(
       16,
-      media.padding.top + 200,
+      media.padding.top + 120,
       media.size.width - 32,
-      120,
+      160,
     );
-    final hole = (_targetRect ?? fallback).inflate(6);
+    final hole = (_targetRect ?? fallback).inflate(4);
 
-    // Tip sits under the hole when space allows; otherwise above.
-    final tipBelow = hole.bottom + 120 < media.size.height - media.padding.bottom;
+    final tipBelow =
+        hole.bottom + 110 < media.size.height - media.padding.bottom - 56;
     final tipTop = tipBelow
-        ? (hole.bottom + 52).clamp(
+        ? (hole.bottom + 58).clamp(
             media.padding.top + 12.0,
-            media.size.height - 140.0,
+            media.size.height - 120.0,
           )
-        : (hole.top - 88).clamp(
+        : (hole.top - 72).clamp(
             media.padding.top + 12.0,
-            media.size.height - 140.0,
+            media.size.height - 120.0,
           );
 
     return Material(
       type: MaterialType.transparency,
       child: Stack(
         children: [
-          // Dim layer — tap outside hole dismisses.
           Positioned.fill(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: widget.onDismiss,
-              child: CustomPaint(
-                painter: _DimHolePainter(hole: hole),
-              ),
+              child: CustomPaint(painter: _DimHolePainter(hole: hole)),
             ),
           ),
 
-          // Clear hit target on the spotlight — runs the fix action.
+          // Spotlight ring — brand white, no cream glow.
           Positioned(
             left: hole.left,
             top: hole.top,
@@ -112,13 +109,12 @@ class _InactiveActivationCoachmarkState
               onTap: widget.onAction,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white, width: 2.5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white, width: 3),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFFFF1A8).withValues(alpha: 0.45),
-                      blurRadius: 22,
-                      spreadRadius: 1,
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 10,
                     ),
                   ],
                 ),
@@ -126,16 +122,15 @@ class _InactiveActivationCoachmarkState
             ),
           ),
 
-          // Animated arrow between hole and tip.
           AnimatedBuilder(
             animation: _pulse,
             builder: (context, child) {
-              final bounce = Curves.easeInOut.transform(_pulse.value) * 8;
+              final bounce = Curves.easeInOut.transform(_pulse.value) * 10;
               final arrowTop = tipBelow
-                  ? hole.bottom + 6 + bounce
-                  : tipTop + 58 - bounce;
+                  ? hole.bottom + 4 + bounce
+                  : tipTop + 36 - bounce;
               return Positioned(
-                left: hole.center.dx - 28,
+                left: hole.center.dx - 34,
                 top: arrowTop,
                 child: child!,
               );
@@ -143,33 +138,53 @@ class _InactiveActivationCoachmarkState
             child: Transform.rotate(
               angle: tipBelow ? 0 : math.pi,
               child: CustomPaint(
-                size: const Size(56, 40),
-                painter: _YellowArrowPainter(),
+                size: const Size(68, 48),
+                painter: _BoldArrowPainter(),
               ),
             ),
           ),
 
-          // Compact tip bubble — not a second action card.
+          // Plain tip text — no white box.
           Positioned(
-            left: 28,
-            right: 28,
+            left: 24,
+            right: 24,
             top: tipTop,
-            child: _TipBubble(
-              text: widget.tip,
+            child: GestureDetector(
               onTap: widget.onAction,
+              child: Text(
+                widget.tip,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  height: 1.35,
+                  fontWeight: FontWeight.w800,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.85),
+                      blurRadius: 8,
+                      offset: const Offset(0, 1),
+                    ),
+                    Shadow(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      blurRadius: 2,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
 
           Positioned(
             left: 0,
             right: 0,
-            bottom: media.padding.bottom + 18,
+            bottom: media.padding.bottom + 16,
             child: Center(
               child: TextButton(
                 onPressed: widget.onDismiss,
                 style: TextButton.styleFrom(
                   foregroundColor: Colors.white,
-                  backgroundColor: Colors.black.withValues(alpha: 0.35),
+                  backgroundColor: Colors.white.withValues(alpha: 0.14),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 18,
                     vertical: 8,
@@ -188,74 +203,42 @@ class _InactiveActivationCoachmarkState
   }
 }
 
-class _TipBubble extends StatelessWidget {
-  const _TipBubble({required this.text, required this.onTap});
-
-  final String text;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      elevation: 8,
-      shadowColor: Colors.black38,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-          child: Text(
-            text,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 15,
-              height: 1.3,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF2D2323),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _YellowArrowPainter extends CustomPainter {
+class _BoldArrowPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFFFFF1A8)
+    // Dark outline first so the arrow stays visible on any backdrop.
+    final outline = Paint()
+      ..color = Colors.black.withValues(alpha: 0.75)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 5
+      ..strokeWidth = 9
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final path = Path()
+    final fill = Paint()
+      ..color = const Color(0xFFFFE566)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final stem = Path()
       ..moveTo(size.width * 0.5, size.height)
       ..quadraticBezierTo(
-        size.width * 0.15,
+        size.width * 0.18,
         size.height * 0.55,
         size.width * 0.5,
-        4,
+        8,
       );
-    canvas.drawPath(path, paint);
 
-    // Arrow head pointing up.
     final head = Path()
-      ..moveTo(size.width * 0.5 - 11, 16)
-      ..lineTo(size.width * 0.5, 2)
-      ..lineTo(size.width * 0.5 + 11, 16);
-    canvas.drawPath(
-      head,
-      Paint()
-        ..color = const Color(0xFFFFF1A8)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 5
-        ..strokeCap = StrokeCap.round
-        ..strokeJoin = StrokeJoin.round,
-    );
+      ..moveTo(size.width * 0.5 - 14, 22)
+      ..lineTo(size.width * 0.5, 4)
+      ..lineTo(size.width * 0.5 + 14, 22);
+
+    for (final paint in [outline, fill]) {
+      canvas.drawPath(stem, paint);
+      canvas.drawPath(head, paint);
+    }
   }
 
   @override
@@ -271,11 +254,11 @@ class _DimHolePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final overlay = Path()..addRect(Offset.zero & size);
     final cut = Path()
-      ..addRRect(RRect.fromRectAndRadius(hole, const Radius.circular(12)));
+      ..addRRect(RRect.fromRectAndRadius(hole, const Radius.circular(10)));
     final path = Path.combine(PathOperation.difference, overlay, cut);
     canvas.drawPath(
       path,
-      Paint()..color = Colors.black.withValues(alpha: 0.72),
+      Paint()..color = Colors.black.withValues(alpha: 0.78),
     );
   }
 
