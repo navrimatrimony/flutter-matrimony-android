@@ -84,7 +84,6 @@ class _LifestyleStepState extends State<LifestyleStep> {
         );
   }
 
-
   Future<PagedLookupResponse> _page(
     String type,
     List<OnboardingOption> fallback,
@@ -149,9 +148,6 @@ class _LifestyleStepState extends State<LifestyleStep> {
       onBack: widget.onBack,
       onContinue: _save,
       children: [
-        // Said once, at the top. Repeating "optional" under all five questions
-        // cost five lines and still left the step reading like a form that has
-        // to be finished.
         Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Text(
@@ -167,9 +163,6 @@ class _LifestyleStepState extends State<LifestyleStep> {
           onChanged: (option) => setState(() => _diet = option),
         ),
         const SizedBox(height: 10),
-        // Was a dropdown. Three answers do not need a sheet that has to be
-        // opened, read, chosen from and closed — four taps where the answers
-        // fit on the screen already.
         _optionGroup(
           label: appText.smoking,
           options: widget.bootstrap.smokingOptions,
@@ -212,8 +205,6 @@ class _LifestyleStepState extends State<LifestyleStep> {
     required OnboardingOption? selected,
     required ValueChanged<OnboardingOption?> onChanged,
   }) {
-    // Only when the server sent nothing to show. Everything here has a short,
-    // fixed list, so a searchable sheet is never the right shape for it.
     if (options.isEmpty) {
       return _picker(
         label: label,
@@ -227,24 +218,10 @@ class _LifestyleStepState extends State<LifestyleStep> {
     return _OptionGroupShell(
       title: label,
       children: [
-        // Each pill takes the width of its own text rather than half the row,
-        // so three short answers sit on one line instead of two.
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: [
-            for (final option in options)
-              OnboardingSelectablePill(
-                label: option.label,
-                selected: selected?.identity == option.identity,
-                onTap: () => onChanged(option),
-                minHeight: 36,
-                fontSize: 13,
-                maxLines: 1,
-                horizontalPadding: 12,
-                verticalPadding: 6,
-              ),
-          ],
+        _LifestyleEqualChipGrid(
+          options: options,
+          selected: selected,
+          onChanged: onChanged,
         ),
       ],
     );
@@ -266,6 +243,64 @@ class _LifestyleStepState extends State<LifestyleStep> {
   }
 }
 
+/// Equal-width soft-square chips — not stadium Wrap pills.
+class _LifestyleEqualChipGrid extends StatelessWidget {
+  const _LifestyleEqualChipGrid({
+    required this.options,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final List<OnboardingOption> options;
+  final OnboardingOption? selected;
+  final ValueChanged<OnboardingOption?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = options.length;
+    final columns = count <= 1
+        ? 1
+        : count == 3
+            ? 3
+            : 2;
+
+    return Column(
+      children: [
+        for (var rowStart = 0; rowStart < count; rowStart += columns)
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: rowStart + columns < count ? 6 : 0,
+            ),
+            child: Row(
+              children: [
+                for (var col = 0; col < columns; col++) ...[
+                  if (col > 0) const SizedBox(width: 6),
+                  Expanded(
+                    child: rowStart + col < count
+                        ? OnboardingSelectablePill(
+                            label: options[rowStart + col].label,
+                            selected: selected?.identity ==
+                                options[rowStart + col].identity,
+                            onTap: () => onChanged(options[rowStart + col]),
+                            expandWidth: true,
+                            cornerRadius: 8,
+                            minHeight: 40,
+                            fontSize: 13,
+                            maxLines: 1,
+                            horizontalPadding: 8,
+                            verticalPadding: 8,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class _OptionGroupShell extends StatelessWidget {
   const _OptionGroupShell({required this.title, required this.children});
 
@@ -277,11 +312,11 @@ class _OptionGroupShell extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
