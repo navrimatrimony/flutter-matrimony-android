@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../core/app_language.dart';
 import 'onboarding_step_helpers.dart';
 
-/// Bottom primary CTA only — not a raised "footer card".
+/// Flat bottom actions — Continue (+ optional secondary under it).
 ///
-/// Matches photo-step feel: one Continue button, no elevated band and no
-/// secondary actions stacked underneath creating a second section.
+/// Not an elevated footer card glued to content. Page background shows through
+/// so the CTA reads as independent; secondary (skip / refresh / request) stays
+/// directly under the button only when a step already provides one.
 class OnboardingStickyCtaBar extends StatelessWidget {
   const OnboardingStickyCtaBar({
     super.key,
@@ -26,13 +27,15 @@ class OnboardingStickyCtaBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         minimum: EdgeInsets.zero,
+        // Tight padding — enough air so CTA is not glued to the card above,
+        // without a large empty footer band.
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+          padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (top != null) ...[top!, const SizedBox(height: 6)],
+              if (top != null) ...[top!, const SizedBox(height: 4)],
               child,
             ],
           ),
@@ -56,7 +59,7 @@ class OnboardingStepScaffold extends StatelessWidget {
     this.secondary,
     this.titleAction,
     this.titleStyle,
-    this.contentPadding = const EdgeInsets.fromLTRB(16, 16, 16, 8),
+    this.contentPadding = const EdgeInsets.fromLTRB(16, 16, 16, 4),
   });
 
   final String title;
@@ -67,6 +70,10 @@ class OnboardingStepScaffold extends StatelessWidget {
   final bool loading;
   final bool continueEnabled;
   final String? continueLabel;
+
+  /// Optional action already used by skippable / utility steps only
+  /// (astro skip, partner refresh, education/career request). Never invent
+  /// a Skip for every step — only render when the step passes one.
   final Widget? secondary;
   final Widget? titleAction;
   final TextStyle? titleStyle;
@@ -80,7 +87,7 @@ class OnboardingStepScaffold extends StatelessWidget {
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
@@ -106,8 +113,6 @@ class OnboardingStepScaffold extends StatelessWidget {
         titleAction != null ||
         onBack != null;
 
-    // Secondary (skip / refresh / request) lives in scroll content — never
-    // under the Continue button, so the sticky strip is only the CTA like photo.
     final headerAndFields = <Widget>[
       if (hasHeader) ...[
         if (titleText.isNotEmpty || titleAction != null || onBack != null)
@@ -160,18 +165,26 @@ class OnboardingStepScaffold extends StatelessWidget {
         const SizedBox(height: 14),
       ],
       ...children,
-      if (secondary != null) ...[
-        const SizedBox(height: 12),
-        Center(child: _compactSecondary(context, secondary!)),
-      ],
     ];
 
+    // CTA + existing secondary under it (skip stays here). Flat — no elevated
+    // footer card, so the button does not read as part of the content card.
     final sticky = OnboardingStickyCtaBar(
-      child: OnboardingContinueButton(
-        label: continueLabel ?? appText.continueLabel,
-        loading: loading,
-        enabled: continueEnabled,
-        onPressed: onContinue,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OnboardingContinueButton(
+            label: continueLabel ?? appText.continueLabel,
+            loading: loading,
+            enabled: continueEnabled,
+            onPressed: onContinue,
+          ),
+          if (secondary != null) ...[
+            const SizedBox(height: 2),
+            Center(child: _compactSecondary(context, secondary!)),
+          ],
+        ],
       ),
     );
 
