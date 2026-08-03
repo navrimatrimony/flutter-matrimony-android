@@ -244,69 +244,96 @@ class _RegistrationSuccessStepState extends State<RegistrationSuccessStep> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final availableHeight =
-        MediaQuery.sizeOf(context).height -
-        MediaQuery.paddingOf(context).vertical -
-        32;
+    final actionCard = _needsEmail
+        ? _emailRequestCard(context)
+        : _needsMobile
+            ? _mobileRequestCard(context)
+            : _settingsReadyCard(context);
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 4),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: availableHeight),
-        child: Column(
-          mainAxisAlignment: _showInitialSuccess
-              ? MainAxisAlignment.center
-              : MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_showInitialSuccess) ...[
-              Center(
-                child: Container(
-                  width: 104,
-                  height: 104,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.green.shade50,
-                    border: Border.all(color: Colors.green.shade100, width: 8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bounded = constraints.hasBoundedHeight &&
+            constraints.maxHeight.isFinite &&
+            constraints.maxHeight > 0;
+        final minHeight = bounded
+            ? constraints.maxHeight
+            : MediaQuery.sizeOf(context).height -
+                MediaQuery.paddingOf(context).vertical -
+                32;
+
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: minHeight),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (_showInitialSuccess)
+                  Expanded(
+                    child: Center(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Center(
+                              child: Container(
+                                width: 104,
+                                height: 104,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Colors.green.shade50,
+                                  border: Border.all(
+                                    color: Colors.green.shade100,
+                                    width: 8,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.check_rounded,
+                                  size: 58,
+                                  color: Colors.green.shade700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 22),
+                            Text(
+                              appText.yourProfileHasBeenCreatedSuccessfully,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: Colors.grey.shade900,
+                                height: 1.12,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              appText.nowSetAFewImportantThings,
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.grey.shade700,
+                                fontWeight: FontWeight.w700,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  const Spacer(),
+                // White action panel stays flush at the bottom.
+                Flexible(
+                  fit: FlexFit.loose,
+                  child: SingleChildScrollView(
+                    reverse: true,
+                    child: actionCard,
                   ),
-                  child: Icon(
-                    Icons.check_rounded,
-                    size: 58,
-                    color: Colors.green.shade700,
-                  ),
                 ),
-              ),
-              const SizedBox(height: 22),
-              Text(
-                appText.yourProfileHasBeenCreatedSuccessfully,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: Colors.grey.shade900,
-                  height: 1.12,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                appText.nowSetAFewImportantThings,
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey.shade700,
-                  fontWeight: FontWeight.w700,
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 24),
-            ],
-            if (_needsEmail)
-              _emailRequestCard(context)
-            else if (_needsMobile)
-              _mobileRequestCard(context)
-            else
-              _settingsReadyCard(context),
-          ],
-        ),
-      ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
