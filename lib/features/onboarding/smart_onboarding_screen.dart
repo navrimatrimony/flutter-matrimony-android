@@ -2683,14 +2683,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
                   child: _buildStepCard(context),
                 ),
               ),
-              if (_step == _SmartOnboardingStep.mobileOtp &&
-                  _otpChallenge?.challengeId == null)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-                  child: _TermsPrivacyFooter(
-                    isMarathi: _language == AppLanguage.marathi,
-                  ),
-                ),
             ],
           ),
         ),
@@ -3107,90 +3099,104 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     return AutofillGroup(
       key: const ValueKey('mobile_number'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Spacer(flex: 1),
-          Center(
-            child: Container(
-              width: 72,
-              height: 72,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: colors.primary.withValues(alpha: 0.18),
-                  width: 8,
-                ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Spacers + keyboard caused BOTTOM OVERFLOWED yellow/black strip.
+          // Scroll when short; center when there is room.
+          return SingleChildScrollView(
+            padding: EdgeInsets.zero,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 72,
+                      height: 72,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.10),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: colors.primary.withValues(alpha: 0.18),
+                          width: 8,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.verified_user_outlined,
+                        size: 34,
+                        color: colors.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 26),
+                  Text(
+                    appText.verifyMobileNumber,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: colors.onSurface,
+                      height: 1.05,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    appText.enterYourMobileNumberToReceive,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 34),
+                  _mobileNumberField(context),
+                  const SizedBox(height: 14),
+                  CheckboxListTile(
+                    value: _whatsappAlertsOptIn,
+                    dense: true,
+                    visualDensity: VisualDensity.compact,
+                    onChanged: _loading
+                        ? null
+                        : (value) => setState(
+                              () => _whatsappAlertsOptIn = value ?? false,
+                            ),
+                    title: Text(
+                      appText.sendProfileAlertsOnWhatsapp,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _loading ? null : _sendOtp,
+                      icon: _loading
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.arrow_forward_rounded),
+                      label: Text(
+                        _loading ? appText.sendingOtp : appText.getOtp,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _TermsPrivacyFooter(
+                    isMarathi: _language == AppLanguage.marathi,
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.verified_user_outlined,
-                size: 34,
-                color: colors.primary,
-              ),
             ),
-          ),
-          const SizedBox(height: 26),
-          Text(
-            appText.verifyMobileNumber,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: colors.onSurface,
-              height: 1.05,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            appText.enterYourMobileNumberToReceive,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: colors.onSurfaceVariant,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 34),
-          _mobileNumberField(context),
-          const SizedBox(height: 14),
-          CheckboxListTile(
-            value: _whatsappAlertsOptIn,
-            dense: true,
-            visualDensity: VisualDensity.compact,
-            onChanged: _loading
-                ? null
-                : (value) =>
-                      setState(() => _whatsappAlertsOptIn = value ?? false),
-            title: Text(
-              appText.sendProfileAlertsOnWhatsapp,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
-            ),
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            height: 56,
-            child: ElevatedButton.icon(
-              onPressed: _loading ? null : _sendOtp,
-              icon: _loading
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.arrow_forward_rounded),
-              label: Text(
-                _loading
-                    ? appText.sendingOtp
-                    : appText.getOtp,
-              ),
-            ),
-          ),
-          const Spacer(flex: 2),
-        ],
+          );
+        },
       ),
     );
   }
@@ -3265,134 +3271,153 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     return AutofillGroup(
       key: const ValueKey('otp_verification'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              IconButton(
-                onPressed: (_loading || _otpAutoAdvancePending)
-                    ? null
-                    : _editMobileNumber,
-                icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: (_loading || _otpAutoAdvancePending)
-                    ? null
-                    : _editMobileNumber,
-                icon: const Icon(Icons.edit_outlined, size: 18),
-                label: Text(appText.edit),
-              ),
-            ],
-          ),
-          const Spacer(flex: 1),
-          Center(
-            child: Container(
-              width: 76,
-              height: 76,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: colors.primary.withValues(alpha: 0.10),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: colors.primary.withValues(alpha: 0.18),
-                  width: 8,
-                ),
-              ),
-              child: Icon(Icons.sms_outlined, size: 34, color: colors.primary),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            appText.verifyMobileNumber2,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.headlineMedium?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: colors.onSurface,
-              height: 1.05,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            appText.weVeSentAVerificationCode,
-            textAlign: TextAlign.center,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: colors.onSurfaceVariant,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '+91 $mobile',
-            textAlign: TextAlign.center,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: colors.onSurface,
-            ),
-          ),
-          const SizedBox(height: 28),
-          _otpCodeField(context),
-          if (debugOtpAvailable) ...[
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.green.shade200),
-              ),
-              child: Row(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.bolt_rounded,
-                    size: 18,
-                    color: Colors.green.shade700,
+                  Row(
+                    children: [
+                      IconButton(
+                        onPressed: (_loading || _otpAutoAdvancePending)
+                            ? null
+                            : _editMobileNumber,
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).backButtonTooltip,
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: (_loading || _otpAutoAdvancePending)
+                            ? null
+                            : _editMobileNumber,
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        label: Text(appText.edit),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      appText.testOtpLabel(debugOtp),
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: Colors.green.shade800,
-                        fontWeight: FontWeight.w900,
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Container(
+                      width: 76,
+                      height: 76,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: colors.primary.withValues(alpha: 0.10),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: colors.primary.withValues(alpha: 0.18),
+                          width: 8,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.sms_outlined,
+                        size: 34,
+                        color: colors.primary,
                       ),
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  Text(
+                    appText.verifyMobileNumber2,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: colors.onSurface,
+                      height: 1.05,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    appText.weVeSentAVerificationCode,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: colors.onSurfaceVariant,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '+91 $mobile',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: colors.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  _otpCodeField(context),
+                  if (debugOtpAvailable) ...[
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.bolt_rounded,
+                            size: 18,
+                            color: Colors.green.shade700,
+                          ),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              appText.testOtpLabel(debugOtp),
+                              textAlign: TextAlign.center,
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: Colors.green.shade800,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: (_loading || _otpAutoAdvancePending)
+                          ? null
+                          : _verifyOtp,
+                      icon: (_loading || _otpAutoAdvancePending)
+                          ? const SizedBox(
+                              height: 18,
+                              width: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.verified_rounded),
+                      label: Text(
+                        _otpAutoAdvancePending
+                            ? appText.continuing
+                            : _loading
+                            ? appText.verifying
+                            : appText.verifyAndContinue,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _buildResendControl(context),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
-          ],
-          const SizedBox(height: 24),
-          SizedBox(
-            height: 56,
-            child: ElevatedButton.icon(
-              onPressed: (_loading || _otpAutoAdvancePending)
-                  ? null
-                  : _verifyOtp,
-              icon: (_loading || _otpAutoAdvancePending)
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.verified_rounded),
-              label: Text(
-                _otpAutoAdvancePending
-                    ? appText.continuing
-                    : _loading
-                    ? appText.verifying
-                    : appText.verifyAndContinue,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _buildResendControl(context),
-          const Spacer(flex: 2),
-        ],
+          );
+        },
       ),
     );
   }
