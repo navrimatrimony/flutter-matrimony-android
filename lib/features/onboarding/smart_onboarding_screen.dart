@@ -106,7 +106,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
   bool _profileForWhomChangedAfterMaritalSelection = false;
   bool _whatsappAlertsOptIn = true;
   bool _otpAutoAdvancePending = false;
-  bool _messageGapVisible = false;
   int _resendSecondsRemaining = 0;
   String? _error;
   String? _message;
@@ -200,7 +199,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       _message = message;
       _messageType = type;
       _error = null;
-      _messageGapVisible = false;
       _profileForWhomError = null;
       _warmupGenderError = null;
       _motherTongueError = null;
@@ -208,17 +206,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     });
 
     if (!autoHide) return;
-    _messageTimer = Timer(const Duration(seconds: 5), () {
+    // Clear straight into step guidance — no blank gap frame.
+    _messageTimer = Timer(const Duration(seconds: 2), () {
       if (!mounted || _message != message) return;
       setState(() {
         _message = null;
-        _messageGapVisible = true;
-      });
-      _messageTimer = Timer(const Duration(seconds: 1), () {
-        if (!mounted || !_messageGapVisible) return;
-        setState(() {
-          _messageGapVisible = false;
-        });
       });
     });
   }
@@ -228,7 +220,6 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     setState(() {
       _error = null;
       _message = null;
-      _messageGapVisible = false;
       _profileForWhomError = null;
       _warmupGenderError = null;
       _motherTongueError = null;
@@ -2699,7 +2690,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return _HeaderMessageData(
         key: 'error:$error',
         icon: Icons.error_outline,
-        color: Colors.red.shade700,
+        accent: Colors.red.shade700,
         title: appText.pleaseCheckThisInformation,
         subline: error,
       );
@@ -2707,7 +2698,7 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
 
     final message = _message;
     if (message != null) {
-      final color = switch (_messageType) {
+      final accent = switch (_messageType) {
         _OnboardingMessageType.success => Colors.green.shade700,
         _OnboardingMessageType.warning => Colors.amber.shade800,
         _OnboardingMessageType.info => Colors.grey.shade700,
@@ -2721,39 +2712,18 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return _HeaderMessageData(
         key: 'message:${_messageType.name}:$message',
         icon: icon,
-        color: color,
+        accent: accent,
         title: message,
         subline: '',
       );
     }
 
-    if (_messageGapVisible) {
-      return const _HeaderMessageData(
-        key: 'message-gap',
-        icon: Icons.notifications_none,
-        color: Colors.transparent,
-        title: '',
-        subline: '',
-        visible: false,
-      );
-    }
-
-    if (_loading) {
-      return _HeaderMessageData(
-        key: 'guidance-hold:${_step.name}',
-        icon: Icons.notifications_none,
-        color: Colors.transparent,
-        title: '',
-        subline: '',
-        visible: false,
-      );
-    }
-
+    // Keep guidance visible during loading so the shell never blanks.
     return _HeaderMessageData(
       key:
           'guidance:${_step.name}:${_profileForWhomKey ?? ''}:${_effectiveProfileGenderKey()}',
       icon: Icons.notifications_active_outlined,
-      color: Colors.grey.shade700,
+      accent: Colors.grey.shade700,
       title: _guidanceTitleForStep(),
       subline: _guidanceSublineForStep(),
       centerTitle: _step == _SmartOnboardingStep.maritalStatus,
@@ -4059,19 +4029,17 @@ class _HeaderMessageData {
   const _HeaderMessageData({
     required this.key,
     required this.icon,
-    required this.color,
+    required this.accent,
     required this.title,
     required this.subline,
-    this.visible = true,
     this.centerTitle = false,
   });
 
   final String key;
   final IconData icon;
-  final Color color;
+  final Color accent;
   final String title;
   final String subline;
-  final bool visible;
   final bool centerTitle;
 }
 
@@ -4082,151 +4050,147 @@ class _HeaderMessageBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // One stable shell — only icon + text crossfade inside.
     return SizedBox(
       height: 60,
       width: double.infinity,
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) {
-          final curved = CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeOutCubic,
-          );
-          return FadeTransition(
-            opacity: curved,
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0.06, 0),
-                end: Offset.zero,
-              ).animate(curved),
-              child: child,
-            ),
-          );
-        },
-        child: data.visible
-            ? Container(
-                key: ValueKey<String>(
-                  '${data.key}:${data.title}:${data.subline}',
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: data.color.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: data.color.withValues(alpha: 0.24)),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      height: 34,
-                      width: 34,
-                      decoration: BoxDecoration(
-                        color: data.color.withValues(alpha: 0.14),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(data.icon, color: data.color, size: 19),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 280),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                alignment: Alignment.centerLeft,
+                children: <Widget>[
+                  ...previousChildren,
+                  if (currentChild != null) currentChild,
+                ],
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey<String>(
+                '${data.key}:${data.title}:${data.subline}',
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    height: 34,
+                    width: 34,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade200,
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 9),
-                    Expanded(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          final titleStyle = Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                color: Colors.grey.shade900,
-                                fontSize: data.centerTitle ? 15.5 : null,
-                                fontWeight: data.centerTitle
-                                    ? FontWeight.w900
-                                    : FontWeight.w800,
-                                height: 1.08,
-                                decoration: TextDecoration.none,
-                              );
-                          final titleAlignment = data.centerTitle
-                              ? Alignment.center
-                              : Alignment.centerLeft;
-                          final titleTextAlign = data.centerTitle
-                              ? TextAlign.center
-                              : TextAlign.left;
-                          final subline = data.subline.trim();
-                          final sublineStyle = Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(
-                                color: Colors.grey.shade700,
-                                fontWeight: FontWeight.w600,
-                                height: 1.14,
-                                decoration: TextDecoration.none,
-                              );
-
-                          if (subline.isEmpty) {
-                            return Align(
-                              alignment: titleAlignment,
-                              child: Text(
-                                data.title,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: titleTextAlign,
-                                style: titleStyle,
-                              ),
+                    child: Icon(data.icon, color: data.accent, size: 19),
+                  ),
+                  const SizedBox(width: 9),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final titleStyle = Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(
+                              color: Colors.grey.shade900,
+                              fontSize: data.centerTitle ? 15.5 : null,
+                              fontWeight: data.centerTitle
+                                  ? FontWeight.w900
+                                  : FontWeight.w800,
+                              height: 1.08,
+                              decoration: TextDecoration.none,
                             );
-                          }
+                        final titleAlignment = data.centerTitle
+                            ? Alignment.center
+                            : Alignment.centerLeft;
+                        final titleTextAlign = data.centerTitle
+                            ? TextAlign.center
+                            : TextAlign.left;
+                        final subline = data.subline.trim();
+                        final sublineStyle = Theme.of(context)
+                            .textTheme
+                            .bodySmall
+                            ?.copyWith(
+                              color: Colors.grey.shade700,
+                              fontWeight: FontWeight.w600,
+                              height: 1.14,
+                              decoration: TextDecoration.none,
+                            );
 
-                          final availableHeight = constraints.maxHeight;
-                          const titleHeight = 20.0;
-                          const lineGap = 6.0;
-                          final sublineHeight =
-                              (availableHeight - titleHeight - lineGap)
-                                  .clamp(16.0, 22.0)
-                                  .toDouble();
-
-                          return ClipRect(
-                            child: Stack(
-                              clipBehavior: Clip.hardEdge,
-                              children: [
-                                Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  top: 0,
-                                  height: titleHeight,
-                                  child: Align(
-                                    alignment: titleAlignment,
-                                    child: Text(
-                                      data.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      textAlign: titleTextAlign,
-                                      style: titleStyle,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 0,
-                                  height: sublineHeight,
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: _LoopingSublineText(
-                                      text: subline,
-                                      style: sublineStyle,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                        if (subline.isEmpty) {
+                          return Align(
+                            alignment: titleAlignment,
+                            child: Text(
+                              data.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: titleTextAlign,
+                              style: titleStyle,
                             ),
                           );
-                        },
-                      ),
+                        }
+
+                        final availableHeight = constraints.maxHeight;
+                        const titleHeight = 20.0;
+                        const lineGap = 6.0;
+                        final sublineHeight =
+                            (availableHeight - titleHeight - lineGap)
+                                .clamp(16.0, 22.0)
+                                .toDouble();
+
+                        return ClipRect(
+                          child: Stack(
+                            clipBehavior: Clip.hardEdge,
+                            children: [
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                top: 0,
+                                height: titleHeight,
+                                child: Align(
+                                  alignment: titleAlignment,
+                                  child: Text(
+                                    data.title,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: titleTextAlign,
+                                    style: titleStyle,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                height: sublineHeight,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: _LoopingSublineText(
+                                    text: subline,
+                                    style: sublineStyle,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                  ],
-                ),
-              )
-            : const SizedBox(key: ValueKey<String>('message-gap')),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
