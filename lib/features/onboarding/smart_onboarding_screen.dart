@@ -3083,15 +3083,11 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
       return stepContent;
     }
 
-    return Card(
-      elevation: 0,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(color: Colors.grey.shade300),
-      ),
-      child: SizedBox.expand(child: stepContent),
-    );
+    // Do NOT wrap the whole step (including sticky CTA) in a Card.
+    // That made Continue look like the bottom of one big panel. Each step's
+    // OnboardingStepScaffold owns a content card; CTA sits outside on the
+    // scaffold background (same pattern as photo / post-registration).
+    return stepContent;
   }
 
   Widget _buildMobileOtpStep(BuildContext context) {

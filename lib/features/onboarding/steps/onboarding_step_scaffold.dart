@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/app_language.dart';
 import 'onboarding_step_helpers.dart';
 
-/// Flat bottom actions — Continue (+ optional secondary under it).
-///
-/// Not an elevated footer card glued to content. Page background shows through
-/// so the CTA reads as independent; secondary (skip / refresh / request) stays
-/// directly under the button only when a step already provides one.
+/// Flat bottom actions on the page background — not inside the content card.
 class OnboardingStickyCtaBar extends StatelessWidget {
   const OnboardingStickyCtaBar({
     super.key,
@@ -20,17 +16,15 @@ class OnboardingStickyCtaBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final pageBg = Theme.of(context).scaffoldBackgroundColor;
 
     return ColoredBox(
-      color: colorScheme.surface,
+      color: pageBg,
       child: SafeArea(
         top: false,
         minimum: EdgeInsets.zero,
-        // Tight padding — enough air so CTA is not glued to the card above,
-        // without a large empty footer band.
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -59,7 +53,8 @@ class OnboardingStepScaffold extends StatelessWidget {
     this.secondary,
     this.titleAction,
     this.titleStyle,
-    this.contentPadding = const EdgeInsets.fromLTRB(16, 16, 16, 4),
+    this.contentPadding = const EdgeInsets.fromLTRB(16, 14, 16, 12),
+    this.contentAsCard = true,
   });
 
   final String title;
@@ -71,13 +66,14 @@ class OnboardingStepScaffold extends StatelessWidget {
   final bool continueEnabled;
   final String? continueLabel;
 
-  /// Optional action already used by skippable / utility steps only
-  /// (astro skip, partner refresh, education/career request). Never invent
-  /// a Skip for every step — only render when the step passes one.
+  /// Only when a step already provides one (astro skip, refresh, request…).
   final Widget? secondary;
   final Widget? titleAction;
   final TextStyle? titleStyle;
   final EdgeInsetsGeometry contentPadding;
+
+  /// When false (photo / post-reg), scroll content is not wrapped in a card.
+  final bool contentAsCard;
 
   Widget _compactSecondary(BuildContext context, Widget child) {
     return Theme(
@@ -100,6 +96,28 @@ class OnboardingStepScaffold extends StatelessWidget {
         ),
       ),
       child: child,
+    );
+  }
+
+  Widget _contentCard(BuildContext context, List<Widget> headerAndFields) {
+    final scroll = SingleChildScrollView(
+      padding: contentPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: headerAndFields,
+      ),
+    );
+    if (!contentAsCard) return scroll;
+
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: Colors.grey.shade300),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: scroll,
     );
   }
 
@@ -167,8 +185,6 @@ class OnboardingStepScaffold extends StatelessWidget {
       ...children,
     ];
 
-    // CTA + existing secondary under it (skip stays here). Flat — no elevated
-    // footer card, so the button does not read as part of the content card.
     final sticky = OnboardingStickyCtaBar(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -194,38 +210,33 @@ class OnboardingStepScaffold extends StatelessWidget {
             constraints.maxHeight.isFinite &&
             constraints.maxHeight > 0;
 
+        final pageBg = Theme.of(context).scaffoldBackgroundColor;
+
         if (!bounded) {
-          return Column(
-            key: key,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: contentPadding,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: headerAndFields,
-                ),
-              ),
-              sticky,
-            ],
+          return ColoredBox(
+            color: pageBg,
+            child: Column(
+              key: key,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _contentCard(context, headerAndFields),
+                sticky,
+              ],
+            ),
           );
         }
 
-        return Column(
-          key: key,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: contentPadding,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: headerAndFields,
-                ),
-              ),
-            ),
-            sticky,
-          ],
+        // Content card expands; CTA stays outside on page background.
+        return ColoredBox(
+          color: pageBg,
+          child: Column(
+            key: key,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(child: _contentCard(context, headerAndFields)),
+              sticky,
+            ],
+          ),
         );
       },
     );

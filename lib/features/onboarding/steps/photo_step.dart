@@ -922,6 +922,7 @@ class _PhotoStepControllerState extends State<PhotoStep> {
     return OnboardingStepScaffold(
       title: appText.profilePhoto2,
       subtitle: appText.addAClearPhotoCropIt,
+      contentAsCard: false,
       loading: busy,
       continueEnabled: !busy && (stickyUploads || stickyContinues),
       onBack: widget.onBack,
