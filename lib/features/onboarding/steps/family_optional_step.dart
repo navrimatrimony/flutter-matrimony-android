@@ -468,24 +468,32 @@ class _ChoiceWrap extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Each pill takes the width of its own label instead of half the
-        // row, so four short answers use one or two lines rather than four.
+        // Equal tiles: same width + height for every status/values chip.
+        final columns = constraints.maxWidth >= 360 ? 4 : 2;
+        final spacing = 6.0;
+        final itemWidth =
+            (constraints.maxWidth - spacing * (columns - 1)) / columns;
         return Wrap(
-          spacing: 6,
-          runSpacing: 6,
+          spacing: spacing,
+          runSpacing: spacing,
           children: options
               .map(
-                (option) => OnboardingSelectablePill(
-                  label: option.label(locale),
-                  selected: selectedKey == option.key,
-                  onTap: onChanged == null ? null : () => onChanged!(option.key),
-                  minHeight: 36,
-                  fontSize: 13,
-                  maxLines: 1,
-                  horizontalPadding: 12,
-                  verticalPadding: 6,
-                  // Match about-suggestion chips (square-ish), not pill ovals.
-                  cornerRadius: 8,
+                (option) => SizedBox(
+                  width: itemWidth,
+                  child: OnboardingSelectablePill(
+                    label: option.label(locale),
+                    selected: selectedKey == option.key,
+                    onTap: onChanged == null
+                        ? null
+                        : () => onChanged!(option.key),
+                    minHeight: 40,
+                    fontSize: 13,
+                    maxLines: 1,
+                    horizontalPadding: 8,
+                    verticalPadding: 8,
+                    cornerRadius: 8,
+                    expandWidth: true,
+                  ),
                 ),
               )
               .toList(),
@@ -512,20 +520,19 @@ class _AboutSuggestionChips extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Three across, so six templates make two even rows instead of three
-        // uneven ones. Falls back to two columns on a narrow phone, where three
-        // would cut the labels.
-        final columns = constraints.maxWidth >= 340 ? 3 : 2;
+        final columns = 3;
         final spacing = 6.0;
         final itemWidth =
             (constraints.maxWidth - spacing * (columns - 1)) / columns;
+        const tileHeight = 44.0;
         return Wrap(
           spacing: spacing,
-          runSpacing: 6,
+          runSpacing: spacing,
           children: [
             for (var i = 0; i < suggestions.length; i++)
               SizedBox(
                 width: itemWidth,
+                height: tileHeight,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(8),
                   onTap: onSelected == null ? null : () => onSelected!(i),
@@ -543,37 +550,23 @@ class _AboutSuggestionChips extends StatelessWidget {
                             : colors.outlineVariant,
                       ),
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 7,
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.auto_awesome_outlined,
-                            size: 16,
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        child: Text(
+                          suggestions[i].label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
                             color: selectedIndex == i
                                 ? onboardingSelectedGreen
                                 : colors.onSurfaceVariant,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            height: 1.1,
                           ),
-                          const SizedBox(width: 7),
-                          Expanded(
-                            child: Text(
-                              suggestions[i].label,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: selectedIndex == i
-                                    ? onboardingSelectedGreen
-                                    : colors.onSurfaceVariant,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 12,
-                                height: 1.15,
-                              ),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
                     ),
                   ),

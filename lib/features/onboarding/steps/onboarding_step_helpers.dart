@@ -146,6 +146,7 @@ class OnboardingSelectablePill extends StatelessWidget {
     this.verticalPadding = 12,
     this.muted = false,
     this.cornerRadius = 999,
+    this.expandWidth = false,
   });
 
   final String label;
@@ -159,6 +160,7 @@ class OnboardingSelectablePill extends StatelessWidget {
   final double verticalPadding;
   final bool muted;
   final double cornerRadius;
+  final bool expandWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -177,6 +179,7 @@ class OnboardingSelectablePill extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           curve: Curves.easeOutCubic,
+          width: expandWidth ? double.infinity : null,
           constraints: BoxConstraints(minHeight: minHeight),
           padding: EdgeInsets.symmetric(
             horizontal: horizontalPadding,
@@ -205,7 +208,7 @@ class OnboardingSelectablePill extends StatelessWidget {
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
+            mainAxisSize: expandWidth ? MainAxisSize.max : MainAxisSize.min,
             children: [
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 120),

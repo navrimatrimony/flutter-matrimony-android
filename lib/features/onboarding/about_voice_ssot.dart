@@ -28,10 +28,10 @@ class AboutTemplateSuggestion {
 ///
 /// Locked product rule (2026-08-03):
 /// - `profile_for_whom = self` → candidate first person, gender-aware
-/// - any other relation (son/daughter/brother/sister/relative/friend) →
-///   **parent/elder voice** ("आमची मुलगी…", "Our daughter…"), gender-aware
+/// - any other relation → **parent/elder voice** ("आमची मुलगी…"), gender-aware
 ///
-/// Do not invent a second voice path beside this resolver.
+/// Copy tone: short biodata / WhatsApp-style Marathi people actually write —
+/// not essay language.
 class AboutVoice {
   const AboutVoice({
     required this.relationKey,
@@ -63,7 +63,7 @@ class AboutVoice {
     );
   }
 
-  /// Third-person / parent-voice subject ("आमची मुलगी", "Our son").
+  /// Parent-voice subject ("आमची मुलगी", "Our son").
   String get subject {
     if (!parentVoice) return '';
     if (isMarathiApp) {
@@ -82,185 +82,169 @@ class AboutVoice {
       'daughter' => 'Our daughter',
       'brother' => 'Our brother',
       'sister' => 'Our sister',
-      'friend' => female ? 'Our friend' : 'Our friend',
+      'friend' => 'Our friend',
       'relative' => 'Our relative',
       _ => female ? 'Our daughter' : 'Our son',
     };
   }
 
+  /// Short equal-length chip labels (same tile size in UI).
   List<AboutTemplateSuggestion> templates({required String factText}) {
     String body(String seed) {
       return [seed, factText].where((part) => part.trim().isNotEmpty).join(' ');
     }
 
+    if (isMarathiApp) {
+      return <AboutTemplateSuggestion>[
+        AboutTemplateSuggestion(label: 'कुटुंब', text: body(_familyFirst)),
+        AboutTemplateSuggestion(label: 'काम', text: body(_careerBalance)),
+        AboutTemplateSuggestion(label: 'परंपरा', text: body(_tradition)),
+        AboutTemplateSuggestion(label: 'प्रामाणिक', text: body(_honesty)),
+        AboutTemplateSuggestion(label: 'शांत', text: body(_calm)),
+        AboutTemplateSuggestion(label: 'एकत्र', text: body(_growth)),
+      ];
+    }
+
     return <AboutTemplateSuggestion>[
-      AboutTemplateSuggestion(
-        label: isMarathiApp ? 'कुटुंब प्रथम' : 'Family first',
-        text: body(_familyFirst),
-      ),
-      AboutTemplateSuggestion(
-        label: isMarathiApp ? 'काम आणि समतोल' : 'Career with balance',
-        text: body(_careerBalance),
-      ),
-      AboutTemplateSuggestion(
-        label: isMarathiApp ? 'परंपरा आणि मोकळेपण' : 'Tradition, open mind',
-        text: body(_tradition),
-      ),
-      AboutTemplateSuggestion(
-        label: isMarathiApp ? 'प्रामाणिकपणा' : 'Honesty & respect',
-        text: body(_honesty),
-      ),
-      AboutTemplateSuggestion(
-        label: isMarathiApp ? 'शांत स्वभाव' : 'Calm & steady',
-        text: body(_calm),
-      ),
-      AboutTemplateSuggestion(
-        label: isMarathiApp ? 'एकत्र वाटचाल' : 'Growing together',
-        text: body(_growth),
-      ),
+      AboutTemplateSuggestion(label: 'Family', text: body(_familyFirst)),
+      AboutTemplateSuggestion(label: 'Work', text: body(_careerBalance)),
+      AboutTemplateSuggestion(label: 'Tradition', text: body(_tradition)),
+      AboutTemplateSuggestion(label: 'Honest', text: body(_honesty)),
+      AboutTemplateSuggestion(label: 'Calm', text: body(_calm)),
+      AboutTemplateSuggestion(label: 'Together', text: body(_growth)),
     ];
   }
 
   String familyBackgroundFact(String status) {
     if (parentVoice) {
       return isMarathiApp
-          ? '$subject यांची कौटुंबिक पार्श्वभूमी $status आहे.'
-          : '$subject comes from a $status family background.';
+          ? 'कुटुंब $status आहे.'
+          : 'Family is $status.';
     }
     return isMarathiApp
-        ? 'कौटुंबिक पार्श्वभूमी $status आहे.'
-        : 'Family background is $status.';
+        ? 'आमचे कुटुंब $status आहे.'
+        : 'Our family is $status.';
   }
 
   String familyValuesFact(String values) {
-    if (parentVoice) {
-      return isMarathiApp
-          ? 'कौटुंबिक मूल्ये $values आहेत.'
-          : 'Family values are $values.';
-    }
     return isMarathiApp
-        ? 'कौटुंबिक मूल्ये $values आहेत.'
-        : 'Family values are $values.';
+        ? 'घरची विचारसरणी $values आहे.'
+        : 'Home values are $values.';
   }
 
   String careerFact(String label) {
     if (parentVoice) {
       return isMarathiApp
           ? (female
-                ? '$subject व्यवसायाने $label या क्षेत्राशी जोडलेली आहे.'
-                : '$subject व्यवसायाने $label या क्षेत्राशी जोडलेला आहे.')
-          : '$subject is professionally connected with $label.';
+                ? '$subject $label क्षेत्रात काम करते.'
+                : '$subject $label क्षेत्रात काम करतो.')
+          : '$subject works in $label.';
     }
     if (isMarathiApp) {
-      return female
-          ? 'व्यवसायाने $label या क्षेत्राशी जोडलेली आहे.'
-          : 'व्यवसायाने $label या क्षेत्राशी जोडलेला आहे.';
+      return female ? 'मी $label क्षेत्रात काम करते.' : 'मी $label क्षेत्रात काम करतो.';
     }
-    return 'Professionally connected with $label.';
+    return 'I work in $label.';
   }
 
   String ageFact(int age) {
     if (parentVoice) {
       return isMarathiApp
-          ? (female
-                ? 'तिचे वय $age वर्षे आहे.'
-                : 'त्याचे वय $age वर्षे आहे.')
-          : (female
-                ? 'She is $age years old.'
-                : 'He is $age years old.');
+          ? (female ? 'तिचे वय $age वर्षे.' : 'त्याचे वय $age वर्षे.')
+          : (female ? 'She is $age.' : 'He is $age.');
     }
-    return isMarathiApp
-        ? 'वय $age वर्षे आहे.'
-        : 'Age is $age years.';
+    return isMarathiApp ? 'माझे वय $age वर्षे.' : 'I am $age.';
   }
 
   String get _familyFirst {
     if (parentVoice) {
-      return isMarathiApp
-          ? '$subject साठी कुटुंब खूप मोलाचे आहे. मोकळा संवाद आणि संयम ठेवून एकमेकांचा आदर करणारा संसार व्हावा, अशी आमची इच्छा आहे.'
-          : 'Family means a great deal to $subject, and we hope for a respectful partnership built on clear communication and patience.';
+      if (isMarathiApp) {
+        return female
+            ? '$subject घरची आहे. कुटुंबाला खूप महत्त्व देते. चांगला संसार व्हावा अशी आमची इच्छा आहे.'
+            : '$subject घरचा आहे. कुटुंबाला खूप महत्त्व देतो. चांगला संसार व्हावा अशी आमची इच्छा आहे.';
+      }
+      return '$subject is close to family. We want a simple, happy married life.';
     }
     if (isMarathiApp) {
       return female
-          ? 'कुटुंब माझ्यासाठी खूप मोलाचे आहे. मोकळा संवाद आणि संयम ठेवून एकमेकांचा आदर करणारा संसार करावा, अशी माझी इच्छा आहे.'
-          : 'कुटुंब माझ्यासाठी खूप मोलाचे आहे. मोकळा संवाद आणि संयम ठेवून एकमेकांचा आदर करणारा संसार करावा, अशी माझी इच्छा आहे.';
+          ? 'मी घरची मुलगी आहे. कुटुंबाला खूप महत्त्व देते. साधा आणि सुखी संसार हवा आहे.'
+          : 'मी घरचा माणूस आहे. कुटुंबाला खूप महत्त्व देतो. साधा आणि सुखी संसार हवा आहे.';
     }
-    return 'Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.';
+    return 'I am close to my family and want a simple, happy married life.';
   }
 
   String get _careerBalance {
     if (parentVoice) {
       return isMarathiApp
           ? (female
-                ? '$subject जबाबदाऱ्या मनापासून पार पाडते, तसेच कुटुंब, नाती आणि शांत दिनक्रम यांनाही तेवढेच महत्त्व देते.'
-                : '$subject जबाबदाऱ्या मनापासून पार पाडतो, तसेच कुटुंब, नाती आणि शांत दिनक्रम यांनाही तेवढेच महत्त्व देतो.')
-          : '$subject takes responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.';
+                ? '$subject कामात गांभीर्याने करते, पण घर आणि कुटुंबही तितकेच महत्त्वाचे मानते.'
+                : '$subject कामात गांभीर्याने करतो, पण घर आणि कुटुंबही तितकेच महत्त्वाचे मानतो.')
+          : '$subject takes work seriously, but family and home matter just as much.';
     }
     if (isMarathiApp) {
       return female
-          ? 'जबाबदाऱ्या मी मनापासून पार पाडते, तसेच कुटुंब, नाती आणि शांत दिनक्रम यांनाही तेवढेच महत्त्व देते.'
-          : 'जबाबदाऱ्या मी मनापासून पार पाडतो, तसेच कुटुंब, नाती आणि शांत दिनक्रम यांनाही तेवढेच महत्त्व देतो.';
+          ? 'कामात मी गांभीर्याने करते, पण घर आणि कुटुंबही तितकेच महत्त्वाचे वाटते.'
+          : 'कामात मी गांभीर्याने करतो, पण घर आणि कुटुंबही तितकेच महत्त्वाचे वाटते.';
     }
-    return 'I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.';
+    return 'I take work seriously, but family and home matter just as much.';
   }
 
   String get _tradition {
     if (parentVoice) {
       return isMarathiApp
           ? (female
-                ? 'परंपरांचा $subject आदर करते, आणि मोठे निर्णय घेताना मोकळेपणाने व व्यवहारी विचाराने बोलणे तिला आवडते.'
-                : 'परंपरांचा $subject आदर करतो, आणि मोठे निर्णय घेताना मोकळेपणाने व व्यवहारी विचाराने बोलणे त्याला आवडते.')
-          : '$subject respects traditions and still values practical, open-minded conversations for important decisions.';
+                ? '$subject घरच्या रीतिरिवाजांचा मान ठेवते. गरज असेल तर नवीन गोष्टीही समजून घेते.'
+                : '$subject घरच्या रीतिरिवाजांचा मान ठेवतो. गरज असेल तर नवीन गोष्टीही समजून घेतो.')
+          : '$subject respects family traditions and is open to practical new ideas.';
     }
     if (isMarathiApp) {
       return female
-          ? 'परंपरांचा मी आदर करते, आणि मोठे निर्णय घेताना मोकळेपणाने व व्यवहारी विचाराने बोलणे मला आवडते.'
-          : 'परंपरांचा मी आदर करतो, आणि मोठे निर्णय घेताना मोकळेपणाने व व्यवहारी विचाराने बोलणे मला आवडते.';
+          ? 'घरच्या रीतिरिवाजांचा मान ठेवते. गरज असेल तर नवीन गोष्टीही समजून घेते.'
+          : 'घरच्या रीतिरिवाजांचा मान ठेवतो. गरज असेल तर नवीन गोष्टीही समजून घेतो.';
     }
-    return 'I respect traditions and still value practical, open-minded conversations when important decisions need to be made.';
+    return 'I respect family traditions and I am open to practical new ideas.';
   }
 
   String get _honesty {
     if (parentVoice) {
       return isMarathiApp
           ? (female
-                ? 'कागदावरच्या परिपूर्णतेपेक्षा प्रामाणिकपणा, एकमेकांबद्दलचा आदर आणि मनाची सुरक्षितता $subject ला जास्त महत्त्वाची वाटते.'
-                : 'कागदावरच्या परिपूर्णतेपेक्षा प्रामाणिकपणा, एकमेकांबद्दलचा आदर आणि मनाची सुरक्षितता $subject ला जास्त महत्त्वाची वाटते.')
-          : 'For $subject, honesty, mutual respect, and emotional safety matter more than perfection on paper.';
+                ? '$subject सरळ आणि प्रामाणिक आहे. खोट्या गोष्टी नकोत — एकमेकांचा आदर हवा, असे तिला वाटते.'
+                : '$subject सरळ आणि प्रामाणिक आहे. खोट्या गोष्टी नकोत — एकमेकांचा आदर हवा, असे त्याला वाटते.')
+          : '$subject is straightforward and honest. Mutual respect matters more than showing off.';
     }
     if (isMarathiApp) {
-      return 'कागदावरच्या परिपूर्णतेपेक्षा प्रामाणिकपणा, एकमेकांबद्दलचा आदर आणि मनाची सुरक्षितता मला जास्त महत्त्वाची वाटते.';
+      return female
+          ? 'मी सरळ आणि प्रामाणिक आहे. खोट्या गोष्टी नकोत. एकमेकांचा आदर असला पाहिजे.'
+          : 'मी सरळ आणि प्रामाणिक आहे. खोट्या गोष्टी नकोत. एकमेकांचा आदर असला पाहिजे.';
     }
-    return 'Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.';
+    return 'I am straightforward and honest. Mutual respect matters more than showing off.';
   }
 
   String get _calm {
     if (parentVoice) {
       return isMarathiApp
           ? (female
-                ? '$subject यांचा स्वभाव शांत आणि स्थिर आहे. कोणतीही गोष्ट संयमाने, स्पष्टपणे आणि मायेने सोडवायला त्यांना आवडते.'
-                : '$subject यांचा स्वभाव शांत आणि स्थिर आहे. कोणतीही गोष्ट संयमाने, स्पष्टपणे आणि मायेने सोडवायला त्यांना आवडते.')
-          : '$subject is generally calm and steady, and prefers resolving things with patience, clarity, and kindness.';
+                ? '$subject शांत स्वभावाची आहे. गोंधळ नको — साध्या आणि समजूतदार गोष्टी आवडतात.'
+                : '$subject शांत स्वभावाचा आहे. गोंधळ नको — साध्या आणि समजूतदार गोष्टी आवडतात.')
+          : '$subject has a calm nature and prefers a peaceful, understanding home.';
     }
     if (isMarathiApp) {
       return female
-          ? 'माझा स्वभाव शांत आणि स्थिर आहे. कोणतीही गोष्ट संयमाने, स्पष्टपणे आणि मायेने सोडवायला मला आवडते.'
-          : 'माझा स्वभाव शांत आणि स्थिर आहे. कोणतीही गोष्ट संयमाने, स्पष्टपणे आणि मायेने सोडवायला मला आवडते.';
+          ? 'मी शांत स्वभावाची आहे. गोंधळ नको. साध्या आणि समजूतदार गोष्टी आवडतात.'
+          : 'मी शांत स्वभावाचा आहे. गोंधळ नको. साध्या आणि समजूतदार गोष्टी आवडतात.';
     }
-    return 'I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.';
+    return 'I have a calm nature. I prefer a peaceful, understanding home.';
   }
 
   String get _growth {
     if (parentVoice) {
       return isMarathiApp
-          ? (female
-                ? '$subject एकमेकांना समजून घेत, एकत्र पुढे जाणाऱ्या सोबत्याच्या शोधात आहे.'
-                : '$subject एकमेकांना समजून घेत, एकत्र पुढे जाणाऱ्या सोबत्याच्या शोधात आहे.')
-          : '$subject is looking for a partner to understand each other and move forward together.';
+          ? '$subject ला अशी जोडी हवी आहे जी एकमेकांना समजेल आणि एकत्र पुढे जाईल.'
+          : 'We hope $subject finds a partner who understands and grows together.';
     }
     if (isMarathiApp) {
-      return 'एकमेकांना समजून घेत, एकत्र पुढे जाणाऱ्या सोबत्याच्या शोधात आहे.';
+      return 'मला अशी जोडी हवी आहे जी एकमेकांना समजेल आणि एकत्र पुढे जाईल.';
     }
-    return 'Looking for a partner to understand each other and move forward together.';
+    return 'I want a partner who understands me and we can move forward together.';
   }
 }
