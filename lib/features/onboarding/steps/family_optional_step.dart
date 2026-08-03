@@ -80,12 +80,12 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
   void _prefill() {
     _familyStatus = onboardingText(widget.data['family_status']);
     _familyValues = onboardingText(widget.data['family_values']);
-    final about = widget.initialAbout?.trim();
-    // Optional step: never auto-pick a suggestion chip. Only restore saved text.
-    if (about != null && about.isNotEmpty && _aboutController.text.isEmpty) {
-      _aboutController.text = about;
+    // Keep the about box empty. Suggestion chips insert text only on tap —
+    // restoring saved/template narrative made the field look pre-written.
+    if (!_edited) {
+      _aboutController.clear();
+      _selectedSuggestionIndex = null;
     }
-    _selectedSuggestionIndex = null;
   }
 
   List<AboutTemplateSuggestion> get _aboutSuggestions {
@@ -299,7 +299,9 @@ class _FamilyOptionalStepState extends State<FamilyOptionalStep> {
                   _selectedSuggestionIndex = null;
                 }),
                 decoration: InputDecoration(
-                  hintText: appText.writeANaturalIntroductionFamilyBackground,
+                  hintText: widget.locale == 'mr'
+                      ? 'येथे लिहा (ऐच्छिक)'
+                      : 'Write here (optional)',
                   alignLabelWithHint: true,
                 ),
               ),

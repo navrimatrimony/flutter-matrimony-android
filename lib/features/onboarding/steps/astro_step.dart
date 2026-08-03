@@ -297,22 +297,10 @@ class _AstroStepState extends State<AstroStep> {
 
     return _AstroSectionCard(
       title: appText.mangalDosh,
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 6,
-        children: [
-          for (final option in options)
-            OnboardingSelectablePill(
-              label: option.label,
-              selected: _mangalDosh?.identity == option.identity,
-              onTap: () => setState(() => _mangalDosh = option),
-              minHeight: 36,
-              fontSize: 13,
-              maxLines: 1,
-              horizontalPadding: 12,
-              verticalPadding: 6,
-            ),
-        ],
+      child: _AstroEqualChipGrid(
+        options: options,
+        isSelected: (option) => _mangalDosh?.identity == option.identity,
+        onSelected: (option) => setState(() => _mangalDosh = option),
       ),
     );
   }
@@ -469,28 +457,17 @@ class _AstroStepState extends State<AstroStep> {
           ),
         ),
         Expanded(
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final option in _charanOptions)
-                SizedBox(
-                  width: 52,
-                  child: OnboardingSelectablePill(
-                    label: option.label,
-                    selected:
-                        _charan != null && _charan == _charanValue(option),
-                    onTap: () => setState(() {
-                      _charan = _charanValue(option);
-                      _reconcile();
-                    }),
-                    minHeight: 34,
-                    fontSize: 13,
-                    horizontalPadding: 6,
-                    verticalPadding: 6,
-                  ),
-                ),
-            ],
+          child: _AstroEqualChipGrid(
+            options: _charanOptions,
+            isSelected: (option) =>
+                _charan != null && _charan == _charanValue(option),
+            onSelected: (option) => setState(() {
+              _charan = _charanValue(option);
+              _reconcile();
+            }),
+            columns: _charanOptions.length <= 4
+                ? _charanOptions.length
+                : 2,
           ),
         ),
       ],
@@ -539,13 +516,13 @@ class _AstroSectionCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: accent ? Colors.blue.shade50 : Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: accent ? Colors.blue.shade200 : Colors.grey.shade200,
+          color: accent ? Colors.blue.shade200 : Colors.grey.shade300,
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -570,6 +547,68 @@ class _AstroSectionCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Equal-width soft-square chips for astro option rows.
+class _AstroEqualChipGrid extends StatelessWidget {
+  const _AstroEqualChipGrid({
+    required this.options,
+    required this.isSelected,
+    required this.onSelected,
+    this.columns,
+  });
+
+  final List<OnboardingOption> options;
+  final bool Function(OnboardingOption option) isSelected;
+  final ValueChanged<OnboardingOption> onSelected;
+  final int? columns;
+
+  @override
+  Widget build(BuildContext context) {
+    final count = options.length;
+    if (count == 0) return const SizedBox.shrink();
+
+    final cols = columns ??
+        (count <= 1
+            ? 1
+            : count == 3
+                ? 3
+                : 2);
+
+    return Column(
+      children: [
+        for (var rowStart = 0; rowStart < count; rowStart += cols)
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: rowStart + cols < count ? 6 : 0,
+            ),
+            child: Row(
+              children: [
+                for (var col = 0; col < cols; col++) ...[
+                  if (col > 0) const SizedBox(width: 6),
+                  Expanded(
+                    child: rowStart + col < count
+                        ? OnboardingSelectablePill(
+                            label: options[rowStart + col].label,
+                            selected: isSelected(options[rowStart + col]),
+                            onTap: () => onSelected(options[rowStart + col]),
+                            expandWidth: true,
+                            cornerRadius: 8,
+                            minHeight: 40,
+                            fontSize: 13,
+                            maxLines: 1,
+                            horizontalPadding: 8,
+                            verticalPadding: 8,
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ],
+              ],
+            ),
+          ),
+      ],
     );
   }
 }

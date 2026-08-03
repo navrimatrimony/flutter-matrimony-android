@@ -1845,9 +1845,9 @@ class _SmartOnboardingScreenState extends State<SmartOnboardingScreen> {
     }
 
     final about = aboutText.trim();
-    // Send an empty about only when it would clear text the profile already
-    // has; otherwise there is nothing to write.
-    final writeAbout = about.isNotEmpty || _profileAboutText() != null;
+    // Only persist when the user typed or picked a suggestion. An empty box
+    // must not wipe an existing about just because the UI starts blank.
+    final writeAbout = about.isNotEmpty;
 
     setState(() {
       _loading = true;
