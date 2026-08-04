@@ -19,15 +19,6 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   static const Color _brandDark = Color(0xFF9F1239);
   static const Color _surface = Color(0xFFFFF8F5);
 
-  /// Fixed catalog strip — independent of which plan card is open.
-  static const List<String> _billingKeys = <String>[
-    'monthly',
-    'quarterly',
-    'half_yearly',
-    'yearly',
-    'lifetime',
-  ];
-
   bool _loading = true;
   bool _refreshing = false;
   String? _error;
@@ -35,8 +26,8 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   List<Map<String, dynamic>> _plans = <Map<String, dynamic>>[];
   int? _checkoutPlanId;
 
-  String _selectedBillingKey = 'monthly';
   int _selectedPlanIndex = 0;
+  int _selectedTermIndex = 0;
   late final PageController _pageController;
 
   @override
@@ -80,24 +71,44 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
       final plansResponse = responses[1];
       final plans = _safeMapList(plansResponse['plans']);
 
+      var planIndex = _selectedPlanIndex;
+      if (plans.isEmpty) {
+        planIndex = 0;
+      } else if (planIndex >= plans.length) {
+        planIndex = 0;
+      }
+
+      // Prefer opening on the user's current catalog plan when present.
+      final currentId = _asInt(
+        _safeMap(currentResponse['current_plan'])?['id'],
+      );
+      if (currentId != null) {
+        final currentIdx = plans.indexWhere((p) => _asInt(p['id']) == currentId);
+        if (currentIdx >= 0) planIndex = currentIdx;
+      }
+
+      final termIndex = plans.isEmpty
+          ? 0
+          : _defaultTermIndexFor(plans[planIndex]);
+
       if (!mounted) return;
       setState(() {
         _current = currentResponse;
         _plans = plans;
+        _selectedPlanIndex = planIndex;
+        _selectedTermIndex = termIndex;
         _error = _responseSuccess(plansResponse)
             ? null
             : _responseMessage(plansResponse, AppStrings.plansLoadFailed);
-        _selectedPlanIndex = _clampIndex(
-          _selectedPlanIndex,
-          _visiblePlans.length,
-        );
       });
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted || !_pageController.hasClients) return;
-        final visible = _visiblePlans;
-        if (visible.isEmpty) return;
-        _pageController.jumpToPage(_selectedPlanIndex);
+        final cards = _termCardsForSelectedPlan;
+        if (cards.isEmpty) return;
+        _pageController.jumpToPage(
+          _selectedTermIndex.clamp(0, cards.length - 1),
+        );
       });
     } catch (error) {
       if (!mounted) return;
@@ -114,51 +125,62 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     }
   }
 
-  List<Map<String, dynamic>> get _visiblePlans {
-    return _plans.where(_planSupportsSelectedBilling).toList(growable: false);
-  }
-
-  bool _planSupportsSelectedBilling(Map<String, dynamic> plan) {
-    final terms = _safeMapList(plan['terms']);
-    // Free / term-less catalog rows stay visible for every duration tab.
-    if (terms.isEmpty) return true;
-    return terms.any(
-      (term) => _stringValue(term['billing_key']) == _selectedBillingKey,
-    );
-  }
-
   Map<String, dynamic>? get _selectedPlan {
-    final visible = _visiblePlans;
-    if (visible.isEmpty) return null;
-    if (_selectedPlanIndex < 0 || _selectedPlanIndex >= visible.length) {
-      return visible.first;
+    if (_plans.isEmpty) return null;
+    if (_selectedPlanIndex < 0 || _selectedPlanIndex >= _plans.length) {
+      return _plans.first;
     }
-    return visible[_selectedPlanIndex];
+    return _plans[_selectedPlanIndex];
   }
 
-  Map<String, dynamic>? _termForBilling(Map<String, dynamic> plan) {
-    for (final term in _safeMapList(plan['terms'])) {
-      if (_stringValue(term['billing_key']) == _selectedBillingKey) {
-        return term;
-      }
-    }
-    return null;
+  /// One card per admin-visible term; plan-level fallback when terms empty.
+  List<Map<String, dynamic>> get _termCardsForSelectedPlan {
+    final plan = _selectedPlan;
+    if (plan == null) return const <Map<String, dynamic>>[];
+    final terms = _safeMapList(plan['terms']);
+    if (terms.isNotEmpty) return terms;
+    return <Map<String, dynamic>>[
+      {
+        'id': null,
+        'billing_key': '',
+        'label': '',
+        'duration_days': plan['duration_days'],
+        'duration_label': plan['duration_label'],
+        'price': plan['price'],
+        'final_price': plan['final_price'],
+        'discount_percent': plan['discount_percent'],
+        '_plan_level': true,
+      },
+    ];
   }
 
-  /// Ordered feature labels across the full catalog (for included + missing rows).
+  Map<String, dynamic>? get _selectedTerm {
+    final cards = _termCardsForSelectedPlan;
+    if (cards.isEmpty) return null;
+    final i = _selectedTermIndex.clamp(0, cards.length - 1);
+    return cards[i];
+  }
+
+  int _defaultTermIndexFor(Map<String, dynamic> plan) {
+    final terms = _safeMapList(plan['terms']);
+    if (terms.isEmpty) return 0;
+    final defaultId = _asInt(plan['default_plan_term_id']);
+    if (defaultId != null) {
+      final idx = terms.indexWhere((t) => _asInt(t['id']) == defaultId);
+      if (idx >= 0) return idx;
+    }
+    return 0;
+  }
+
   List<String> get _featureCatalogLabels {
     final labels = <String>[];
     final seen = <String>{};
-
-    List<Map<String, dynamic>> ordered = List<Map<String, dynamic>>.from(
-      _plans,
-    );
-    ordered.sort((a, b) {
-      final aCount = _stringList(a['features']).length;
-      final bCount = _stringList(b['features']).length;
-      return bCount.compareTo(aCount);
-    });
-
+    final ordered = List<Map<String, dynamic>>.from(_plans)
+      ..sort((a, b) {
+        return _stringList(b['features']).length.compareTo(
+          _stringList(a['features']).length,
+        );
+      });
     for (final plan in ordered) {
       for (final line in _stringList(plan['features'])) {
         final label = _featureLabelOf(line);
@@ -173,16 +195,8 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     final planId = _asInt(plan['id']);
     if (planId == null) return;
 
-    final term = _termForBilling(plan);
-    final terms = _safeMapList(plan['terms']);
-    if (terms.isNotEmpty && term == null) {
-      _showSnackBar(
-        currentAppLanguage == AppLanguage.marathi
-            ? 'हा कालावधी या प्लॅनसाठी उपलब्ध नाही.'
-            : 'This duration is not available for this plan.',
-      );
-      return;
-    }
+    final term = _selectedTerm;
+    final termId = _asInt(term?['id']);
 
     setState(() {
       _checkoutPlanId = planId;
@@ -194,7 +208,7 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
           fullscreenDialog: true,
           builder: (_) => PlanCouponScreen(
             plan: plan,
-            planTermId: _asInt(term?['id']),
+            planTermId: termId,
           ),
         ),
       );
@@ -231,35 +245,31 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
       currentPlan?['display_name'] ?? currentPlan?['name'],
     );
     if (name.isEmpty) return '—';
+    final short = name.split('(').first.trim();
     final mr = currentAppLanguage == AppLanguage.marathi;
-    return mr ? 'सध्या: $name' : 'Now: $name';
+    return mr ? 'सध्या: $short' : 'Now: $short';
   }
 
-  void _selectBillingKey(String key) {
-    if (key == _selectedBillingKey) return;
-    final previousId = _asInt(_selectedPlan?['id']);
+  void _selectPlanIndex(int index) {
+    if (index < 0 || index >= _plans.length) return;
+    final termIndex = _defaultTermIndexFor(_plans[index]);
     setState(() {
-      _selectedBillingKey = key;
-      final visible = _visiblePlans;
-      var nextIndex = 0;
-      if (previousId != null) {
-        final keep = visible.indexWhere((p) => _asInt(p['id']) == previousId);
-        if (keep >= 0) nextIndex = keep;
-      }
-      _selectedPlanIndex = _clampIndex(nextIndex, visible.length);
+      _selectedPlanIndex = index;
+      _selectedTermIndex = termIndex;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_pageController.hasClients) return;
-      if (_visiblePlans.isEmpty) return;
-      _pageController.jumpToPage(_selectedPlanIndex);
+      final cards = _termCardsForSelectedPlan;
+      if (cards.isEmpty) return;
+      _pageController.jumpToPage(termIndex.clamp(0, cards.length - 1));
     });
   }
 
-  void _selectPlanIndex(int index, {bool animate = true}) {
-    final visible = _visiblePlans;
-    if (index < 0 || index >= visible.length) return;
+  void _selectTermIndex(int index, {bool animate = true}) {
+    final cards = _termCardsForSelectedPlan;
+    if (index < 0 || index >= cards.length) return;
     setState(() {
-      _selectedPlanIndex = index;
+      _selectedTermIndex = index;
     });
     if (!_pageController.hasClients) return;
     if (animate) {
@@ -339,13 +349,8 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
                 if (_plans.isEmpty)
                   Expanded(child: Center(child: _buildEmptyCard()))
                 else ...[
-                  _buildBillingStrip(mr),
                   _buildPlanNameStrip(mr),
-                  Expanded(
-                    child: _visiblePlans.isEmpty
-                        ? Center(child: _buildNoPlansForBilling(mr))
-                        : _buildPlanPager(),
-                  ),
+                  Expanded(child: _buildTermPager()),
                   _buildBottomCta(mr),
                 ],
               ],
@@ -353,97 +358,104 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildBillingStrip(bool mr) {
-    return SizedBox(
-      height: 48,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-        itemCount: _billingKeys.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final key = _billingKeys[index];
-          final selected = key == _selectedBillingKey;
-          return ChoiceChip(
-            label: Text(_billingLabel(key, mr)),
-            selected: selected,
-            selectedColor: _brandColor,
-            labelStyle: TextStyle(
-              color: selected ? Colors.white : _brandDark,
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-            ),
-            backgroundColor: Colors.white,
-            visualDensity: VisualDensity.compact,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            side: BorderSide(
-              color: selected ? _brandColor : const Color(0xFFE8DDD7),
-            ),
-            onSelected: (_) => _selectBillingKey(key),
-          );
-        },
-      ),
-    );
-  }
-
   Widget _buildPlanNameStrip(bool mr) {
-    final visible = _visiblePlans;
-    if (visible.isEmpty) return const SizedBox(height: 4);
-
-    return SizedBox(
-      height: 40,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
-        itemCount: visible.length,
-        separatorBuilder: (context, index) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final plan = visible[index];
-          final selected = index == _selectedPlanIndex;
-          final name = _shortPlanName(plan);
-          return InkWell(
-            borderRadius: BorderRadius.circular(999),
-            onTap: () => _selectPlanIndex(index),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 160),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: selected ? const Color(0xFFFFF1F2) : Colors.white,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: selected ? _brandColor : const Color(0xFFE8DDD7),
-                  width: selected ? 1.4 : 1,
-                ),
-              ),
-              child: Text(
-                name,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: selected ? _brandColor : _brandDark,
-                ),
-              ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 8),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: const Color(0xFFE8DDD7)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          );
-        },
+          ],
+        ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (var i = 0; i < _plans.length; i++) ...[
+                if (i > 0) const SizedBox(width: 4),
+                _buildPlanChip(i, mr),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildPlanPager() {
-    final visible = _visiblePlans;
+  Widget _buildPlanChip(int index, bool mr) {
+    final plan = _plans[index];
+    final selected = index == _selectedPlanIndex;
+    final isCurrent = plan['is_current'] == true;
+    final name = _shortPlanName(plan);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: () => _selectPlanIndex(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? _brandColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+          border: isCurrent && !selected
+              ? Border.all(color: _brandColor.withValues(alpha: 0.45))
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              name,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
+                color: selected ? Colors.white : _brandDark,
+              ),
+            ),
+            if (isCurrent) ...[
+              const SizedBox(width: 6),
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected ? Colors.white : _brandColor,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTermPager() {
+    final plan = _selectedPlan;
+    final cards = _termCardsForSelectedPlan;
+    if (plan == null || cards.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     return PageView.builder(
       controller: _pageController,
-      itemCount: visible.length,
+      itemCount: cards.length,
       onPageChanged: (index) {
         setState(() {
-          _selectedPlanIndex = index;
+          _selectedTermIndex = index;
         });
       },
       itemBuilder: (context, index) {
         return Padding(
-          padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
-          child: _buildMainPlanCard(visible[index], index, visible.length),
+          padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
+          child: _buildMainPlanCard(plan, cards[index], index, cards.length),
         );
       },
     );
@@ -451,93 +463,120 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
 
   Widget _buildMainPlanCard(
     Map<String, dynamic> plan,
+    Map<String, dynamic> term,
     int index,
     int total,
   ) {
-    final selectedTerm = _termForBilling(plan);
+    final mr = currentAppLanguage == AppLanguage.marathi;
+    final highlight = plan['highlight'] == true;
+    final isCurrent = plan['is_current'] == true;
     final name = _stringValue(
       plan['display_name'] ?? plan['name'],
       fallback: AppStrings.plansTitle,
     );
-    final badge = _stringValue(plan['marketing_badge']);
-    final highlight = plan['highlight'] == true;
-    final mr = currentAppLanguage == AppLanguage.marathi;
+    final marketingLabel = _marketingBadgeLabel(plan, mr);
     final featureRows = _featureRowsFor(plan);
+    final pricing = _pricingFor(plan, term);
 
     return Card(
-      elevation: 2,
+      elevation: highlight ? 4 : 2,
       margin: EdgeInsets.zero,
       shadowColor: Colors.black26,
       color: Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
         side: BorderSide(
-          color: highlight ? _brandColor : const Color(0xFFE8DDD7),
-          width: highlight ? 1.6 : 1,
+          color: isCurrent
+              ? const Color(0xFF4F46E5)
+              : (highlight ? _brandColor : const Color(0xFFE8DDD7)),
+          width: (isCurrent || highlight) ? 1.7 : 1,
         ),
       ),
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (isCurrent || marketingLabel != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        if (isCurrent)
+                          _buildStatusChip(
+                            mr ? 'तुमचा सध्याचा प्लॅन' : 'Your current plan',
+                            const Color(0xFF4F46E5),
+                          ),
+                        if (marketingLabel != null)
+                          _buildStatusChip(marketingLabel, _brandColor),
+                      ],
+                    ),
+                  ),
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.workspace_premium_rounded,
-                      color: highlight ? _brandColor : Colors.blueGrey,
-                      size: 26,
-                    ),
-                    const Spacer(),
-                    if (badge.isNotEmpty) _buildBadge(badge),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  name,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: _brandDark,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _priceOnly(plan, selectedTerm),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w900,
-                    color: _brandColor,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1F2),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      _durationChip(plan, selectedTerm, mr),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: _brandDark,
+                    Expanded(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.workspace_premium_rounded,
+                            color: highlight ? _brandColor : Colors.blueGrey,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  name,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w900,
+                                    color: _brandDark,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today_outlined,
+                                      size: 13,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        _durationLine(term, mr),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.grey.shade700,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    _buildPriceBlock(pricing, mr),
+                  ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Expanded(
                   child: featureRows.isEmpty
                       ? Center(
@@ -547,9 +586,13 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
                             style: TextStyle(color: Colors.grey.shade700),
                           ),
                         )
-                      : ListView.builder(
+                      : ListView.separated(
                           padding: EdgeInsets.zero,
                           itemCount: featureRows.length,
+                          separatorBuilder: (context, i) => Divider(
+                            height: 1,
+                            color: Colors.grey.shade200,
+                          ),
                           itemBuilder: (context, i) {
                             final row = featureRows[i];
                             return _buildFeatureRow(row.text, row.included);
@@ -558,59 +601,214 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
                 ),
                 if (total > 1)
                   Padding(
-                    padding: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.only(top: 8),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        for (var i = 0; i < total; i++)
-                          Container(
-                            width: i == index ? 8 : 6,
-                            height: i == index ? 8 : 6,
-                            margin: const EdgeInsets.symmetric(horizontal: 3),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: i == index
-                                  ? _brandColor
-                                  : Colors.grey.shade300,
-                            ),
+                        _circleChevron(
+                          icon: Icons.chevron_left_rounded,
+                          enabled: index > 0,
+                          onTap: () => _selectTermIndex(index - 1),
+                        ),
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              for (var i = 0; i < total; i++)
+                                Container(
+                                  width: i == index ? 8 : 6,
+                                  height: i == index ? 8 : 6,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: i == index
+                                        ? _brandColor
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
+                            ],
                           ),
+                        ),
+                        _circleChevron(
+                          icon: Icons.chevron_right_rounded,
+                          enabled: index < total - 1,
+                          onTap: () => _selectTermIndex(index + 1),
+                        ),
                       ],
                     ),
                   ),
               ],
             ),
           ),
-          if (total > 1) ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: IconButton(
-                onPressed: index <= 0
-                    ? null
-                    : () => _selectPlanIndex(index - 1),
-                icon: Icon(
-                  Icons.chevron_left_rounded,
-                  color: index <= 0 ? Colors.grey.shade300 : _brandColor,
-                  size: 30,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPriceBlock(_PlanPricing pricing, bool mr) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        if (pricing.showListStrike) ...[
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _currency(pricing.listPrice),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey.shade500,
+                  decoration: TextDecoration.lineThrough,
+                  decorationColor: Colors.grey.shade500,
                 ),
+              ),
+              if (pricing.discountPercent > 0) ...[
+                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFE4E6),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    mr
+                        ? '${pricing.discountPercent}% सूट'
+                        : '${pricing.discountPercent}% OFF',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: _brandDark,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 2),
+        ],
+        Text(
+          _currency(pricing.finalPrice),
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w900,
+            color: _brandColor,
+            height: 1.05,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _circleChevron({
+    required IconData icon,
+    required bool enabled,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(),
+      elevation: 1,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: enabled ? onTap : null,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Icon(
+            icon,
+            size: 22,
+            color: enabled ? _brandColor : Colors.grey.shade300,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomCta(bool mr) {
+    final plan = _selectedPlan;
+    final planId = plan == null ? null : _asInt(plan['id']);
+    final isCheckoutLoading = planId != null && _checkoutPlanId == planId;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: plan == null || planId == null || isCheckoutLoading
+                    ? null
+                    : () => _startCheckout(plan),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _brandColor,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: isCheckoutLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            mr ? 'पुढे — पेमेंट' : 'Next — Payment',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(Icons.arrow_forward, size: 18),
+                        ],
+                      ),
               ),
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                onPressed: index >= total - 1
-                    ? null
-                    : () => _selectPlanIndex(index + 1),
-                icon: Icon(
-                  Icons.chevron_right_rounded,
-                  color: index >= total - 1
-                      ? Colors.grey.shade300
-                      : _brandColor,
-                  size: 30,
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock_outline, size: 13, color: Colors.grey.shade600),
+                const SizedBox(width: 5),
+                Text(
+                  mr ? 'सुरक्षित पेमेंट · PayU' : 'Secure payment · PayU',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
-              ),
+              ],
             ),
           ],
-        ],
+        ),
       ),
     );
   }
@@ -641,82 +839,36 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
         .toList(growable: false);
   }
 
-  Widget _buildBottomCta(bool mr) {
-    final plan = _selectedPlan;
-    final planId = plan == null ? null : _asInt(plan['id']);
-    final isCheckoutLoading = planId != null && _checkoutPlanId == planId;
-    final terms = plan == null ? const <Map<String, dynamic>>[] : _safeMapList(plan['terms']);
-    final termOk = plan != null && (terms.isEmpty || _termForBilling(plan) != null);
-
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+  Widget _buildFeatureRow(String text, bool included) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Opacity(
+        opacity: included ? 1 : 0.45,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed:
-                    plan == null ||
-                        planId == null ||
-                        isCheckoutLoading ||
-                        !termOk
-                    ? null
-                    : () => _startCheckout(plan),
-                style: FilledButton.styleFrom(
-                  backgroundColor: _brandColor,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                ),
-                child: isCheckoutLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        mr ? 'पुढे — पेमेंट' : 'Next — Payment',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-              ),
+            Icon(
+              included ? Icons.check_circle : Icons.remove_circle_outline,
+              color: included ? const Color(0xFF16A085) : Colors.grey,
+              size: 18,
             ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.lock_outline, size: 13, color: Colors.grey.shade600),
-                const SizedBox(width: 5),
-                Text(
-                  mr ? 'सुरक्षित पेमेंट · PayU' : 'Secure payment · PayU',
-                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                text,
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  height: 1.25,
+                  color: included ? Colors.black87 : Colors.grey.shade600,
+                  decoration: included
+                      ? TextDecoration.none
+                      : TextDecoration.lineThrough,
+                  decorationColor: Colors.grey.shade500,
                 ),
-              ],
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildNoPlansForBilling(bool mr) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Text(
-        mr
-            ? 'या कालावधीसाठी प्लॅन उपलब्ध नाही.'
-            : 'No plans for this duration.',
-        textAlign: TextAlign.center,
-        style: const TextStyle(fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -751,57 +903,74 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildBadge(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF4CC),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: const Color(0xFFE6B84F)),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Color(0xFF7A4A00),
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
+  /// Mirrors Laravel public pricing discount display.
+  _PlanPricing _pricingFor(
+    Map<String, dynamic> plan,
+    Map<String, dynamic> term,
+  ) {
+    final list = _asDouble(term['price']) ?? _asDouble(plan['price']) ?? 0;
+    final finalPrice =
+        _asDouble(term['final_price']) ?? _asDouble(plan['final_price']) ?? 0;
+    var disc =
+        _asInt(term['discount_percent']) ??
+        _asInt(plan['discount_percent']) ??
+        0;
+    if (disc <= 0 && list > finalPrice + 0.004) {
+      disc = (100 * (1 - finalPrice / list)).round().clamp(0, 100);
+    }
+    final showStrike = disc > 0 && list > finalPrice + 0.004;
+    return _PlanPricing(
+      listPrice: list,
+      finalPrice: finalPrice,
+      discountPercent: disc,
+      showListStrike: showStrike,
     );
   }
 
-  Widget _buildFeatureRow(String text, bool included) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 7),
-      child: Opacity(
-        opacity: included ? 1 : 0.45,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              included ? Icons.check_circle : Icons.remove_circle_outline,
-              color: included ? const Color(0xFF16A085) : Colors.grey,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  height: 1.25,
-                  color: included ? Colors.black87 : Colors.grey.shade600,
-                  decoration: included
-                      ? TextDecoration.none
-                      : TextDecoration.lineThrough,
-                  decorationColor: Colors.grey.shade500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  String _durationLine(Map<String, dynamic> term, bool mr) {
+    final billing = _stringValue(term['billing_key']);
+    final billingLabel = _billingLabel(billing, mr);
+    final days = _asInt(term['duration_days']);
+    final durationLabel = _stringValue(term['duration_label']);
+    final label = _stringValue(term['label']);
+
+    final primary = billingLabel.isNotEmpty
+        ? billingLabel
+        : (label.isNotEmpty
+              ? label
+              : (durationLabel.isNotEmpty
+                    ? durationLabel
+                    : (mr ? 'मुदत' : 'Duration')));
+
+    if (billing == 'lifetime' || (days != null && days <= 0)) {
+      return mr ? '$primary · लग्न ठरेपर्यंत' : '$primary · Till marriage';
+    }
+    if (days != null && days > 0) {
+      return mr ? '$primary · $days दिवस' : '$primary · $days days';
+    }
+    return primary;
+  }
+
+  String? _marketingBadgeLabel(Map<String, dynamic> plan, bool mr) {
+    final highlight = plan['highlight'] == true;
+    if (!highlight) return null;
+
+    final key = _stringValue(plan['marketing_badge']).toLowerCase();
+    switch (key) {
+      case 'best_seller':
+        return mr ? 'Best Seller' : 'Best Seller';
+      case 'popular':
+        return mr ? 'Popular' : 'Popular';
+      case 'new':
+        return mr ? 'New' : 'New';
+      case 'limited_offer':
+        return mr ? 'Limited offer' : 'Limited offer';
+      case 'recommended':
+        return mr ? 'Recommended' : 'Recommended';
+      default:
+        // Admin "highlight" without badge — same as website gold fallback tone.
+        return mr ? 'सर्वाधिक लोकप्रिय' : 'Most Popular';
+    }
   }
 
   String _shortPlanName(Map<String, dynamic> plan) {
@@ -822,43 +991,19 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
         return mr ? 'सहामाही' : 'Half-yearly';
       case 'yearly':
         return mr ? 'वार्षिक' : 'Yearly';
+      case 'five_yearly':
+        return mr ? '5 वर्षे' : '5 years';
       case 'lifetime':
         return mr ? 'लग्न ठरेपर्यंत' : 'Till marriage';
       default:
-        return key;
+        return '';
     }
-  }
-
-  String _priceOnly(
-    Map<String, dynamic> plan,
-    Map<String, dynamic>? selectedTerm,
-  ) {
-    final amount = selectedTerm?['final_price'] ?? plan['final_price'];
-    return _currency(amount);
-  }
-
-  String _durationChip(
-    Map<String, dynamic> plan,
-    Map<String, dynamic>? selectedTerm,
-    bool mr,
-  ) {
-    if (selectedTerm == null && _safeMapList(plan['terms']).isEmpty) {
-      return mr ? 'फ्री' : 'Free';
-    }
-    return _billingLabel(_selectedBillingKey, mr);
   }
 
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
-  }
-
-  static int _clampIndex(int index, int length) {
-    if (length <= 0) return 0;
-    if (index < 0) return 0;
-    if (index >= length) return 0;
-    return index;
   }
 
   static String _featureLabelOf(String line) {
@@ -911,6 +1056,13 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     return null;
   }
 
+  static double? _asDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value.trim());
+    return null;
+  }
+
   static String _stringValue(dynamic value, {String fallback = ''}) {
     final text = value?.toString().trim() ?? '';
     return text.isEmpty ? fallback : text;
@@ -922,7 +1074,20 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     if (amount == amount.roundToDouble()) {
       return '₹${amount.toStringAsFixed(0)}';
     }
-
     return '₹${amount.toStringAsFixed(2)}';
   }
+}
+
+class _PlanPricing {
+  const _PlanPricing({
+    required this.listPrice,
+    required this.finalPrice,
+    required this.discountPercent,
+    required this.showListStrike,
+  });
+
+  final double listPrice;
+  final double finalPrice;
+  final int discountPercent;
+  final bool showListStrike;
 }
