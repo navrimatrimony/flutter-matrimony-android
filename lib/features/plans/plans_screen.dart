@@ -17,8 +17,7 @@ class PlansScreen extends StatefulWidget {
 class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   static const Color _brandColor = Color(0xFFDC2626);
   static const Color _brandDark = Color(0xFF9F1239);
-  static const Color _gold = Color(0xFFC79A3B);
-  static const Color _surface = Color(0xFFFFFBF7);
+  static const Color _surface = Color(0xFFFFF8F5);
 
   bool _loading = true;
   bool _refreshing = false;
@@ -28,9 +27,13 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   final Map<int, int?> _selectedTermIds = <int, int?>{};
   int? _checkoutPlanId;
 
+  int _selectedPlanIndex = 0;
+  late final PageController _pageController;
+
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.92);
     WidgetsBinding.instance.addObserver(this);
     _loadPlans();
   }
@@ -38,15 +41,13 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _pageController.dispose();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
-
-    // Soft refresh when returning to the screen (e.g. after OS interrupts).
-    // Skip while a native checkout is in progress.
     if (_checkoutPlanId != null) return;
     _loadPlans(silent: true);
   }
@@ -77,6 +78,13 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
         nextSelectedTerms[planId] = _defaultPlanTermId(plan);
       }
 
+      var nextIndex = _selectedPlanIndex;
+      if (plans.isEmpty) {
+        nextIndex = 0;
+      } else if (nextIndex >= plans.length) {
+        nextIndex = 0;
+      }
+
       if (!mounted) return;
       setState(() {
         _current = currentResponse;
@@ -84,9 +92,15 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
         _selectedTermIds
           ..clear()
           ..addAll(nextSelectedTerms);
+        _selectedPlanIndex = nextIndex;
         _error = _responseSuccess(plansResponse)
             ? null
             : _responseMessage(plansResponse, AppStrings.plansLoadFailed);
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_pageController.hasClients || plans.isEmpty) return;
+        _pageController.jumpToPage(nextIndex);
       });
     } catch (error) {
       if (!mounted) return;
@@ -148,112 +162,495 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     }
   }
 
+  String get _headerCurrentPlanText {
+    final currentPlan = _safeMap(_current?['current_plan']);
+    final name = _stringValue(
+      currentPlan?['display_name'] ?? currentPlan?['name'],
+    );
+    if (name.isEmpty) {
+      return currentAppLanguage == AppLanguage.marathi ? '—' : '—';
+    }
+    final mr = currentAppLanguage == AppLanguage.marathi;
+    return mr ? 'सध्या: $name' : 'Now: $name';
+  }
+
+  Map<String, dynamic>? get _selectedPlan {
+    if (_plans.isEmpty) return null;
+    if (_selectedPlanIndex < 0 || _selectedPlanIndex >= _plans.length) {
+      return _plans.first;
+    }
+    return _plans[_selectedPlanIndex];
+  }
+
+  void _selectPlanIndex(int index, {bool animate = true}) {
+    if (index < 0 || index >= _plans.length) return;
+    setState(() {
+      _selectedPlanIndex = index;
+    });
+    if (!_pageController.hasClients) return;
+    if (animate) {
+      _pageController.animateToPage(
+        index,
+        duration: const Duration(milliseconds: 280),
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      _pageController.jumpToPage(index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final mr = currentAppLanguage == AppLanguage.marathi;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F4EF),
-      appBar: AppBar(title: Text(AppStrings.plansTitle)),
+      backgroundColor: _surface,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        foregroundColor: _brandColor,
+        elevation: 0,
+        title: Text(
+          AppStrings.plansTitle,
+          style: const TextStyle(
+            color: _brandColor,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        actions: [
+          if (!_loading)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 148),
+                  child: Text(
+                    _headerCurrentPlanText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          IconButton(
+            tooltip: AppStrings.plansRefresh,
+            onPressed: _refreshing ? null : () => _loadPlans(silent: true),
+            icon: _refreshing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.refresh, size: 20),
+          ),
+        ],
+      ),
       body: _loading
           ? AppLoadingState.list(
               title: appText.loadingPlans,
               icon: Icons.workspace_premium_outlined,
             )
-          : RefreshIndicator(
-              onRefresh: () => _loadPlans(silent: true),
-              child: ListView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
-                children: [
-                  _buildCurrentPlanCard(),
-                  const SizedBox(height: 16),
-                  _buildSectionHeader(AppStrings.plansAvailablePlans),
-                  const SizedBox(height: 10),
-                  if (_error != null) _buildErrorBanner(_error!),
-                  if (_plans.isEmpty) _buildEmptyCard(),
-                  for (final plan in _plans) _buildPlanCard(plan),
+          : Column(
+              children: [
+                if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: _buildErrorBanner(_error!),
+                  ),
+                if (_plans.isEmpty)
+                  Expanded(child: Center(child: _buildEmptyCard()))
+                else ...[
+                  const SizedBox(height: 8),
+                  _buildTermToggle(mr),
+                  const SizedBox(height: 8),
+                  Expanded(child: _buildPlanPager()),
+                  _buildScrubber(mr),
+                  _buildBottomCta(mr),
                 ],
-              ),
+              ],
             ),
     );
   }
 
-  Widget _buildCurrentPlanCard() {
-    final currentPlan = _safeMap(_current?['current_plan']);
-    final subscription = _safeMap(_current?['active_subscription']);
-    final contactView = _safeMap(_current?['contact_view']);
-    final usage = _safeMap(contactView?['usage']);
-    final state = _safeMap(contactView?['state']);
-    final planName = _stringValue(
-      currentPlan?['display_name'] ?? currentPlan?['name'],
-      fallback: AppStrings.plansNoCurrentPlan,
+  Widget _buildTermToggle(bool mr) {
+    final plan = _selectedPlan;
+    if (plan == null) return const SizedBox.shrink();
+    final terms = _safeMapList(plan['terms']);
+    final planId = _asInt(plan['id']);
+    if (planId == null || terms.length <= 1) {
+      if (terms.length == 1) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+          child: Text(
+            _termChipLabel(terms.first, mr),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.grey.shade700,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
+      }
+      return const SizedBox(height: 4);
+    }
+
+    final selectedId = _selectedTermIds[planId];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          for (final term in terms)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(_termChipLabel(term, mr)),
+                selected: _asInt(term['id']) == selectedId,
+                selectedColor: _brandColor,
+                labelStyle: TextStyle(
+                  color: _asInt(term['id']) == selectedId
+                      ? Colors.white
+                      : _brandDark,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+                backgroundColor: Colors.white,
+                side: BorderSide(
+                  color: _asInt(term['id']) == selectedId
+                      ? _brandColor
+                      : const Color(0xFFE8DDD7),
+                ),
+                onSelected: (_) {
+                  setState(() {
+                    _selectedTermIds[planId] = _asInt(term['id']);
+                  });
+                },
+              ),
+            ),
+        ],
+      ),
     );
-    final hasActiveSubscription = subscription != null;
-    final statusText = hasActiveSubscription
-        ? AppStrings.plansActiveSubscription
-        : AppStrings.plansFreeOrLocked;
+  }
+
+  Widget _buildPlanPager() {
+    return PageView.builder(
+      controller: _pageController,
+      itemCount: _plans.length,
+      onPageChanged: (index) {
+        setState(() {
+          _selectedPlanIndex = index;
+        });
+      },
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+          child: _buildMainPlanCard(_plans[index], index),
+        );
+      },
+    );
+  }
+
+  Widget _buildMainPlanCard(Map<String, dynamic> plan, int index) {
+    final terms = _safeMapList(plan['terms']);
+    final selectedTerm = _selectedTerm(plan);
+    final name = _stringValue(
+      plan['display_name'] ?? plan['name'],
+      fallback: AppStrings.plansTitle,
+    );
+    final badge = _stringValue(plan['marketing_badge']);
+    final features = _stringList(plan['features']);
+    final highlight = plan['highlight'] == true;
+    final mr = currentAppLanguage == AppLanguage.marathi;
 
     return Card(
-      elevation: 0,
+      elevation: 3,
+      shadowColor: Colors.black26,
       color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: Color(0xFFE8DDD7)),
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(
+          color: highlight ? _brandColor : const Color(0xFFE8DDD7),
+          width: highlight ? 1.6 : 1,
+        ),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Stack(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.workspace_premium, color: _gold),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    AppStrings.plansCurrentPlan,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: _brandDark,
+                Row(
+                  children: [
+                    Icon(
+                      Icons.workspace_premium_rounded,
+                      color: highlight ? _brandColor : Colors.blueGrey,
+                      size: 28,
+                    ),
+                    const Spacer(),
+                    if (badge.isNotEmpty) _buildBadge(badge),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  name,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
+                    color: _brandDark,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _priceOnly(plan, selectedTerm),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: _brandColor,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF1F2),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      _durationChip(plan, selectedTerm, mr),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: _brandDark,
+                      ),
                     ),
                   ),
                 ),
-                TextButton.icon(
-                  onPressed: _refreshing
-                      ? null
-                      : () => _loadPlans(silent: true),
-                  icon: _refreshing
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: features.isEmpty
+                      ? Center(
+                          child: Text(
+                            _stringValue(plan['description']),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
                         )
-                      : const Icon(Icons.refresh, size: 18),
-                  label: Text(AppStrings.plansRefresh),
+                      : ListView(
+                          children: [
+                            for (final feature in features.take(6))
+                              _buildFeatureRow(feature),
+                          ],
+                        ),
                 ),
+                if (_plans.length > 1)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (var i = 0; i < _plans.length; i++)
+                        Container(
+                          width: i == index ? 8 : 6,
+                          height: i == index ? 8 : 6,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: i == index
+                                ? _brandColor
+                                : Colors.grey.shade300,
+                          ),
+                        ),
+                    ],
+                  ),
+                if (terms.length == 1) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    _termLabel(terms.first),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              planName,
-              style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              statusText,
-              style: const TextStyle(
-                color: Color(0xFF6B4B4B),
-                fontWeight: FontWeight.w700,
+          ),
+          if (_plans.length > 1) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                onPressed: index <= 0
+                    ? null
+                    : () => _selectPlanIndex(index - 1),
+                icon: Icon(
+                  Icons.chevron_left_rounded,
+                  color: index <= 0 ? Colors.grey.shade300 : _brandColor,
+                  size: 32,
+                ),
               ),
             ),
-            const SizedBox(height: 14),
-            _buildQuotaLine(usage, state),
-            const SizedBox(height: 10),
-            Text(
-              currentAppLanguage == AppLanguage.marathi
-                  ? 'पेमेंट app मध्येच पूर्ण होते. पूर्ण झाल्यावर ही स्क्रीन नव्याने दिसेल.'
-                  : 'Payment completes inside the app. This screen refreshes when it finishes.',
-              style: const TextStyle(color: Color(0xFF7C6A64), fontSize: 13),
+            Align(
+              alignment: Alignment.centerRight,
+              child: IconButton(
+                onPressed: index >= _plans.length - 1
+                    ? null
+                    : () => _selectPlanIndex(index + 1),
+                icon: Icon(
+                  Icons.chevron_right_rounded,
+                  color: index >= _plans.length - 1
+                      ? Colors.grey.shade300
+                      : _brandColor,
+                  size: 32,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScrubber(bool mr) {
+    return SizedBox(
+      height: 92,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+        itemCount: _plans.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final plan = _plans[index];
+          final selected = index == _selectedPlanIndex;
+          final name = _stringValue(
+            plan['display_name'] ?? plan['name'],
+            fallback: 'Plan',
+          );
+          final shortName = name.split('(').first.trim();
+          final selectedTerm = _selectedTerm(plan);
+          final price = _priceOnly(plan, selectedTerm);
+
+          return InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => _selectPlanIndex(index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 92,
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              decoration: BoxDecoration(
+                color: selected ? const Color(0xFFFFF1F2) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: selected ? _brandColor : const Color(0xFFE8DDD7),
+                  width: selected ? 1.6 : 1,
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.workspace_premium_outlined,
+                    size: 18,
+                    color: selected ? _brandColor : Colors.blueGrey,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    shortName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: selected ? _brandColor : _brandDark,
+                    ),
+                  ),
+                  Text(
+                    price,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildBottomCta(bool mr) {
+    final plan = _selectedPlan;
+    final planId = plan == null ? null : _asInt(plan['id']);
+    final isCheckoutLoading = planId != null && _checkoutPlanId == planId;
+
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: plan == null || planId == null || isCheckoutLoading
+                    ? null
+                    : () => _startCheckout(plan),
+                style: FilledButton.styleFrom(
+                  backgroundColor: _brandColor,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: isCheckoutLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        mr ? 'पुढे — पेमेंट' : 'Next — Payment',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.lock_outline, size: 13, color: Colors.grey.shade600),
+                const SizedBox(width: 5),
+                Text(
+                  mr
+                      ? 'सुरक्षित पेमेंट · PayU'
+                      : 'Secure payment · PayU',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ],
             ),
           ],
         ),
@@ -261,51 +658,9 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildQuotaLine(
-    Map<String, dynamic>? usage,
-    Map<String, dynamic>? state,
-  ) {
-    final used = usage?['used'] ?? state?['used'] ?? 0;
-    final limit = usage?['limit'] ?? state?['limit'] ?? '-';
-    final remaining = usage?['remaining'] ?? state?['remaining'] ?? '-';
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: _surface,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE8DDD7)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.phone_in_talk, color: _brandColor, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              '${AppStrings.plansContactQuota}: $used / $limit, ${AppStrings.plansRemaining} $remaining',
-              style: const TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        color: _brandDark,
-        fontSize: 18,
-        fontWeight: FontWeight.w900,
-      ),
-    );
-  }
-
   Widget _buildErrorBanner(String message) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
+      margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: const Color(0xFFFFF3CD),
@@ -323,120 +678,12 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   }
 
   Widget _buildEmptyCard() {
-    return Card(
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: Color(0xFFE8DDD7)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Text(
-          AppStrings.plansEmpty,
-          style: const TextStyle(fontWeight: FontWeight.w700),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPlanCard(Map<String, dynamic> plan) {
-    final planId = _asInt(plan['id']);
-    final terms = _safeMapList(plan['terms']);
-    final selectedTerm = _selectedTerm(plan);
-    final name = _stringValue(
-      plan['display_name'] ?? plan['name'],
-      fallback: AppStrings.plansTitle,
-    );
-    final description = _stringValue(plan['description']);
-    final badge = _stringValue(plan['marketing_badge']);
-    final features = _stringList(plan['features']);
-    final isCheckoutLoading = planId != null && _checkoutPlanId == planId;
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 14),
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          color: plan['highlight'] == true ? _gold : const Color(0xFFE8DDD7),
-          width: plan['highlight'] == true ? 1.4 : 1,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: _brandDark,
-                    ),
-                  ),
-                ),
-                if (badge.isNotEmpty) _buildBadge(badge),
-              ],
-            ),
-            if (description.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                description,
-                style: const TextStyle(color: Color(0xFF6B4B4B)),
-              ),
-            ],
-            const SizedBox(height: 14),
-            Text(
-              _priceLine(plan, selectedTerm),
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
-            ),
-            const SizedBox(height: 10),
-            if (terms.length > 1) _buildTermPicker(plan, terms),
-            if (terms.length == 1)
-              Text(
-                _termLabel(terms.first),
-                style: const TextStyle(
-                  color: Color(0xFF6B4B4B),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            if (features.isNotEmpty) ...[
-              const SizedBox(height: 14),
-              ...features.map(_buildFeatureRow),
-            ],
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: planId == null || isCheckoutLoading
-                    ? null
-                    : () => _startCheckout(plan),
-                icon: isCheckoutLoading
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(Icons.payment),
-                label: Text(
-                  isCheckoutLoading
-                      ? AppStrings.plansOpeningCheckout
-                      : AppStrings.plansChoose,
-                ),
-              ),
-            ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Text(
+        AppStrings.plansEmpty,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -457,35 +704,6 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
           fontWeight: FontWeight.w900,
         ),
       ),
-    );
-  }
-
-  Widget _buildTermPicker(
-    Map<String, dynamic> plan,
-    List<Map<String, dynamic>> terms,
-  ) {
-    final planId = _asInt(plan['id']);
-    if (planId == null) return const SizedBox.shrink();
-
-    return DropdownButtonFormField<int>(
-      initialValue: _selectedTermIds[planId],
-      decoration: const InputDecoration(
-        prefixIcon: Icon(Icons.calendar_month),
-        contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      ),
-      items: terms
-          .map(
-            (term) => DropdownMenuItem<int>(
-              value: _asInt(term['id']),
-              child: Text(_termLabel(term), overflow: TextOverflow.ellipsis),
-            ),
-          )
-          .toList(),
-      onChanged: (value) {
-        setState(() {
-          _selectedTermIds[planId] = value;
-        });
-      },
     );
   }
 
@@ -521,16 +739,40 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     return null;
   }
 
-  String _priceLine(
+  String _priceOnly(
     Map<String, dynamic> plan,
     Map<String, dynamic>? selectedTerm,
   ) {
     final amount = selectedTerm?['final_price'] ?? plan['final_price'];
-    final duration = selectedTerm?['duration_label'] ?? plan['duration_label'];
-    final price = _currency(amount);
-    final label = _stringValue(duration);
+    return _currency(amount);
+  }
 
-    return label.isEmpty ? price : '$price / $label';
+  String _durationChip(
+    Map<String, dynamic> plan,
+    Map<String, dynamic>? selectedTerm,
+    bool mr,
+  ) {
+    final duration = _stringValue(
+      selectedTerm?['duration_label'] ?? plan['duration_label'],
+    );
+    if (duration.isNotEmpty) {
+      return mr ? '$duration वैध' : 'Valid $duration';
+    }
+    final days = selectedTerm?['duration_days'] ?? plan['duration_days'];
+    if (days != null) {
+      return mr ? '$days दिवस वैध' : 'Valid $days days';
+    }
+    return mr ? 'कालावधी' : 'Duration';
+  }
+
+  String _termChipLabel(Map<String, dynamic> term, bool mr) {
+    final label = _stringValue(term['label']);
+    if (label.isNotEmpty) return label;
+    final duration = _stringValue(term['duration_label']);
+    if (duration.isNotEmpty) return duration;
+    final days = term['duration_days'];
+    if (days != null) return mr ? '$days दिवस' : '$days days';
+    return _stringValue(term['billing_key'], fallback: mr ? 'टर्म' : 'Term');
   }
 
   String _termLabel(Map<String, dynamic> term) {
