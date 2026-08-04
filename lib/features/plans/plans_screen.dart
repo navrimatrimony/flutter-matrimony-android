@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api_client.dart';
 import '../../core/api_error_text.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/app_language.dart';
+import 'plan_checkout_webview_screen.dart';
 
 class PlansScreen extends StatefulWidget {
   const PlansScreen({super.key});
@@ -46,9 +45,9 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state != AppLifecycleState.resumed) return;
 
-    // Checkout completes in an external browser, so the only signal that a
-    // payment finished is the member returning to the app. Re-read the plan
-    // instead of leaving the pre-payment card on screen until a manual refresh.
+    // Soft refresh when returning to the screen (e.g. after OS interrupts).
+    // Primary payment completion is handled by the in-app checkout WebView.
+    if (_checkoutPlanId != null) return;
     _loadPlans(silent: true);
   }
 
@@ -131,15 +130,34 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
         return;
       }
 
-      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      final planName = _stringValue(
+        plan['display_name'] ?? plan['name'],
+        fallback: AppStrings.plansTitle,
+      );
+
+      final completed = await Navigator.of(context).push<bool>(
+        MaterialPageRoute(
+          fullscreenDialog: true,
+          builder: (_) => PlanCheckoutWebViewScreen(
+            checkoutUrl: checkoutUrl,
+            planName: planName,
+          ),
+        ),
+      );
+
+      if (!mounted) return;
+      await _loadPlans(silent: true);
       if (!mounted) return;
 
-      if (opened) {
-        _showSnackBar(AppStrings.plansBrowserNote);
-      } else {
-        await Clipboard.setData(ClipboardData(text: checkoutUrl));
-        if (!mounted) return;
-        _showSnackBar(AppStrings.plansOpenFailedCopied);
+      if (completed == true) {
+        final hasActive = _safeMap(_current?['active_subscription']) != null;
+        _showSnackBar(
+          hasActive
+              ? AppStrings.plansActiveSubscription
+              : (currentAppLanguage == AppLanguage.marathi
+                    ? 'पेमेंट पूर्ण झाले. स्थिती रिफ्रेश झाली.'
+                    : 'Payment finished. Plan status refreshed.'),
+        );
       }
     } catch (error) {
       if (!mounted) return;
@@ -255,7 +273,9 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
             _buildQuotaLine(usage, state),
             const SizedBox(height: 10),
             Text(
-              AppStrings.plansManualRefreshHint,
+              currentAppLanguage == AppLanguage.marathi
+                  ? 'पेमेंट app मध्येच पूर्ण होते. पूर्ण झाल्यावर ही स्क्रीन नव्याने दिसेल.'
+                  : 'Payment completes inside the app. This screen refreshes when it finishes.',
               style: const TextStyle(color: Color(0xFF7C6A64), fontSize: 13),
             ),
           ],
@@ -430,7 +450,7 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
                           color: Colors.white,
                         ),
                       )
-                    : const Icon(Icons.open_in_new),
+                    : const Icon(Icons.payment),
                 label: Text(
                   isCheckoutLoading
                       ? AppStrings.plansOpeningCheckout
