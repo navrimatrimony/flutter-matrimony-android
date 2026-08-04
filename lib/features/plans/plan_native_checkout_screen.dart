@@ -10,14 +10,13 @@ import '../../core/app_language.dart';
 import '../../core/app_strings.dart';
 import 'plan_payment_result_screen.dart';
 
-/// Confirm + launch PayU CheckoutPro, then verify on Laravel.
+/// Confirm order + launch CheckoutPro (mockup pay-flow-02 / 03).
 class PlanNativeCheckoutScreen extends StatefulWidget {
   const PlanNativeCheckoutScreen({
     super.key,
     required this.checkout,
   });
 
-  /// Body of `POST /plans/{id}/checkout/native` → `checkout` object.
   final Map<String, dynamic> checkout;
 
   @override
@@ -28,14 +27,23 @@ class PlanNativeCheckoutScreen extends StatefulWidget {
 class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
     implements PayUCheckoutProProtocol {
   static const Color _brand = Color(0xFFDC2626);
+  static const Color _surface = Color(0xFFFFF8F5);
 
   late final PayUCheckoutProFlutter _checkoutPro;
   bool _launching = false;
   bool _handlingCallback = false;
+  bool _openingOverlay = false;
   String? _statusLine;
 
   Map<String, dynamic> get _payu {
     final raw = widget.checkout['payu'];
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return <String, dynamic>{};
+  }
+
+  Map<String, dynamic> get _amount {
+    final raw = widget.checkout['amount'];
     if (raw is Map<String, dynamic>) return raw;
     if (raw is Map) return Map<String, dynamic>.from(raw);
     return <String, dynamic>{};
@@ -48,18 +56,7 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
         fallback: AppStrings.plansTitle,
       );
 
-  String get _amountLabel {
-    final amount = widget.checkout['amount'];
-    if (amount is Map) {
-      final finalAmount = amount['final_amount'] ?? amount['amount_string'];
-      if (finalAmount != null) {
-        return '₹$finalAmount';
-      }
-    }
-    final payuAmount = _payu['amount'];
-    if (payuAmount != null) return '₹$payuAmount';
-    return '—';
-  }
+  String get _couponCode => _string(widget.checkout['coupon_code']);
 
   @override
   void initState() {
@@ -67,10 +64,20 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
     _checkoutPro = PayUCheckoutProFlutter(this);
   }
 
+  String _money(dynamic v) {
+    if (v == null) return '—';
+    if (v is num) {
+      final s = v.toStringAsFixed(2);
+      return s.endsWith('.00') ? v.toStringAsFixed(0) : s;
+    }
+    return v.toString();
+  }
+
   Future<void> _startPayment() async {
     if (_launching || _handlingCallback) return;
     setState(() {
       _launching = true;
+      _openingOverlay = true;
       _statusLine = currentAppLanguage == AppLanguage.marathi
           ? 'पेमेंट स्क्रीन उघडत आहे…'
           : 'Opening payment…';
@@ -113,7 +120,7 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
         PayUCheckoutProConfigKeys.merchantResponseTimeout: 10000,
         PayUCheckoutProConfigKeys.cartDetails: <Map<String, String>>[
           {'Plan': _planName},
-          {'Amount': _amountLabel},
+          {'Amount': '₹${_money(_amount['final_amount'] ?? payu['amount'])}'},
         ],
       };
 
@@ -124,6 +131,7 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
     } catch (error) {
       if (!mounted) return;
       setState(() {
+        _openingOverlay = false;
         _statusLine = failureText(
           currentAppLanguage == AppLanguage.marathi
               ? 'पेमेंट उघडता आले नाही.'
@@ -178,6 +186,7 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
         debugPrint('PayU generateHash failed: $error');
         if (!mounted) return;
         setState(() {
+          _openingOverlay = false;
           _statusLine = currentAppLanguage == AppLanguage.marathi
               ? 'हॅश तयार करता आला नाही. पुन्हा प्रयत्न करा.'
               : 'Could not generate payment hash. Try again.';
@@ -215,6 +224,7 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
 
     if (mounted) {
       setState(() {
+        _openingOverlay = false;
         _statusLine = currentAppLanguage == AppLanguage.marathi
             ? 'परिणाम तपासत आहे…'
             : 'Confirming payment…';
@@ -256,7 +266,9 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
         final activated = payment is Map && payment['activated'] == true;
         final ok = verify['success'] == true && activated;
         result = PlanPaymentResult(
-          success: ok,
+          kind: ok
+              ? PlanPaymentResultKind.success
+              : PlanPaymentResultKind.failed,
           title: ok
               ? (currentAppLanguage == AppLanguage.marathi
                     ? 'पेमेंट यशस्वी'
@@ -267,12 +279,16 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
           message: _string(
             verify['message'],
             fallback: ok
-                ? AppStrings.plansActiveSubscription
+                ? (currentAppLanguage == AppLanguage.marathi
+                      ? 'तुमची वर्गणी सक्रिय झाली आहे'
+                      : 'Your subscription is now active')
                 : (currentAppLanguage == AppLanguage.marathi
                       ? 'सपोर्टशी संपर्क करा. Txn: $txnid'
                       : 'Contact support. Txn: $txnid'),
           ),
           txnid: txnid,
+          planName: _planName,
+          amountLabel: '₹${_money(_amount['final_amount'] ?? _payu['amount'])}',
         );
       } else if (outcome == 'cancelled') {
         await ApiClient.verifyPayuPayment(<String, dynamic>{
@@ -281,14 +297,15 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
           'sdk_response': map,
         });
         result = PlanPaymentResult(
-          success: false,
+          kind: PlanPaymentResultKind.cancelled,
           title: currentAppLanguage == AppLanguage.marathi
               ? 'पेमेंट रद्द'
               : 'Payment cancelled',
           message: currentAppLanguage == AppLanguage.marathi
-              ? 'तुम्ही पेमेंट रद्द केले.'
-              : 'You cancelled the payment.',
+              ? 'तुम्ही पेमेंट रद्द केले. प्लॅन बदललेला नाही.'
+              : 'You cancelled the payment. Plan was not changed.',
           txnid: txnid,
+          planName: _planName,
         );
       } else {
         await ApiClient.verifyPayuPayment(<String, dynamic>{
@@ -298,22 +315,23 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
           'sdk_response': map,
         });
         result = PlanPaymentResult(
-          success: false,
+          kind: PlanPaymentResultKind.failed,
           title: currentAppLanguage == AppLanguage.marathi
               ? 'पेमेंट अयशस्वी'
               : 'Payment failed',
           message: _string(
             map['errorMsg'] ?? map['error_Message'] ?? map['field9'],
             fallback: currentAppLanguage == AppLanguage.marathi
-                ? 'पेमेंट पूर्ण झाले नाही. पुन्हा प्रयत्न करा.'
-                : 'Payment was not completed. Please try again.',
+                ? 'रक्कम कापली गेली नसेल. पुन्हा प्रयत्न करा.'
+                : 'If money was not deducted, please try again.',
           ),
           txnid: txnid,
+          planName: _planName,
         );
       }
     } catch (error) {
       result = PlanPaymentResult(
-        success: false,
+        kind: PlanPaymentResultKind.failed,
         title: currentAppLanguage == AppLanguage.marathi
             ? 'पुष्टी अयशस्वी'
             : 'Confirmation failed',
@@ -324,6 +342,7 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
           error,
         ),
         txnid: txnid,
+        planName: _planName,
       );
     }
 
@@ -337,92 +356,255 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
 
   @override
   Widget build(BuildContext context) {
+    final mr = currentAppLanguage == AppLanguage.marathi;
+    final base = _amount['base_amount'];
+    final finalAmt = _amount['final_amount'] ?? _payu['amount'];
+    final discount = (_amount['coupon_discount'] as num?)?.toDouble() ?? 0;
+    final days = widget.checkout['duration_days_total'] ??
+        widget.checkout['duration_days'];
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF7),
+      backgroundColor: _surface,
       appBar: AppBar(
-        title: Text(
-          currentAppLanguage == AppLanguage.marathi
-              ? 'पेमेंट पुष्टी'
-              : 'Confirm payment',
-        ),
+        backgroundColor: _brand,
+        foregroundColor: Colors.white,
+        title: Text(mr ? 'पेमेंट पुष्टी' : 'Confirm payment'),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                _planName,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+              children: [
+                Container(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.receipt_long, color: _brand),
+                          const SizedBox(width: 8),
+                          Text(
+                            mr ? 'ऑर्डर सारांश' : 'Order summary',
+                            style: const TextStyle(
+                              color: _brand,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      _row(
+                        Icons.workspace_premium_outlined,
+                        mr ? 'प्लॅन' : 'Plan',
+                        _planName,
+                      ),
+                      _row(
+                        Icons.calendar_month_outlined,
+                        mr ? 'कालावधी' : 'Duration',
+                        days == null
+                            ? '—'
+                            : (mr ? '$days दिवस' : '$days days'),
+                      ),
+                      _row(
+                        Icons.currency_rupee,
+                        mr ? 'मूळ रक्कम' : 'Base amount',
+                        '₹${_money(base)}',
+                      ),
+                      if (_couponCode.isNotEmpty)
+                        _row(
+                          Icons.local_offer_outlined,
+                          mr ? 'कूपन' : 'Coupon',
+                          _couponCode,
+                        ),
+                      if (discount > 0.004)
+                        _row(
+                          Icons.savings_outlined,
+                          mr ? 'सवलत' : 'Discount',
+                          '-₹${_money(discount)}',
+                          valueColor: const Color(0xFF15803D),
+                        ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        child: Divider(height: 1),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              mr
+                                  ? 'एकूण रक्कम (अंतिम)'
+                                  : 'Total (final)',
+                              style: TextStyle(
+                                color: Colors.grey.shade800,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '₹${_money(finalAmt)}',
+                            style: const TextStyle(
+                              color: Color(0xFF15803D),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                currentAppLanguage == AppLanguage.marathi
-                    ? 'रक्कम: $_amountLabel'
-                    : 'Amount: $_amountLabel',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                currentAppLanguage == AppLanguage.marathi
-                    ? 'पेमेंट अॅपमध्येच पूर्ण होईल. ब्राउझर उघडणार नाही.'
-                    : 'Payment completes inside the app. No browser.',
-                style: TextStyle(color: Colors.grey.shade700, height: 1.35),
-              ),
-              if (_txnid.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Text(
-                  'Txn: $_txnid',
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                if (_txnid.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Txn: $_txnid',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  ),
+                ],
+                if (_statusLine != null && !_openingOverlay) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    _statusLine!,
+                    style: TextStyle(color: Colors.grey.shade800),
+                  ),
+                ],
+                const SizedBox(height: 28),
+                FilledButton(
+                  onPressed:
+                      _launching || _handlingCallback ? null : _startPayment,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _brand,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: Text(
+                    mr ? 'पेमेंट सुरू करा' : 'Start payment',
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ),
-              ],
-              const Spacer(),
-              if (_statusLine != null) ...[
-                Text(
-                  _statusLine!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey.shade800),
+                TextButton(
+                  onPressed: _launching || _handlingCallback
+                      ? null
+                      : () => Navigator.of(context).pop(false),
+                  child: Text(
+                    mr ? 'रद्द' : 'Cancel',
+                    style: const TextStyle(color: _brand),
+                  ),
                 ),
                 const SizedBox(height: 12),
-              ],
-              FilledButton(
-                onPressed: _launching || _handlingCallback ? null : _startPayment,
-                style: FilledButton.styleFrom(
-                  backgroundColor: _brand,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                child: _launching
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        currentAppLanguage == AppLanguage.marathi
-                            ? 'पेमेंट सुरू करा'
-                            : 'Pay now',
-                        style: const TextStyle(fontSize: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.verified_user_outlined,
+                      size: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      mr
+                          ? 'PayU द्वारे सुरक्षित पेमेंट'
+                          : 'Secure payment by PayU',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
                       ),
-              ),
-              const SizedBox(height: 8),
-              TextButton(
-                onPressed: _launching || _handlingCallback
-                    ? null
-                    : () => Navigator.of(context).pop(false),
-                child: Text(
-                  currentAppLanguage == AppLanguage.marathi ? 'मागे' : 'Back',
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          if (_openingOverlay)
+            ColoredBox(
+              color: Colors.white.withValues(alpha: 0.92),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(color: _brand),
+                      const SizedBox(height: 18),
+                      Text(
+                        mr
+                            ? 'पेमेंट स्क्रीन उघडत आहे…'
+                            : 'Opening payment…',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        mr
+                            ? 'कृपया थांबा. ब्राउझर उघडणार नाही.'
+                            : 'Please wait. No browser will open.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: Colors.grey.shade700),
+                      ),
+                      if (_txnid.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Text(
+                          'Txn: $_txnid',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(
+    IconData icon,
+    String label,
+    String value, {
+    Color? valueColor,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: _brand),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(label, style: TextStyle(color: Colors.grey.shade700)),
           ),
-        ),
+          Flexible(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? Colors.grey.shade900,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

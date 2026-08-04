@@ -5,7 +5,7 @@ import '../../core/api_error_text.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/app_language.dart';
-import 'plan_native_checkout_screen.dart';
+import 'plan_coupon_screen.dart';
 
 class PlansScreen extends StatefulWidget {
   const PlansScreen({super.key});
@@ -112,37 +112,13 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     });
 
     try {
-      final response = await ApiClient.startPlanCheckoutNative(
-        planId,
-        planTermId: _selectedTermIds[planId],
-      );
-      if (!mounted) return;
-
-      if (!_responseSuccess(response)) {
-        _showSnackBar(_responseMessage(response, AppStrings.plansLoadFailed));
-        return;
-      }
-
-      final checkoutRaw = response['checkout'];
-      final checkout = checkoutRaw is Map<String, dynamic>
-          ? checkoutRaw
-          : (checkoutRaw is Map
-                ? Map<String, dynamic>.from(checkoutRaw)
-                : null);
-      final payu = checkout?['payu'];
-      if (checkout == null || payu is! Map) {
-        _showSnackBar(
-          currentAppLanguage == AppLanguage.marathi
-              ? 'नेटिव्ह चेकआउट तयार झाले नाही.'
-              : 'Native checkout could not be prepared.',
-        );
-        return;
-      }
-
       final completed = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => PlanNativeCheckoutScreen(checkout: checkout),
+          builder: (_) => PlanCouponScreen(
+            plan: plan,
+            planTermId: _selectedTermIds[planId],
+          ),
         ),
       );
 

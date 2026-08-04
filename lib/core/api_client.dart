@@ -3014,9 +3014,12 @@ class ApiClient {
   static Future<Map<String, dynamic>> startPlanCheckoutNative(
     int planId, {
     int? planTermId,
+    String? couponCode,
   }) {
     return _postJson(ApiRoutes.planCheckoutNative(planId), <String, dynamic>{
       'plan_term_id': planTermId,
+      if (couponCode != null && couponCode.trim().isNotEmpty)
+        'coupon_code': couponCode.trim(),
     }, authenticated: true);
   }
 
