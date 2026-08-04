@@ -194,6 +194,14 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
   Future<void> _startCheckout(Map<String, dynamic> plan) async {
     final planId = _asInt(plan['id']);
     if (planId == null) return;
+    if (_isFreeCatalogPlan(plan)) {
+      _showSnackBar(
+        currentAppLanguage == AppLanguage.marathi
+            ? 'Free प्लॅन खरेदी करण्याची गरज नाही.'
+            : 'The Free plan does not require payment.',
+      );
+      return;
+    }
 
     final term = _selectedTerm;
     final termId = _asInt(term?['id']);
@@ -749,6 +757,17 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     final plan = _selectedPlan;
     final planId = plan == null ? null : _asInt(plan['id']);
     final isCheckoutLoading = planId != null && _checkoutPlanId == planId;
+    final isFree = plan != null && _isFreeCatalogPlan(plan);
+    final isCurrent = plan?['is_current'] == true;
+
+    String ctaLabel;
+    if (isFree && isCurrent) {
+      ctaLabel = mr ? 'तुमचा सध्याचा प्लॅन' : 'Your current plan';
+    } else if (isFree) {
+      ctaLabel = mr ? 'Free प्लॅन' : 'Free plan';
+    } else {
+      ctaLabel = mr ? 'पुढे — पेमेंट' : 'Next — Payment';
+    }
 
     return SafeArea(
       top: false,
@@ -760,7 +779,10 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: plan == null || planId == null || isCheckoutLoading
+                onPressed: plan == null ||
+                        planId == null ||
+                        isCheckoutLoading ||
+                        isFree
                     ? null
                     : () => _startCheckout(plan),
                 style: FilledButton.styleFrom(
@@ -783,14 +805,16 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            mr ? 'पुढे — पेमेंट' : 'Next — Payment',
+                            ctaLabel,
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.arrow_forward, size: 18),
+                          if (!isFree) ...[
+                            const SizedBox(width: 6),
+                            const Icon(Icons.arrow_forward, size: 18),
+                          ],
                         ],
                       ),
               ),
@@ -979,6 +1003,11 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
       fallback: 'Plan',
     );
     return name.split('(').first.trim();
+  }
+
+  static bool _isFreeCatalogPlan(Map<String, dynamic> plan) {
+    final slug = _stringValue(plan['slug']).toLowerCase();
+    return slug == 'free' || slug.startsWith('free_');
   }
 
   String _billingLabel(String key, bool mr) {
