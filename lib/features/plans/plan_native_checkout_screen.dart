@@ -148,13 +148,17 @@ class _PlanNativeCheckoutScreenState extends State<PlanNativeCheckoutScreen>
         final hashString = _string(response[PayUHashConstantsKeys.hashString]);
         final hashType = response[PayUHashConstantsKeys.hashType]?.toString();
         final postSalt = response[PayUHashConstantsKeys.postSalt]?.toString();
+        final txnid = _txnid;
+        if (txnid.isEmpty) {
+          throw StateError('Missing txnid for PayU hash request');
+        }
 
         final api = await ApiClient.generatePayuHash(
           hashName: hashName,
           hashString: hashString,
           hashType: hashType,
           postSalt: postSalt,
-          txnid: _txnid,
+          txnid: txnid,
         );
 
         Map<dynamic, dynamic> hashResponse = <dynamic, dynamic>{};
