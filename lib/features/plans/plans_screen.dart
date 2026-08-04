@@ -5,7 +5,7 @@ import '../../core/api_error_text.dart';
 import '../../core/app_loading.dart';
 import '../../core/app_strings.dart';
 import '../../core/app_language.dart';
-import 'plan_checkout_webview_screen.dart';
+import 'plan_native_checkout_screen.dart';
 
 class PlansScreen extends StatefulWidget {
   const PlansScreen({super.key});
@@ -46,7 +46,7 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed) return;
 
     // Soft refresh when returning to the screen (e.g. after OS interrupts).
-    // Primary payment completion is handled by the in-app checkout WebView.
+    // Skip while a native checkout is in progress.
     if (_checkoutPlanId != null) return;
     _loadPlans(silent: true);
   }
@@ -112,7 +112,7 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     });
 
     try {
-      final response = await ApiClient.startPlanCheckout(
+      final response = await ApiClient.startPlanCheckoutNative(
         planId,
         planTermId: _selectedTermIds[planId],
       );
@@ -123,25 +123,26 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
         return;
       }
 
-      final checkoutUrl = _stringValue(response['checkout_url']);
-      final uri = Uri.tryParse(checkoutUrl);
-      if (checkoutUrl.isEmpty || uri == null) {
-        _showSnackBar(AppStrings.plansCheckoutUrlMissing);
+      final checkoutRaw = response['checkout'];
+      final checkout = checkoutRaw is Map<String, dynamic>
+          ? checkoutRaw
+          : (checkoutRaw is Map
+                ? Map<String, dynamic>.from(checkoutRaw)
+                : null);
+      final payu = checkout?['payu'];
+      if (checkout == null || payu is! Map) {
+        _showSnackBar(
+          currentAppLanguage == AppLanguage.marathi
+              ? 'नेटिव्ह चेकआउट तयार झाले नाही.'
+              : 'Native checkout could not be prepared.',
+        );
         return;
       }
-
-      final planName = _stringValue(
-        plan['display_name'] ?? plan['name'],
-        fallback: AppStrings.plansTitle,
-      );
 
       final completed = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => PlanCheckoutWebViewScreen(
-            checkoutUrl: checkoutUrl,
-            planName: planName,
-          ),
+          builder: (_) => PlanNativeCheckoutScreen(checkout: checkout),
         ),
       );
 

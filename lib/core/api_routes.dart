@@ -136,6 +136,10 @@ class ApiRoutes {
   static const String plans = '/plans';
 
   static String planCheckout(int planId) => '/plans/$planId/checkout';
+  static String planCheckoutNative(int planId) =>
+      '/plans/$planId/checkout/native';
+  static const String payuHash = '/payments/payu/hash';
+  static const String payuVerify = '/payments/payu/verify';
 
   static const String biodataExportOptions = '/biodata/export-options';
   static const String biodataExport = '/biodata/export';

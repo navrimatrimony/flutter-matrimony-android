@@ -3011,6 +3011,37 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  static Future<Map<String, dynamic>> startPlanCheckoutNative(
+    int planId, {
+    int? planTermId,
+  }) {
+    return _postJson(ApiRoutes.planCheckoutNative(planId), <String, dynamic>{
+      'plan_term_id': planTermId,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> generatePayuHash({
+    required String hashName,
+    required String hashString,
+    String? hashType,
+    String? postSalt,
+    String? txnid,
+  }) {
+    return _postJson(ApiRoutes.payuHash, <String, dynamic>{
+      'hashName': hashName,
+      'hashString': hashString,
+      if (hashType != null && hashType.isNotEmpty) 'hashType': hashType,
+      if (postSalt != null && postSalt.isNotEmpty) 'postSalt': postSalt,
+      if (txnid != null && txnid.isNotEmpty) 'txnid': txnid,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> verifyPayuPayment(
+    Map<String, dynamic> payload,
+  ) {
+    return _postJson(ApiRoutes.payuVerify, payload, authenticated: true);
+  }
+
   static Future<Map<String, dynamic>> getBiodataExportOptions({
     String? locale,
   }) {
