@@ -1323,6 +1323,20 @@
     },
     "suchakRequestYourMessage": "Your message",
     "suchakRequestTheirMessage": "Message",
+    "suchakMeetingsTitle": "Meetings",
+    "suchakMeetingsOpenFromRequests": "View meetings",
+    "loadingSuchakMeetings": "Loading meetings",
+    "suchakMeetingsDidNotLoad": "Meetings did not load.",
+    "noSuchakMeetings": "No meetings have been recorded for you yet.",
+    "suchakMeetingsUntitledSuchak": "Suchak",
+    "suchakMeetingScheduledFor": "Scheduled for {date}",
+    "@suchakMeetingScheduledFor": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
     "notificationSettingsTitle": "Notification settings",
     "notificationSettingsIntro": "Choose which notifications reach your phone.",
     "notificationSettingsManage": "Push notifications",

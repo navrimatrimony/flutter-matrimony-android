@@ -31,6 +31,7 @@ import 'features/settings/change_password_screen.dart';
 import 'features/settings/delete_account_screen.dart';
 import 'features/settings/notification_settings_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/suchak/meetings_screen.dart';
 import 'features/suchak/suchak_requests_screen.dart';
 
 // RouteObserver for RouteAware lifecycle management
@@ -176,6 +177,8 @@ class _MyAppState extends State<MyApp> {
             _authenticatedScreen(const ContactInboxScreen()),
         '/suchak-requests': (context) =>
             _authenticatedScreen(const SuchakRequestsScreen()),
+        '/suchak-meetings': (context) =>
+            _authenticatedScreen(const SuchakMeetingsScreen()),
         '/plans': (context) => _authenticatedScreen(const PlansScreen()),
         '/biodata-export': (context) =>
             _authenticatedScreen(const BiodataExportScreen()),

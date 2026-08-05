@@ -86,6 +86,14 @@ class _SuchakRequestsScreenState extends State<SuchakRequestsScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(appText.suchakRequestsTitle),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pushNamed('/suchak-meetings');
+              },
+              child: Text(appText.suchakMeetingsOpenFromRequests),
+            ),
+          ],
           bottom: TabBar(
             tabs: [
               Tab(text: appText.tabReceived),

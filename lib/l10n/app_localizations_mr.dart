@@ -3810,6 +3810,29 @@ class AppLocalizationsMr extends AppLocalizations {
   String get suchakRequestTheirMessage => 'संदेश';
 
   @override
+  String get suchakMeetingsTitle => 'भेटि';
+
+  @override
+  String get suchakMeetingsOpenFromRequests => 'भेटि पहा';
+
+  @override
+  String get loadingSuchakMeetings => 'भेटि उघडत आहेत';
+
+  @override
+  String get suchakMeetingsDidNotLoad => 'भेटि उघडता आल्या नाहीत.';
+
+  @override
+  String get noSuchakMeetings => 'तुमच्यासाठी अजून कोणतीही भेट नोंदवलेली नाही.';
+
+  @override
+  String get suchakMeetingsUntitledSuchak => 'सूचक';
+
+  @override
+  String suchakMeetingScheduledFor(String date) {
+    return '$date रोजी ठरलेली';
+  }
+
+  @override
   String get notificationSettingsTitle => 'सूचना सेटिंग्ज';
 
   @override

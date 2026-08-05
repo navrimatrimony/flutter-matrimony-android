@@ -2989,6 +2989,11 @@ class ApiClient {
     return _getJson(ApiRoutes.suchakRequests, authenticated: true);
   }
 
+  /// Customer-side meetings list (U9a / U9b).
+  static Future<Map<String, dynamic>> getSuchakMeetings() {
+    return _getJson(ApiRoutes.suchakMeetings, authenticated: true);
+  }
+
   /// The candidate answering for themselves. The Suchak may answer the same
   /// request, so a 200 can still come back as `already_answered` — that is the
   /// race being settled server-side, not a failure.

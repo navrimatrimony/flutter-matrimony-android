@@ -1176,6 +1176,20 @@
     "suchakRequestSentOnDate": "{date} रोजी पाठवली",
     "suchakRequestYourMessage": "तुमचा संदेश",
     "suchakRequestTheirMessage": "संदेश",
+    "suchakMeetingsTitle": "भेटि",
+    "suchakMeetingsOpenFromRequests": "भेटि पहा",
+    "loadingSuchakMeetings": "भेटि उघडत आहेत",
+    "suchakMeetingsDidNotLoad": "भेटि उघडता आल्या नाहीत.",
+    "noSuchakMeetings": "तुमच्यासाठी अजून कोणतीही भेट नोंदवलेली नाही.",
+    "suchakMeetingsUntitledSuchak": "सूचक",
+    "suchakMeetingScheduledFor": "{date} रोजी ठरलेली",
+    "@suchakMeetingScheduledFor": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
     "notificationSettingsTitle": "सूचना सेटिंग्ज",
     "notificationSettingsIntro": "तुमच्या फोनवर कोणत्या सूचना याव्यात ते निवडा.",
     "notificationSettingsManage": "फोनवरील सूचना",

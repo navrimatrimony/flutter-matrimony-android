@@ -3828,6 +3828,29 @@ class AppLocalizationsEn extends AppLocalizations {
   String get suchakRequestTheirMessage => 'Message';
 
   @override
+  String get suchakMeetingsTitle => 'Meetings';
+
+  @override
+  String get suchakMeetingsOpenFromRequests => 'View meetings';
+
+  @override
+  String get loadingSuchakMeetings => 'Loading meetings';
+
+  @override
+  String get suchakMeetingsDidNotLoad => 'Meetings did not load.';
+
+  @override
+  String get noSuchakMeetings => 'No meetings have been recorded for you yet.';
+
+  @override
+  String get suchakMeetingsUntitledSuchak => 'Suchak';
+
+  @override
+  String suchakMeetingScheduledFor(String date) {
+    return 'Scheduled for $date';
+  }
+
+  @override
   String get notificationSettingsTitle => 'Notification settings';
 
   @override

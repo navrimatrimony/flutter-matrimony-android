@@ -7094,6 +7094,48 @@ abstract class AppLocalizations {
   /// **'Message'**
   String get suchakRequestTheirMessage;
 
+  /// No description provided for @suchakMeetingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetings'**
+  String get suchakMeetingsTitle;
+
+  /// No description provided for @suchakMeetingsOpenFromRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'View meetings'**
+  String get suchakMeetingsOpenFromRequests;
+
+  /// No description provided for @loadingSuchakMeetings.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading meetings'**
+  String get loadingSuchakMeetings;
+
+  /// No description provided for @suchakMeetingsDidNotLoad.
+  ///
+  /// In en, this message translates to:
+  /// **'Meetings did not load.'**
+  String get suchakMeetingsDidNotLoad;
+
+  /// No description provided for @noSuchakMeetings.
+  ///
+  /// In en, this message translates to:
+  /// **'No meetings have been recorded for you yet.'**
+  String get noSuchakMeetings;
+
+  /// No description provided for @suchakMeetingsUntitledSuchak.
+  ///
+  /// In en, this message translates to:
+  /// **'Suchak'**
+  String get suchakMeetingsUntitledSuchak;
+
+  /// No description provided for @suchakMeetingScheduledFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled for {date}'**
+  String suchakMeetingScheduledFor(String date);
+
   /// No description provided for @notificationSettingsTitle.
   ///
   /// In en, this message translates to:

@@ -122,6 +122,15 @@ class ApiRoutes {
   static String suchakRequestDecision(int requestId) =>
       '$suchakRequests/$requestId/decision';
 
+  /// Customer-side meetings (U9a). Visit ids for confirm/dispute come from here.
+  static const String suchakMeetings = '/suchak-meetings';
+
+  static String suchakMeetingConfirm(int visitId) =>
+      '$suchakMeetings/$visitId/confirm';
+
+  static String suchakMeetingDispute(int visitId) =>
+      '$suchakMeetings/$visitId/dispute';
+
   static String profilePhotoPrimary(int photoId) =>
       '$profilePhotos/$photoId/primary';
 
