@@ -73,6 +73,14 @@ class PushNotificationService {
       );
       await _ensureChannel();
 
+      // `_initialized` is only set at the very end, so anything that throws
+      // below — getInitialMessage() reaching Firebase, for one — leaves the
+      // guard at the top open while these subscriptions are already live. A
+      // second initialize() would then stack a second onMessage listener and
+      // the member would see every push twice. Re-subscribing is therefore
+      // always preceded by tearing down whatever is already attached.
+      await _cancelSubscriptions();
+
       _messageSubscription = FirebaseMessaging.onMessage.listen(
         _showForegroundNotification,
       );
@@ -150,13 +158,31 @@ class PushNotificationService {
 
   @visibleForTesting
   Future<void> dispose() async {
+    await _cancelSubscriptions();
+    _initialized = false;
+  }
+
+  Future<void> _cancelSubscriptions() async {
     await _messageSubscription?.cancel();
     await _openedSubscription?.cancel();
     await _tokenRefreshSubscription?.cancel();
     _messageSubscription = null;
     _openedSubscription = null;
     _tokenRefreshSubscription = null;
-    _initialized = false;
+  }
+
+  /// Same message must land on the same tray slot, so a re-delivery replaces the
+  /// notification instead of stacking a second copy beside it. A wall-clock id
+  /// could never collide and therefore could never collapse a duplicate.
+  /// Android notification ids are 32-bit — keep it positive and in range.
+  int _notificationId(RemoteMessage message) {
+    final key =
+        _stringValue(message.data['id']).trim().isNotEmpty
+        ? _stringValue(message.data['id']).trim()
+        : (message.messageId ?? message.sentTime?.toIso8601String());
+
+    return (key?.hashCode ?? DateTime.now().millisecondsSinceEpoch).abs() %
+        100000;
   }
 
   void _onTokenRefresh(String token) {
@@ -186,7 +212,7 @@ class PushNotificationService {
       await _ensureChannel();
 
       await _localNotifications.show(
-        id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
+        id: _notificationId(message),
         title: title.isEmpty ? appText.pushDefaultTitle : title,
         body: body,
         notificationDetails: NotificationDetails(
