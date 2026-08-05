@@ -4,9 +4,9 @@ import '../../core/api_client.dart';
 import '../../core/app_language.dart';
 import '../../core/app_loading.dart';
 
-/// Read-only list of meetings where this member is the customer side (U9b).
+/// Meetings where this member is the customer side (U9b).
 ///
-/// Confirm / dispute actions land in U10 / U11 on these same rows.
+/// U10: confirm when `visit_status` is `completed`. Dispute lands in U11.
 class SuchakMeetingsScreen extends StatefulWidget {
   const SuchakMeetingsScreen({super.key});
 
@@ -15,13 +15,16 @@ class SuchakMeetingsScreen extends StatefulWidget {
 }
 
 class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
+  static const Color _accent = Color(0xFF9B1B46);
   static const Color _heading = Color(0xFF2E2220);
   static const Color _muted = Color(0xFF6E625F);
   static const Color _hairline = Color(0xFFEDE2DE);
 
   bool _isLoading = true;
   String? _errorMessage;
+  String? _actionMessage;
   List<Map<String, dynamic>> _meetings = <Map<String, dynamic>>[];
+  final Set<int> _busyVisitIds = <int>{};
 
   @override
   void initState() {
@@ -64,6 +67,95 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
     }
   }
 
+  bool _canConfirm(String status) => status == 'completed';
+
+  Future<void> _confirmMeeting(Map<String, dynamic> row) async {
+    final visitId = _asInt(row['id']);
+    if (visitId == null || _busyVisitIds.contains(visitId)) return;
+
+    final note = await _askConfirmationNote();
+    if (note == null || !mounted) return;
+
+    setState(() {
+      _busyVisitIds.add(visitId);
+      _actionMessage = null;
+    });
+
+    try {
+      final response = await ApiClient.confirmSuchakMeeting(
+        visitId: visitId,
+        confirmationNote: note,
+      );
+      if (!mounted) return;
+
+      if (_responseSuccess(response)) {
+        setState(() {
+          _busyVisitIds.remove(visitId);
+          _actionMessage = _responseMessage(
+            response,
+            appText.suchakMeetingConfirmed,
+          );
+        });
+        await _loadMeetings();
+        return;
+      }
+
+      setState(() {
+        _busyVisitIds.remove(visitId);
+        _actionMessage = _responseMessage(
+          response,
+          appText.couldNotConfirmSuchakMeeting,
+        );
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busyVisitIds.remove(visitId);
+        _actionMessage = appText.unexpectedErrorOccurred(e.toString());
+      });
+    }
+  }
+
+  Future<String?> _askConfirmationNote() async {
+    final controller = TextEditingController();
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(appText.suchakMeetingConfirmTitle),
+            content: TextField(
+              controller: controller,
+              maxLines: 3,
+              maxLength: 1000,
+              decoration: InputDecoration(
+                hintText: appText.suchakMeetingConfirmNoteHint,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(appText.cancel),
+              ),
+              TextButton(
+                onPressed: () {
+                  final text = controller.text.trim();
+                  if (text.isEmpty) return;
+                  Navigator.of(context).pop(text);
+                },
+                child: Text(appText.suchakMeetingConfirmAction),
+              ),
+            ],
+          );
+        },
+      );
+    } finally {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.dispose();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,14 +165,14 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
+    if (_isLoading && _meetings.isEmpty) {
       return AppLoadingState.list(
         title: appText.loadingSuchakMeetings,
         icon: Icons.event_available_outlined,
       );
     }
 
-    if (_errorMessage != null) {
+    if (_errorMessage != null && _meetings.isEmpty) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(18),
@@ -131,14 +223,34 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadMeetings,
-      child: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-        itemCount: _meetings.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 10),
-        itemBuilder: (context, index) => _buildMeetingCard(_meetings[index]),
-      ),
+    return Column(
+      children: [
+        if (_actionMessage != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: Text(
+              _actionMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: _heading,
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+            ),
+          ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: _loadMeetings,
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              itemCount: _meetings.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) =>
+                  _buildMeetingCard(_meetings[index]),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -146,6 +258,8 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
     final suchakName = (row['suchak_display_name'] ?? '').toString().trim();
     final status = (row['visit_status'] ?? '').toString().trim();
     final scheduled = (row['scheduled_for'] ?? '').toString().trim();
+    final visitId = _asInt(row['id']);
+    final busy = visitId != null && _busyVisitIds.contains(visitId);
 
     return Container(
       key: ValueKey<Object>(row['id'] ?? scheduled),
@@ -158,7 +272,9 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            suchakName.isEmpty ? appText.suchakMeetingsUntitledSuchak : suchakName,
+            suchakName.isEmpty
+                ? appText.suchakMeetingsUntitledSuchak
+                : suchakName,
             style: const TextStyle(
               color: _heading,
               fontWeight: FontWeight.w700,
@@ -183,9 +299,32 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
               ),
             ),
           ],
+          if (_canConfirm(status)) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: busy ? null : () => _confirmMeeting(row),
+                style: FilledButton.styleFrom(backgroundColor: _accent),
+                child: busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(appText.suchakMeetingConfirmAction),
+              ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '');
   }
 
   bool _responseSuccess(Map<String, dynamic> response) {

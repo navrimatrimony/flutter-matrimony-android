@@ -3851,6 +3851,21 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get suchakMeetingConfirmAction => 'Confirm meeting';
+
+  @override
+  String get suchakMeetingConfirmTitle => 'Confirm this meeting?';
+
+  @override
+  String get suchakMeetingConfirmNoteHint => 'Briefly say what happened.';
+
+  @override
+  String get suchakMeetingConfirmed => 'Meeting confirmed.';
+
+  @override
+  String get couldNotConfirmSuchakMeeting => 'Could not confirm this meeting.';
+
+  @override
   String get notificationSettingsTitle => 'Notification settings';
 
   @override

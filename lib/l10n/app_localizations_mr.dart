@@ -3833,6 +3833,21 @@ class AppLocalizationsMr extends AppLocalizations {
   }
 
   @override
+  String get suchakMeetingConfirmAction => 'भेट पुष्टी करा';
+
+  @override
+  String get suchakMeetingConfirmTitle => 'ही भेट पुष्टी करायची?';
+
+  @override
+  String get suchakMeetingConfirmNoteHint => 'काय झाले ते थोडक्यात लिहा.';
+
+  @override
+  String get suchakMeetingConfirmed => 'भेट पुष्टी नोंदवली.';
+
+  @override
+  String get couldNotConfirmSuchakMeeting => 'ही भेट पुष्टी करता आली नाही.';
+
+  @override
   String get notificationSettingsTitle => 'सूचना सेटिंग्ज';
 
   @override

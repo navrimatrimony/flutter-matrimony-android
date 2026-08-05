@@ -7136,6 +7136,36 @@ abstract class AppLocalizations {
   /// **'Scheduled for {date}'**
   String suchakMeetingScheduledFor(String date);
 
+  /// No description provided for @suchakMeetingConfirmAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm meeting'**
+  String get suchakMeetingConfirmAction;
+
+  /// No description provided for @suchakMeetingConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm this meeting?'**
+  String get suchakMeetingConfirmTitle;
+
+  /// No description provided for @suchakMeetingConfirmNoteHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Briefly say what happened.'**
+  String get suchakMeetingConfirmNoteHint;
+
+  /// No description provided for @suchakMeetingConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting confirmed.'**
+  String get suchakMeetingConfirmed;
+
+  /// No description provided for @couldNotConfirmSuchakMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not confirm this meeting.'**
+  String get couldNotConfirmSuchakMeeting;
+
   /// No description provided for @notificationSettingsTitle.
   ///
   /// In en, this message translates to:

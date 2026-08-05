@@ -1337,6 +1337,11 @@
             }
         }
     },
+    "suchakMeetingConfirmAction": "Confirm meeting",
+    "suchakMeetingConfirmTitle": "Confirm this meeting?",
+    "suchakMeetingConfirmNoteHint": "Briefly say what happened.",
+    "suchakMeetingConfirmed": "Meeting confirmed.",
+    "couldNotConfirmSuchakMeeting": "Could not confirm this meeting.",
     "notificationSettingsTitle": "Notification settings",
     "notificationSettingsIntro": "Choose which notifications reach your phone.",
     "notificationSettingsManage": "Push notifications",

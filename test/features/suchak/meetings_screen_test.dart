@@ -40,7 +40,7 @@ void main() {
         'meetings': <Map<String, dynamic>>[
           <String, dynamic>{
             'id': 42,
-            'visit_status': 'completed',
+            'visit_status': 'scheduled',
             'scheduled_for': '2026-08-01T10:00:00+05:30',
             'suchak_display_name': 'Pawar Vivah Mandal',
           },
@@ -51,7 +51,8 @@ void main() {
     await pumpScreen(tester);
 
     expect(find.text('Pawar Vivah Mandal'), findsOneWidget);
-    expect(find.text('completed'), findsOneWidget);
+    expect(find.text('scheduled'), findsOneWidget);
+    expect(find.text(appText.suchakMeetingConfirmAction), findsNothing);
   });
 
   testWidgets('renders honest empty state', (tester) async {
@@ -68,5 +69,50 @@ void main() {
       find.text('No meetings have been recorded for you yet.'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('u10 confirm is offered only for completed and posts the note', (
+    tester,
+  ) async {
+    http.onJson('/suchak-meetings', <String, dynamic>{
+      'success': true,
+      'data': <String, dynamic>{
+        'meetings': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 42,
+            'visit_status': 'completed',
+            'scheduled_for': '2026-08-01T10:00:00+05:30',
+            'suchak_display_name': 'Pawar Vivah Mandal',
+          },
+          <String, dynamic>{
+            'id': 43,
+            'visit_status': 'confirmed',
+            'scheduled_for': '2026-07-20T10:00:00+05:30',
+            'suchak_display_name': 'Other Suchak',
+          },
+        ],
+      },
+    });
+    http.onJson('/suchak-meetings/42/confirm', <String, dynamic>{
+      'success': true,
+      'message': 'भेट झाल्याची पुष्टी नोंदवली.',
+      'data': <String, dynamic>{'visit_status': 'confirmed'},
+    });
+
+    await pumpScreen(tester);
+
+    expect(find.text(appText.suchakMeetingConfirmAction), findsOneWidget);
+
+    await tester.tap(find.text(appText.suchakMeetingConfirmAction));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'We met on Sunday.');
+    await tester.tap(find.text(appText.suchakMeetingConfirmAction).last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    final posted = http.requestFor('/suchak-meetings/42/confirm');
+    expect(posted, isNotNull);
+    expect(posted!.jsonBody['confirmation_note'], 'We met on Sunday.');
   });
 }

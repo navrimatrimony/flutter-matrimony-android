@@ -2994,6 +2994,18 @@ class ApiClient {
     return _getJson(ApiRoutes.suchakMeetings, authenticated: true);
   }
 
+  /// Member confirms a meeting happened (U10).
+  static Future<Map<String, dynamic>> confirmSuchakMeeting({
+    required int visitId,
+    required String confirmationNote,
+  }) {
+    return _postJson(
+      ApiRoutes.suchakMeetingConfirm(visitId),
+      <String, dynamic>{'confirmation_note': confirmationNote},
+      authenticated: true,
+    );
+  }
+
   /// The candidate answering for themselves. The Suchak may answer the same
   /// request, so a 200 can still come back as `already_answered` — that is the
   /// race being settled server-side, not a failure.

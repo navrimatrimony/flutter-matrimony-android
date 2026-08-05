@@ -1190,6 +1190,11 @@
             }
         }
     },
+    "suchakMeetingConfirmAction": "भेट पुष्टी करा",
+    "suchakMeetingConfirmTitle": "ही भेट पुष्टी करायची?",
+    "suchakMeetingConfirmNoteHint": "काय झाले ते थोडक्यात लिहा.",
+    "suchakMeetingConfirmed": "भेट पुष्टी नोंदवली.",
+    "couldNotConfirmSuchakMeeting": "ही भेट पुष्टी करता आली नाही.",
     "notificationSettingsTitle": "सूचना सेटिंग्ज",
     "notificationSettingsIntro": "तुमच्या फोनवर कोणत्या सूचना याव्यात ते निवडा.",
     "notificationSettingsManage": "फोनवरील सूचना",
