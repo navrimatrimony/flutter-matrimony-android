@@ -1808,6 +1808,39 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  /// Where the member's account stands: `active`, `paused` or
+  /// `deletion_pending`, plus how many days are left to cancel.
+  static Future<Map<String, dynamic>> fetchAccountDeletionStatus() {
+    return _getJson(ApiRoutes.accountDeletion, authenticated: true);
+  }
+
+  /// Starts the grace period. [confirmation] is the word the member typed and
+  /// is checked again on the server, so this cannot be reached by a stray tap.
+  static Future<Map<String, dynamic>> requestAccountDeletion({
+    required String confirmation,
+    required String reasonKey,
+    String? reasonNote,
+  }) {
+    return _postJson(ApiRoutes.accountDeletion, {
+      'confirmation': confirmation,
+      'reason_key': reasonKey,
+      'reason_note': reasonNote,
+    }, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> cancelAccountDeletion() {
+    return _profileActionDelete(ApiRoutes.accountDeletion);
+  }
+
+  /// Hides the profile without scheduling anything — the softer option.
+  static Future<Map<String, dynamic>> pauseAccount() {
+    return _postJson(ApiRoutes.accountPause, const {}, authenticated: true);
+  }
+
+  static Future<Map<String, dynamic>> resumeAccount() {
+    return _postJson(ApiRoutes.accountResume, const {}, authenticated: true);
+  }
+
   static Future<Map<String, dynamic>> verifyGoogleEmail({
     required String email,
     required String idToken,

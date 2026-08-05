@@ -5129,4 +5129,112 @@ class AppLocalizationsMr extends AppLocalizations {
 
   @override
   String get categoryIdOptional => 'श्रेणी क्रमांक (ऐच्छिक)';
+
+  @override
+  String get deleteAccountTitle => 'खाते हटवा';
+
+  @override
+  String get deleteAccountSettingsSubtitle =>
+      'प्रोफाइल काही काळ थांबवा किंवा खाते कायमचे हटवा';
+
+  @override
+  String get deleteAccountIntro =>
+      'तुम्ही प्रोफाइल काही काळ लपवू शकता, किंवा खाते कायमचे हटवू शकता. निवडण्याआधी दोन्हीचा अर्थ वाचा.';
+
+  @override
+  String get deleteAccountPauseTitle => 'प्रोफाइल थांबवा';
+
+  @override
+  String get deleteAccountPauseBody =>
+      'तुमची प्रोफाइल कोणालाही दिसणार नाही आणि संदेश थांबतील. काहीही पुसले जाणार नाही. कधीही परत या — सर्व काही जिथे ठेवले तिथेच असेल.';
+
+  @override
+  String get deleteAccountPauseCta => 'प्रोफाइल थांबवा';
+
+  @override
+  String get deleteAccountPausedBanner =>
+      'तुमची प्रोफाइल थांबवलेली आहे. सध्या ती कोणालाही दिसत नाही.';
+
+  @override
+  String get deleteAccountResumeCta => 'प्रोफाइल पुन्हा दाखवा';
+
+  @override
+  String get deleteAccountDeleteTitle => 'खाते हटवा';
+
+  @override
+  String deleteAccountDeleteBody(int days) {
+    return 'तुमची प्रोफाइल लगेच लपवली जाईल. $days दिवसांनंतर सर्व काही कायमचे पुसले जाईल — तुमचे फोटो, तपशील आणि संदेश. तोपर्यंत तुम्ही रद्द करून सर्व काही परत मिळवू शकता.';
+  }
+
+  @override
+  String get deleteAccountDeleteCta => 'हटवण्यासाठी पुढे जा';
+
+  @override
+  String get deleteAccountReasonPrompt => 'तुम्ही का जात आहात?';
+
+  @override
+  String get deleteAccountReasonHint =>
+      'यामुळे आम्हाला सुधारणा करता येते. एक निवडा.';
+
+  @override
+  String get deleteAccountReasonNoteLabel => 'अधिक सांगा (ऐच्छिक)';
+
+  @override
+  String get deleteAccountConfirmPrompt => 'पुष्टीसाठी delete असे लिहा';
+
+  @override
+  String get deleteAccountConfirmHint => 'delete';
+
+  @override
+  String get deleteAccountConfirmError => 'पुष्टीसाठी delete हा शब्द लिहा.';
+
+  @override
+  String get deleteAccountFinalCta => 'माझे खाते हटवा';
+
+  @override
+  String get deleteAccountPendingTitle => 'तुमचे खाते हटवले जाईल';
+
+  @override
+  String deleteAccountPendingBody(int days) {
+    return '$days दिवस शिल्लक. त्याआधी कधीही रद्द करा, काहीही हरवणार नाही.';
+  }
+
+  @override
+  String get deleteAccountPendingCancelCta => 'हटवणे रद्द करा, खाते ठेवा';
+
+  @override
+  String get deleteAccountWhatHappensTitle => 'काय पुसले जाईल';
+
+  @override
+  String get deleteAccountWhatHappensBody =>
+      'तुमची प्रोफाइल, फोटो, आवडीनिवडी, स्वारस्य आणि बायोडेटा पुसले जातील. करकायद्यामुळे व्यवहारांच्या नोंदी ठेवाव्या लागतात. तुम्ही पाठवलेले संदेश समोरच्याच्या चॅटमध्ये राहतील, पण तुमचे नाव आणि फोटो काढून टाकले जातील, त्यामुळे तुमची ओळख पटणार नाही.';
+
+  @override
+  String get deleteAccountReadMore => 'संपूर्ण धोरण वाचा';
+
+  @override
+  String get deleteAccountGenericError =>
+      'हे पूर्ण झाले नाही. पुन्हा प्रयत्न करा.';
+
+  @override
+  String get deleteAccountReasonNoSuitableMatches =>
+      'मला योग्य स्थळ मिळाले नाही';
+
+  @override
+  String get deleteAccountReasonFoundMatchElsewhere =>
+      'मला दुसरीकडे स्थळ मिळाले';
+
+  @override
+  String get deleteAccountReasonTooManyMessages =>
+      'खूप जास्त संदेश किंवा सूचना येतात';
+
+  @override
+  String get deleteAccountReasonPrivacyConcern =>
+      'माझ्या गोपनीयतेबद्दल काळजी वाटते';
+
+  @override
+  String get deleteAccountReasonHardToUse => 'ॲप वापरणे अवघड वाटले';
+
+  @override
+  String get deleteAccountReasonOther => 'दुसरे कारण';
 }

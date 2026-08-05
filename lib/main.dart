@@ -28,6 +28,7 @@ import 'features/photo/photo_gallery_screen.dart';
 import 'features/plans/plans_screen.dart';
 import 'features/profile_lists/profile_lists_screen.dart';
 import 'features/settings/change_password_screen.dart';
+import 'features/settings/delete_account_screen.dart';
 import 'features/settings/notification_settings_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/suchak/suchak_requests_screen.dart';
@@ -187,6 +188,8 @@ class _MyAppState extends State<MyApp> {
             _authenticatedScreen(const NotificationSettingsScreen()),
         '/change-password': (context) =>
             _authenticatedScreen(const ChangePasswordScreen()),
+        '/delete-account': (context) =>
+            _authenticatedScreen(const DeleteAccountScreen()),
         '/profile-lists': (context) =>
             _authenticatedScreen(const ProfileListsScreen()),
         '/photo-gallery': (context) =>

@@ -9457,6 +9457,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Category number (optional)'**
   String get categoryIdOptional;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountSettingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause your profile or delete your account permanently'**
+  String get deleteAccountSettingsSubtitle;
+
+  /// No description provided for @deleteAccountIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'You can hide your profile for a while, or delete your account for good. Read what each one does before you choose.'**
+  String get deleteAccountIntro;
+
+  /// No description provided for @deleteAccountPauseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause my profile'**
+  String get deleteAccountPauseTitle;
+
+  /// No description provided for @deleteAccountPauseBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile is hidden from everyone and the messages stop. Nothing is deleted. Come back whenever you like and everything is exactly where you left it.'**
+  String get deleteAccountPauseBody;
+
+  /// No description provided for @deleteAccountPauseCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause my profile'**
+  String get deleteAccountPauseCta;
+
+  /// No description provided for @deleteAccountPausedBanner.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile is paused. Nobody can see it right now.'**
+  String get deleteAccountPausedBanner;
+
+  /// No description provided for @deleteAccountResumeCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Make my profile visible again'**
+  String get deleteAccountResumeCta;
+
+  /// No description provided for @deleteAccountDeleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteAccountDeleteTitle;
+
+  /// No description provided for @deleteAccountDeleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile is hidden straight away. After {days} days everything is erased for good — your photos, your details and your messages. Until then you can cancel and get it all back.'**
+  String deleteAccountDeleteBody(int days);
+
+  /// No description provided for @deleteAccountDeleteCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue to delete'**
+  String get deleteAccountDeleteCta;
+
+  /// No description provided for @deleteAccountReasonPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Why are you leaving?'**
+  String get deleteAccountReasonPrompt;
+
+  /// No description provided for @deleteAccountReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'This helps us improve. Choose one.'**
+  String get deleteAccountReasonHint;
+
+  /// No description provided for @deleteAccountReasonNoteLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Tell us more (optional)'**
+  String get deleteAccountReasonNoteLabel;
+
+  /// No description provided for @deleteAccountConfirmPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Type delete to confirm'**
+  String get deleteAccountConfirmPrompt;
+
+  /// No description provided for @deleteAccountConfirmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'delete'**
+  String get deleteAccountConfirmHint;
+
+  /// No description provided for @deleteAccountConfirmError.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the word delete to confirm.'**
+  String get deleteAccountConfirmError;
+
+  /// No description provided for @deleteAccountFinalCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete my account'**
+  String get deleteAccountFinalCta;
+
+  /// No description provided for @deleteAccountPendingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account will be deleted'**
+  String get deleteAccountPendingTitle;
+
+  /// No description provided for @deleteAccountPendingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days left. Cancel any time before then and nothing is lost.'**
+  String deleteAccountPendingBody(int days);
+
+  /// No description provided for @deleteAccountPendingCancelCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel deletion, keep my account'**
+  String get deleteAccountPendingCancelCta;
+
+  /// No description provided for @deleteAccountWhatHappensTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What gets deleted'**
+  String get deleteAccountWhatHappensTitle;
+
+  /// No description provided for @deleteAccountWhatHappensBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your profile, photos, preferences, interests and biodata are erased. Payment records are kept because tax law requires it. Messages you sent stay in the other person\'s chat, but your name and photo are removed so you cannot be identified.'**
+  String get deleteAccountWhatHappensBody;
+
+  /// No description provided for @deleteAccountReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read the full policy'**
+  String get deleteAccountReadMore;
+
+  /// No description provided for @deleteAccountGenericError.
+  ///
+  /// In en, this message translates to:
+  /// **'That did not go through. Please try again.'**
+  String get deleteAccountGenericError;
+
+  /// No description provided for @deleteAccountReasonNoSuitableMatches.
+  ///
+  /// In en, this message translates to:
+  /// **'I did not find suitable matches'**
+  String get deleteAccountReasonNoSuitableMatches;
+
+  /// No description provided for @deleteAccountReasonFoundMatchElsewhere.
+  ///
+  /// In en, this message translates to:
+  /// **'I found a match elsewhere'**
+  String get deleteAccountReasonFoundMatchElsewhere;
+
+  /// No description provided for @deleteAccountReasonTooManyMessages.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many messages or notifications'**
+  String get deleteAccountReasonTooManyMessages;
+
+  /// No description provided for @deleteAccountReasonPrivacyConcern.
+  ///
+  /// In en, this message translates to:
+  /// **'I am concerned about my privacy'**
+  String get deleteAccountReasonPrivacyConcern;
+
+  /// No description provided for @deleteAccountReasonHardToUse.
+  ///
+  /// In en, this message translates to:
+  /// **'The app was hard to use'**
+  String get deleteAccountReasonHardToUse;
+
+  /// No description provided for @deleteAccountReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Another reason'**
+  String get deleteAccountReasonOther;
 }
 
 class _AppLocalizationsDelegate

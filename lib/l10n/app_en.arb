@@ -1,2109 +1,2206 @@
 {
-  "@@locale": "en",
-  "a4Landscape": "A4 Landscape",
-  "a4Portrait": "A4 Portrait",
-  "aClearPhotoUsuallyImprovesResponse": "A clear photo usually improves response quality.",
-  "aLocationRequestIsAlreadyRunning": "A location request is already running.",
-  "aboutProfile": "About profile",
-  "accepted": "Accepted",
-  "accepted2": "Accepted",
-  "acceptedIfChildrenLiveSeparately": "Accepted if children live separately",
-  "addAClearPhotoCropIt": "Add a clear photo. Crop it if needed, then upload it for approval.",
-  "addAProfilePhotoFromCamera": "Add a profile photo from camera or gallery.",
-  "addChild": "Add child",
-  "addCompanyWorkLocation": "+ Add company / work location",
-  "addName": "Add name",
-  "addNewLocation": "Add new location",
-  "addOccupationAndOptionalWorkInfo": "Add occupation and optional work info.",
-  "addPhotos": "Add photos",
-  "addPhotosAndReviewPartnerPreference": "Add photos and review partner preference to improve suggestions.",
-  "addedToShortlist": "Added to Shortlist.",
-  "addressLineOptional": "Address line optional",
-  "age": "Age",
-  "ageRange": "Age range",
-  "allowLocationToApplyTheClosest": "Allow location to apply the closest app location.",
-  "alreadyHaveAccount": "Already have an account?",
-  "alreadyRegisteredVerifyMobileToContinue": "Already registered? Verify mobile to continue",
-  "and": " and ",
-  "annual": "Annual",
-  "annualIncome": "Annual income",
-  "appName": "Navri Mile Navryala",
-  "applyCrop": "Apply crop",
-  "approvalPending": "Approval pending",
-  "approvalRequired": "Approval required",
-  "approvedPhotoIsVisibleOnYour": "Approved photo is visible on your profile. You can replace it with a new photo.",
-  "approvedPhotoShownOnProfile": "This approved photo is shown on your profile.",
-  "approvedPhotoShownReplace": "The approved photo is shown on your profile. You can select a new photo to replace it.",
-  "approx": "Approx",
-  "astroAllOptional": "All optional · only what you know",
-  "astroTriangleHint": "Fill any two — the third fills itself",
-  "astroDerivedRashi": "Rashi came from the nakshatra",
-  "astroDerivedNakshatra": "Nakshatra came from the rashi and charan",
-  "astroDerivedCharan": "Charan came from the nakshatra and rashi",
-  "astroTriangleLabel": "Nakshatra · rashi · charan",
-  "astroClearAll": "Clear all",
-  "astroClearField": "Clear this",
-  "aboutTemplateGrowthTogether": "Growing together",
-  "aboutTemplateGrowthTogetherBody": "Looking for a partner to understand each other and move forward together.",
-  "astroDetails": "Astro details",
-  "authExpiredLoginAgain": "Authentication expired! Please log in again",
-  "authExpiredPleaseLoginAgain": "Authentication expired. Please log in again.",
-  "basedOnYourPartnerPreferences": "Based on your partner preferences",
-  "basicDetails": "Basic details",
-  "basicPreferences": "Basic Preferences",
-  "basics": "Basics",
-  "before": "Before",
-  "biodataCopyLink": "Copy link",
-  "biodataExpiresAt": "Link valid until",
-  "biodataExportBrowserOpened": "Biodata opened in the browser.",
-  "biodataExportDownload": "Download",
-  "biodataExportFailed": "Biodata export failed.",
-  "biodataExportFormat": "Choose format",
-  "biodataExportLinkExpires": "Share/download links are valid for a short time.",
-  "biodataExportLinkMissing": "The backend did not return a download link.",
-  "biodataExportLoadFailed": "Biodata export options could not be loaded.",
-  "biodataExportMenu": "Biodata Export",
-  "biodataExportOpenFailedCopied": "Could not open the browser. Link copied to clipboard.",
-  "biodataExportShare": "Share",
-  "biodataExportShared": "Biodata share link is ready.",
-  "biodataExportSubtitle": "Download or share your own biodata as a PDF.",
-  "biodataExportTemplate": "Choose template",
-  "biodataExportTitle": "Biodata Export",
-  "biodataExportUnavailable": "Biodata export is not available right now.",
-  "biodataExportWarnings": "Completeness warnings",
-  "biodataGeneratedSubtitle": "Use this link to preview, download, or share the generated biodata.",
-  "biodataGeneratedTitle": "Generated biodata is ready",
-  "biodataIntakeAlreadyApprovedLocked": "This biodata is already approved and cannot be edited here.",
-  "biodataIntakeCheckLowConfidenceFields": "Please check these fields carefully",
-  "biodataIntakeConfirmSave": "Confirm & Save",
-  "biodataIntakeExtractedText": "Biodata text used for autofill",
-  "biodataIntakeFailureCodes": "Failure codes",
-  "biodataIntakeFieldsEmpty": "No structured fields were detected. Check the text below and try again with a clearer photo.",
-  "biodataIntakeIntroSubtitle": "Use a clear photo or screenshot. The app will read the text and show editable details on the next screen.",
-  "biodataIntakeIntroTitle": "Choose a biodata photo",
-  "biodataIntakeLowConfidence": "Low confidence",
-  "biodataIntakeMenu": "Biodata Intake",
-  "biodataIntakeNoReadableText": "Could not read enough text from this photo. Please use a clearer, straight, well-lit photo.",
-  "biodataIntakeOpenProfile": "View Profile",
-  "biodataIntakeOverallQuality": "Overall quality",
-  "biodataIntakeProcessFailed": "Biodata could not be processed. Please try again.",
-  "biodataIntakeQualitySignals": "Quality signals",
-  "biodataIntakeReviewSaveFailed": "Review could not be saved.",
-  "biodataIntakeReviewSaveSuccess": "Review saved. Approval is still separate.",
-  "biodataIntakeReviewSubtitle": "Edit anything that looks wrong, then save.",
-  "biodataIntakeReviewTitle": "Review details",
-  "biodataIntakeSaveFailed": "Details could not be saved.",
-  "biodataIntakeSavePending": "Details have been saved for review.",
-  "biodataIntakeSaveReview": "Save review",
-  "biodataIntakeSaveSuccess": "Details saved. Profile has been updated.",
-  "biodataIntakeSubtitle": "Read biodata photo text and prepare a profile draft.",
-  "biodataIntakeTitle": "Biodata Intake",
-  "biodataIntakeTryAnother": "Another photo",
-  "biodataLinkCopied": "Biodata link copied.",
-  "biodataNotReadyForReview": "This biodata is not yet ready for review.",
-  "biodataPreviewAction": "Open preview",
-  "biodataPrintAction": "Biodata / Print",
-  "biodataTemplateDesignPreview": "Design preview",
-  "biodataTemplateLocked": "Locked",
-  "biodataTemplateNoPhoto": "No photo",
-  "biodataTemplatePremium": "Premium",
-  "biodataTemplateWithPhoto": "With photo",
-  "bottomChat": "Chat",
-  "bottomConnect": "Connect",
-  "bottomHome": "Home",
-  "bottomMatches": "Matches",
-  "brideGroom": "Bride / Groom",
-  "brideRelativeSDetails": "Bride relative’s details",
-  "brideRelativeSFullName": "Bride relative’s full name *",
-  "brother": "Brother",
-  "brotherSDetails": "Brother’s details",
-  "brotherSFullName": "Brother’s full name *",
-  "browseProfiles": "Matches",
-  "browseProfilesSubtitle": "Explore suitable matrimony profiles",
-  "byContinuingIAgreeToThe": "By continuing, I agree to the ",
-  "byRegisteringIAgreeToThe": "By registering, I agree to the ",
-  "calmSteady": "Calm & steady",
-  "camera": "Camera",
-  "cameraGalleryProfilePhotoAdd": "Add a profile photo from the camera or gallery.",
-  "canSendContactRequestForProfile": "You can send a contact request for this profile.",
-  "cancel": "Cancel",
-  "cancel2": "Cancel",
-  "cannotSendInterestForThisProfile": "Interest cannot be sent for this profile.",
-  "careerWithBalance": "Career with balance",
-  "careerWithBalance2": "Career with balance",
-  "caste": "Caste",
-  "caste2": "Caste *",
-  "charan": "Charan",
-  "chatAll": "All",
-  "chatComingSoon": "Chat will be available in the app soon.",
-  "chatEmpty": "No chats yet.",
-  "chatInbox": "Chat Inbox",
-  "chatLoadFailed": "Chat could not be loaded.",
-  "chatMenu": "Chat",
-  "chatMessageHint": "Type a message...",
-  "chatMessageRead": "Read",
-  "chatMessageSent": "Sent",
-  "chatOpenFailed": "Chat could not be opened.",
-  "chatReadLocked": "Upgrade may be required to read this message.",
-  "chatRequests": "Requests",
-  "chatSend": "Send",
-  "chatSendFailed": "Message could not be sent.",
-  "chatTitle": "Chat",
-  "chatUnread": "Unread",
-  "chatUpgradeToRead": "Upgrade to read",
-  "checkThisNumberBeforeSaving": "This number must be checked before saving",
-  "checkingGoogleEmail": "Checking Google email",
-  "checkingProfile": "Checking profile.",
-  "childLivingWithOptionsCouldNot": "Child living-with options could not be loaded.",
-  "childName": "Child name",
-  "children": "Children?",
-  "childrenSeparate": "Children separate",
-  "chooseCityDistrictFromFilters": "Choose city/district from filters.",
-  "chooseCommunityDetails": "Choose community details",
-  "chooseGenderBeforeContinuing": "Choose gender before continuing.",
-  "chooseLanguage": "Choose Language",
-  "chooseLocationFilter": "Choose location",
-  "chooseLocationForNearMe": "Choose a location filter to see nearby profiles.",
-  "chooseOccupation": "Choose occupation.",
-  "chooseSearchFilters": "Choose search filters",
-  "chooseTheHighestOrRelevantEducation": "Choose the highest or relevant education.",
-  "chooseWhereTheProfileLives": "Choose where the profile lives.",
-  "chooseWhoThisProfileIsFor": "Choose who this profile is for.",
-  "chooseWhoThisProfileIsFor2": "Choose who this profile is for.",
-  "chooseWorkDetails": "Choose work details.",
-  "citySuburban": "City / Suburban",
-  "cleanBorderPhotoRightA4Portrait": "Clean border, photo on the right and A4 portrait layout.",
-  "clearFace": "Clear face",
-  "clearFilter": "Clear filter",
-  "clearLocation": "Clear location",
-  "community": "Community",
-  "communityDetails": "Community details",
-  "communityPreferencesHelpKeepSuggestionsRelevant": "Community preferences help keep suggestions relevant.",
-  "companyOptional": "Company optional",
-  "comparisonShowLess": "Show less",
-  "comparisonValueUnknown": "Not specified",
-  "comparisonViewAll": "View all",
-  "completeAtLeastOneChildDetail": "Complete at least one child detail.",
-  "completeChildDetailsBeforeContinuing": "Complete child details before continuing.",
-  "completeRegistration": "Complete registration",
-  "confirmAction": "Confirm",
-  "confirmPassword": "Confirm Password",
-  "connectContactRequests": "Contact",
-  "connectReceived": "Received",
-  "connectSent": "Sent",
-  "connectUpgrade": "Upgrade",
-  "contactInbox": "Contact inbox",
-  "contactInboxDidNotLoad": "Contact inbox did not load.",
-  "contactInformationNotAvailable": "Contact information is currently not available.",
-  "contactRequestNotAvailable": "Contact request is not available right now.",
-  "contactRequestOptionsNotAvailable": "Contact request options are not available.",
-  "contactRequestPending": "Your contact request is pending.",
-  "contactRequestRejected": "Your contact request has been rejected.",
-  "contactRequests": "Contact Requests",
-  "contactRoute": "Contact route",
-  "contactRuleStrictness": "Contact rule strictness",
-  "contactUnlockComingSoon": "The contact unlock feature will be available soon.",
-  "contactUnlockMode": "Contact unlock mode",
-  "contactUnlockNotAvailable": "Contact unlock is not available right now.",
-  "contactVisibility": "Contact visibility",
-  "continueLabel": "Continue",
-  "continueToPartnerPreference": "Continue to partner preference",
-  "continuing": "Continuing...",
-  "couldNotAcceptInterest": "Could not accept interest.",
-  "couldNotApproveContact": "Could not approve contact.",
-  "couldNotBlockProfile": "Could not block profile.",
-  "couldNotCheckProfile": "Could not check profile.",
-  "couldNotCropPhoto": "Could not crop the photo. Please try again or select a different photo.",
-  "couldNotHideProfile": "Could not hide profile.",
-  "couldNotLoadCasteList": "Could not load caste list.",
-  "couldNotLoadDropdownOptions": "Could not load the dropdown options.",
-  "couldNotLoadEducationAndCareerOptions": "Could not load the education and career options.",
-  "couldNotLoadFamilyAndHoroscopeOptions": "Could not load the family and horoscope options.",
-  "couldNotLoadInterests": "Could not load interests.",
-  "couldNotLoadMaritalAndLifestyleOptions": "Could not load the marital and lifestyle options.",
-  "couldNotLoadOptions": "Could not load options.",
-  "couldNotLoadPartnerPreferenceOptions": "Could not load the partner preference options.",
-  "couldNotLoadPhotos": "Photos could not be loaded.",
-  "couldNotLoadProfile": "Could not load the profile.",
-  "couldNotLoadReligionList": "Could not load religion list.",
-  "couldNotReadAGoogleEmail": "Could not read a Google email from this device.",
-  "couldNotReadAccountNamePlease": "Could not read account name. Please go back and try again.",
-  "couldNotReadEmailFromGoogle": "Could not read email from Google.",
-  "couldNotReadMobileLocation": "Could not read mobile location.",
-  "couldNotRefreshPhotoStatus": "Could not refresh photo status.",
-  "couldNotRefreshProfile": "Could not refresh the profile.",
-  "couldNotRefreshProfileDetails": "Profile details could not be refreshed.",
-  "couldNotRejectContact": "Could not reject contact.",
-  "couldNotRejectInterest": "Could not reject interest.",
-  "couldNotRemoveFromShortlist": "Could not remove from Shortlist.",
-  "couldNotSavePassword": "Could not save password.",
-  "couldNotSaveProfile": "Could not save the profile. Please try again.",
-  "couldNotSaveTheAboutSection": "Could not save the about section.",
-  "couldNotSearchLocation": "Could not search location.",
-  "couldNotSearchSubCaste": "Could not search sub-caste.",
-  "couldNotSendContactRequest": "Could not send the contact request.",
-  "couldNotSendEmailOtp": "Could not send email OTP.",
-  "couldNotSendInterest": "Could not send interest. Please try again.",
-  "couldNotSendInterest2": "Could not send interest.",
-  "couldNotSendOtp": "Could not send OTP.",
-  "couldNotShareProfile": "Could not share profile.",
-  "couldNotShortlist": "Could not add to Shortlist.",
-  "couldNotSubmitLocationRequestCheck": "Could not submit location request. Check the selected district and taluka, then try again.",
-  "couldNotSubmitReport": "Could not submit report.",
-  "couldNotSubmitRequest": "Could not submit request.",
-  "couldNotUnlockContact": "Could not unlock the contact.",
-  "couldNotUseLocation": "Could not use location.",
-  "couldNotUseMobileLocation": "Could not use mobile location.",
-  "couldNotVerifyEmail": "Could not verify email.",
-  "couldNotWithdrawInterest": "Could not withdraw interest.",
-  "country": "Country",
-  "createAPasswordNowIfYou": "Create a password now if you want password login later.",
-  "createAdd": "Create / add",
-  "createAddYourLocation": "Create / add your location",
-  "createPassword": "Create Password",
-  "cropAdjustPhoto": "Crop / adjust photo",
-  "cropPhoto": "Crop photo",
-  "cropTheSelectedPhotoIfNeeded": "Crop the selected photo if needed, then upload it.",
-  "croppedPhotoIsReadyUploadIt": "Cropped photo is ready. Upload it to continue.",
-  "dashboard": "My Dashboard",
-  "dashboardAccountTools": "Account tools",
-  "dashboardActivity": "Your activity",
-  "dashboardAddNow": "Add now",
-  "dashboardBasicDetails": "Basic details",
-  "dashboardChangePlan": "Change plan",
-  "dashboardCheckNotifications": "Check Notifications",
-  "dashboardCheckNotificationsSubtitle": "See new notifications and updates.",
-  "dashboardCompleteProfile": "Complete Profile",
-  "dashboardCompleteProfileSubtitle": "Complete key details to improve matching.",
-  "dashboardCreateProfile": "Create Profile",
-  "dashboardCreateProfileSubtitle": "Dashboard fallback: start onboarding if your profile is missing.",
-  "dashboardEducationCareer": "Education / Career",
-  "dashboardFreePlan": "Free Plan",
-  "dashboardHeadline": "Your next step toward the right match",
-  "dashboardHeroFallback": "Your matrimony dashboard is ready.",
-  "dashboardListsToolSubtitle": "Shortlist, block and hidden",
-  "dashboardLocationDetails": "Location details",
-  "dashboardNeedsAttention": "Needs attention",
-  "dashboardNextBestAction": "Next best action",
-  "dashboardPartnerPreference": "Partner Preference",
-  "dashboardPhoto": "Photo",
-  "dashboardPhotoApproved": "Photo approved",
-  "dashboardPhotoMissing": "Photo missing",
-  "dashboardPhotoPending": "Photo pending",
-  "dashboardPhotoPendingSubtitle": "Check your photo verification status.",
-  "dashboardPlanContact": "Plan / Contact status",
-  "dashboardPlanToolSubtitle": "Plans, payment and contact credits",
-  "dashboardPremiumMember": "Premium Member",
-  "dashboardProfileActive": "Profile active",
-  "dashboardProfileMissing": "Profile missing",
-  "dashboardQuickActions": "Quick actions",
-  "dashboardReadiness": "Profile readiness",
-  "dashboardReadinessSubtitle": "No fake percentage; checklist based on available data.",
-  "dashboardReady": "Ready",
-  "dashboardReplyMessages": "Reply to Messages",
-  "dashboardReplyMessagesSubtitle": "Unread chats are waiting for your response.",
-  "dashboardRespondInterests": "Respond to Interests",
-  "dashboardRespondInterestsSubtitle": "Review pending proposals and respond.",
-  "dashboardReviewContactRequests": "Review Contact Requests",
-  "dashboardReviewContactRequestsSubtitle": "Review pending contact requests safely.",
-  "dashboardSettingsToolSubtitle": "Privacy and preferences",
-  "dashboardSubtitle": "Manage your profile, photo and interests in one place.",
-  "dashboardUpgradePlan": "Upgrade Plan",
-  "dashboardUpgradePlanSubtitle": "View contact unlocks and premium benefits.",
-  "dashboardUploadPhotoPrompt": "Upload a clear photo to get better responses.",
-  "dashboardViewMatches": "View Matches",
-  "dashboardViewMatchesSubtitle": "Explore suitable profiles for you.",
-  "dateOfBirth": "Date of birth",
-  "dateOfBirth2": "Date of birth *",
-  "daughter": "Daughter",
-  "daughterSDetails": "Daughter’s details",
-  "daughterSFullName": "Daughter’s full name *",
-  "delete": "Delete",
-  "deletePhoto": "Delete photo",
-  "deviceLocationIsOffTurnOn": "Device location is off. Turn on location from settings.",
-  "didnTGetTheCodeYet": "Didn’t get the code yet?",
-  "diet": "Diet",
-  "district": "District",
-  "doNotCloseScreenUntilUploadComplete": "Do not close the screen until the upload is complete.",
-  "doNotEnterContactNumbersOrPrivateDetails": "Do not enter contact numbers or private details.",
-  "doubleBorderPortrait": "Double Border Portrait",
-  "draftParsedReview": "Draft / parsed review",
-  "draftRowsUnavailable": "Draft rows are not available.",
-  "drinking": "Drinking",
-  "edit": "Edit",
-  "editOneSectionAtATimeProfileReloadsAfterSave": "Edit one section at a time. After saving, the profile will reload freshly.",
-  "editProfile": "Update Profile",
-  "editTheEmailIfNeededThen": "Edit the email if needed, then verify it with Google or email OTP.",
-  "education": "Education",
-  "education2": "Education *",
-  "educationCareer": "Education & Career",
-  "educationLabel": "Education label",
-  "educationRequestSubmitted": "Education request submitted.",
-  "emailAdded": "Email added",
-  "emailAddress": "Email address",
-  "emailAlerts": "Email alerts",
-  "emailOtp": "Email OTP",
-  "emailUsedForAccountMobileVerification": "This email will be used for the account. Mobile verification is required to proceed.",
-  "emailVerified": "Email verified",
-  "emailVerifiedSuccessfully": "Email verified successfully.",
-  "enterAValid10DigitMobile": "Enter a valid 10 digit mobile number.",
-  "enterAValidDob": "Enter a valid DOB.",
-  "enterAValidEmailAddress": "Enter a valid email address.",
-  "enterAValidIncomeAmount": "Enter a valid income amount.",
-  "enterAValidMaxIncome": "Enter a valid max income.",
-  "enterAValidMinIncome": "Enter a valid min income.",
-  "enterCandidateRealNameBeforeSaving": "Enter the candidate's real name before saving",
-  "enterChildAge": "Enter child age.",
-  "enterFullName": "Enter full name.",
-  "enterMinIncomeToo": "Enter min income too.",
-  "enterPasswordAndConfirmPassword": "Enter password and confirm password.",
-  "enterThe6DigitOtp": "Enter the 6 digit OTP.",
-  "enterThe6DigitOtp2": "Enter the 6 digit OTP.",
-  "enterTheOtpSentToYour": "Enter the OTP sent to your email.",
-  "enterTitleAmount": "Enter the $title amount.",
-  "enterTitleRangeAmount": "Enter the $title range amount.",
-  "enterValidChildAge": "Enter valid child age.",
-  "enterYourMobileNumberToReceive": "Enter your mobile number to receive a secure 6 digit code.",
-  "exact": "Exact",
-  "extraNoteOptional": "Extra note optional",
-  "familyFeedsAbout": "These two answers get woven into the introduction below",
-  "familyAndAbout": "Family and about",
-  "familyDetails": "Family details",
-  "familyFriendly": "Family-friendly",
-  "familyStatus": "Family status",
-  "familyValues": "Family values",
-  "featureNotAvailable": "This feature is not available right now.",
-  "female": "Female",
-  "friend": "Friend",
-  "friendSDetails": "Friend’s details",
-  "friendSDetails2": "Friend’s details",
-  "friendSDetails3": "Friend’s details",
-  "friendSFullName": "Friend’s full name *",
-  "friendSFullName2": "Friend’s full name *",
-  "fullName": "Full name *",
-  "gallery": "Gallery",
-  "gender": "Gender",
-  "getOtp": "Get OTP",
-  "gettingLocation": "Getting location...",
-  "goodLight": "Good light",
-  "googleVerificationFailedWeWillVerify": "Google verification failed. We will verify this email with OTP.",
-  "googleVerificationIsNotReadyWe": "Google verification is not ready. We will verify this email with OTP.",
-  "googleVerifiedYourEmail": "Google verified your email.",
-  "grantAtLeastOneContactMethod": "Grant at least one contact method.",
-  "groomRelativeSDetails": "Groom relative’s details",
-  "groomRelativeSFullName": "Groom relative’s full name *",
-  "gunamilanDisclaimer": "Gunamilan is only a compatibility reference. Families should make the final decision after discussion.",
-  "gunamilanHideDetails": "Hide details",
-  "gunamilanIncomplete": "Horoscope data is incomplete.",
-  "gunamilanRequired": "Gunamilan match required",
-  "gunamilanRequiredHelp": "When on, only matches scoring at least 18 of 36 are shown. If either side has no patrika details filled in, the match is not excluded — gunamilan simply cannot be checked.",
-  "gunamilanScore": "Gunamilan score",
-  "gunamilanTitle": "Gunamilan / Horoscope Match",
-  "gunamilanViewDetails": "View details",
-  "height": "Height *",
-  "heightRangeCm": "Height range cm",
-  "herMotherTongue": "Her mother tongue",
-  "hideFromBlockedUsers": "Hide from blocked users",
-  "hidePassword": "Hide password",
-  "highestSelected": "Highest selected: ",
-  "hisMotherTongue": "His mother tongue",
-  "honestyRespect": "Honesty & respect",
-  "iAmCreatingThisProfileFor": "I am creating this profile for",
-  "iWillDoThisLater": "I will do this later",
-  "importantSettingsAreNext": "Important settings are next",
-  "inactiveReminder": "Inactive reminder",
-  "income": "Income",
-  "incomeAmount": "Income amount",
-  "incomeAmount2": "Income amount",
-  "incomeCanBeKeptPrivate": "Income can be kept private.",
-  "incomePeriod": "Income period",
-  "incomeRange": "Income range",
-  "incomeRange2": "Income range",
-  "incomeType": "Income type",
-  "intercasteAccepted": "Intercaste accepted.",
-  "interestAlreadySent": "Interest has already been sent.",
-  "interestSent": "Interest Sent",
-  "interestSent2": "Interest sent.",
-  "interestStatistics": "Interest Statistics",
-  "keepIncomePrivate": "Keep income private",
-  "keepIncomePrivate2": "Keep income private",
-  "label": "label",
-  "landingHeadline": "A trusted way to find the right match",
-  "landingSubline": "Safe, simple and family-friendly matrimony platform",
-  "landscapeLayoutLargePhotoCompact": "Large photo and compact information in a landscape layout.",
-  "languageMenu": "Language",
-  "languageSwitchSubtitle": "Change app language",
-  "leftRight": "Left / right",
-  "lessThan1YearIsNot": "Less than 1 year is not supported by the current save rules. Select 1 year for now.",
-  "lifestyle": "Lifestyle",
-  "lifestyleDetails": "Lifestyle details",
-  "lifestylePreferences": "Lifestyle Preferences",
-  "likeThisProfile": "Like this profile?",
-  "livingWith": "Living with",
-  "livingWithOptionsUnavailable": "Living-with options unavailable.",
-  "loading": "Loading...",
-  "loadingBiodataOptions": "Loading biodata options",
-  "loadingChats": "Loading chats",
-  "loadingContactRequests": "Loading contact requests",
-  "loadingConversation": "Loading conversation",
-  "loadingMatches": "Loading matches",
-  "loadingNotifications": "Loading notifications",
-  "loadingPhotos": "Loading photos",
-  "loadingPlans": "Loading plans",
-  "loadingProfile": "Loading profile",
-  "loadingProfileLists": "Loading profile lists",
-  "loadingReceivedInterests": "Loading received interests",
-  "loadingSentInterests": "Loading sent interests",
-  "loadingSettings": "Loading settings",
-  "location": "Location",
-  "locationDetails": "Location details",
-  "locationEntryAddedYouCanContinue": "Location entry added. You can continue.",
-  "locationFoundButNoMatchingApp": "Location found, but no matching app location was found.",
-  "locationPermissionIsNeededForNearby": "Location permission is needed for Nearby.",
-  "locationPermissionWasDenied": "Location permission was denied.",
-  "locationPreference": "Location preference",
-  "locationPreferences": "Location Preferences",
-  "locationSelected": "Location selected",
-  "locationTookTooLongTryAgain": "Location took too long. Try again.",
-  "lockedProfile": "Locked profile",
-  "lockedVisitor": "Locked visitor",
-  "login": "Login",
-  "loginChangeMobile": "Change mobile number",
-  "loginFailed": "Login failed. Check login or password.",
-  "loginHidePassword": "Hide password",
-  "loginIdentifierLabel": "Mobile / Email / Username",
-  "loginKeepSignedIn": "Keep me signed in",
-  "loginKeepSignedInSubtitle": "Open the app next time without entering your password.",
-  "loginMissingFields": "Enter login and password.",
-  "loginMobileHint": "Enter your mobile number. We will send you a one-time code.",
-  "loginNetworkError": "Could not reach the server. Check your internet and try again.",
-  "loginOtpAutoFillHint": "If the code arrives on this phone it fills in by itself.",
-  "loginOtpSentHint": "Enter the code we sent to your mobile number.",
-  "loginOtpWhatsappHint": "The code was sent on WhatsApp.",
-  "loginPasswordLabel": "Password",
-  "loginPickFromSim": "Pick from SIM",
-  "loginProfileCheckFailed": "Profile check failed. Please try again.",
-  "loginProfileMissing": "Profile not found. Create your profile.",
-  "loginRegisterPrompt": "New user? Register here",
-  "loginShowPassword": "Show password",
-  "loginSuccess": "Login successful. Welcome back.",
-  "loginTestOtpBanner": "Test mode. This code is shown only because real messages are not being sent yet.",
-  "loginUseOtpInstead": "Use OTP instead",
-  "loginUsePasswordInstead": "Use password instead",
-  "forgotPasswordLink": "Forgot password?",
-  "forgotPasswordTitle": "Reset password",
-  "forgotPasswordRequestSubtitle": "Enter your mobile number, email or username. A mobile number signs you in with a one-time code and no password. An email or username gets a reset link by email.",
-  "forgotPasswordIdentifierLabel": "Mobile, email or username",
-  "forgotPasswordSendLink": "Send reset link",
-  "forgotPasswordUseOtp": "Send OTP and sign in",
-  "forgotPasswordMobileNoticeTitle": "You typed a mobile number",
-  "forgotPasswordMobileNoticeBody": "You do not need a password. We will send a one-time code to this number and sign you in. A password can be set later from Settings.",
-  "forgotPasswordEmailNoticeTitle": "You typed an email address",
-  "forgotPasswordEmailNoticeBody": "We will email a password reset link to this address. Open the email, then paste the link back here.",
-  "forgotPasswordUsernameNoticeTitle": "You typed a username",
-  "forgotPasswordUsernameNoticeBody": "We will email a password reset link to the address on your account. Open the email, then paste the link back here.",
-  "forgotPasswordIdentifierMissing": "Enter your mobile number, email or username.",
-  "forgotPasswordSendFailed": "Could not send the reset link. Please try again.",
-  "forgotPasswordRateLimited": "Too many attempts. Please wait a minute and try again.",
-  "forgotPasswordLinkSentTitle": "Check your email",
-  "forgotPasswordLinkSentSubtitle": "Open the reset link we emailed you, copy the full link and paste it below. The link stops working after 60 minutes.",
-  "forgotPasswordResetStepSubtitle": "Paste the reset link from your email, then choose a new password.",
-  "forgotPasswordLinkLabel": "Paste reset link",
-  "forgotPasswordLinkHint": "Or paste only the token if you have it",
-  "forgotPasswordEmailLabel": "Email on your account",
-  "forgotPasswordNewPasswordLabel": "New password",
-  "forgotPasswordConfirmPasswordLabel": "Confirm new password",
-  "forgotPasswordSubmit": "Reset password",
-  "forgotPasswordTokenMissing": "Paste the reset link from your email.",
-  "forgotPasswordEmailMissing": "Enter the email address on your account.",
-  "forgotPasswordEmailInvalid": "Enter a valid email address.",
-  "forgotPasswordTooShort": "Use at least 8 characters.",
-  "forgotPasswordMismatch": "Both passwords must match.",
-  "forgotPasswordResetFailed": "Could not reset the password. The link may have expired.",
-  "forgotPasswordResetDone": "Password changed. Sign in with your new password.",
-  "forgotPasswordHaveLink": "I already have the reset link",
-  "forgotPasswordBackToRequest": "Send the link again",
-  "loginWelcomeSubtitle": "Continue your matrimony journey securely.",
-  "loginWelcomeTitle": "Welcome back",
-  "logout": "Logout",
-  "logoutToExit": "Use Logout when you want to leave this account.",
-  "makeSelectionBeforeSaving": "A selection must be made before saving",
-  "male": "Male",
-  "mangalDosh": "Mangal dosh",
-  "maritalStatus": "Marital status",
-  "maritalStatusOptionsCouldNotBe": "Marital status options could not be loaded.",
-  "marriageType": "Marriage type",
-  "matchesFilter": "Filters",
-  "matchesFilterHint": "Age, caste, location",
-  "matchesScreenWillAppearSoon": "The matches screen will appear in a moment.",
-  "matchesTabDaily": "Daily",
-  "matchesTabMore": "More Matches",
-  "matchesTabMyMatches": "My Matches",
-  "matchesTabNearMe": "Near Me",
-  "matchesTabNew": "New",
-  "matchesTabSearch": "Search",
-  "max": "Max",
-  "maxIncome": "Max income",
-  "maxIncomeMustBeMoreThan": "Max income must be more than min income.",
-  "membersYouMayLike": "Profiles you may like",
-  "min": "Min",
-  "minIncome": "Min income",
-  "mobileLocationFilledPleaseReviewIt": "Mobile location filled. Please review it before continuing.",
-  "mobileLocationIsAlreadyRunning": "Mobile location is already running.",
-  "mobileLocationMatchedPleaseReviewIt": "Mobile location matched. Please review it before continuing.",
-  "mobileLocationTimedOutTryAgain": "Mobile location timed out. Try again or search manually.",
-  "mobileNumber": "Mobile number *",
-  "mobileNumber2": "Mobile number",
-  "mobileVerificationKeepsTheAccountSecure": "Mobile verification keeps the account secure and recoverable.",
-  "mobileVerified": "Mobile verified",
-  "monthly": "Monthly",
-  "moreMatchesSectionsAreUnavailableShowing": "More Matches sections are unavailable. Showing available matches below.",
-  "moreProfilesYouMayLike": "More suitable profiles",
-  "motherTongue": "Mother tongue *",
-  "motherTongue2": "Mother tongue",
-  "moveLeft": "Move left",
-  "moveRight": "Move right",
-  "myProfile": "My Profile",
-  "myProfileSubtitle": "View your matrimony profile",
-  "myself": "Myself",
-  "nakshatra": "Nakshatra",
-  "name": "Name",
-  "nearbyLocation": "Nearby location",
-  "nearbyTalukaSuggestionsComeFromBackend": "Nearby taluka suggestions come from the backend.",
-  "newEditableIntakeNotReady": "A new editable intake was created, but it is not ready yet.",
-  "newMatchesDigest": "New matches digest",
-  "newSetWillAppearHere": "It will appear here when a new set is available. Until then you can view regular matches.",
-  "no": "No",
-  "noBiodataIntakeUploadedYet": "No biodata intake has been uploaded yet.",
-  "noBlockedProfiles": "No blocked profiles.",
-  "noChildren": "No children",
-  "noHiddenProfiles": "No hidden profiles.",
-  "noInformation": "Not available",
-  "noLocationsFound": "No locations found.",
-  "noOptionsFound": "No options found.",
-  "noOptionsFound2": "No options found",
-  "noProfileData": "Profile data is not available.",
-  "noProfilesFoundTryReducingFilters": "No profiles found. Try reducing filters and search again.",
-  "noSafeNewDataToSave": "There is no safe new information to save. The previous profile information has been kept as is.",
-  "noShortlistedProfiles": "No shortlisted profiles yet.",
-  "normal": "Normal",
-  "normalModeSelectedSomePreferencesAre": "Normal mode selected. Some preferences are wider for more matches.",
-  "notFoundRequestOccupation": "Not found? Request occupation",
-  "notFoundRequestToAdd": "Not found? Request to add",
-  "notesOptional": "Notes optional",
-  "notificationsEmpty": "No notifications yet.",
-  "notificationsLoadFailed": "Notifications could not be loaded.",
-  "notificationsMarkAllRead": "Mark all read",
-  "notificationsOpenFailed": "This notification does not have an app action.",
-  "notificationsRead": "Read",
-  "notificationsSoon": "Notifications will be available soon.",
-  "notificationsTitle": "Notifications",
-  "notificationsUnread": "Unread",
-  "nowSetAFewImportantThings": "Now set a few important things so we can suggest suitable matches.",
-  "occupation": "Occupation",
-  "occupationAndIncomeAreOptionalWhen": "Occupation and income are optional when not working.",
-  "occupationLabel": "Occupation label",
-  "occupationRequestSubmitted": "Occupation request submitted.",
-  "ofThisProfile": "Of this profile",
-  "oneFinalProfileDetailHelpsFamilies": "One final profile detail helps families understand the match better.",
-  "onlyIdVerifiedProfiles": "Only ID verified profiles",
-  "onlyProfilesWithPhoto": "Only profiles with photo",
-  "open": "Open",
-  "open2": "Open",
-  "openLocation": "Open location",
-  "openToIntercaste": "Open to intercaste",
-  "optional": "Optional",
-  "optional2": "Optional",
-  "optionalButUsefulForBetterSuggestions": "Optional, but useful for better suggestions",
-  "optionalYouCanAddThisLater": "Optional — you can add this later",
-  "optionsNotLoaded": "Options not loaded.",
-  "other": "Other",
-  "otherPreferences": "Other Preferences",
-  "otpVerificationFailed": "OTP verification failed.",
-  "partnerPreference": "Partner preference",
-  "partnerPreference2": "Partner Preference",
-  "partnerPreferencePreviewIsNotReady": "Partner preference preview is not ready.",
-  "partnerPreferenceSaveFailed": "Partner preference save failed.",
-  "partnerPreferenceSaveProblem": "A problem occurred while saving the partner preference.",
-  "partnerProfileWithChildren": "Partner profile with children",
-  "passwordAndConfirmPasswordDoNot": "Password and confirm password do not match.",
-  "pending": "Pending",
-  "pendingSuggestionsAreNotSelectedAs": "Pending suggestions are not selected as occupation until approved.",
-  "pendingSuggestionsAreNotSelectedAs2": "Pending suggestions are not selected as education until approved.",
-  "perMonth": "per month",
-  "perYear": "per year",
-  "photoApproved": "Photo approved",
-  "photoApprovedMovingToPartnerPreference": "Photo approved. Moving to partner preference.",
-  "photoAvailable": "Photo available",
-  "photoCropPhoto": "Could not crop the photo. Please select a different photo.",
-  "photoDeleteConfirm": "Remove this photo from your profile?",
-  "photoGalleryEmpty": "No photos uploaded yet.",
-  "photoInReviewShownWhenApproved": "The photo is under review. It will be shown on your profile once approved.",
-  "photoIsNotValidPleaseSelect": "Photo is not valid. Please select a clear image.",
-  "photoIsUploadedApprovalOrSafety": "Photo is uploaded. Approval or safety check is pending.",
-  "photoIsUploadingPleaseWait": "Photo is uploading. Please wait.",
-  "photoManagementHint": "Select a thumbnail below, then manage that photo.",
-  "photoNotApproved": "Photo not approved",
-  "photoNotUploaded": "Photo not uploaded",
-  "photoPreviewUnavailable": "Photo preview is not available.",
-  "photoReachedBackendQualityAndSafety": "Photo reached backend. Quality and safety check is in progress.",
-  "photoReceivedByBackend": "The backend has received the photo. Quality and safety check is in progress.",
-  "photoReceivedCheckingQualitySafety": "The photo has been received. The backend is checking quality and safety.",
-  "photoReorderFailed": "Photo reorder failed.",
-  "photoSelectedCropItIfNeeded": "Photo selected. Crop it if needed, then upload.",
-  "photoSelectionCancelled": "Photo selection cancelled.",
-  "photoStatusCouldNotBeRefreshed": "Photo status could not be refreshed.",
-  "photoUnavailable": "Photo not available",
-  "photoUploadFailed": "Photo upload failed.",
-  "photoUploadFailedPleaseTryAgain": "Photo upload failed. Please try again.",
-  "photoUploadHelp": "Upload a clear, single-person photo in good light.",
-  "photoUploadIsNotAllowedFor": "Photo upload is not allowed for this account.",
-  "photoUploadNotAllowedForAccount": "Photo upload is currently not allowed for your account.",
-  "photoUploadProblem": "A problem occurred while uploading the photo. Please try again.",
-  "photoUploaded": "Photo uploaded.",
-  "photoUploadedApprovalPending": "The photo is uploaded. Approval or safety check is pending.",
-  "photoUploadedBackendQualitySafetyCheck": "The photo is uploaded. It will become visible after the server quality and safety check.",
-  "photoUploadedPleaseCheckTheStatus": "Photo uploaded. Please check the status before continuing.",
-  "photoUploadedReviewIsPendingSo": "Photo uploaded. Review is pending, so we will continue.",
-  "photoUploadedStatusWillUpdate": "Photo uploaded. Status will update here.",
-  "photoUploadedToModerationEngine": "This photo will be uploaded to the backend moderation engine.",
-  "photoVisibility": "Photo visibility",
-  "photosVerification": "Photos / Verification",
-  "photosVerificationSubtitle": "Manage gallery and verification status",
-  "physicalBuild": "Physical Build",
-  "pincodeOptional": "Pincode optional",
-  "plainLandscape": "Plain Landscape",
-  "plansActiveSubscription": "Active subscription",
-  "plansAvailablePlans": "Available plans",
-  "plansBrowserNote": "Checkout opened in the browser. Payment status will update from Laravel.",
-  "plansCheckoutUrlMissing": "Checkout link was not returned by the backend.",
-  "plansChoose": "Choose",
-  "plansContactQuota": "Contact unlock quota",
-  "plansCurrentPlan": "Current plan",
-  "plansEmpty": "No upgrade plan is available right now.",
-  "plansFreeOrLocked": "Free / locked state",
-  "plansLoadFailed": "Plans could not be loaded.",
-  "plansManualRefreshHint": "After payment, return to the app and tap Refresh.",
-  "plansNoCurrentPlan": "Current plan is not available",
-  "plansOpenFailedCopied": "Could not open the browser. Checkout link was copied to the clipboard.",
-  "plansOpeningCheckout": "Opening checkout...",
-  "plansRefresh": "Refresh",
-  "plansRemaining": "remaining",
-  "plansTitle": "Plans",
-  "plansUpgradeMenu": "Plans / Upgrade",
-  "pleaseCheckChildDetails": "Please check child details.",
-  "pleaseCheckDateOfBirth": "Please check Date of birth.",
-  "pleaseCheckHeight": "Please check Height.",
-  "pleaseCheckThisField": "Please check this field.",
-  "pleaseCheckThisInformation": "Please check this information.",
-  "pleaseEnterEducation": "Please enter education.",
-  "pleaseEnterEducationOrSelectSuggestion": "Please enter education or select a suggestion.",
-  "pleaseEnterFullName": "Please enter full name.",
-  "pleaseLogin": "Please login",
-  "pleaseSelectAPhotoFirst": "Please select a photo first.",
-  "pleaseSelectCasteFromSuggestions": "Please select a caste from the suggestions.",
-  "pleaseSelectDateOfBirth": "Please select date of birth.",
-  "pleaseSelectLivingWithAgain": "Please select living with again.",
-  "pleaseSelectLocationFromSuggestions": "Please select a location from the suggestions.",
-  "pleaseSelectMotherTongueAgain": "Please select mother tongue again.",
-  "pleaseSelectReligionFromSuggestions": "Please select a religion from the suggestions.",
-  "pleaseSelectWhetherThereAreChildren": "Please select whether there are children.",
-  "pleaseTryAgainWithAClear": "Please try again with a clear photo.",
-  "pleaseUploadAClearSafeSingle": "Please upload a clear, safe, single-person photo.",
-  "pleaseVerifyMobileFirst": "Please verify mobile first.",
-  "pleaseWriteReportReason": "Please write the reason for the report",
-  "preferredAgeRangeInvalid": "The preferred age range is invalid.",
-  "preferredHeightRangeInvalid": "The preferred height range is invalid.",
-  "preferredIncomeRangeInvalid": "The preferred income range is invalid.",
-  "premiumDoubleBorderElegantA4Portrait": "Premium double border, photo and an elegant A4 portrait.",
-  "premiumProfiles": "Premium profiles",
-  "premiumProfilesSubtitle": "Selected premium profiles",
-  "premiumRoyalStyleLandscape": "Premium royal style, with a landscape photo.",
-  "preparingProfilesForYou": "Preparing profiles for you.",
-  "preparingReviewScreen": "Preparing the review screen...",
-  "preparingYourInformation": "Preparing your information.",
-  "previousBiodataTextUnavailable": "The previous biodata text is not available. Please upload the biodata again.",
-  "primaryPhoto": "Primary",
-  "problemSelectingPhoto": "A problem occurred while selecting the photo. Please try again.",
-  "professionalLandscapeBiodataNoPhoto": "Professional landscape biodata without a photo.",
-  "professionalPreferences": "Professional Preferences",
-  "profile": "Profile",
-  "profileCreatedSuccessfully": "Profile created successfully!",
-  "profileDetailsCopied": "Profile details copied.",
-  "profileListsBlocked": "Blocked",
-  "profileListsHidden": "Hidden",
-  "profileListsLoadFailed": "Profile list could not be loaded.",
-  "profileListsMenu": "Shortlist / Blocked",
-  "profileListsShortlist": "Shortlist",
-  "profileListsTitle": "Shortlist / Blocked",
-  "profileManagedBy": "Profile managed by",
-  "profileNotFoundCreateFirst": "Profile not found. Please create a profile first.",
-  "profileOpenNotAllowed": "This profile cannot be opened right now.",
-  "profilePhoto": "Profile photo",
-  "profilePhoto2": "Profile Photo",
-  "profileQuality": "Profile quality",
-  "profileRemovedFromShortlist": "Profile removed from shortlist.",
-  "profileType": "Profile type",
-  "profileTypeLoadFailed": "Profile type could not be loaded.",
-  "profileUnblocked": "Profile unblocked.",
-  "profileUnhidden": "Profile unhidden.",
-  "profileUpdatedSuccessfully": "Profile updated successfully!",
-  "profileViewed": "Profile viewed",
-  "profileVisibility": "Profile visibility",
-  "profileWasNotFoundPleaseComplete": "Profile was not found. Please complete profile first.",
-  "profilesCloserToYourLocation": "Profiles closer to your location",
-  "profilesFromSearch": "Profiles from your search",
-  "profilesWhosePreferencesMayMatchYou": "Profiles whose preferences may match you",
-  "profilesYouViewedRecently": "Profiles you viewed recently",
-  "range": "Range",
-  "rashi": "Rashi",
-  "readyToUpload": "Ready to upload",
-  "receivedInterests": "Received Interests",
-  "receivedInterests2": "Received interests",
-  "receivedInterestsSubtitle": "View and respond to received interests",
-  "recentVisitorsEmpty": "No eligible recent visitors to show yet.",
-  "recentlyActive": "Recently active",
-  "recognizedButNotAddedToForm": "Information that was recognized but not added to the form",
-  "refresh": "Refresh",
-  "refreshPhotoStatus": "Refresh photo status",
-  "refreshPreference": "Refresh preference",
-  "register": "Register",
-  "registrationComplete": "Registration complete",
-  "registrationIsCompleteNextSettingsImprove": "Registration is complete. Next settings improve match suggestions.",
-  "registrationSuccessfulCreateProfile": "Registration successful! Create your profile...",
-  "rejected": "Rejected",
-  "relative": "Relative",
-  "relativeSDetails": "Relative’s details",
-  "relativeSFullName": "Relative’s full name *",
-  "religion": "Religion",
-  "religion2": "Religion *",
-  "religiousPreferences": "Religious Preferences",
-  "removeFromShortlist": "Remove from shortlist",
-  "removeUnwantedTalukasBeforeSaving": "Remove unwanted talukas before saving.",
-  "removedFromShortlist": "Removed from Shortlist.",
-  "replaceApprovedPhoto": "Replace approved photo",
-  "replacePhoto": "Replace photo",
-  "reportReasonMinLength": "Report reason must be at least 10 characters.",
-  "requestEducation": "Request education",
-  "requestOccupation": "Request occupation",
-  "requestedLocation": "Requested location",
-  "requireContactRequest": "Require contact request",
-  "required": "Required",
-  "resendCode": "Resend code",
-  "resendOtp": "Resend OTP",
-  "retry": "Retry",
-  "reviewThePreferencePreparedFromYour": "Review the preference prepared from your profile. You can widen it for more matches.",
-  "royalLandscape": "Royal Landscape",
-  "rural": "Rural",
-  "safePhoto": "Safe photo",
-  "safeProfiles": "Safe profiles",
-  "save": "Save",
-  "saveAndContinue": "Save and continue",
-  "saveAndContinue2": "Save and continue",
-  "saveNormalPreferenceAndFinishSetup": "Save normal preference and finish setup",
-  "saveOrDiscardChangesInSection": "Do you want to save or discard the changes in this section?",
-  "saveSection": "Save section",
-  "saveStrictPreferenceAndFinishSetup": "Save strict preference and finish setup",
-  "saved": "Saved.",
-  "savedChooseMaritalStatus": "Saved. Choose marital status.",
-  "savedForNowAdminCanApprove": "Saved for now; admin can approve the master location later.",
-  "search": "Search",
-  "search2": "Search",
-  "searchAndSelectEducation": "Search and select education",
-  "searchCountry": "Search country",
-  "searchDistrict": "Search district",
-  "searchEducation": "Search education",
-  "searchFilters": "Search filters",
-  "searchLocation": "Search location",
-  "searchMotherTongue": "Search mother tongue",
-  "searchOccupation": "Search occupation",
-  "searchState": "Search state",
-  "searchTaluka": "Search taluka",
-  "searchTalukaCityOrSuburb": "Search taluka, city or suburb",
-  "searchWithAgeCommunityLocationAnd": "Search with age, community, location and advanced filters.",
-  "searchWorkType": "Search work type",
-  "sectionSaved": "Section saved.",
-  "sectionUpdated": "Section updated.",
-  "seeHowYourProfileMatchesHer": "See how well your profile matches her expectations",
-  "seeHowYourProfileMatchesHis": "See how well your profile matches his expectations",
-  "seeHowYourProfileMatchesThisMatch": "See how well your profile matches this match's expectations",
-  "seeWhoViewedYourProfile": "See who viewed your profile",
-  "select": "Select",
-  "selectACitySuburbVillageOr": "Select a city, suburb, village, or add your location.",
-  "selectAgeBetween1And30": "Select age between 1 and 30.",
-  "selectAtLeastOneContactMethod": "Select at least one contact method.",
-  "selectCaste": "Select caste.",
-  "selectChildGender": "Select child gender.",
-  "selectClearPortraitPhoto": "Select a clear portrait photo from the camera or gallery.",
-  "selectCountry": "Select country",
-  "selectCountry2": "Select country.",
-  "selectCountryStateDistrictAndEnter": "Select country, state, district and enter location name.",
-  "selectDistrict": "Select district",
-  "selectDistrictAndLocation": "Select district and location.",
-  "selectDob": "Select DOB.",
-  "selectEducation": "Select education.",
-  "selectEmail": "Select Email",
-  "selectFamilyStatus": "Select family status.",
-  "selectFamilyStatusAndWriteA": "Select family status and write a short about section.",
-  "selectFriendSGender": "Select friend's gender",
-  "selectGender": "Select gender",
-  "selectGenderAgain": "Select gender again.",
-  "selectHeight": "Select height.",
-  "selectHeight2": "Select height",
-  "selectIfKnown": "Select if known",
-  "selectIncomeRange": "Select income range",
-  "selectLocation": "Select location",
-  "selectLocationBeforeSaving": "A place of residence must be selected before saving",
-  "selectMaritalStatus": "Select marital status.",
-  "selectMotherTongue": "Select mother tongue",
-  "selectMotherTongueReligionAndCaste": "Select mother tongue, religion and caste to continue.",
-  "selectOccupation": "Select occupation",
-  "selectPhoto": "Select photo",
-  "selectProfileType": "Please select profile type.",
-  "selectRelativeSGender": "Select relative's gender",
-  "selectReligion": "Select religion.",
-  "selectReligionFirstToChoosePreferredCaste": "Select a religion first to choose a preferred caste.",
-  "selectState": "Select state",
-  "selectState2": "Select state.",
-  "selectSubCasteFromSuggestionsOrLeaveEmpty": "Please select a sub-caste from the suggestions or leave the field empty.",
-  "selectTalukaCityOrSuburb": "Select taluka, city or suburb",
-  "selectTalukaOptional": "Select taluka optional",
-  "selectTheCurrentWorkType": "Select the current work type.",
-  "selectWhenOptionsAvailable": "Select once options are available.",
-  "selectWorkType": "Select work type",
-  "selectYourGender": "Select your gender",
-  "selectedPhoto": "Selected photo",
-  "sendEmailOtp": "Send email OTP",
-  "sendInterest": "Send Interest",
-  "sendOtpAgain": "Send OTP again",
-  "sendOtpFirst": "Send OTP first.",
-  "sendProfileAlertsOnWhatsapp": "Send profile alerts on WhatsApp",
-  "sendingOtp": "Sending OTP",
-  "sentInterests": "Sent Interests",
-  "sentInterestsSubtitle": "View interests you have sent",
-  "sessionExpiredPleaseLogin": "Session expired. Please log in again.",
-  "sessionExpiredPleaseLoginAgain": "Session expired. Please login again.",
-  "sessionExpiredVerifyMobileAgain": "Session expired. Verify mobile again.",
-  "setAPasswordIfYouWish": "Set a password if you wish to log in with it",
-  "setPassword": "Set password",
-  "setPassword2": "Set Password",
-  "setPrimary": "Set primary",
-  "settingsAccountSummary": "Account summary",
-  "settingsCommunication": "Communication",
-  "settingsLoadFailed": "Settings could not be loaded.",
-  "settingsNoProfile": "These settings will be available after your profile is complete.",
-  "settingsNotAvailable": "Not available",
-  "settingsNotifications": "Notifications",
-  "settingsPrivacy": "Privacy",
-  "settingsReadOnly": "Read only",
-  "settingsSave": "Save",
-  "settingsSaved": "Settings saved.",
-  "settingsSecurity": "Security",
-  "changePasswordTitle": "Change password",
-  "changePasswordSettingsSubtitle": "Set a new password without the old one.",
-  "changePasswordIntro": "Choose a new password. You will not be asked for your old one — being signed in here is proof enough.",
-  "changePasswordOtherDevicesNotice": "Your other devices will be signed out. This phone stays signed in.",
-  "changePasswordSubmit": "Save new password",
-  "changePasswordMissing": "Enter a new password.",
-  "changePasswordFailed": "Could not change the password. Please try again.",
-  "changePasswordSessionExpired": "You have been signed out. Sign in again, then change the password.",
-  "settingsTitle": "Settings",
-  "showPassword": "Show password",
-  "simpleFamilyFirst": "Simple & family-first",
-  "simpleFamilyFirst2": "Simple & family-first",
-  "simpleProcess": "Simple registration",
-  "singlePerson": "Single person",
-  "sister": "Sister",
-  "sisterSDetails": "Sister’s details",
-  "sisterSFullName": "Sister’s full name *",
-  "skipAstroDetails": "Skip astro details",
-  "skipEmailVerification": "Skip email verification",
-  "smoking": "Smoking",
-  "son": "Son",
-  "sonSDetails": "Son’s details",
-  "sonSFullName": "Son’s full name *",
-  "spectaclesLens": "Spectacles / Lens",
-  "startWithEmail": "Start with Email",
-  "startWithProfileOwner": "Start with profile owner",
-  "state": "State",
-  "str": ".",
-  "strict": "Strict",
-  "strictModeSelectedPreferencesAreFocused": "Strict mode selected. Preferences are focused from your profile.",
-  "subCaste": "Sub-caste",
-  "submit": "Submit",
-  "suggestedProfilesForYou": "Suggested profiles for you",
-  "taluka": "Taluka",
-  "talukaCitySuburban": "Taluka / City / Suburban",
-  "thereWasAProblemSelectingThe": "There was a problem selecting the photo. Please try again.",
-  "thereWasAProblemUploadingThe": "There was a problem uploading the photo. Please try again.",
-  "thisApprovedPhotoIsVisibleOn": "This approved photo is visible on your profile.",
-  "thisIsOptionalAddOnlyWhat": "This is optional. Add only what you know now.",
-  "thisKeepsEveryNextQuestionRelevant": "This keeps every next question relevant to the right person.",
-  "thisLocationAlreadyExistsItHas": "This location already exists. It has been selected.",
-  "thisMonth": "this month",
-  "thisPhotoCouldNotBeApproved": "This photo could not be approved. Please upload another clear photo.",
-  "thisPhotoWasNotApprovedPlease": "This photo was not approved. Please upload another clear photo.",
-  "thisPreferenceIsBasedOnThe": "This preference is based on the information you filled. You can edit any section now or change it later.",
-  "thisWeek": "this week",
-  "titleRangeInvalid": "The $title range is invalid.",
-  "today": "today",
-  "todaysRecommendationsComplete": "Today's recommendations are complete",
-  "total": "Total",
-  "traditionOpenMind": "Tradition & open mind",
-  "traditionOpenMind2": "Tradition & open mind",
-  "traditionalColorsDecorativeBorder": "Traditional colors, decorative border and an introduction card with photo.",
-  "tryAgainAfterTheLatestServer": "Try again after the latest server update.",
-  "tryGoogleVerification": "Try Google verification",
-  "turnOnDeviceLocationInAndroid": "Turn on device location in Android settings and try again.",
-  "unblockProfile": "Unblock",
-  "unhideProfile": "Unhide",
-  "unlock": "Unlock",
-  "unlockRequiredToViewContact": "Unlock is required to view contact details.",
-  "upDown": "Up / down",
-  "upgrade": "Upgrade",
-  "upgradeRequiredToViewContact": "Upgrade is required to view contact details.",
-  "upgradeToSeeVisitors": "Upgrade to see visitors",
-  "uploadAProfilePhotoBeforeContinuing": "Upload a profile photo before continuing.",
-  "uploadClearProfilePhoto": "Upload a clear profile photo. The approved status will appear only after backend approval.",
-  "uploadClearSafeSinglePersonPhoto": "Please upload a clear, safe and single-person photo.",
-  "uploadCompleteScreen": "Do not close the screen until the upload is complete.",
-  "uploadNeedsAttention": "Upload needs attention",
-  "uploadPhoto": "Upload Photo",
-  "uploadPhotoSubtitle": "Update your profile photo",
-  "uploadSelectedPhoto": "Upload selected photo",
-  "uploadTheSelectedPhotoBeforeContinuing": "Upload the selected photo before continuing.",
-  "uploadedBiodataPhoto": "Uploaded biodata photo",
-  "uploading": "Uploading...",
-  "uploadingPhoto": "Uploading photo",
-  "useLocation": "Use location",
-  "useLocationForNearby": "Use location for Nearby",
-  "useMobileLocation": "Use mobile location",
-  "useNearby": "Use nearby",
-  "useNearbyKeepsBackendSuggestedCountry": "Use nearby keeps backend suggested country/state/district. Open removes location filters.",
-  "lifestyleAllOptional": "All optional · you can fill these later",
-  "usefulForDayToDayCompatibility": "Useful for day-to-day compatibility.",
-  "v1": "<1",
-  "v10kTo30k": "10K to 30K",
-  "v10lTo30l": "10L to 30L",
-  "v1lTo2l": "1L to 2L",
-  "v2lTo5l": "2L to 5L",
-  "v30kTo1l": "30K to 1L",
-  "v30lTo50l": "30L to 50L",
-  "v50lAndAbove": "50L and above",
-  "v5lAndAbove": "5L and above",
-  "v5lTo10l": "5L to 10L",
-  "verificationStatus": "Verification status",
-  "verifiedEmail": "Verified email",
-  "verifyAndContinue": "Verify and continue",
-  "verifyEmail": "Verify email",
-  "verifyMobile": "Verify mobile",
-  "verifyMobileNumber": "Verify mobile number",
-  "verifyMobileNumber2": "Verify Mobile Number",
-  "verifyOtp": "Verify OTP",
-  "verifying": "Verifying...",
-  "verifying2": "Verifying",
-  "viewMatches": "View matches",
-  "viewProfile": "View profile",
-  "viewedRecently": "Viewed recently",
-  "viewedYourProfile": "Viewed your profile",
-  "villageLocationName": "Village / location name",
-  "weCouldNotSaveThisInformation": "We could not save this information. Please check the highlighted field.",
-  "weFoundYourMobileLocationPlease": "We found your mobile location. Please select the nearest location from the list.",
-  "wePreparedThisFromTheInformation": "We prepared this from the information you filled. You can keep it strict or make it normal.",
-  "weVeSentAVerificationCode": "We’ve sent a verification code to",
-  "weWillAddThisOnlyIf": "We will add this only if it is not already available.",
-  "whatsappResponseAvailable": "WhatsApp Response is available.",
-  "whatsappResponseComingSoon": "WhatsApp Response feature will be available soon.",
-  "whatsappResponseInboxWillBeAvailable": "WhatsApp Response inbox will be available in the mobile app soon.",
-  "whoViewed": "Who viewed",
-  "willingToRelocate": "Willing to relocate",
-  "workDetails": "Work details",
-  "workLocationOptional": "Work location optional",
-  "workingAs": "Working as",
-  "workingWith": "Working with",
-  "writeANaturalIntroductionFamilyBackground": "Write a natural introduction, family background, and what makes this profile easy to understand.",
-  "writeAShortAboutSection": "Write a short about section.",
-  "writeExpectationsAboutPartnerBriefly": "Write your expectations about a partner briefly.",
-  "writeOtherReason": "Write the other reason.",
-  "years": " years",
-  "yes": "Yes",
-  "yes2": "Yes",
-  "yourDetails": "Your details",
-  "yourFullName": "Your full name *",
-  "yourMotherTongue": "Your mother tongue",
-  "yourPhotos": "Your photos",
-  "yourProfileHasBeenCreatedSuccessfully": "Your profile has been created successfully.",
-  "yourProfileViewedTimes": "Your profile was viewed $count times",
-  "yourProfileViewedTimesInWindow": "$window your profile was viewed $count times",
-  "yourProfileWasViewed": "Your profile was viewed.",
-  "zoom": "Zoom",
-  "back": "Back",
-  "viewPlans": "View Plans",
-  "profileActions": "Profile actions",
-  "shareProfile": "Share profile",
-  "addToShortlist": "Add to Shortlist",
-  "hideThisProfile": "Hide this Profile",
-  "blockThisProfile": "Block this Profile",
-  "reportThisProfile": "Report this Profile",
-  "gunmilan": "Gunmilan",
-  "requestContact": "Request Contact",
-  "close": "Close",
-  "sendRequest": "Send Request",
-  "hide": "Hide",
-  "block": "Block",
-  "whatsappResponse": "WhatsApp Response",
-  "viewContact": "View Contact",
-  "upgradeToViewContact": "Upgrade to View Contact",
-  "statusOnline": "Online",
-  "comparisonYouAndHer": "You & Her",
-  "comparisonYouAndHim": "You & Him",
-  "comparisonYouAndProfile": "You & Profile",
-  "contactInformationTitle": "Contact Information",
-  "contactInformationAvailable": "Contact information is available.",
-  "upgradeToViewAllPhotos": "Upgrade to view all photos.",
-  "uploadPhotoToUnlockProfiles": "Upload your photo to unlock more profiles.",
-  "photoAccessLockedForPlan": "Photo access is locked for your current plan.",
-  "contactDetailsUnlocked": "Contact details unlocked.",
-  "contactRequestSent": "Contact request sent.",
-  "profileHidden": "Profile hidden.",
-  "profileBlocked": "Profile blocked.",
-  "profileLinkReadyToShare": "Profile link ready to share.",
-  "profileLinkCopied": "Profile link copied.",
-  "reportSubmitted": "Report submitted.",
-  "comparisonTitle": "Comparison",
-  "comparisonViewerYou": "You",
-  "heightLabel": "Height",
-  "astro": "Astro",
-  "moreProfilesYouMayLike2": "More profiles you may like",
-  "contactMethods": "Contact methods",
-  "reason": "Reason",
-  "otherReason": "Other reason",
-  "reportProfileTitle": "Report profile",
-  "hideProfileConfirmTitle": "Hide profile?",
-  "hideProfileConfirmMessage": "This profile will be hidden from your browse/search list.",
-  "blockProfileConfirmTitle": "Block profile?",
-  "blockProfileConfirmMessage": "Blocking will remove interests/shortlists between both profiles and hide this profile from you.",
-  "viewProfileColon": "View profile:",
-  "photoActions": "Photo actions",
-  "aboutName": "About {name}",
-  "@aboutName": {
-    "placeholders": {
-      "name": { "type": "String" }
+    "@@locale": "en",
+    "a4Landscape": "A4 Landscape",
+    "a4Portrait": "A4 Portrait",
+    "aClearPhotoUsuallyImprovesResponse": "A clear photo usually improves response quality.",
+    "aLocationRequestIsAlreadyRunning": "A location request is already running.",
+    "aboutProfile": "About profile",
+    "accepted": "Accepted",
+    "accepted2": "Accepted",
+    "acceptedIfChildrenLiveSeparately": "Accepted if children live separately",
+    "addAClearPhotoCropIt": "Add a clear photo. Crop it if needed, then upload it for approval.",
+    "addAProfilePhotoFromCamera": "Add a profile photo from camera or gallery.",
+    "addChild": "Add child",
+    "addCompanyWorkLocation": "+ Add company / work location",
+    "addName": "Add name",
+    "addNewLocation": "Add new location",
+    "addOccupationAndOptionalWorkInfo": "Add occupation and optional work info.",
+    "addPhotos": "Add photos",
+    "addPhotosAndReviewPartnerPreference": "Add photos and review partner preference to improve suggestions.",
+    "addedToShortlist": "Added to Shortlist.",
+    "addressLineOptional": "Address line optional",
+    "age": "Age",
+    "ageRange": "Age range",
+    "allowLocationToApplyTheClosest": "Allow location to apply the closest app location.",
+    "alreadyHaveAccount": "Already have an account?",
+    "alreadyRegisteredVerifyMobileToContinue": "Already registered? Verify mobile to continue",
+    "and": " and ",
+    "annual": "Annual",
+    "annualIncome": "Annual income",
+    "appName": "Navri Mile Navryala",
+    "applyCrop": "Apply crop",
+    "approvalPending": "Approval pending",
+    "approvalRequired": "Approval required",
+    "approvedPhotoIsVisibleOnYour": "Approved photo is visible on your profile. You can replace it with a new photo.",
+    "approvedPhotoShownOnProfile": "This approved photo is shown on your profile.",
+    "approvedPhotoShownReplace": "The approved photo is shown on your profile. You can select a new photo to replace it.",
+    "approx": "Approx",
+    "astroAllOptional": "All optional · only what you know",
+    "astroTriangleHint": "Fill any two — the third fills itself",
+    "astroDerivedRashi": "Rashi came from the nakshatra",
+    "astroDerivedNakshatra": "Nakshatra came from the rashi and charan",
+    "astroDerivedCharan": "Charan came from the nakshatra and rashi",
+    "astroTriangleLabel": "Nakshatra · rashi · charan",
+    "astroClearAll": "Clear all",
+    "astroClearField": "Clear this",
+    "aboutTemplateGrowthTogether": "Growing together",
+    "aboutTemplateGrowthTogetherBody": "Looking for a partner to understand each other and move forward together.",
+    "astroDetails": "Astro details",
+    "authExpiredLoginAgain": "Authentication expired! Please log in again",
+    "authExpiredPleaseLoginAgain": "Authentication expired. Please log in again.",
+    "basedOnYourPartnerPreferences": "Based on your partner preferences",
+    "basicDetails": "Basic details",
+    "basicPreferences": "Basic Preferences",
+    "basics": "Basics",
+    "before": "Before",
+    "biodataCopyLink": "Copy link",
+    "biodataExpiresAt": "Link valid until",
+    "biodataExportBrowserOpened": "Biodata opened in the browser.",
+    "biodataExportDownload": "Download",
+    "biodataExportFailed": "Biodata export failed.",
+    "biodataExportFormat": "Choose format",
+    "biodataExportLinkExpires": "Share/download links are valid for a short time.",
+    "biodataExportLinkMissing": "The backend did not return a download link.",
+    "biodataExportLoadFailed": "Biodata export options could not be loaded.",
+    "biodataExportMenu": "Biodata Export",
+    "biodataExportOpenFailedCopied": "Could not open the browser. Link copied to clipboard.",
+    "biodataExportShare": "Share",
+    "biodataExportShared": "Biodata share link is ready.",
+    "biodataExportSubtitle": "Download or share your own biodata as a PDF.",
+    "biodataExportTemplate": "Choose template",
+    "biodataExportTitle": "Biodata Export",
+    "biodataExportUnavailable": "Biodata export is not available right now.",
+    "biodataExportWarnings": "Completeness warnings",
+    "biodataGeneratedSubtitle": "Use this link to preview, download, or share the generated biodata.",
+    "biodataGeneratedTitle": "Generated biodata is ready",
+    "biodataIntakeAlreadyApprovedLocked": "This biodata is already approved and cannot be edited here.",
+    "biodataIntakeCheckLowConfidenceFields": "Please check these fields carefully",
+    "biodataIntakeConfirmSave": "Confirm & Save",
+    "biodataIntakeExtractedText": "Biodata text used for autofill",
+    "biodataIntakeFailureCodes": "Failure codes",
+    "biodataIntakeFieldsEmpty": "No structured fields were detected. Check the text below and try again with a clearer photo.",
+    "biodataIntakeIntroSubtitle": "Use a clear photo or screenshot. The app will read the text and show editable details on the next screen.",
+    "biodataIntakeIntroTitle": "Choose a biodata photo",
+    "biodataIntakeLowConfidence": "Low confidence",
+    "biodataIntakeMenu": "Biodata Intake",
+    "biodataIntakeNoReadableText": "Could not read enough text from this photo. Please use a clearer, straight, well-lit photo.",
+    "biodataIntakeOpenProfile": "View Profile",
+    "biodataIntakeOverallQuality": "Overall quality",
+    "biodataIntakeProcessFailed": "Biodata could not be processed. Please try again.",
+    "biodataIntakeQualitySignals": "Quality signals",
+    "biodataIntakeReviewSaveFailed": "Review could not be saved.",
+    "biodataIntakeReviewSaveSuccess": "Review saved. Approval is still separate.",
+    "biodataIntakeReviewSubtitle": "Edit anything that looks wrong, then save.",
+    "biodataIntakeReviewTitle": "Review details",
+    "biodataIntakeSaveFailed": "Details could not be saved.",
+    "biodataIntakeSavePending": "Details have been saved for review.",
+    "biodataIntakeSaveReview": "Save review",
+    "biodataIntakeSaveSuccess": "Details saved. Profile has been updated.",
+    "biodataIntakeSubtitle": "Read biodata photo text and prepare a profile draft.",
+    "biodataIntakeTitle": "Biodata Intake",
+    "biodataIntakeTryAnother": "Another photo",
+    "biodataLinkCopied": "Biodata link copied.",
+    "biodataNotReadyForReview": "This biodata is not yet ready for review.",
+    "biodataPreviewAction": "Open preview",
+    "biodataPrintAction": "Biodata / Print",
+    "biodataTemplateDesignPreview": "Design preview",
+    "biodataTemplateLocked": "Locked",
+    "biodataTemplateNoPhoto": "No photo",
+    "biodataTemplatePremium": "Premium",
+    "biodataTemplateWithPhoto": "With photo",
+    "bottomChat": "Chat",
+    "bottomConnect": "Connect",
+    "bottomHome": "Home",
+    "bottomMatches": "Matches",
+    "brideGroom": "Bride / Groom",
+    "brideRelativeSDetails": "Bride relative’s details",
+    "brideRelativeSFullName": "Bride relative’s full name *",
+    "brother": "Brother",
+    "brotherSDetails": "Brother’s details",
+    "brotherSFullName": "Brother’s full name *",
+    "browseProfiles": "Matches",
+    "browseProfilesSubtitle": "Explore suitable matrimony profiles",
+    "byContinuingIAgreeToThe": "By continuing, I agree to the ",
+    "byRegisteringIAgreeToThe": "By registering, I agree to the ",
+    "calmSteady": "Calm & steady",
+    "camera": "Camera",
+    "cameraGalleryProfilePhotoAdd": "Add a profile photo from the camera or gallery.",
+    "canSendContactRequestForProfile": "You can send a contact request for this profile.",
+    "cancel": "Cancel",
+    "cancel2": "Cancel",
+    "cannotSendInterestForThisProfile": "Interest cannot be sent for this profile.",
+    "careerWithBalance": "Career with balance",
+    "careerWithBalance2": "Career with balance",
+    "caste": "Caste",
+    "caste2": "Caste *",
+    "charan": "Charan",
+    "chatAll": "All",
+    "chatComingSoon": "Chat will be available in the app soon.",
+    "chatEmpty": "No chats yet.",
+    "chatInbox": "Chat Inbox",
+    "chatLoadFailed": "Chat could not be loaded.",
+    "chatMenu": "Chat",
+    "chatMessageHint": "Type a message...",
+    "chatMessageRead": "Read",
+    "chatMessageSent": "Sent",
+    "chatOpenFailed": "Chat could not be opened.",
+    "chatReadLocked": "Upgrade may be required to read this message.",
+    "chatRequests": "Requests",
+    "chatSend": "Send",
+    "chatSendFailed": "Message could not be sent.",
+    "chatTitle": "Chat",
+    "chatUnread": "Unread",
+    "chatUpgradeToRead": "Upgrade to read",
+    "checkThisNumberBeforeSaving": "This number must be checked before saving",
+    "checkingGoogleEmail": "Checking Google email",
+    "checkingProfile": "Checking profile.",
+    "childLivingWithOptionsCouldNot": "Child living-with options could not be loaded.",
+    "childName": "Child name",
+    "children": "Children?",
+    "childrenSeparate": "Children separate",
+    "chooseCityDistrictFromFilters": "Choose city/district from filters.",
+    "chooseCommunityDetails": "Choose community details",
+    "chooseGenderBeforeContinuing": "Choose gender before continuing.",
+    "chooseLanguage": "Choose Language",
+    "chooseLocationFilter": "Choose location",
+    "chooseLocationForNearMe": "Choose a location filter to see nearby profiles.",
+    "chooseOccupation": "Choose occupation.",
+    "chooseSearchFilters": "Choose search filters",
+    "chooseTheHighestOrRelevantEducation": "Choose the highest or relevant education.",
+    "chooseWhereTheProfileLives": "Choose where the profile lives.",
+    "chooseWhoThisProfileIsFor": "Choose who this profile is for.",
+    "chooseWhoThisProfileIsFor2": "Choose who this profile is for.",
+    "chooseWorkDetails": "Choose work details.",
+    "citySuburban": "City / Suburban",
+    "cleanBorderPhotoRightA4Portrait": "Clean border, photo on the right and A4 portrait layout.",
+    "clearFace": "Clear face",
+    "clearFilter": "Clear filter",
+    "clearLocation": "Clear location",
+    "community": "Community",
+    "communityDetails": "Community details",
+    "communityPreferencesHelpKeepSuggestionsRelevant": "Community preferences help keep suggestions relevant.",
+    "companyOptional": "Company optional",
+    "comparisonShowLess": "Show less",
+    "comparisonValueUnknown": "Not specified",
+    "comparisonViewAll": "View all",
+    "completeAtLeastOneChildDetail": "Complete at least one child detail.",
+    "completeChildDetailsBeforeContinuing": "Complete child details before continuing.",
+    "completeRegistration": "Complete registration",
+    "confirmAction": "Confirm",
+    "confirmPassword": "Confirm Password",
+    "connectContactRequests": "Contact",
+    "connectReceived": "Received",
+    "connectSent": "Sent",
+    "connectUpgrade": "Upgrade",
+    "contactInbox": "Contact inbox",
+    "contactInboxDidNotLoad": "Contact inbox did not load.",
+    "contactInformationNotAvailable": "Contact information is currently not available.",
+    "contactRequestNotAvailable": "Contact request is not available right now.",
+    "contactRequestOptionsNotAvailable": "Contact request options are not available.",
+    "contactRequestPending": "Your contact request is pending.",
+    "contactRequestRejected": "Your contact request has been rejected.",
+    "contactRequests": "Contact Requests",
+    "contactRoute": "Contact route",
+    "contactRuleStrictness": "Contact rule strictness",
+    "contactUnlockComingSoon": "The contact unlock feature will be available soon.",
+    "contactUnlockMode": "Contact unlock mode",
+    "contactUnlockNotAvailable": "Contact unlock is not available right now.",
+    "contactVisibility": "Contact visibility",
+    "continueLabel": "Continue",
+    "continueToPartnerPreference": "Continue to partner preference",
+    "continuing": "Continuing...",
+    "couldNotAcceptInterest": "Could not accept interest.",
+    "couldNotApproveContact": "Could not approve contact.",
+    "couldNotBlockProfile": "Could not block profile.",
+    "couldNotCheckProfile": "Could not check profile.",
+    "couldNotCropPhoto": "Could not crop the photo. Please try again or select a different photo.",
+    "couldNotHideProfile": "Could not hide profile.",
+    "couldNotLoadCasteList": "Could not load caste list.",
+    "couldNotLoadDropdownOptions": "Could not load the dropdown options.",
+    "couldNotLoadEducationAndCareerOptions": "Could not load the education and career options.",
+    "couldNotLoadFamilyAndHoroscopeOptions": "Could not load the family and horoscope options.",
+    "couldNotLoadInterests": "Could not load interests.",
+    "couldNotLoadMaritalAndLifestyleOptions": "Could not load the marital and lifestyle options.",
+    "couldNotLoadOptions": "Could not load options.",
+    "couldNotLoadPartnerPreferenceOptions": "Could not load the partner preference options.",
+    "couldNotLoadPhotos": "Photos could not be loaded.",
+    "couldNotLoadProfile": "Could not load the profile.",
+    "couldNotLoadReligionList": "Could not load religion list.",
+    "couldNotReadAGoogleEmail": "Could not read a Google email from this device.",
+    "couldNotReadAccountNamePlease": "Could not read account name. Please go back and try again.",
+    "couldNotReadEmailFromGoogle": "Could not read email from Google.",
+    "couldNotReadMobileLocation": "Could not read mobile location.",
+    "couldNotRefreshPhotoStatus": "Could not refresh photo status.",
+    "couldNotRefreshProfile": "Could not refresh the profile.",
+    "couldNotRefreshProfileDetails": "Profile details could not be refreshed.",
+    "couldNotRejectContact": "Could not reject contact.",
+    "couldNotRejectInterest": "Could not reject interest.",
+    "couldNotRemoveFromShortlist": "Could not remove from Shortlist.",
+    "couldNotSavePassword": "Could not save password.",
+    "couldNotSaveProfile": "Could not save the profile. Please try again.",
+    "couldNotSaveTheAboutSection": "Could not save the about section.",
+    "couldNotSearchLocation": "Could not search location.",
+    "couldNotSearchSubCaste": "Could not search sub-caste.",
+    "couldNotSendContactRequest": "Could not send the contact request.",
+    "couldNotSendEmailOtp": "Could not send email OTP.",
+    "couldNotSendInterest": "Could not send interest. Please try again.",
+    "couldNotSendInterest2": "Could not send interest.",
+    "couldNotSendOtp": "Could not send OTP.",
+    "couldNotShareProfile": "Could not share profile.",
+    "couldNotShortlist": "Could not add to Shortlist.",
+    "couldNotSubmitLocationRequestCheck": "Could not submit location request. Check the selected district and taluka, then try again.",
+    "couldNotSubmitReport": "Could not submit report.",
+    "couldNotSubmitRequest": "Could not submit request.",
+    "couldNotUnlockContact": "Could not unlock the contact.",
+    "couldNotUseLocation": "Could not use location.",
+    "couldNotUseMobileLocation": "Could not use mobile location.",
+    "couldNotVerifyEmail": "Could not verify email.",
+    "couldNotWithdrawInterest": "Could not withdraw interest.",
+    "country": "Country",
+    "createAPasswordNowIfYou": "Create a password now if you want password login later.",
+    "createAdd": "Create / add",
+    "createAddYourLocation": "Create / add your location",
+    "createPassword": "Create Password",
+    "cropAdjustPhoto": "Crop / adjust photo",
+    "cropPhoto": "Crop photo",
+    "cropTheSelectedPhotoIfNeeded": "Crop the selected photo if needed, then upload it.",
+    "croppedPhotoIsReadyUploadIt": "Cropped photo is ready. Upload it to continue.",
+    "dashboard": "My Dashboard",
+    "dashboardAccountTools": "Account tools",
+    "dashboardActivity": "Your activity",
+    "dashboardAddNow": "Add now",
+    "dashboardBasicDetails": "Basic details",
+    "dashboardChangePlan": "Change plan",
+    "dashboardCheckNotifications": "Check Notifications",
+    "dashboardCheckNotificationsSubtitle": "See new notifications and updates.",
+    "dashboardCompleteProfile": "Complete Profile",
+    "dashboardCompleteProfileSubtitle": "Complete key details to improve matching.",
+    "dashboardCreateProfile": "Create Profile",
+    "dashboardCreateProfileSubtitle": "Dashboard fallback: start onboarding if your profile is missing.",
+    "dashboardEducationCareer": "Education / Career",
+    "dashboardFreePlan": "Free Plan",
+    "dashboardHeadline": "Your next step toward the right match",
+    "dashboardHeroFallback": "Your matrimony dashboard is ready.",
+    "dashboardListsToolSubtitle": "Shortlist, block and hidden",
+    "dashboardLocationDetails": "Location details",
+    "dashboardNeedsAttention": "Needs attention",
+    "dashboardNextBestAction": "Next best action",
+    "dashboardPartnerPreference": "Partner Preference",
+    "dashboardPhoto": "Photo",
+    "dashboardPhotoApproved": "Photo approved",
+    "dashboardPhotoMissing": "Photo missing",
+    "dashboardPhotoPending": "Photo pending",
+    "dashboardPhotoPendingSubtitle": "Check your photo verification status.",
+    "dashboardPlanContact": "Plan / Contact status",
+    "dashboardPlanToolSubtitle": "Plans, payment and contact credits",
+    "dashboardPremiumMember": "Premium Member",
+    "dashboardProfileActive": "Profile active",
+    "dashboardProfileMissing": "Profile missing",
+    "dashboardQuickActions": "Quick actions",
+    "dashboardReadiness": "Profile readiness",
+    "dashboardReadinessSubtitle": "No fake percentage; checklist based on available data.",
+    "dashboardReady": "Ready",
+    "dashboardReplyMessages": "Reply to Messages",
+    "dashboardReplyMessagesSubtitle": "Unread chats are waiting for your response.",
+    "dashboardRespondInterests": "Respond to Interests",
+    "dashboardRespondInterestsSubtitle": "Review pending proposals and respond.",
+    "dashboardReviewContactRequests": "Review Contact Requests",
+    "dashboardReviewContactRequestsSubtitle": "Review pending contact requests safely.",
+    "dashboardSettingsToolSubtitle": "Privacy and preferences",
+    "dashboardSubtitle": "Manage your profile, photo and interests in one place.",
+    "dashboardUpgradePlan": "Upgrade Plan",
+    "dashboardUpgradePlanSubtitle": "View contact unlocks and premium benefits.",
+    "dashboardUploadPhotoPrompt": "Upload a clear photo to get better responses.",
+    "dashboardViewMatches": "View Matches",
+    "dashboardViewMatchesSubtitle": "Explore suitable profiles for you.",
+    "dateOfBirth": "Date of birth",
+    "dateOfBirth2": "Date of birth *",
+    "daughter": "Daughter",
+    "daughterSDetails": "Daughter’s details",
+    "daughterSFullName": "Daughter’s full name *",
+    "delete": "Delete",
+    "deletePhoto": "Delete photo",
+    "deviceLocationIsOffTurnOn": "Device location is off. Turn on location from settings.",
+    "didnTGetTheCodeYet": "Didn’t get the code yet?",
+    "diet": "Diet",
+    "district": "District",
+    "doNotCloseScreenUntilUploadComplete": "Do not close the screen until the upload is complete.",
+    "doNotEnterContactNumbersOrPrivateDetails": "Do not enter contact numbers or private details.",
+    "doubleBorderPortrait": "Double Border Portrait",
+    "draftParsedReview": "Draft / parsed review",
+    "draftRowsUnavailable": "Draft rows are not available.",
+    "drinking": "Drinking",
+    "edit": "Edit",
+    "editOneSectionAtATimeProfileReloadsAfterSave": "Edit one section at a time. After saving, the profile will reload freshly.",
+    "editProfile": "Update Profile",
+    "editTheEmailIfNeededThen": "Edit the email if needed, then verify it with Google or email OTP.",
+    "education": "Education",
+    "education2": "Education *",
+    "educationCareer": "Education & Career",
+    "educationLabel": "Education label",
+    "educationRequestSubmitted": "Education request submitted.",
+    "emailAdded": "Email added",
+    "emailAddress": "Email address",
+    "emailAlerts": "Email alerts",
+    "emailOtp": "Email OTP",
+    "emailUsedForAccountMobileVerification": "This email will be used for the account. Mobile verification is required to proceed.",
+    "emailVerified": "Email verified",
+    "emailVerifiedSuccessfully": "Email verified successfully.",
+    "enterAValid10DigitMobile": "Enter a valid 10 digit mobile number.",
+    "enterAValidDob": "Enter a valid DOB.",
+    "enterAValidEmailAddress": "Enter a valid email address.",
+    "enterAValidIncomeAmount": "Enter a valid income amount.",
+    "enterAValidMaxIncome": "Enter a valid max income.",
+    "enterAValidMinIncome": "Enter a valid min income.",
+    "enterCandidateRealNameBeforeSaving": "Enter the candidate's real name before saving",
+    "enterChildAge": "Enter child age.",
+    "enterFullName": "Enter full name.",
+    "enterMinIncomeToo": "Enter min income too.",
+    "enterPasswordAndConfirmPassword": "Enter password and confirm password.",
+    "enterThe6DigitOtp": "Enter the 6 digit OTP.",
+    "enterThe6DigitOtp2": "Enter the 6 digit OTP.",
+    "enterTheOtpSentToYour": "Enter the OTP sent to your email.",
+    "enterTitleAmount": "Enter the $title amount.",
+    "enterTitleRangeAmount": "Enter the $title range amount.",
+    "enterValidChildAge": "Enter valid child age.",
+    "enterYourMobileNumberToReceive": "Enter your mobile number to receive a secure 6 digit code.",
+    "exact": "Exact",
+    "extraNoteOptional": "Extra note optional",
+    "familyFeedsAbout": "These two answers get woven into the introduction below",
+    "familyAndAbout": "Family and about",
+    "familyDetails": "Family details",
+    "familyFriendly": "Family-friendly",
+    "familyStatus": "Family status",
+    "familyValues": "Family values",
+    "featureNotAvailable": "This feature is not available right now.",
+    "female": "Female",
+    "friend": "Friend",
+    "friendSDetails": "Friend’s details",
+    "friendSDetails2": "Friend’s details",
+    "friendSDetails3": "Friend’s details",
+    "friendSFullName": "Friend’s full name *",
+    "friendSFullName2": "Friend’s full name *",
+    "fullName": "Full name *",
+    "gallery": "Gallery",
+    "gender": "Gender",
+    "getOtp": "Get OTP",
+    "gettingLocation": "Getting location...",
+    "goodLight": "Good light",
+    "googleVerificationFailedWeWillVerify": "Google verification failed. We will verify this email with OTP.",
+    "googleVerificationIsNotReadyWe": "Google verification is not ready. We will verify this email with OTP.",
+    "googleVerifiedYourEmail": "Google verified your email.",
+    "grantAtLeastOneContactMethod": "Grant at least one contact method.",
+    "groomRelativeSDetails": "Groom relative’s details",
+    "groomRelativeSFullName": "Groom relative’s full name *",
+    "gunamilanDisclaimer": "Gunamilan is only a compatibility reference. Families should make the final decision after discussion.",
+    "gunamilanHideDetails": "Hide details",
+    "gunamilanIncomplete": "Horoscope data is incomplete.",
+    "gunamilanRequired": "Gunamilan match required",
+    "gunamilanRequiredHelp": "When on, only matches scoring at least 18 of 36 are shown. If either side has no patrika details filled in, the match is not excluded — gunamilan simply cannot be checked.",
+    "gunamilanScore": "Gunamilan score",
+    "gunamilanTitle": "Gunamilan / Horoscope Match",
+    "gunamilanViewDetails": "View details",
+    "height": "Height *",
+    "heightRangeCm": "Height range cm",
+    "herMotherTongue": "Her mother tongue",
+    "hideFromBlockedUsers": "Hide from blocked users",
+    "hidePassword": "Hide password",
+    "highestSelected": "Highest selected: ",
+    "hisMotherTongue": "His mother tongue",
+    "honestyRespect": "Honesty & respect",
+    "iAmCreatingThisProfileFor": "I am creating this profile for",
+    "iWillDoThisLater": "I will do this later",
+    "importantSettingsAreNext": "Important settings are next",
+    "inactiveReminder": "Inactive reminder",
+    "income": "Income",
+    "incomeAmount": "Income amount",
+    "incomeAmount2": "Income amount",
+    "incomeCanBeKeptPrivate": "Income can be kept private.",
+    "incomePeriod": "Income period",
+    "incomeRange": "Income range",
+    "incomeRange2": "Income range",
+    "incomeType": "Income type",
+    "intercasteAccepted": "Intercaste accepted.",
+    "interestAlreadySent": "Interest has already been sent.",
+    "interestSent": "Interest Sent",
+    "interestSent2": "Interest sent.",
+    "interestStatistics": "Interest Statistics",
+    "keepIncomePrivate": "Keep income private",
+    "keepIncomePrivate2": "Keep income private",
+    "label": "label",
+    "landingHeadline": "A trusted way to find the right match",
+    "landingSubline": "Safe, simple and family-friendly matrimony platform",
+    "landscapeLayoutLargePhotoCompact": "Large photo and compact information in a landscape layout.",
+    "languageMenu": "Language",
+    "languageSwitchSubtitle": "Change app language",
+    "leftRight": "Left / right",
+    "lessThan1YearIsNot": "Less than 1 year is not supported by the current save rules. Select 1 year for now.",
+    "lifestyle": "Lifestyle",
+    "lifestyleDetails": "Lifestyle details",
+    "lifestylePreferences": "Lifestyle Preferences",
+    "likeThisProfile": "Like this profile?",
+    "livingWith": "Living with",
+    "livingWithOptionsUnavailable": "Living-with options unavailable.",
+    "loading": "Loading...",
+    "loadingBiodataOptions": "Loading biodata options",
+    "loadingChats": "Loading chats",
+    "loadingContactRequests": "Loading contact requests",
+    "loadingConversation": "Loading conversation",
+    "loadingMatches": "Loading matches",
+    "loadingNotifications": "Loading notifications",
+    "loadingPhotos": "Loading photos",
+    "loadingPlans": "Loading plans",
+    "loadingProfile": "Loading profile",
+    "loadingProfileLists": "Loading profile lists",
+    "loadingReceivedInterests": "Loading received interests",
+    "loadingSentInterests": "Loading sent interests",
+    "loadingSettings": "Loading settings",
+    "location": "Location",
+    "locationDetails": "Location details",
+    "locationEntryAddedYouCanContinue": "Location entry added. You can continue.",
+    "locationFoundButNoMatchingApp": "Location found, but no matching app location was found.",
+    "locationPermissionIsNeededForNearby": "Location permission is needed for Nearby.",
+    "locationPermissionWasDenied": "Location permission was denied.",
+    "locationPreference": "Location preference",
+    "locationPreferences": "Location Preferences",
+    "locationSelected": "Location selected",
+    "locationTookTooLongTryAgain": "Location took too long. Try again.",
+    "lockedProfile": "Locked profile",
+    "lockedVisitor": "Locked visitor",
+    "login": "Login",
+    "loginChangeMobile": "Change mobile number",
+    "loginFailed": "Login failed. Check login or password.",
+    "loginHidePassword": "Hide password",
+    "loginIdentifierLabel": "Mobile / Email / Username",
+    "loginKeepSignedIn": "Keep me signed in",
+    "loginKeepSignedInSubtitle": "Open the app next time without entering your password.",
+    "loginMissingFields": "Enter login and password.",
+    "loginMobileHint": "Enter your mobile number. We will send you a one-time code.",
+    "loginNetworkError": "Could not reach the server. Check your internet and try again.",
+    "loginOtpAutoFillHint": "If the code arrives on this phone it fills in by itself.",
+    "loginOtpSentHint": "Enter the code we sent to your mobile number.",
+    "loginOtpWhatsappHint": "The code was sent on WhatsApp.",
+    "loginPasswordLabel": "Password",
+    "loginPickFromSim": "Pick from SIM",
+    "loginProfileCheckFailed": "Profile check failed. Please try again.",
+    "loginProfileMissing": "Profile not found. Create your profile.",
+    "loginRegisterPrompt": "New user? Register here",
+    "loginShowPassword": "Show password",
+    "loginSuccess": "Login successful. Welcome back.",
+    "loginTestOtpBanner": "Test mode. This code is shown only because real messages are not being sent yet.",
+    "loginUseOtpInstead": "Use OTP instead",
+    "loginUsePasswordInstead": "Use password instead",
+    "forgotPasswordLink": "Forgot password?",
+    "forgotPasswordTitle": "Reset password",
+    "forgotPasswordRequestSubtitle": "Enter your mobile number, email or username. A mobile number signs you in with a one-time code and no password. An email or username gets a reset link by email.",
+    "forgotPasswordIdentifierLabel": "Mobile, email or username",
+    "forgotPasswordSendLink": "Send reset link",
+    "forgotPasswordUseOtp": "Send OTP and sign in",
+    "forgotPasswordMobileNoticeTitle": "You typed a mobile number",
+    "forgotPasswordMobileNoticeBody": "You do not need a password. We will send a one-time code to this number and sign you in. A password can be set later from Settings.",
+    "forgotPasswordEmailNoticeTitle": "You typed an email address",
+    "forgotPasswordEmailNoticeBody": "We will email a password reset link to this address. Open the email, then paste the link back here.",
+    "forgotPasswordUsernameNoticeTitle": "You typed a username",
+    "forgotPasswordUsernameNoticeBody": "We will email a password reset link to the address on your account. Open the email, then paste the link back here.",
+    "forgotPasswordIdentifierMissing": "Enter your mobile number, email or username.",
+    "forgotPasswordSendFailed": "Could not send the reset link. Please try again.",
+    "forgotPasswordRateLimited": "Too many attempts. Please wait a minute and try again.",
+    "forgotPasswordLinkSentTitle": "Check your email",
+    "forgotPasswordLinkSentSubtitle": "Open the reset link we emailed you, copy the full link and paste it below. The link stops working after 60 minutes.",
+    "forgotPasswordResetStepSubtitle": "Paste the reset link from your email, then choose a new password.",
+    "forgotPasswordLinkLabel": "Paste reset link",
+    "forgotPasswordLinkHint": "Or paste only the token if you have it",
+    "forgotPasswordEmailLabel": "Email on your account",
+    "forgotPasswordNewPasswordLabel": "New password",
+    "forgotPasswordConfirmPasswordLabel": "Confirm new password",
+    "forgotPasswordSubmit": "Reset password",
+    "forgotPasswordTokenMissing": "Paste the reset link from your email.",
+    "forgotPasswordEmailMissing": "Enter the email address on your account.",
+    "forgotPasswordEmailInvalid": "Enter a valid email address.",
+    "forgotPasswordTooShort": "Use at least 8 characters.",
+    "forgotPasswordMismatch": "Both passwords must match.",
+    "forgotPasswordResetFailed": "Could not reset the password. The link may have expired.",
+    "forgotPasswordResetDone": "Password changed. Sign in with your new password.",
+    "forgotPasswordHaveLink": "I already have the reset link",
+    "forgotPasswordBackToRequest": "Send the link again",
+    "loginWelcomeSubtitle": "Continue your matrimony journey securely.",
+    "loginWelcomeTitle": "Welcome back",
+    "logout": "Logout",
+    "logoutToExit": "Use Logout when you want to leave this account.",
+    "makeSelectionBeforeSaving": "A selection must be made before saving",
+    "male": "Male",
+    "mangalDosh": "Mangal dosh",
+    "maritalStatus": "Marital status",
+    "maritalStatusOptionsCouldNotBe": "Marital status options could not be loaded.",
+    "marriageType": "Marriage type",
+    "matchesFilter": "Filters",
+    "matchesFilterHint": "Age, caste, location",
+    "matchesScreenWillAppearSoon": "The matches screen will appear in a moment.",
+    "matchesTabDaily": "Daily",
+    "matchesTabMore": "More Matches",
+    "matchesTabMyMatches": "My Matches",
+    "matchesTabNearMe": "Near Me",
+    "matchesTabNew": "New",
+    "matchesTabSearch": "Search",
+    "max": "Max",
+    "maxIncome": "Max income",
+    "maxIncomeMustBeMoreThan": "Max income must be more than min income.",
+    "membersYouMayLike": "Profiles you may like",
+    "min": "Min",
+    "minIncome": "Min income",
+    "mobileLocationFilledPleaseReviewIt": "Mobile location filled. Please review it before continuing.",
+    "mobileLocationIsAlreadyRunning": "Mobile location is already running.",
+    "mobileLocationMatchedPleaseReviewIt": "Mobile location matched. Please review it before continuing.",
+    "mobileLocationTimedOutTryAgain": "Mobile location timed out. Try again or search manually.",
+    "mobileNumber": "Mobile number *",
+    "mobileNumber2": "Mobile number",
+    "mobileVerificationKeepsTheAccountSecure": "Mobile verification keeps the account secure and recoverable.",
+    "mobileVerified": "Mobile verified",
+    "monthly": "Monthly",
+    "moreMatchesSectionsAreUnavailableShowing": "More Matches sections are unavailable. Showing available matches below.",
+    "moreProfilesYouMayLike": "More suitable profiles",
+    "motherTongue": "Mother tongue *",
+    "motherTongue2": "Mother tongue",
+    "moveLeft": "Move left",
+    "moveRight": "Move right",
+    "myProfile": "My Profile",
+    "myProfileSubtitle": "View your matrimony profile",
+    "myself": "Myself",
+    "nakshatra": "Nakshatra",
+    "name": "Name",
+    "nearbyLocation": "Nearby location",
+    "nearbyTalukaSuggestionsComeFromBackend": "Nearby taluka suggestions come from the backend.",
+    "newEditableIntakeNotReady": "A new editable intake was created, but it is not ready yet.",
+    "newMatchesDigest": "New matches digest",
+    "newSetWillAppearHere": "It will appear here when a new set is available. Until then you can view regular matches.",
+    "no": "No",
+    "noBiodataIntakeUploadedYet": "No biodata intake has been uploaded yet.",
+    "noBlockedProfiles": "No blocked profiles.",
+    "noChildren": "No children",
+    "noHiddenProfiles": "No hidden profiles.",
+    "noInformation": "Not available",
+    "noLocationsFound": "No locations found.",
+    "noOptionsFound": "No options found.",
+    "noOptionsFound2": "No options found",
+    "noProfileData": "Profile data is not available.",
+    "noProfilesFoundTryReducingFilters": "No profiles found. Try reducing filters and search again.",
+    "noSafeNewDataToSave": "There is no safe new information to save. The previous profile information has been kept as is.",
+    "noShortlistedProfiles": "No shortlisted profiles yet.",
+    "normal": "Normal",
+    "normalModeSelectedSomePreferencesAre": "Normal mode selected. Some preferences are wider for more matches.",
+    "notFoundRequestOccupation": "Not found? Request occupation",
+    "notFoundRequestToAdd": "Not found? Request to add",
+    "notesOptional": "Notes optional",
+    "notificationsEmpty": "No notifications yet.",
+    "notificationsLoadFailed": "Notifications could not be loaded.",
+    "notificationsMarkAllRead": "Mark all read",
+    "notificationsOpenFailed": "This notification does not have an app action.",
+    "notificationsRead": "Read",
+    "notificationsSoon": "Notifications will be available soon.",
+    "notificationsTitle": "Notifications",
+    "notificationsUnread": "Unread",
+    "nowSetAFewImportantThings": "Now set a few important things so we can suggest suitable matches.",
+    "occupation": "Occupation",
+    "occupationAndIncomeAreOptionalWhen": "Occupation and income are optional when not working.",
+    "occupationLabel": "Occupation label",
+    "occupationRequestSubmitted": "Occupation request submitted.",
+    "ofThisProfile": "Of this profile",
+    "oneFinalProfileDetailHelpsFamilies": "One final profile detail helps families understand the match better.",
+    "onlyIdVerifiedProfiles": "Only ID verified profiles",
+    "onlyProfilesWithPhoto": "Only profiles with photo",
+    "open": "Open",
+    "open2": "Open",
+    "openLocation": "Open location",
+    "openToIntercaste": "Open to intercaste",
+    "optional": "Optional",
+    "optional2": "Optional",
+    "optionalButUsefulForBetterSuggestions": "Optional, but useful for better suggestions",
+    "optionalYouCanAddThisLater": "Optional — you can add this later",
+    "optionsNotLoaded": "Options not loaded.",
+    "other": "Other",
+    "otherPreferences": "Other Preferences",
+    "otpVerificationFailed": "OTP verification failed.",
+    "partnerPreference": "Partner preference",
+    "partnerPreference2": "Partner Preference",
+    "partnerPreferencePreviewIsNotReady": "Partner preference preview is not ready.",
+    "partnerPreferenceSaveFailed": "Partner preference save failed.",
+    "partnerPreferenceSaveProblem": "A problem occurred while saving the partner preference.",
+    "partnerProfileWithChildren": "Partner profile with children",
+    "passwordAndConfirmPasswordDoNot": "Password and confirm password do not match.",
+    "pending": "Pending",
+    "pendingSuggestionsAreNotSelectedAs": "Pending suggestions are not selected as occupation until approved.",
+    "pendingSuggestionsAreNotSelectedAs2": "Pending suggestions are not selected as education until approved.",
+    "perMonth": "per month",
+    "perYear": "per year",
+    "photoApproved": "Photo approved",
+    "photoApprovedMovingToPartnerPreference": "Photo approved. Moving to partner preference.",
+    "photoAvailable": "Photo available",
+    "photoCropPhoto": "Could not crop the photo. Please select a different photo.",
+    "photoDeleteConfirm": "Remove this photo from your profile?",
+    "photoGalleryEmpty": "No photos uploaded yet.",
+    "photoInReviewShownWhenApproved": "The photo is under review. It will be shown on your profile once approved.",
+    "photoIsNotValidPleaseSelect": "Photo is not valid. Please select a clear image.",
+    "photoIsUploadedApprovalOrSafety": "Photo is uploaded. Approval or safety check is pending.",
+    "photoIsUploadingPleaseWait": "Photo is uploading. Please wait.",
+    "photoManagementHint": "Select a thumbnail below, then manage that photo.",
+    "photoNotApproved": "Photo not approved",
+    "photoNotUploaded": "Photo not uploaded",
+    "photoPreviewUnavailable": "Photo preview is not available.",
+    "photoReachedBackendQualityAndSafety": "Photo reached backend. Quality and safety check is in progress.",
+    "photoReceivedByBackend": "The backend has received the photo. Quality and safety check is in progress.",
+    "photoReceivedCheckingQualitySafety": "The photo has been received. The backend is checking quality and safety.",
+    "photoReorderFailed": "Photo reorder failed.",
+    "photoSelectedCropItIfNeeded": "Photo selected. Crop it if needed, then upload.",
+    "photoSelectionCancelled": "Photo selection cancelled.",
+    "photoStatusCouldNotBeRefreshed": "Photo status could not be refreshed.",
+    "photoUnavailable": "Photo not available",
+    "photoUploadFailed": "Photo upload failed.",
+    "photoUploadFailedPleaseTryAgain": "Photo upload failed. Please try again.",
+    "photoUploadHelp": "Upload a clear, single-person photo in good light.",
+    "photoUploadIsNotAllowedFor": "Photo upload is not allowed for this account.",
+    "photoUploadNotAllowedForAccount": "Photo upload is currently not allowed for your account.",
+    "photoUploadProblem": "A problem occurred while uploading the photo. Please try again.",
+    "photoUploaded": "Photo uploaded.",
+    "photoUploadedApprovalPending": "The photo is uploaded. Approval or safety check is pending.",
+    "photoUploadedBackendQualitySafetyCheck": "The photo is uploaded. It will become visible after the server quality and safety check.",
+    "photoUploadedPleaseCheckTheStatus": "Photo uploaded. Please check the status before continuing.",
+    "photoUploadedReviewIsPendingSo": "Photo uploaded. Review is pending, so we will continue.",
+    "photoUploadedStatusWillUpdate": "Photo uploaded. Status will update here.",
+    "photoUploadedToModerationEngine": "This photo will be uploaded to the backend moderation engine.",
+    "photoVisibility": "Photo visibility",
+    "photosVerification": "Photos / Verification",
+    "photosVerificationSubtitle": "Manage gallery and verification status",
+    "physicalBuild": "Physical Build",
+    "pincodeOptional": "Pincode optional",
+    "plainLandscape": "Plain Landscape",
+    "plansActiveSubscription": "Active subscription",
+    "plansAvailablePlans": "Available plans",
+    "plansBrowserNote": "Checkout opened in the browser. Payment status will update from Laravel.",
+    "plansCheckoutUrlMissing": "Checkout link was not returned by the backend.",
+    "plansChoose": "Choose",
+    "plansContactQuota": "Contact unlock quota",
+    "plansCurrentPlan": "Current plan",
+    "plansEmpty": "No upgrade plan is available right now.",
+    "plansFreeOrLocked": "Free / locked state",
+    "plansLoadFailed": "Plans could not be loaded.",
+    "plansManualRefreshHint": "After payment, return to the app and tap Refresh.",
+    "plansNoCurrentPlan": "Current plan is not available",
+    "plansOpenFailedCopied": "Could not open the browser. Checkout link was copied to the clipboard.",
+    "plansOpeningCheckout": "Opening checkout...",
+    "plansRefresh": "Refresh",
+    "plansRemaining": "remaining",
+    "plansTitle": "Plans",
+    "plansUpgradeMenu": "Plans / Upgrade",
+    "pleaseCheckChildDetails": "Please check child details.",
+    "pleaseCheckDateOfBirth": "Please check Date of birth.",
+    "pleaseCheckHeight": "Please check Height.",
+    "pleaseCheckThisField": "Please check this field.",
+    "pleaseCheckThisInformation": "Please check this information.",
+    "pleaseEnterEducation": "Please enter education.",
+    "pleaseEnterEducationOrSelectSuggestion": "Please enter education or select a suggestion.",
+    "pleaseEnterFullName": "Please enter full name.",
+    "pleaseLogin": "Please login",
+    "pleaseSelectAPhotoFirst": "Please select a photo first.",
+    "pleaseSelectCasteFromSuggestions": "Please select a caste from the suggestions.",
+    "pleaseSelectDateOfBirth": "Please select date of birth.",
+    "pleaseSelectLivingWithAgain": "Please select living with again.",
+    "pleaseSelectLocationFromSuggestions": "Please select a location from the suggestions.",
+    "pleaseSelectMotherTongueAgain": "Please select mother tongue again.",
+    "pleaseSelectReligionFromSuggestions": "Please select a religion from the suggestions.",
+    "pleaseSelectWhetherThereAreChildren": "Please select whether there are children.",
+    "pleaseTryAgainWithAClear": "Please try again with a clear photo.",
+    "pleaseUploadAClearSafeSingle": "Please upload a clear, safe, single-person photo.",
+    "pleaseVerifyMobileFirst": "Please verify mobile first.",
+    "pleaseWriteReportReason": "Please write the reason for the report",
+    "preferredAgeRangeInvalid": "The preferred age range is invalid.",
+    "preferredHeightRangeInvalid": "The preferred height range is invalid.",
+    "preferredIncomeRangeInvalid": "The preferred income range is invalid.",
+    "premiumDoubleBorderElegantA4Portrait": "Premium double border, photo and an elegant A4 portrait.",
+    "premiumProfiles": "Premium profiles",
+    "premiumProfilesSubtitle": "Selected premium profiles",
+    "premiumRoyalStyleLandscape": "Premium royal style, with a landscape photo.",
+    "preparingProfilesForYou": "Preparing profiles for you.",
+    "preparingReviewScreen": "Preparing the review screen...",
+    "preparingYourInformation": "Preparing your information.",
+    "previousBiodataTextUnavailable": "The previous biodata text is not available. Please upload the biodata again.",
+    "primaryPhoto": "Primary",
+    "problemSelectingPhoto": "A problem occurred while selecting the photo. Please try again.",
+    "professionalLandscapeBiodataNoPhoto": "Professional landscape biodata without a photo.",
+    "professionalPreferences": "Professional Preferences",
+    "profile": "Profile",
+    "profileCreatedSuccessfully": "Profile created successfully!",
+    "profileDetailsCopied": "Profile details copied.",
+    "profileListsBlocked": "Blocked",
+    "profileListsHidden": "Hidden",
+    "profileListsLoadFailed": "Profile list could not be loaded.",
+    "profileListsMenu": "Shortlist / Blocked",
+    "profileListsShortlist": "Shortlist",
+    "profileListsTitle": "Shortlist / Blocked",
+    "profileManagedBy": "Profile managed by",
+    "profileNotFoundCreateFirst": "Profile not found. Please create a profile first.",
+    "profileOpenNotAllowed": "This profile cannot be opened right now.",
+    "profilePhoto": "Profile photo",
+    "profilePhoto2": "Profile Photo",
+    "profileQuality": "Profile quality",
+    "profileRemovedFromShortlist": "Profile removed from shortlist.",
+    "profileType": "Profile type",
+    "profileTypeLoadFailed": "Profile type could not be loaded.",
+    "profileUnblocked": "Profile unblocked.",
+    "profileUnhidden": "Profile unhidden.",
+    "profileUpdatedSuccessfully": "Profile updated successfully!",
+    "profileViewed": "Profile viewed",
+    "profileVisibility": "Profile visibility",
+    "profileWasNotFoundPleaseComplete": "Profile was not found. Please complete profile first.",
+    "profilesCloserToYourLocation": "Profiles closer to your location",
+    "profilesFromSearch": "Profiles from your search",
+    "profilesWhosePreferencesMayMatchYou": "Profiles whose preferences may match you",
+    "profilesYouViewedRecently": "Profiles you viewed recently",
+    "range": "Range",
+    "rashi": "Rashi",
+    "readyToUpload": "Ready to upload",
+    "receivedInterests": "Received Interests",
+    "receivedInterests2": "Received interests",
+    "receivedInterestsSubtitle": "View and respond to received interests",
+    "recentVisitorsEmpty": "No eligible recent visitors to show yet.",
+    "recentlyActive": "Recently active",
+    "recognizedButNotAddedToForm": "Information that was recognized but not added to the form",
+    "refresh": "Refresh",
+    "refreshPhotoStatus": "Refresh photo status",
+    "refreshPreference": "Refresh preference",
+    "register": "Register",
+    "registrationComplete": "Registration complete",
+    "registrationIsCompleteNextSettingsImprove": "Registration is complete. Next settings improve match suggestions.",
+    "registrationSuccessfulCreateProfile": "Registration successful! Create your profile...",
+    "rejected": "Rejected",
+    "relative": "Relative",
+    "relativeSDetails": "Relative’s details",
+    "relativeSFullName": "Relative’s full name *",
+    "religion": "Religion",
+    "religion2": "Religion *",
+    "religiousPreferences": "Religious Preferences",
+    "removeFromShortlist": "Remove from shortlist",
+    "removeUnwantedTalukasBeforeSaving": "Remove unwanted talukas before saving.",
+    "removedFromShortlist": "Removed from Shortlist.",
+    "replaceApprovedPhoto": "Replace approved photo",
+    "replacePhoto": "Replace photo",
+    "reportReasonMinLength": "Report reason must be at least 10 characters.",
+    "requestEducation": "Request education",
+    "requestOccupation": "Request occupation",
+    "requestedLocation": "Requested location",
+    "requireContactRequest": "Require contact request",
+    "required": "Required",
+    "resendCode": "Resend code",
+    "resendOtp": "Resend OTP",
+    "retry": "Retry",
+    "reviewThePreferencePreparedFromYour": "Review the preference prepared from your profile. You can widen it for more matches.",
+    "royalLandscape": "Royal Landscape",
+    "rural": "Rural",
+    "safePhoto": "Safe photo",
+    "safeProfiles": "Safe profiles",
+    "save": "Save",
+    "saveAndContinue": "Save and continue",
+    "saveAndContinue2": "Save and continue",
+    "saveNormalPreferenceAndFinishSetup": "Save normal preference and finish setup",
+    "saveOrDiscardChangesInSection": "Do you want to save or discard the changes in this section?",
+    "saveSection": "Save section",
+    "saveStrictPreferenceAndFinishSetup": "Save strict preference and finish setup",
+    "saved": "Saved.",
+    "savedChooseMaritalStatus": "Saved. Choose marital status.",
+    "savedForNowAdminCanApprove": "Saved for now; admin can approve the master location later.",
+    "search": "Search",
+    "search2": "Search",
+    "searchAndSelectEducation": "Search and select education",
+    "searchCountry": "Search country",
+    "searchDistrict": "Search district",
+    "searchEducation": "Search education",
+    "searchFilters": "Search filters",
+    "searchLocation": "Search location",
+    "searchMotherTongue": "Search mother tongue",
+    "searchOccupation": "Search occupation",
+    "searchState": "Search state",
+    "searchTaluka": "Search taluka",
+    "searchTalukaCityOrSuburb": "Search taluka, city or suburb",
+    "searchWithAgeCommunityLocationAnd": "Search with age, community, location and advanced filters.",
+    "searchWorkType": "Search work type",
+    "sectionSaved": "Section saved.",
+    "sectionUpdated": "Section updated.",
+    "seeHowYourProfileMatchesHer": "See how well your profile matches her expectations",
+    "seeHowYourProfileMatchesHis": "See how well your profile matches his expectations",
+    "seeHowYourProfileMatchesThisMatch": "See how well your profile matches this match's expectations",
+    "seeWhoViewedYourProfile": "See who viewed your profile",
+    "select": "Select",
+    "selectACitySuburbVillageOr": "Select a city, suburb, village, or add your location.",
+    "selectAgeBetween1And30": "Select age between 1 and 30.",
+    "selectAtLeastOneContactMethod": "Select at least one contact method.",
+    "selectCaste": "Select caste.",
+    "selectChildGender": "Select child gender.",
+    "selectClearPortraitPhoto": "Select a clear portrait photo from the camera or gallery.",
+    "selectCountry": "Select country",
+    "selectCountry2": "Select country.",
+    "selectCountryStateDistrictAndEnter": "Select country, state, district and enter location name.",
+    "selectDistrict": "Select district",
+    "selectDistrictAndLocation": "Select district and location.",
+    "selectDob": "Select DOB.",
+    "selectEducation": "Select education.",
+    "selectEmail": "Select Email",
+    "selectFamilyStatus": "Select family status.",
+    "selectFamilyStatusAndWriteA": "Select family status and write a short about section.",
+    "selectFriendSGender": "Select friend's gender",
+    "selectGender": "Select gender",
+    "selectGenderAgain": "Select gender again.",
+    "selectHeight": "Select height.",
+    "selectHeight2": "Select height",
+    "selectIfKnown": "Select if known",
+    "selectIncomeRange": "Select income range",
+    "selectLocation": "Select location",
+    "selectLocationBeforeSaving": "A place of residence must be selected before saving",
+    "selectMaritalStatus": "Select marital status.",
+    "selectMotherTongue": "Select mother tongue",
+    "selectMotherTongueReligionAndCaste": "Select mother tongue, religion and caste to continue.",
+    "selectOccupation": "Select occupation",
+    "selectPhoto": "Select photo",
+    "selectProfileType": "Please select profile type.",
+    "selectRelativeSGender": "Select relative's gender",
+    "selectReligion": "Select religion.",
+    "selectReligionFirstToChoosePreferredCaste": "Select a religion first to choose a preferred caste.",
+    "selectState": "Select state",
+    "selectState2": "Select state.",
+    "selectSubCasteFromSuggestionsOrLeaveEmpty": "Please select a sub-caste from the suggestions or leave the field empty.",
+    "selectTalukaCityOrSuburb": "Select taluka, city or suburb",
+    "selectTalukaOptional": "Select taluka optional",
+    "selectTheCurrentWorkType": "Select the current work type.",
+    "selectWhenOptionsAvailable": "Select once options are available.",
+    "selectWorkType": "Select work type",
+    "selectYourGender": "Select your gender",
+    "selectedPhoto": "Selected photo",
+    "sendEmailOtp": "Send email OTP",
+    "sendInterest": "Send Interest",
+    "sendOtpAgain": "Send OTP again",
+    "sendOtpFirst": "Send OTP first.",
+    "sendProfileAlertsOnWhatsapp": "Send profile alerts on WhatsApp",
+    "sendingOtp": "Sending OTP",
+    "sentInterests": "Sent Interests",
+    "sentInterestsSubtitle": "View interests you have sent",
+    "sessionExpiredPleaseLogin": "Session expired. Please log in again.",
+    "sessionExpiredPleaseLoginAgain": "Session expired. Please login again.",
+    "sessionExpiredVerifyMobileAgain": "Session expired. Verify mobile again.",
+    "setAPasswordIfYouWish": "Set a password if you wish to log in with it",
+    "setPassword": "Set password",
+    "setPassword2": "Set Password",
+    "setPrimary": "Set primary",
+    "settingsAccountSummary": "Account summary",
+    "settingsCommunication": "Communication",
+    "settingsLoadFailed": "Settings could not be loaded.",
+    "settingsNoProfile": "These settings will be available after your profile is complete.",
+    "settingsNotAvailable": "Not available",
+    "settingsNotifications": "Notifications",
+    "settingsPrivacy": "Privacy",
+    "settingsReadOnly": "Read only",
+    "settingsSave": "Save",
+    "settingsSaved": "Settings saved.",
+    "settingsSecurity": "Security",
+    "changePasswordTitle": "Change password",
+    "changePasswordSettingsSubtitle": "Set a new password without the old one.",
+    "changePasswordIntro": "Choose a new password. You will not be asked for your old one — being signed in here is proof enough.",
+    "changePasswordOtherDevicesNotice": "Your other devices will be signed out. This phone stays signed in.",
+    "changePasswordSubmit": "Save new password",
+    "changePasswordMissing": "Enter a new password.",
+    "changePasswordFailed": "Could not change the password. Please try again.",
+    "changePasswordSessionExpired": "You have been signed out. Sign in again, then change the password.",
+    "settingsTitle": "Settings",
+    "showPassword": "Show password",
+    "simpleFamilyFirst": "Simple & family-first",
+    "simpleFamilyFirst2": "Simple & family-first",
+    "simpleProcess": "Simple registration",
+    "singlePerson": "Single person",
+    "sister": "Sister",
+    "sisterSDetails": "Sister’s details",
+    "sisterSFullName": "Sister’s full name *",
+    "skipAstroDetails": "Skip astro details",
+    "skipEmailVerification": "Skip email verification",
+    "smoking": "Smoking",
+    "son": "Son",
+    "sonSDetails": "Son’s details",
+    "sonSFullName": "Son’s full name *",
+    "spectaclesLens": "Spectacles / Lens",
+    "startWithEmail": "Start with Email",
+    "startWithProfileOwner": "Start with profile owner",
+    "state": "State",
+    "str": ".",
+    "strict": "Strict",
+    "strictModeSelectedPreferencesAreFocused": "Strict mode selected. Preferences are focused from your profile.",
+    "subCaste": "Sub-caste",
+    "submit": "Submit",
+    "suggestedProfilesForYou": "Suggested profiles for you",
+    "taluka": "Taluka",
+    "talukaCitySuburban": "Taluka / City / Suburban",
+    "thereWasAProblemSelectingThe": "There was a problem selecting the photo. Please try again.",
+    "thereWasAProblemUploadingThe": "There was a problem uploading the photo. Please try again.",
+    "thisApprovedPhotoIsVisibleOn": "This approved photo is visible on your profile.",
+    "thisIsOptionalAddOnlyWhat": "This is optional. Add only what you know now.",
+    "thisKeepsEveryNextQuestionRelevant": "This keeps every next question relevant to the right person.",
+    "thisLocationAlreadyExistsItHas": "This location already exists. It has been selected.",
+    "thisMonth": "this month",
+    "thisPhotoCouldNotBeApproved": "This photo could not be approved. Please upload another clear photo.",
+    "thisPhotoWasNotApprovedPlease": "This photo was not approved. Please upload another clear photo.",
+    "thisPreferenceIsBasedOnThe": "This preference is based on the information you filled. You can edit any section now or change it later.",
+    "thisWeek": "this week",
+    "titleRangeInvalid": "The $title range is invalid.",
+    "today": "today",
+    "todaysRecommendationsComplete": "Today's recommendations are complete",
+    "total": "Total",
+    "traditionOpenMind": "Tradition & open mind",
+    "traditionOpenMind2": "Tradition & open mind",
+    "traditionalColorsDecorativeBorder": "Traditional colors, decorative border and an introduction card with photo.",
+    "tryAgainAfterTheLatestServer": "Try again after the latest server update.",
+    "tryGoogleVerification": "Try Google verification",
+    "turnOnDeviceLocationInAndroid": "Turn on device location in Android settings and try again.",
+    "unblockProfile": "Unblock",
+    "unhideProfile": "Unhide",
+    "unlock": "Unlock",
+    "unlockRequiredToViewContact": "Unlock is required to view contact details.",
+    "upDown": "Up / down",
+    "upgrade": "Upgrade",
+    "upgradeRequiredToViewContact": "Upgrade is required to view contact details.",
+    "upgradeToSeeVisitors": "Upgrade to see visitors",
+    "uploadAProfilePhotoBeforeContinuing": "Upload a profile photo before continuing.",
+    "uploadClearProfilePhoto": "Upload a clear profile photo. The approved status will appear only after backend approval.",
+    "uploadClearSafeSinglePersonPhoto": "Please upload a clear, safe and single-person photo.",
+    "uploadCompleteScreen": "Do not close the screen until the upload is complete.",
+    "uploadNeedsAttention": "Upload needs attention",
+    "uploadPhoto": "Upload Photo",
+    "uploadPhotoSubtitle": "Update your profile photo",
+    "uploadSelectedPhoto": "Upload selected photo",
+    "uploadTheSelectedPhotoBeforeContinuing": "Upload the selected photo before continuing.",
+    "uploadedBiodataPhoto": "Uploaded biodata photo",
+    "uploading": "Uploading...",
+    "uploadingPhoto": "Uploading photo",
+    "useLocation": "Use location",
+    "useLocationForNearby": "Use location for Nearby",
+    "useMobileLocation": "Use mobile location",
+    "useNearby": "Use nearby",
+    "useNearbyKeepsBackendSuggestedCountry": "Use nearby keeps backend suggested country/state/district. Open removes location filters.",
+    "lifestyleAllOptional": "All optional · you can fill these later",
+    "usefulForDayToDayCompatibility": "Useful for day-to-day compatibility.",
+    "v1": "<1",
+    "v10kTo30k": "10K to 30K",
+    "v10lTo30l": "10L to 30L",
+    "v1lTo2l": "1L to 2L",
+    "v2lTo5l": "2L to 5L",
+    "v30kTo1l": "30K to 1L",
+    "v30lTo50l": "30L to 50L",
+    "v50lAndAbove": "50L and above",
+    "v5lAndAbove": "5L and above",
+    "v5lTo10l": "5L to 10L",
+    "verificationStatus": "Verification status",
+    "verifiedEmail": "Verified email",
+    "verifyAndContinue": "Verify and continue",
+    "verifyEmail": "Verify email",
+    "verifyMobile": "Verify mobile",
+    "verifyMobileNumber": "Verify mobile number",
+    "verifyMobileNumber2": "Verify Mobile Number",
+    "verifyOtp": "Verify OTP",
+    "verifying": "Verifying...",
+    "verifying2": "Verifying",
+    "viewMatches": "View matches",
+    "viewProfile": "View profile",
+    "viewedRecently": "Viewed recently",
+    "viewedYourProfile": "Viewed your profile",
+    "villageLocationName": "Village / location name",
+    "weCouldNotSaveThisInformation": "We could not save this information. Please check the highlighted field.",
+    "weFoundYourMobileLocationPlease": "We found your mobile location. Please select the nearest location from the list.",
+    "wePreparedThisFromTheInformation": "We prepared this from the information you filled. You can keep it strict or make it normal.",
+    "weVeSentAVerificationCode": "We’ve sent a verification code to",
+    "weWillAddThisOnlyIf": "We will add this only if it is not already available.",
+    "whatsappResponseAvailable": "WhatsApp Response is available.",
+    "whatsappResponseComingSoon": "WhatsApp Response feature will be available soon.",
+    "whatsappResponseInboxWillBeAvailable": "WhatsApp Response inbox will be available in the mobile app soon.",
+    "whoViewed": "Who viewed",
+    "willingToRelocate": "Willing to relocate",
+    "workDetails": "Work details",
+    "workLocationOptional": "Work location optional",
+    "workingAs": "Working as",
+    "workingWith": "Working with",
+    "writeANaturalIntroductionFamilyBackground": "Write a natural introduction, family background, and what makes this profile easy to understand.",
+    "writeAShortAboutSection": "Write a short about section.",
+    "writeExpectationsAboutPartnerBriefly": "Write your expectations about a partner briefly.",
+    "writeOtherReason": "Write the other reason.",
+    "years": " years",
+    "yes": "Yes",
+    "yes2": "Yes",
+    "yourDetails": "Your details",
+    "yourFullName": "Your full name *",
+    "yourMotherTongue": "Your mother tongue",
+    "yourPhotos": "Your photos",
+    "yourProfileHasBeenCreatedSuccessfully": "Your profile has been created successfully.",
+    "yourProfileViewedTimes": "Your profile was viewed $count times",
+    "yourProfileViewedTimesInWindow": "$window your profile was viewed $count times",
+    "yourProfileWasViewed": "Your profile was viewed.",
+    "zoom": "Zoom",
+    "back": "Back",
+    "viewPlans": "View Plans",
+    "profileActions": "Profile actions",
+    "shareProfile": "Share profile",
+    "addToShortlist": "Add to Shortlist",
+    "hideThisProfile": "Hide this Profile",
+    "blockThisProfile": "Block this Profile",
+    "reportThisProfile": "Report this Profile",
+    "gunmilan": "Gunmilan",
+    "requestContact": "Request Contact",
+    "close": "Close",
+    "sendRequest": "Send Request",
+    "hide": "Hide",
+    "block": "Block",
+    "whatsappResponse": "WhatsApp Response",
+    "viewContact": "View Contact",
+    "upgradeToViewContact": "Upgrade to View Contact",
+    "statusOnline": "Online",
+    "comparisonYouAndHer": "You & Her",
+    "comparisonYouAndHim": "You & Him",
+    "comparisonYouAndProfile": "You & Profile",
+    "contactInformationTitle": "Contact Information",
+    "contactInformationAvailable": "Contact information is available.",
+    "upgradeToViewAllPhotos": "Upgrade to view all photos.",
+    "uploadPhotoToUnlockProfiles": "Upload your photo to unlock more profiles.",
+    "photoAccessLockedForPlan": "Photo access is locked for your current plan.",
+    "contactDetailsUnlocked": "Contact details unlocked.",
+    "contactRequestSent": "Contact request sent.",
+    "profileHidden": "Profile hidden.",
+    "profileBlocked": "Profile blocked.",
+    "profileLinkReadyToShare": "Profile link ready to share.",
+    "profileLinkCopied": "Profile link copied.",
+    "reportSubmitted": "Report submitted.",
+    "comparisonTitle": "Comparison",
+    "comparisonViewerYou": "You",
+    "heightLabel": "Height",
+    "astro": "Astro",
+    "moreProfilesYouMayLike2": "More profiles you may like",
+    "contactMethods": "Contact methods",
+    "reason": "Reason",
+    "otherReason": "Other reason",
+    "reportProfileTitle": "Report profile",
+    "hideProfileConfirmTitle": "Hide profile?",
+    "hideProfileConfirmMessage": "This profile will be hidden from your browse/search list.",
+    "blockProfileConfirmTitle": "Block profile?",
+    "blockProfileConfirmMessage": "Blocking will remove interests/shortlists between both profiles and hide this profile from you.",
+    "viewProfileColon": "View profile:",
+    "photoActions": "Photo actions",
+    "aboutName": "About {name}",
+    "@aboutName": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "aboutSummaryWorkingAs": "working as {occupation}",
+    "@aboutSummaryWorkingAs": {
+        "placeholders": {
+            "occupation": {
+                "type": "String"
+            }
+        }
+    },
+    "aboutSummaryBasedIn": "based in {location}",
+    "@aboutSummaryBasedIn": {
+        "placeholders": {
+            "location": {
+                "type": "String"
+            }
+        }
+    },
+    "aboutSummarySentence": "{name} is {details}.",
+    "@aboutSummarySentence": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "details": {
+                "type": "String"
+            }
+        }
+    },
+    "photosCounter": "Photos {current}/{total}",
+    "@photosCounter": {
+        "placeholders": {
+            "current": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "contactValueCopied": "{label} copied.",
+    "@contactValueCopied": {
+        "placeholders": {
+            "label": {
+                "type": "String"
+            }
+        }
+    },
+    "profileIdLabel": "Profile ID: {id}",
+    "@profileIdLabel": {
+        "placeholders": {
+            "id": {
+                "type": "String"
+            }
+        }
+    },
+    "profileNotFound": "Profile not found.",
+    "profilePreview": "Profile preview",
+    "profileInformation": "Profile information",
+    "photoNotAddedYet": "No photo added yet",
+    "nameNotAvailable": "Name not available",
+    "pleaseTryAgain": "Please try again.",
+    "signInWithGoogle": "Sign in with Google",
+    "googleSignInFailed": "Google sign-in did not go through. Try again, or come in another way.",
+    "signUpWithGoogle": "Sign Up with Google",
+    "signUpWithMobile": "Sign Up with Mobile",
+    "unexpectedErrorOccurred": "An unexpected error occurred: {error}",
+    "@unexpectedErrorOccurred": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "sectionSavedNamed": "{section} saved.",
+    "@sectionSavedNamed": {
+        "placeholders": {
+            "section": {
+                "type": "String"
+            }
+        }
+    },
+    "testOtpLabel": "Test OTP: {otp}",
+    "@testOtpLabel": {
+        "placeholders": {
+            "otp": {
+                "type": "String"
+            }
+        }
+    },
+    "loginResendInSeconds": "Send OTP again in {seconds}s",
+    "@loginResendInSeconds": {
+        "description": "Resend cooldown. `seconds` is a String on purpose so no locale-aware number formatter can turn the digits into Devanagari.",
+        "placeholders": {
+            "seconds": {
+                "type": "String"
+            }
+        }
+    },
+    "nearbyTalukasCount": "{count} nearby talukas",
+    "@nearbyTalukasCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "districtsCount": "{count} districts",
+    "@districtsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "statesCount": "{count} states",
+    "@statesCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "countriesCount": "{count} countries",
+    "@countriesCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "contactMobileNumberLabel": "Mobile Number",
+    "contactEmailLabel": "Email",
+    "copy": "Copy",
+    "soon": "Soon",
+    "contactStateAvailableBadge": "Available",
+    "contactStateLockedBadge": "Locked",
+    "contactStateResponseBadge": "Response",
+    "contactStateRequestBadge": "Request",
+    "contactStateInfoBadge": "Info",
+    "suchakManagedProfileTitle": "Profile added by a Suchak",
+    "suchakContactSubtitleFallback": "Experienced marriage facilitator",
+    "suchakContactPrivacyNote": "The candidate's own number is never shown. Everything goes through the Suchak.",
+    "suchakContactWhyNote": "If {candidateName}'s profile looks right, tell {suchakName}. They will show your profile to {candidateName}/their family and convey their reply to you free of charge.",
+    "@suchakContactWhyNote": {
+        "placeholders": {
+            "candidateName": {
+                "type": "String"
+            },
+            "suchakName": {
+                "type": "String"
+            }
+        }
+    },
+    "suchakContactNumberLabel": "Suchak's number",
+    "suchakCallAction": "Call",
+    "suchakMessageAction": "Message",
+    "suchakCallFailed": "Could not open the phone dialer.",
+    "suchakLabel": "Suchak",
+    "suchakStateAvailableBadge": "Suchak",
+    "suchakStateAnsweredBadge": "Answered",
+    "suchakStateClosedBadge": "Closed",
+    "suchakRequestAvailableMessage": "A Suchak manages this profile. Send a request and they will take it ahead.",
+    "suchakRequestPendingMessage": "Your request is with the Suchak. Their reply arrives here.",
+    "suchakRequestAnsweredMessage": "The Suchak has answered. Continue in chat.",
+    "suchakRequestClosedMessage": "This request is closed. You can send a new one.",
+    "suchakRequestSendButton": "Request through Suchak",
+    "suchakRequestResendButton": "Send a new request",
+    "suchakRequestOpenChatButton": "Open chat",
+    "suchakRequestPendingBadge": "Request pending",
+    "suchakRequestDialogTitle": "Request through Suchak",
+    "suchakRequestDialogBody": "Your request goes to {name}, who will take it to the candidate and their family.",
+    "@suchakRequestDialogBody": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "suchakRequestMessageLabel": "Message for the Suchak",
+    "suchakRequestMessageHint": "Share brief context for the Suchak.",
+    "suchakRequestSent": "Suchak request sent.",
+    "couldNotSendSuchakRequest": "Could not send the Suchak request.",
+    "suchakChatNotOpenYet": "The Suchak has not opened the chat yet.",
+    "suchakRequestsTitle": "Suchak Requests",
+    "tabReceived": "Received",
+    "tabSent": "Sent",
+    "loadingSuchakRequests": "Loading Suchak requests",
+    "suchakRequestsDidNotLoad": "Suchak requests did not load.",
+    "noReceivedSuchakRequests": "Nobody has asked your Suchak about you yet.",
+    "noSentSuchakRequests": "You have not sent a Suchak request yet.",
+    "suchakRequestInterested": "Interested",
+    "suchakRequestNotInterested": "Not interested",
+    "suchakRequestConfirmTitle": "Send this answer?",
+    "suchakRequestConfirmBody": "Your Suchak can answer this request too. Whichever answer arrives first is the one that counts.",
+    "suchakRequestDecisionRecorded": "Your answer has been recorded.",
+    "couldNotAnswerSuchakRequest": "Could not record your answer.",
+    "suchakRequestAlreadyAnswered": "This request was already answered.",
+    "suchakRequestAlreadyAnsweredBy": "This request was already answered by {by}.",
+    "@suchakRequestAlreadyAnsweredBy": {
+        "placeholders": {
+            "by": {
+                "type": "String"
+            }
+        }
+    },
+    "suchakRequestAnsweredByName": "Answered by {by}",
+    "@suchakRequestAnsweredByName": {
+        "placeholders": {
+            "by": {
+                "type": "String"
+            }
+        }
+    },
+    "suchakRequestAskedOnDate": "Asked on {date}",
+    "@suchakRequestAskedOnDate": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "suchakRequestSentOnDate": "Sent on {date}",
+    "@suchakRequestSentOnDate": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "suchakRequestYourMessage": "Your message",
+    "suchakRequestTheirMessage": "Message",
+    "notificationSettingsTitle": "Notification settings",
+    "notificationSettingsIntro": "Choose which notifications reach your phone.",
+    "notificationSettingsManage": "Push notifications",
+    "notificationSettingsEmpty": "No notification types are available right now.",
+    "notificationSettingsSaveFailed": "This change could not be saved.",
+    "notificationPermissionOffTitle": "Notifications are switched off",
+    "@notificationPermissionOffTitle": {
+        "description": "Banner heading shown when Android is blocking notifications for this app."
+    },
+    "notificationPermissionOffBody": "Your phone is not letting this app send notifications, so nothing below can reach you.",
+    "notificationPermissionBlockedBody": "Your phone is blocking notifications for this app. The app can no longer ask for this — switch notifications on in phone settings.",
+    "notificationPermissionEnable": "Turn on notifications",
+    "notificationPermissionOpenSettings": "Open phone settings",
+    "quietHours": "Quiet hours",
+    "pushChannelName": "Notifications",
+    "pushChannelDescription": "Alerts about interests, contact requests and matches.",
+    "pushDefaultTitle": "New notification",
+    "accept": "Accept",
+    "reject": "Reject",
+    "statusLabel": "Status",
+    "interestAccepted": "Interest accepted.",
+    "interestRejected": "Interest declined.",
+    "noReceivedInterests": "No received interests yet.",
+    "lockedInterestTitle": "Locked interest",
+    "lockedInterestBody": "Unlock with a plan to see who sent this interest.",
+    "lockedInterestAcceptHint": "Accept becomes available once this interest is unlocked.",
+    "interestRevealLimitBanner": "Your plan reveals {count} received interests {interval}.",
+    "@interestRevealLimitBanner": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            },
+            "interval": {
+                "type": "String"
+            }
+        }
+    },
+    "interestRevealNone": "Your current plan does not reveal any received interest.",
+    "intervalEachDay": "each day",
+    "intervalEachWeek": "each week",
+    "intervalEachMonth": "each month",
+    "intervalEachQuarter": "each quarter",
+    "intervalInTotal": "in total",
+    "sectionBasicInformation": "Basic Information",
+    "sectionPhysical": "Physical",
+    "sectionSiblings": "Siblings",
+    "sectionRelatives": "Relatives",
+    "sectionProperty": "Property",
+    "sectionHoroscope": "Horoscope",
+    "sectionAboutMe": "About Me",
+    "sectionPartnerPreferences": "Partner Preferences",
+    "labelSelfAddresses": "Self Addresses",
+    "labelAddressLine": "Address Line",
+    "labelBirthTime": "Birth Time",
+    "labelBirthPlace": "Birth Place",
+    "labelMarriageHistory": "Marriage History",
+    "labelChildren": "Children",
+    "labelWeight": "Weight",
+    "labelComplexion": "Complexion",
+    "labelBloodGroup": "Blood Group",
+    "labelPhysicalCondition": "Physical Condition",
+    "labelHighestEducation": "Highest Education",
+    "labelCompanyName": "Company Name",
+    "labelWorkLocation": "Work Location",
+    "labelFather": "Father",
+    "labelMother": "Mother",
+    "labelFatherContactNumbered": "Father Contact {number}",
+    "@labelFatherContactNumbered": {
+        "placeholders": {
+            "number": {
+                "type": "int"
+            }
+        }
+    },
+    "labelMotherContactNumbered": "Mother Contact {number}",
+    "@labelMotherContactNumbered": {
+        "placeholders": {
+            "number": {
+                "type": "int"
+            }
+        }
+    },
+    "labelFamilyIncome": "Family Income",
+    "labelFamilyType": "Family Type",
+    "labelParentsAddresses": "Parents Addresses",
+    "labelAllianceNetwork": "Alliance Network",
+    "labelOtherRelatives": "Other Relatives",
+    "labelPropertyDetails": "Property Details",
+    "labelGan": "Gan",
+    "horoscopeDerivedTitle": "Filled automatically from the above",
+    "labelNadi": "Nadi",
+    "labelYoni": "Yoni",
+    "labelVarna": "Varna",
+    "labelVashya": "Vashya",
+    "labelRashiLord": "Rashi Lord",
+    "labelDevak": "Devak",
+    "labelKul": "Kul",
+    "labelGotra": "Gotra",
+    "labelNavrasName": "Navras Name",
+    "labelBirthWeekday": "Birth Weekday",
+    "labelExpectations": "Expectations",
+    "labelHeightRange": "Height Range",
+    "labelPartnerWithChildren": "Partner With Children",
+    "labelPreferredMaritalStatus": "Preferred Marital Status",
+    "labelPreferredDiet": "Preferred Diet",
+    "labelPreferredReligion": "Preferred Religion",
+    "labelPreferredCaste": "Preferred Caste",
+    "labelPreferredEducation": "Preferred Education",
+    "labelPreferredOccupation": "Preferred Occupation",
+    "labelPhotoStatus": "Photo Status",
+    "valueNotAdded": "Not added",
+    "valuePhotoUploaded": "Photo uploaded",
+    "valuePhotoPendingOrNotApproved": "Photo pending or not approved",
+    "valueNoApprovedPhoto": "No approved photo",
+    "valueUndisclosed": "Undisclosed",
+    "valueUpTo": "Up to {value}",
+    "@valueUpTo": {
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "valueApproxAmount": "Approx. {value}",
+    "@valueApproxAmount": {
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "valueNoSiblings": "No siblings",
+    "valueMoreCount": "+{count} more",
+    "@valueMoreCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "siblingCountOne": "1 sibling",
+    "siblingCountOther": "{count} siblings",
+    "@siblingCountOther": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "childCountOne": "1 child",
+    "childCountOther": "{count} children",
+    "@childCountOther": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "valueMarriageYear": "Marriage {year}",
+    "@valueMarriageYear": {
+        "placeholders": {
+            "year": {
+                "type": "String"
+            }
+        }
+    },
+    "valueSeparatedYear": "Separated {year}",
+    "@valueSeparatedYear": {
+        "placeholders": {
+            "year": {
+                "type": "String"
+            }
+        }
+    },
+    "valueDivorceYear": "Divorce {year}",
+    "@valueDivorceYear": {
+        "placeholders": {
+            "year": {
+                "type": "String"
+            }
+        }
+    },
+    "valueAnnulmentYear": "Annulment {year}",
+    "@valueAnnulmentYear": {
+        "placeholders": {
+            "year": {
+                "type": "String"
+            }
+        }
+    },
+    "valueSpouseDeathYear": "Spouse death {year}",
+    "@valueSpouseDeathYear": {
+        "placeholders": {
+            "year": {
+                "type": "String"
+            }
+        }
+    },
+    "valueChildNumbered": "Child {number}",
+    "@valueChildNumbered": {
+        "placeholders": {
+            "number": {
+                "type": "int"
+            }
+        }
+    },
+    "valueAgeYears": "{age} years",
+    "@valueAgeYears": {
+        "placeholders": {
+            "age": {
+                "type": "String"
+            }
+        }
+    },
+    "valueFinalized": "Finalized",
+    "valueMutual": "Mutual",
+    "valueContested": "Contested",
+    "valuePreferNotToSay": "Prefer not to say",
+    "valueMarried": "Married",
+    "valueUnmarried": "Unmarried",
+    "relationBrotherWife": "Brother's wife",
+    "relationSisterHusband": "Sister's husband",
+    "relationPaternalGrandfather": "Paternal Grandfather",
+    "relationPaternalGrandmother": "Paternal Grandmother",
+    "relationPaternalUncle": "Paternal Uncle",
+    "relationPaternalUncleWife": "Wife of Paternal Uncle",
+    "relationPaternalAunt": "Paternal Aunt",
+    "relationPaternalAuntHusband": "Husband of Paternal Aunt",
+    "relationCousin": "Cousin",
+    "relationMaternalAddressAjol": "Maternal address (Ajol)",
+    "relationMaternalGrandfather": "Maternal Grandfather",
+    "relationMaternalGrandmother": "Maternal Grandmother",
+    "relationMaternalUncle": "Maternal Uncle",
+    "relationMaternalUncleWife": "Maternal Uncle's wife",
+    "relationMaternalAunt": "Maternal Aunt",
+    "relationMaternalAuntHusband": "Husband of Maternal Aunt",
+    "clear": "Clear",
+    "unableToLoad": "Unable to load",
+    "tryAnotherSearchTerm": "Try another search term.",
+    "requestToAdd": "Request to add",
+    "popular": "Popular",
+    "notSelectableForThisField": "Not selectable for this field.",
+    "translationMissingFallback": "Translation missing. Showing fallback label.",
+    "done": "Done",
+    "selectedCount": "{count} selected",
+    "@selectedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "noPendingContactRequests": "No pending contact requests.",
+    "noSentContactRequests": "No sent contact requests.",
+    "requestedLabel": "Requested",
+    "createdLabel": "Created",
+    "approve": "Approve",
+    "approveContactTitle": "Approve Contact",
+    "durationLabel": "Duration",
+    "approveOnce24Hours": "Approve once (24 hours)",
+    "grantAccess": "Grant Access",
+    "contactAccessGranted": "Contact access granted.",
+    "rejectRequestTitle": "Reject request?",
+    "rejectRequestBody": "This will reject the contact request.",
+    "requestRejected": "Request rejected.",
+    "contactRequestLabel": "Contact request",
+    "interestWithdrawnSuccessfully": "Interest withdrawn successfully.",
+    "unknown": "Unknown",
+    "noSentInterestsYet": "You have not sent any interests yet.",
+    "statusPrefix": "Status: ",
+    "withdrawInterest": "Withdraw Interest",
+    "unauthorizedAccess": "Unauthorized",
+    "photoSelectedWillBeChecked": "Photo selected. It will be checked for quality and safety after upload.",
+    "refreshStatus": "Refresh status",
+    "clearProfilePhoto": "Clear profile photo",
+    "portrait34WorksBest": "3:4 portrait works best",
+    "photoGuidelines": "Photo guidelines",
+    "stageAddYourProfilePhoto": "Add your profile photo",
+    "stageQualityCheckInProgress": "Quality check in progress",
+    "approvedPhotoVisibleOnProfile": "Approved photo currently visible on your profile.",
+    "uploadClearPhotoWeWillCheck": "Upload a clear photo. We will optimize it and check it before it appears on your profile.",
+    "approved": "Approved",
+    "badgeNeedsRetry": "Needs retry",
+    "badgeChecking": "Checking",
+    "badgeUploading": "Uploading",
+    "badgeSelected": "Selected",
+    "primaryPhotoUpdated": "Primary photo updated.",
+    "photoDeleted": "Photo deleted.",
+    "photoOrderUpdated": "Photo order updated.",
+    "dashboardHome": "Dashboard",
+    "upload": "Upload",
+    "adjustCrop34": "Adjust photo",
+    "dragFramePullCorners": "Drag the frame. Pull corners to resize.",
+    "usePhoto": "Use photo",
+    "cropEncodingFailed": "Crop encoding failed.",
+    "comparisonStrongMatch": "Strong match",
+    "comparisonMatch": "Match",
+    "comparisonNearMatch": "Near match",
+    "comparisonNeedsReview": "Needs review",
+    "comparisonReview": "Review",
+    "mobileLabel": "Mobile",
+    "adminPolicyHeading": "Admin policy",
+    "requestModeLabel": "Request mode",
+    "allowedScopesLabel": "Allowed scopes",
+    "messagingLabel": "Messaging",
+    "accountProfileIdLabel": "Profile ID",
+    "moreMatchesSectionsUnavailable": "More Matches sections unavailable.",
+    "recommendationTitle": "Recommendation",
+    "skip": "Skip",
+    "swipeInterestHint": "Swipe right to send interest. Swipe left to skip.",
+    "filterTabMinimum": "Minimum",
+    "filterTabAdvanced": "Advanced",
+    "apply": "Apply",
+    "basicPreference": "Basic preference",
+    "verifiedPhoto": "Verified photo",
+    "optionFallback": "Option",
+    "aboutTemplateFamilyFirstBody": "Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.",
+    "aboutTemplateCareerBalanceBody": "I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.",
+    "aboutTemplateTraditionBody": "I respect traditions and still value practical, open-minded conversations when important decisions need to be made.",
+    "aboutTemplateHonestyBody": "Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.",
+    "aboutTemplateCalmSteadyBody": "I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.",
+    "aboutFactAge": "Age is {age} years.",
+    "@aboutFactAge": {
+        "placeholders": {
+            "age": {
+                "type": "int"
+            }
+        }
+    },
+    "aboutFactHeight": "Height is about {feet} ft {inches} in.",
+    "@aboutFactHeight": {
+        "placeholders": {
+            "feet": {
+                "type": "int"
+            },
+            "inches": {
+                "type": "int"
+            }
+        }
+    },
+    "aboutFactMaritalStatus": "Marital status: {label}.",
+    "@aboutFactMaritalStatus": {
+        "placeholders": {
+            "label": {
+                "type": "String"
+            }
+        }
+    },
+    "aboutFactCommunity": "Community background: {labels}.",
+    "@aboutFactCommunity": {
+        "placeholders": {
+            "labels": {
+                "type": "String"
+            }
+        }
+    },
+    "aboutFactEducation": "Education: {labels}.",
+    "@aboutFactEducation": {
+        "placeholders": {
+            "labels": {
+                "type": "String"
+            }
+        }
+    },
+    "aboutFactCareer": "Professionally connected with {label}.",
+    "@aboutFactCareer": {
+        "placeholders": {
+            "label": {
+                "type": "String"
+            }
+        }
+    },
+    "aboutFamilyTemplateFamilyFirstBody": "Family values and mutual respect are important to me. I believe in a balanced life with clear communication, patience, and support from both families.",
+    "aboutFamilyTemplateCareerBalanceBody": "I take responsibilities seriously and like keeping a healthy balance between work, family, and personal growth. I value honesty and steady understanding.",
+    "aboutFamilyTemplateTraditionBody": "I respect traditions while staying open to practical modern thinking. I am looking for a relationship built on trust, kindness, and shared decisions.",
+    "aboutFactFamilyBackground": "Family background is {status}.",
+    "@aboutFactFamilyBackground": {
+        "placeholders": {
+            "status": {
+                "type": "String"
+            }
+        }
+    },
+    "aboutFactFamilyValues": "Family values are {values}.",
+    "@aboutFactFamilyValues": {
+        "placeholders": {
+            "values": {
+                "type": "String"
+            }
+        }
+    },
+    "termsAndConditionsShort": "T & C",
+    "privacyPolicy": "Privacy Policy",
+    "reviewInProgress": "Review in progress",
+    "selectedFileName": "Selected file: {name}",
+    "@selectedFileName": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "incomeUnitLakh": "L",
+    "incomeUnitCrore": "Cr",
+    "incomeUnitThousand": "K",
+    "heightBelowMin": "Below 4ft 6in (136 cm)",
+    "heightAboveMax": "Above 7ft (214 cm)",
+    "countryIndia": "India",
+    "locationGroupCity": "City",
+    "locationGroupSuburban": "Suburban",
+    "remove": "Remove",
+    "unlimitedDownloads": "Unlimited downloads",
+    "downloadQuotaLine": "{used} / {limit}, {remaining} remaining",
+    "@downloadQuotaLine": {
+        "placeholders": {
+            "used": {
+                "type": "String"
+            },
+            "limit": {
+                "type": "String"
+            },
+            "remaining": {
+                "type": "String"
+            }
+        }
+    },
+    "optionalFieldLabel": "{label} (Optional)",
+    "@optionalFieldLabel": {
+        "placeholders": {
+            "label": {
+                "type": "String"
+            }
+        }
+    },
+    "notSelected": "Not selected",
+    "manage": "Manage",
+    "saveChanges": "Save changes",
+    "discardChanges": "Discard",
+    "unsavedChanges": "Unsaved changes",
+    "savedLabel": "Saved",
+    "missingLabel": "Missing",
+    "needsDetails": "Needs details",
+    "partialLabel": "Partial",
+    "toggleOn": "ON",
+    "toggleOff": "OFF",
+    "optionsUnavailable": "Options unavailable",
+    "add": "Add",
+    "profileSaveFailed": "Profile save failed",
+    "notAddedYet": "Not added yet",
+    "editAllProfileTitle": "Edit All Profile",
+    "editProfileSections": "Edit profile sections",
+    "addressTypeCurrent": "Current",
+    "addressTypePermanent": "Permanent",
+    "addressTypeNative": "Native",
+    "addressTypeWork": "Work",
+    "cardMaritalStatusAndChildren": "Marital status and children",
+    "cardBirthDetails": "Birth details",
+    "cardPhysicalDetails": "Physical details",
+    "cardFatherContactNumbers": "Father contact numbers",
+    "cardMotherContactNumbers": "Mother contact numbers",
+    "cardFamilyOverview": "Family overview",
+    "cardPersonalIncome": "Personal income",
+    "cardFamilyRelatives": "Family relatives",
+    "cardAllianceDetails": "Alliance details",
+    "smokingStatus": "Smoking status",
+    "drinkingStatus": "Drinking status",
+    "marriageYear": "Marriage year",
+    "annulmentYear": "Annulment year",
+    "divorceYear": "Divorce year",
+    "separationYear": "Separation year",
+    "spouseDeathYear": "Spouse death year",
+    "legalStatus": "Legal status",
+    "annulmentDetails": "Annulment details",
+    "separationDetails": "Separation details",
+    "widowhoodDetails": "Widowhood details",
+    "divorceDetails": "Divorce details",
+    "noChildrenAdded": "No children added.",
+    "addAddress": "Add address",
+    "addressNumbered": "Address {number}",
+    "@addressNumbered": {
+        "placeholders": {
+            "number": {
+                "type": "int"
+            }
+        }
+    },
+    "removeAddress": "Remove address",
+    "addressLabel": "Address",
+    "addressType": "Address type",
+    "searchCityOrVillage": "Search city or village",
+    "fullNameLabel": "Full name",
+    "selectReligionFirst": "Select religion first",
+    "selectCasteFirst": "Select caste first",
+    "birthTimeHint": "HH:MM",
+    "clearBirthTime": "Clear birth time",
+    "clearOccupation": "Clear occupation",
+    "customOptionLabel": "{label} (Custom)",
+    "@customOptionLabel": {
+        "placeholders": {
+            "label": {
+                "type": "String"
+            }
+        }
+    },
+    "periodLabel": "Period",
+    "exactPeriodIncome": "Exact {period} income",
+    "@exactPeriodIncome": {
+        "placeholders": {
+            "period": {
+                "type": "String"
+            }
+        }
+    },
+    "approximatePeriodIncome": "Approximate {period} income",
+    "@approximatePeriodIncome": {
+        "placeholders": {
+            "period": {
+                "type": "String"
+            }
+        }
+    },
+    "minimumAmount": "Minimum amount",
+    "maximumAmount": "Maximum amount",
+    "keepFieldPrivate": "Keep {title} private",
+    "@keepFieldPrivate": {
+        "placeholders": {
+            "title": {
+                "type": "String"
+            }
+        }
+    },
+    "currencyLabel": "Currency",
+    "incomeTypeApproximate": "Approximate",
+    "incomePeriodWeekly": "Weekly",
+    "addIncomeDetails": "Add income details",
+    "approximateIncome": "Approximate income",
+    "searchOrTypeEducation": "Search or type education",
+    "searchCityOrTypeWorkLocation": "Search city or type work location",
+    "selectWeight": "Select weight",
+    "addAnotherContact": "Add another contact",
+    "removeThisContact": "Remove this contact",
+    "contactNumbered": "Contact {number}",
+    "@contactNumbered": {
+        "placeholders": {
+            "number": {
+                "type": "int"
+            }
+        }
+    },
+    "fatherName": "Father name",
+    "fatherOccupationCategory": "Father occupation category",
+    "fatherOccupationDetails": "Father occupation details",
+    "fatherExtraInfo": "Father extra info",
+    "motherName": "Mother name",
+    "motherOccupationCategory": "Mother occupation category",
+    "motherOccupationDetails": "Mother occupation details",
+    "motherExtraInfo": "Mother extra info",
+    "addBrother": "Add brother",
+    "addSister": "Add sister",
+    "siblingNumbered": "Sibling {number}",
+    "@siblingNumbered": {
+        "placeholders": {
+            "number": {
+                "type": "int"
+            }
+        }
+    },
+    "relationLabel": "Relation",
+    "addressOrCity": "Address / City",
+    "notesLabel": "Notes",
+    "addPaternal": "Add paternal",
+    "addMaternal": "Add maternal",
+    "relativeNumbered": "Relative {number}",
+    "@relativeNumbered": {
+        "placeholders": {
+            "number": {
+                "type": "int"
+            }
+        }
+    },
+    "relativeDetails": "Relative details",
+    "relativeDetailsHint": "Name, occupation, address and other details",
+    "addAllianceFamily": "Add alliance family",
+    "allianceFamilyNumbered": "Alliance family {number}",
+    "@allianceFamilyNumbered": {
+        "placeholders": {
+            "number": {
+                "type": "int"
+            }
+        }
+    },
+    "surnameLabel": "Surname",
+    "cityOrLocation": "City / Location",
+    "publicSafeSummaryOnly": "Public-safe summary only.",
+    "mangalDoshType": "Mangal dosh type",
+    "noProfilePhotoUploadedYet": "No profile photo uploaded yet.",
+    "profilePhotoUploaded": "Profile photo uploaded.",
+    "manageProfilePhoto": "Manage profile photo",
+    "managePhotos": "Manage photos",
+    "yourTaluka": "Your taluka",
+    "distanceKm": "{distance} km",
+    "@distanceKm": {
+        "placeholders": {
+            "distance": {
+                "type": "String"
+            }
+        }
+    },
+    "preferredLocations": "Preferred locations",
+    "noLocationsSelected": "No locations selected.",
+    "locationSuggestionsUnavailable": "Location suggestions are not available yet.",
+    "resetToSuggestedLocations": "Reset to suggested locations",
+    "preferredReligionsLabel": "Preferred religions",
+    "preferredCastesLabel": "Preferred castes",
+    "openToIntercasteMatches": "Open to intercaste matches",
+    "preferredMotherTongues": "Preferred mother tongues",
+    "preferredOccupationsLabel": "Preferred occupations",
+    "marriageTypePreference": "Marriage type preference",
+    "preferredMaritalStatuses": "Preferred marital statuses",
+    "withChildren": "With children",
+    "preferredProfileManagedBy": "Preferred profile managed by",
+    "managedBy": "Managed by",
+    "agePreferenceRange": "Age {min}-{max}",
+    "@agePreferenceRange": {
+        "placeholders": {
+            "min": {
+                "type": "String"
+            },
+            "max": {
+                "type": "String"
+            }
+        }
+    },
+    "agePreferenceMin": "Age {min}+",
+    "@agePreferenceMin": {
+        "placeholders": {
+            "min": {
+                "type": "String"
+            }
+        }
+    },
+    "agePreferenceMax": "Age up to {max}",
+    "@agePreferenceMax": {
+        "placeholders": {
+            "max": {
+                "type": "String"
+            }
+        }
+    },
+    "incomePreferenceRange": "Income {min}-{max}",
+    "@incomePreferenceRange": {
+        "placeholders": {
+            "min": {
+                "type": "String"
+            },
+            "max": {
+                "type": "String"
+            }
+        }
+    },
+    "incomePreferenceMin": "Income {min}+",
+    "@incomePreferenceMin": {
+        "placeholders": {
+            "min": {
+                "type": "String"
+            }
+        }
+    },
+    "incomePreferenceMax": "Income up to {max}",
+    "@incomePreferenceMax": {
+        "placeholders": {
+            "max": {
+                "type": "String"
+            }
+        }
+    },
+    "siblingsAdded": "Siblings added",
+    "otherRelativesAdded": "Other relatives added",
+    "propertyAdded": "Property added",
+    "photoNotUploadedYet": "Photo not uploaded yet",
+    "heightBelowMinCompact": "Below 4' 6\" (136 cm)",
+    "heightAboveMaxCompact": "Above 7' 0\" (214 cm)",
+    "heightFeetInchesCm": "{feet}' {inches}\" ({cm} cm)",
+    "@heightFeetInchesCm": {
+        "placeholders": {
+            "feet": {
+                "type": "int"
+            },
+            "inches": {
+                "type": "int"
+            },
+            "cm": {
+                "type": "int"
+            }
+        }
+    },
+    "weightKg": "{kg} kg",
+    "@weightKg": {
+        "placeholders": {
+            "kg": {
+                "type": "int"
+            }
+        }
+    },
+    "locationsCount": "{count} locations",
+    "@locationsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "locationPlusNearby": "{label} +{count} nearby",
+    "@locationPlusNearby": {
+        "placeholders": {
+            "label": {
+                "type": "String"
+            },
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "addressCountOne": "1 address",
+    "addressCountOther": "{count} addresses",
+    "@addressCountOther": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "childDetailCountOne": "1 child detail",
+    "childDetailCountOther": "{count} child details",
+    "@childDetailCountOther": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "relativeCountOne": "1 relative",
+    "relativeCountOther": "{count} relatives",
+    "@relativeCountOther": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "allianceFamilyCountOne": "1 alliance family",
+    "allianceFamilyCountOther": "{count} alliance families",
+    "@allianceFamilyCountOther": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "ageYearsRange": "{start} - {end} years",
+    "@ageYearsRange": {
+        "placeholders": {
+            "start": {
+                "type": "String"
+            },
+            "end": {
+                "type": "String"
+            }
+        }
+    },
+    "sectionProgressShort": "{label} {filled}/{total}",
+    "@sectionProgressShort": {
+        "placeholders": {
+            "label": {
+                "type": "String"
+            },
+            "filled": {
+                "type": "int"
+            },
+            "total": {
+                "type": "int"
+            }
+        }
+    },
+    "clearCharan": "Clear charan",
+    "heightPreferenceRange": "Height {min}-{max}",
+    "@heightPreferenceRange": {
+        "placeholders": {
+            "min": {
+                "type": "String"
+            },
+            "max": {
+                "type": "String"
+            }
+        }
+    },
+    "heightPreferenceMin": "Height {min}+",
+    "@heightPreferenceMin": {
+        "placeholders": {
+            "min": {
+                "type": "String"
+            }
+        }
+    },
+    "heightPreferenceMax": "Height up to {max}",
+    "@heightPreferenceMax": {
+        "placeholders": {
+            "max": {
+                "type": "String"
+            }
+        }
+    },
+    "biodataSourceFallback": "Biodata",
+    "fieldFallback": "Field",
+    "parsingFailedDetail": "Parsing failed: {detail}",
+    "@parsingFailedDetail": {
+        "placeholders": {
+            "detail": {
+                "type": "String"
+            }
+        }
+    },
+    "normalizedBiodataDraft": "Normalized Biodata Draft",
+    "rawNormalizedDraftJson": "Raw normalized draft JSON",
+    "missingOrReviewNeeded": "Missing / review needed",
+    "parsedJsonTitle": "Parsed JSON",
+    "ocrDiagnostics": "OCR preprocessing diagnostics",
+    "profileForWhomSelf": "For myself",
+    "profileForWhomSon": "For my son",
+    "profileForWhomDaughter": "For my daughter",
+    "profileForWhomBrother": "For my brother",
+    "profileForWhomSister": "For my sister",
+    "profileForWhomRelative": "For a relative",
+    "profileForWhomFriend": "For a friend",
+    "categoryIdOptional": "Category number (optional)",
+    "deleteAccountTitle": "Delete account",
+    "deleteAccountSettingsSubtitle": "Pause your profile or delete your account permanently",
+    "deleteAccountIntro": "You can hide your profile for a while, or delete your account for good. Read what each one does before you choose.",
+    "deleteAccountPauseTitle": "Pause my profile",
+    "deleteAccountPauseBody": "Your profile is hidden from everyone and the messages stop. Nothing is deleted. Come back whenever you like and everything is exactly where you left it.",
+    "deleteAccountPauseCta": "Pause my profile",
+    "deleteAccountPausedBanner": "Your profile is paused. Nobody can see it right now.",
+    "deleteAccountResumeCta": "Make my profile visible again",
+    "deleteAccountDeleteTitle": "Delete my account",
+    "deleteAccountDeleteBody": "Your profile is hidden straight away. After {days} days everything is erased for good — your photos, your details and your messages. Until then you can cancel and get it all back.",
+    "deleteAccountDeleteCta": "Continue to delete",
+    "deleteAccountReasonPrompt": "Why are you leaving?",
+    "deleteAccountReasonHint": "This helps us improve. Choose one.",
+    "deleteAccountReasonNoteLabel": "Tell us more (optional)",
+    "deleteAccountConfirmPrompt": "Type delete to confirm",
+    "deleteAccountConfirmHint": "delete",
+    "deleteAccountConfirmError": "Type the word delete to confirm.",
+    "deleteAccountFinalCta": "Delete my account",
+    "deleteAccountPendingTitle": "Your account will be deleted",
+    "deleteAccountPendingBody": "{days} days left. Cancel any time before then and nothing is lost.",
+    "deleteAccountPendingCancelCta": "Cancel deletion, keep my account",
+    "deleteAccountWhatHappensTitle": "What gets deleted",
+    "deleteAccountWhatHappensBody": "Your profile, photos, preferences, interests and biodata are erased. Payment records are kept because tax law requires it. Messages you sent stay in the other person's chat, but your name and photo are removed so you cannot be identified.",
+    "deleteAccountReadMore": "Read the full policy",
+    "deleteAccountGenericError": "That did not go through. Please try again.",
+    "deleteAccountReasonNoSuitableMatches": "I did not find suitable matches",
+    "deleteAccountReasonFoundMatchElsewhere": "I found a match elsewhere",
+    "deleteAccountReasonTooManyMessages": "Too many messages or notifications",
+    "deleteAccountReasonPrivacyConcern": "I am concerned about my privacy",
+    "deleteAccountReasonHardToUse": "The app was hard to use",
+    "deleteAccountReasonOther": "Another reason",
+    "@deleteAccountDeleteBody": {
+        "placeholders": {
+            "days": {
+                "type": "int"
+            }
+        }
+    },
+    "@deleteAccountPendingBody": {
+        "placeholders": {
+            "days": {
+                "type": "int"
+            }
+        }
     }
-  },
-  "aboutSummaryWorkingAs": "working as {occupation}",
-  "@aboutSummaryWorkingAs": {
-    "placeholders": {
-      "occupation": { "type": "String" }
-    }
-  },
-  "aboutSummaryBasedIn": "based in {location}",
-  "@aboutSummaryBasedIn": {
-    "placeholders": {
-      "location": { "type": "String" }
-    }
-  },
-  "aboutSummarySentence": "{name} is {details}.",
-  "@aboutSummarySentence": {
-    "placeholders": {
-      "name": { "type": "String" },
-      "details": { "type": "String" }
-    }
-  },
-  "photosCounter": "Photos {current}/{total}",
-  "@photosCounter": {
-    "placeholders": {
-      "current": { "type": "int" },
-      "total": { "type": "int" }
-    }
-  },
-  "contactValueCopied": "{label} copied.",
-  "@contactValueCopied": {
-    "placeholders": {
-      "label": { "type": "String" }
-    }
-  },
-  "profileIdLabel": "Profile ID: {id}",
-  "@profileIdLabel": {
-    "placeholders": {
-      "id": { "type": "String" }
-    }
-  },
-  "profileNotFound": "Profile not found.",
-  "profilePreview": "Profile preview",
-  "profileInformation": "Profile information",
-  "photoNotAddedYet": "No photo added yet",
-  "nameNotAvailable": "Name not available",
-  "pleaseTryAgain": "Please try again.",
-  "signInWithGoogle": "Sign in with Google",
-  "googleSignInFailed": "Google sign-in did not go through. Try again, or come in another way.",
-  "signUpWithGoogle": "Sign Up with Google",
-  "signUpWithMobile": "Sign Up with Mobile",
-  "unexpectedErrorOccurred": "An unexpected error occurred: {error}",
-  "@unexpectedErrorOccurred": {
-    "placeholders": {
-      "error": { "type": "String" }
-    }
-  },
-  "sectionSavedNamed": "{section} saved.",
-  "@sectionSavedNamed": {
-    "placeholders": {
-      "section": { "type": "String" }
-    }
-  },
-  "testOtpLabel": "Test OTP: {otp}",
-  "@testOtpLabel": {
-    "placeholders": {
-      "otp": { "type": "String" }
-    }
-  },
-  "loginResendInSeconds": "Send OTP again in {seconds}s",
-  "@loginResendInSeconds": {
-    "description": "Resend cooldown. `seconds` is a String on purpose so no locale-aware number formatter can turn the digits into Devanagari.",
-    "placeholders": {
-      "seconds": { "type": "String" }
-    }
-  },
-  "nearbyTalukasCount": "{count} nearby talukas",
-  "@nearbyTalukasCount": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "districtsCount": "{count} districts",
-  "@districtsCount": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "statesCount": "{count} states",
-  "@statesCount": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "countriesCount": "{count} countries",
-  "@countriesCount": {
-    "placeholders": {
-      "count": { "type": "int" }
-    }
-  },
-  "contactMobileNumberLabel": "Mobile Number",
-  "contactEmailLabel": "Email",
-  "copy": "Copy",
-  "soon": "Soon",
-  "contactStateAvailableBadge": "Available",
-  "contactStateLockedBadge": "Locked",
-  "contactStateResponseBadge": "Response",
-  "contactStateRequestBadge": "Request",
-  "contactStateInfoBadge": "Info",
-  "suchakManagedProfileTitle": "Profile added by a Suchak",
-  "suchakContactSubtitleFallback": "Experienced marriage facilitator",
-  "suchakContactPrivacyNote": "The candidate's own number is never shown. Everything goes through the Suchak.",
-  "suchakContactWhyNote": "If {candidateName}'s profile looks right, tell {suchakName}. They will show your profile to {candidateName}/their family and convey their reply to you free of charge.",
-  "@suchakContactWhyNote": {
-    "placeholders": {
-      "candidateName": { "type": "String" },
-      "suchakName": { "type": "String" }
-    }
-  },
-  "suchakContactNumberLabel": "Suchak's number",
-  "suchakCallAction": "Call",
-  "suchakMessageAction": "Message",
-  "suchakCallFailed": "Could not open the phone dialer.",
-  "suchakLabel": "Suchak",
-  "suchakStateAvailableBadge": "Suchak",
-  "suchakStateAnsweredBadge": "Answered",
-  "suchakStateClosedBadge": "Closed",
-  "suchakRequestAvailableMessage": "A Suchak manages this profile. Send a request and they will take it ahead.",
-  "suchakRequestPendingMessage": "Your request is with the Suchak. Their reply arrives here.",
-  "suchakRequestAnsweredMessage": "The Suchak has answered. Continue in chat.",
-  "suchakRequestClosedMessage": "This request is closed. You can send a new one.",
-  "suchakRequestSendButton": "Request through Suchak",
-  "suchakRequestResendButton": "Send a new request",
-  "suchakRequestOpenChatButton": "Open chat",
-  "suchakRequestPendingBadge": "Request pending",
-  "suchakRequestDialogTitle": "Request through Suchak",
-  "suchakRequestDialogBody": "Your request goes to {name}, who will take it to the candidate and their family.",
-  "@suchakRequestDialogBody": {
-    "placeholders": {
-      "name": { "type": "String" }
-    }
-  },
-  "suchakRequestMessageLabel": "Message for the Suchak",
-  "suchakRequestMessageHint": "Share brief context for the Suchak.",
-  "suchakRequestSent": "Suchak request sent.",
-  "couldNotSendSuchakRequest": "Could not send the Suchak request.",
-  "suchakChatNotOpenYet": "The Suchak has not opened the chat yet.",
-  "suchakRequestsTitle": "Suchak Requests",
-  "tabReceived": "Received",
-  "tabSent": "Sent",
-  "loadingSuchakRequests": "Loading Suchak requests",
-  "suchakRequestsDidNotLoad": "Suchak requests did not load.",
-  "noReceivedSuchakRequests": "Nobody has asked your Suchak about you yet.",
-  "noSentSuchakRequests": "You have not sent a Suchak request yet.",
-  "suchakRequestInterested": "Interested",
-  "suchakRequestNotInterested": "Not interested",
-  "suchakRequestConfirmTitle": "Send this answer?",
-  "suchakRequestConfirmBody": "Your Suchak can answer this request too. Whichever answer arrives first is the one that counts.",
-  "suchakRequestDecisionRecorded": "Your answer has been recorded.",
-  "couldNotAnswerSuchakRequest": "Could not record your answer.",
-  "suchakRequestAlreadyAnswered": "This request was already answered.",
-  "suchakRequestAlreadyAnsweredBy": "This request was already answered by {by}.",
-  "@suchakRequestAlreadyAnsweredBy": {
-    "placeholders": {
-      "by": { "type": "String" }
-    }
-  },
-  "suchakRequestAnsweredByName": "Answered by {by}",
-  "@suchakRequestAnsweredByName": {
-    "placeholders": {
-      "by": { "type": "String" }
-    }
-  },
-  "suchakRequestAskedOnDate": "Asked on {date}",
-  "@suchakRequestAskedOnDate": {
-    "placeholders": {
-      "date": { "type": "String" }
-    }
-  },
-  "suchakRequestSentOnDate": "Sent on {date}",
-  "@suchakRequestSentOnDate": {
-    "placeholders": {
-      "date": { "type": "String" }
-    }
-  },
-  "suchakRequestYourMessage": "Your message",
-  "suchakRequestTheirMessage": "Message",
-  "notificationSettingsTitle": "Notification settings",
-  "notificationSettingsIntro": "Choose which notifications reach your phone.",
-  "notificationSettingsManage": "Push notifications",
-  "notificationSettingsEmpty": "No notification types are available right now.",
-  "notificationSettingsSaveFailed": "This change could not be saved.",
-  "notificationPermissionOffTitle": "Notifications are switched off",
-  "@notificationPermissionOffTitle": {
-    "description": "Banner heading shown when Android is blocking notifications for this app."
-  },
-  "notificationPermissionOffBody": "Your phone is not letting this app send notifications, so nothing below can reach you.",
-  "notificationPermissionBlockedBody": "Your phone is blocking notifications for this app. The app can no longer ask for this — switch notifications on in phone settings.",
-  "notificationPermissionEnable": "Turn on notifications",
-  "notificationPermissionOpenSettings": "Open phone settings",
-  "quietHours": "Quiet hours",
-  "pushChannelName": "Notifications",
-  "pushChannelDescription": "Alerts about interests, contact requests and matches.",
-  "pushDefaultTitle": "New notification",
-  "accept": "Accept",
-  "reject": "Reject",
-  "statusLabel": "Status",
-  "interestAccepted": "Interest accepted.",
-  "interestRejected": "Interest declined.",
-  "noReceivedInterests": "No received interests yet.",
-  "lockedInterestTitle": "Locked interest",
-  "lockedInterestBody": "Unlock with a plan to see who sent this interest.",
-  "lockedInterestAcceptHint": "Accept becomes available once this interest is unlocked.",
-  "interestRevealLimitBanner": "Your plan reveals {count} received interests {interval}.",
-  "@interestRevealLimitBanner": {
-    "placeholders": {
-      "count": { "type": "int" },
-      "interval": { "type": "String" }
-    }
-  },
-  "interestRevealNone": "Your current plan does not reveal any received interest.",
-  "intervalEachDay": "each day",
-  "intervalEachWeek": "each week",
-  "intervalEachMonth": "each month",
-  "intervalEachQuarter": "each quarter",
-  "intervalInTotal": "in total",
-  "sectionBasicInformation": "Basic Information",
-  "sectionPhysical": "Physical",
-  "sectionSiblings": "Siblings",
-  "sectionRelatives": "Relatives",
-  "sectionProperty": "Property",
-  "sectionHoroscope": "Horoscope",
-  "sectionAboutMe": "About Me",
-  "sectionPartnerPreferences": "Partner Preferences",
-  "labelSelfAddresses": "Self Addresses",
-  "labelAddressLine": "Address Line",
-  "labelBirthTime": "Birth Time",
-  "labelBirthPlace": "Birth Place",
-  "labelMarriageHistory": "Marriage History",
-  "labelChildren": "Children",
-  "labelWeight": "Weight",
-  "labelComplexion": "Complexion",
-  "labelBloodGroup": "Blood Group",
-  "labelPhysicalCondition": "Physical Condition",
-  "labelHighestEducation": "Highest Education",
-  "labelCompanyName": "Company Name",
-  "labelWorkLocation": "Work Location",
-  "labelFather": "Father",
-  "labelMother": "Mother",
-  "labelFatherContactNumbered": "Father Contact {number}",
-  "@labelFatherContactNumbered": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "labelMotherContactNumbered": "Mother Contact {number}",
-  "@labelMotherContactNumbered": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "labelFamilyIncome": "Family Income",
-  "labelFamilyType": "Family Type",
-  "labelParentsAddresses": "Parents Addresses",
-  "labelAllianceNetwork": "Alliance Network",
-  "labelOtherRelatives": "Other Relatives",
-  "labelPropertyDetails": "Property Details",
-  "labelGan": "Gan",
-  "horoscopeDerivedTitle": "Filled automatically from the above",
-  "labelNadi": "Nadi",
-  "labelYoni": "Yoni",
-  "labelVarna": "Varna",
-  "labelVashya": "Vashya",
-  "labelRashiLord": "Rashi Lord",
-  "labelDevak": "Devak",
-  "labelKul": "Kul",
-  "labelGotra": "Gotra",
-  "labelNavrasName": "Navras Name",
-  "labelBirthWeekday": "Birth Weekday",
-  "labelExpectations": "Expectations",
-  "labelHeightRange": "Height Range",
-  "labelPartnerWithChildren": "Partner With Children",
-  "labelPreferredMaritalStatus": "Preferred Marital Status",
-  "labelPreferredDiet": "Preferred Diet",
-  "labelPreferredReligion": "Preferred Religion",
-  "labelPreferredCaste": "Preferred Caste",
-  "labelPreferredEducation": "Preferred Education",
-  "labelPreferredOccupation": "Preferred Occupation",
-  "labelPhotoStatus": "Photo Status",
-  "valueNotAdded": "Not added",
-  "valuePhotoUploaded": "Photo uploaded",
-  "valuePhotoPendingOrNotApproved": "Photo pending or not approved",
-  "valueNoApprovedPhoto": "No approved photo",
-  "valueUndisclosed": "Undisclosed",
-  "valueUpTo": "Up to {value}",
-  "@valueUpTo": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "valueApproxAmount": "Approx. {value}",
-  "@valueApproxAmount": {
-    "placeholders": {
-      "value": {
-        "type": "String"
-      }
-    }
-  },
-  "valueNoSiblings": "No siblings",
-  "valueMoreCount": "+{count} more",
-  "@valueMoreCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "siblingCountOne": "1 sibling",
-  "siblingCountOther": "{count} siblings",
-  "@siblingCountOther": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "childCountOne": "1 child",
-  "childCountOther": "{count} children",
-  "@childCountOther": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "valueMarriageYear": "Marriage {year}",
-  "@valueMarriageYear": {
-    "placeholders": {
-      "year": {
-        "type": "String"
-      }
-    }
-  },
-  "valueSeparatedYear": "Separated {year}",
-  "@valueSeparatedYear": {
-    "placeholders": {
-      "year": {
-        "type": "String"
-      }
-    }
-  },
-  "valueDivorceYear": "Divorce {year}",
-  "@valueDivorceYear": {
-    "placeholders": {
-      "year": {
-        "type": "String"
-      }
-    }
-  },
-  "valueAnnulmentYear": "Annulment {year}",
-  "@valueAnnulmentYear": {
-    "placeholders": {
-      "year": {
-        "type": "String"
-      }
-    }
-  },
-  "valueSpouseDeathYear": "Spouse death {year}",
-  "@valueSpouseDeathYear": {
-    "placeholders": {
-      "year": {
-        "type": "String"
-      }
-    }
-  },
-  "valueChildNumbered": "Child {number}",
-  "@valueChildNumbered": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "valueAgeYears": "{age} years",
-  "@valueAgeYears": {
-    "placeholders": {
-      "age": {
-        "type": "String"
-      }
-    }
-  },
-  "valueFinalized": "Finalized",
-  "valueMutual": "Mutual",
-  "valueContested": "Contested",
-  "valuePreferNotToSay": "Prefer not to say",
-  "valueMarried": "Married",
-  "valueUnmarried": "Unmarried",
-  "relationBrotherWife": "Brother's wife",
-  "relationSisterHusband": "Sister's husband",
-  "relationPaternalGrandfather": "Paternal Grandfather",
-  "relationPaternalGrandmother": "Paternal Grandmother",
-  "relationPaternalUncle": "Paternal Uncle",
-  "relationPaternalUncleWife": "Wife of Paternal Uncle",
-  "relationPaternalAunt": "Paternal Aunt",
-  "relationPaternalAuntHusband": "Husband of Paternal Aunt",
-  "relationCousin": "Cousin",
-  "relationMaternalAddressAjol": "Maternal address (Ajol)",
-  "relationMaternalGrandfather": "Maternal Grandfather",
-  "relationMaternalGrandmother": "Maternal Grandmother",
-  "relationMaternalUncle": "Maternal Uncle",
-  "relationMaternalUncleWife": "Maternal Uncle's wife",
-  "relationMaternalAunt": "Maternal Aunt",
-  "relationMaternalAuntHusband": "Husband of Maternal Aunt",
-  "clear": "Clear",
-  "unableToLoad": "Unable to load",
-  "tryAnotherSearchTerm": "Try another search term.",
-  "requestToAdd": "Request to add",
-  "popular": "Popular",
-  "notSelectableForThisField": "Not selectable for this field.",
-  "translationMissingFallback": "Translation missing. Showing fallback label.",
-  "done": "Done",
-  "selectedCount": "{count} selected",
-  "@selectedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "noPendingContactRequests": "No pending contact requests.",
-  "noSentContactRequests": "No sent contact requests.",
-  "requestedLabel": "Requested",
-  "createdLabel": "Created",
-  "approve": "Approve",
-  "approveContactTitle": "Approve Contact",
-  "durationLabel": "Duration",
-  "approveOnce24Hours": "Approve once (24 hours)",
-  "grantAccess": "Grant Access",
-  "contactAccessGranted": "Contact access granted.",
-  "rejectRequestTitle": "Reject request?",
-  "rejectRequestBody": "This will reject the contact request.",
-  "requestRejected": "Request rejected.",
-  "contactRequestLabel": "Contact request",
-  "interestWithdrawnSuccessfully": "Interest withdrawn successfully.",
-  "unknown": "Unknown",
-  "noSentInterestsYet": "You have not sent any interests yet.",
-  "statusPrefix": "Status: ",
-  "withdrawInterest": "Withdraw Interest",
-  "unauthorizedAccess": "Unauthorized",
-  "photoSelectedWillBeChecked": "Photo selected. It will be checked for quality and safety after upload.",
-  "refreshStatus": "Refresh status",
-  "clearProfilePhoto": "Clear profile photo",
-  "portrait34WorksBest": "3:4 portrait works best",
-  "photoGuidelines": "Photo guidelines",
-  "stageAddYourProfilePhoto": "Add your profile photo",
-  "stageQualityCheckInProgress": "Quality check in progress",
-  "approvedPhotoVisibleOnProfile": "Approved photo currently visible on your profile.",
-  "uploadClearPhotoWeWillCheck": "Upload a clear photo. We will optimize it and check it before it appears on your profile.",
-  "approved": "Approved",
-  "badgeNeedsRetry": "Needs retry",
-  "badgeChecking": "Checking",
-  "badgeUploading": "Uploading",
-  "badgeSelected": "Selected",
-  "primaryPhotoUpdated": "Primary photo updated.",
-  "photoDeleted": "Photo deleted.",
-  "photoOrderUpdated": "Photo order updated.",
-  "dashboardHome": "Dashboard",
-  "upload": "Upload",
-  "adjustCrop34": "Adjust photo",
-  "dragFramePullCorners": "Drag the frame. Pull corners to resize.",
-  "usePhoto": "Use photo",
-  "cropEncodingFailed": "Crop encoding failed.",
-  "comparisonStrongMatch": "Strong match",
-  "comparisonMatch": "Match",
-  "comparisonNearMatch": "Near match",
-  "comparisonNeedsReview": "Needs review",
-  "comparisonReview": "Review",
-  "mobileLabel": "Mobile",
-  "adminPolicyHeading": "Admin policy",
-  "requestModeLabel": "Request mode",
-  "allowedScopesLabel": "Allowed scopes",
-  "messagingLabel": "Messaging",
-  "accountProfileIdLabel": "Profile ID",
-  "moreMatchesSectionsUnavailable": "More Matches sections unavailable.",
-  "recommendationTitle": "Recommendation",
-  "skip": "Skip",
-  "swipeInterestHint": "Swipe right to send interest. Swipe left to skip.",
-  "filterTabMinimum": "Minimum",
-  "filterTabAdvanced": "Advanced",
-  "apply": "Apply",
-  "basicPreference": "Basic preference",
-  "verifiedPhoto": "Verified photo",
-  "optionFallback": "Option",
-  "aboutTemplateFamilyFirstBody": "Family means a great deal to me, and I hope to build a respectful partnership with clear communication and patience.",
-  "aboutTemplateCareerBalanceBody": "I take responsibilities seriously while keeping space for family, relationships, and a peaceful daily routine.",
-  "aboutTemplateTraditionBody": "I respect traditions and still value practical, open-minded conversations when important decisions need to be made.",
-  "aboutTemplateHonestyBody": "Honesty, mutual respect, and emotional safety matter more to me than perfection on paper.",
-  "aboutTemplateCalmSteadyBody": "I am generally calm and steady, and I prefer resolving things with patience, clarity, and kindness.",
-  "aboutFactAge": "Age is {age} years.",
-  "@aboutFactAge": {
-    "placeholders": {
-      "age": {
-        "type": "int"
-      }
-    }
-  },
-  "aboutFactHeight": "Height is about {feet} ft {inches} in.",
-  "@aboutFactHeight": {
-    "placeholders": {
-      "feet": {
-        "type": "int"
-      },
-      "inches": {
-        "type": "int"
-      }
-    }
-  },
-  "aboutFactMaritalStatus": "Marital status: {label}.",
-  "@aboutFactMaritalStatus": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "aboutFactCommunity": "Community background: {labels}.",
-  "@aboutFactCommunity": {
-    "placeholders": {
-      "labels": {
-        "type": "String"
-      }
-    }
-  },
-  "aboutFactEducation": "Education: {labels}.",
-  "@aboutFactEducation": {
-    "placeholders": {
-      "labels": {
-        "type": "String"
-      }
-    }
-  },
-  "aboutFactCareer": "Professionally connected with {label}.",
-  "@aboutFactCareer": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "aboutFamilyTemplateFamilyFirstBody": "Family values and mutual respect are important to me. I believe in a balanced life with clear communication, patience, and support from both families.",
-  "aboutFamilyTemplateCareerBalanceBody": "I take responsibilities seriously and like keeping a healthy balance between work, family, and personal growth. I value honesty and steady understanding.",
-  "aboutFamilyTemplateTraditionBody": "I respect traditions while staying open to practical modern thinking. I am looking for a relationship built on trust, kindness, and shared decisions.",
-  "aboutFactFamilyBackground": "Family background is {status}.",
-  "@aboutFactFamilyBackground": {
-    "placeholders": {
-      "status": {
-        "type": "String"
-      }
-    }
-  },
-  "aboutFactFamilyValues": "Family values are {values}.",
-  "@aboutFactFamilyValues": {
-    "placeholders": {
-      "values": {
-        "type": "String"
-      }
-    }
-  },
-  "termsAndConditionsShort": "T & C",
-  "privacyPolicy": "Privacy Policy",
-  "reviewInProgress": "Review in progress",
-  "selectedFileName": "Selected file: {name}",
-  "@selectedFileName": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "incomeUnitLakh": "L",
-  "incomeUnitCrore": "Cr",
-  "incomeUnitThousand": "K",
-  "heightBelowMin": "Below 4ft 6in (136 cm)",
-  "heightAboveMax": "Above 7ft (214 cm)",
-  "countryIndia": "India",
-  "locationGroupCity": "City",
-  "locationGroupSuburban": "Suburban",
-  "remove": "Remove",
-  "unlimitedDownloads": "Unlimited downloads",
-  "downloadQuotaLine": "{used} / {limit}, {remaining} remaining",
-  "@downloadQuotaLine": {
-    "placeholders": {
-      "used": {
-        "type": "String"
-      },
-      "limit": {
-        "type": "String"
-      },
-      "remaining": {
-        "type": "String"
-      }
-    }
-  },
-  "optionalFieldLabel": "{label} (Optional)",
-  "@optionalFieldLabel": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "notSelected": "Not selected",
-  "manage": "Manage",
-  "saveChanges": "Save changes",
-  "discardChanges": "Discard",
-  "unsavedChanges": "Unsaved changes",
-  "savedLabel": "Saved",
-  "missingLabel": "Missing",
-  "needsDetails": "Needs details",
-  "partialLabel": "Partial",
-  "toggleOn": "ON",
-  "toggleOff": "OFF",
-  "optionsUnavailable": "Options unavailable",
-  "add": "Add",
-  "profileSaveFailed": "Profile save failed",
-  "notAddedYet": "Not added yet",
-  "editAllProfileTitle": "Edit All Profile",
-  "editProfileSections": "Edit profile sections",
-  "addressTypeCurrent": "Current",
-  "addressTypePermanent": "Permanent",
-  "addressTypeNative": "Native",
-  "addressTypeWork": "Work",
-  "cardMaritalStatusAndChildren": "Marital status and children",
-  "cardBirthDetails": "Birth details",
-  "cardPhysicalDetails": "Physical details",
-  "cardFatherContactNumbers": "Father contact numbers",
-  "cardMotherContactNumbers": "Mother contact numbers",
-  "cardFamilyOverview": "Family overview",
-  "cardPersonalIncome": "Personal income",
-  "cardFamilyRelatives": "Family relatives",
-  "cardAllianceDetails": "Alliance details",
-  "smokingStatus": "Smoking status",
-  "drinkingStatus": "Drinking status",
-  "marriageYear": "Marriage year",
-  "annulmentYear": "Annulment year",
-  "divorceYear": "Divorce year",
-  "separationYear": "Separation year",
-  "spouseDeathYear": "Spouse death year",
-  "legalStatus": "Legal status",
-  "annulmentDetails": "Annulment details",
-  "separationDetails": "Separation details",
-  "widowhoodDetails": "Widowhood details",
-  "divorceDetails": "Divorce details",
-  "noChildrenAdded": "No children added.",
-  "addAddress": "Add address",
-  "addressNumbered": "Address {number}",
-  "@addressNumbered": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "removeAddress": "Remove address",
-  "addressLabel": "Address",
-  "addressType": "Address type",
-  "searchCityOrVillage": "Search city or village",
-  "fullNameLabel": "Full name",
-  "selectReligionFirst": "Select religion first",
-  "selectCasteFirst": "Select caste first",
-  "birthTimeHint": "HH:MM",
-  "clearBirthTime": "Clear birth time",
-  "clearOccupation": "Clear occupation",
-  "customOptionLabel": "{label} (Custom)",
-  "@customOptionLabel": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      }
-    }
-  },
-  "periodLabel": "Period",
-  "exactPeriodIncome": "Exact {period} income",
-  "@exactPeriodIncome": {
-    "placeholders": {
-      "period": {
-        "type": "String"
-      }
-    }
-  },
-  "approximatePeriodIncome": "Approximate {period} income",
-  "@approximatePeriodIncome": {
-    "placeholders": {
-      "period": {
-        "type": "String"
-      }
-    }
-  },
-  "minimumAmount": "Minimum amount",
-  "maximumAmount": "Maximum amount",
-  "keepFieldPrivate": "Keep {title} private",
-  "@keepFieldPrivate": {
-    "placeholders": {
-      "title": {
-        "type": "String"
-      }
-    }
-  },
-  "currencyLabel": "Currency",
-  "incomeTypeApproximate": "Approximate",
-  "incomePeriodWeekly": "Weekly",
-  "addIncomeDetails": "Add income details",
-  "approximateIncome": "Approximate income",
-  "searchOrTypeEducation": "Search or type education",
-  "searchCityOrTypeWorkLocation": "Search city or type work location",
-  "selectWeight": "Select weight",
-  "addAnotherContact": "Add another contact",
-  "removeThisContact": "Remove this contact",
-  "contactNumbered": "Contact {number}",
-  "@contactNumbered": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "fatherName": "Father name",
-  "fatherOccupationCategory": "Father occupation category",
-  "fatherOccupationDetails": "Father occupation details",
-  "fatherExtraInfo": "Father extra info",
-  "motherName": "Mother name",
-  "motherOccupationCategory": "Mother occupation category",
-  "motherOccupationDetails": "Mother occupation details",
-  "motherExtraInfo": "Mother extra info",
-  "addBrother": "Add brother",
-  "addSister": "Add sister",
-  "siblingNumbered": "Sibling {number}",
-  "@siblingNumbered": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "relationLabel": "Relation",
-  "addressOrCity": "Address / City",
-  "notesLabel": "Notes",
-  "addPaternal": "Add paternal",
-  "addMaternal": "Add maternal",
-  "relativeNumbered": "Relative {number}",
-  "@relativeNumbered": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "relativeDetails": "Relative details",
-  "relativeDetailsHint": "Name, occupation, address and other details",
-  "addAllianceFamily": "Add alliance family",
-  "allianceFamilyNumbered": "Alliance family {number}",
-  "@allianceFamilyNumbered": {
-    "placeholders": {
-      "number": {
-        "type": "int"
-      }
-    }
-  },
-  "surnameLabel": "Surname",
-  "cityOrLocation": "City / Location",
-  "publicSafeSummaryOnly": "Public-safe summary only.",
-  "mangalDoshType": "Mangal dosh type",
-  "noProfilePhotoUploadedYet": "No profile photo uploaded yet.",
-  "profilePhotoUploaded": "Profile photo uploaded.",
-  "manageProfilePhoto": "Manage profile photo",
-  "managePhotos": "Manage photos",
-  "yourTaluka": "Your taluka",
-  "distanceKm": "{distance} km",
-  "@distanceKm": {
-    "placeholders": {
-      "distance": {
-        "type": "String"
-      }
-    }
-  },
-  "preferredLocations": "Preferred locations",
-  "noLocationsSelected": "No locations selected.",
-  "locationSuggestionsUnavailable": "Location suggestions are not available yet.",
-  "resetToSuggestedLocations": "Reset to suggested locations",
-  "preferredReligionsLabel": "Preferred religions",
-  "preferredCastesLabel": "Preferred castes",
-  "openToIntercasteMatches": "Open to intercaste matches",
-  "preferredMotherTongues": "Preferred mother tongues",
-  "preferredOccupationsLabel": "Preferred occupations",
-  "marriageTypePreference": "Marriage type preference",
-  "preferredMaritalStatuses": "Preferred marital statuses",
-  "withChildren": "With children",
-  "preferredProfileManagedBy": "Preferred profile managed by",
-  "managedBy": "Managed by",
-  "agePreferenceRange": "Age {min}-{max}",
-  "@agePreferenceRange": {
-    "placeholders": {
-      "min": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
-  "agePreferenceMin": "Age {min}+",
-  "@agePreferenceMin": {
-    "placeholders": {
-      "min": {
-        "type": "String"
-      }
-    }
-  },
-  "agePreferenceMax": "Age up to {max}",
-  "@agePreferenceMax": {
-    "placeholders": {
-      "max": {
-        "type": "String"
-      }
-    }
-  },
-  "incomePreferenceRange": "Income {min}-{max}",
-  "@incomePreferenceRange": {
-    "placeholders": {
-      "min": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
-  "incomePreferenceMin": "Income {min}+",
-  "@incomePreferenceMin": {
-    "placeholders": {
-      "min": {
-        "type": "String"
-      }
-    }
-  },
-  "incomePreferenceMax": "Income up to {max}",
-  "@incomePreferenceMax": {
-    "placeholders": {
-      "max": {
-        "type": "String"
-      }
-    }
-  },
-  "siblingsAdded": "Siblings added",
-  "otherRelativesAdded": "Other relatives added",
-  "propertyAdded": "Property added",
-  "photoNotUploadedYet": "Photo not uploaded yet",
-  "heightBelowMinCompact": "Below 4' 6\" (136 cm)",
-  "heightAboveMaxCompact": "Above 7' 0\" (214 cm)",
-  "heightFeetInchesCm": "{feet}' {inches}\" ({cm} cm)",
-  "@heightFeetInchesCm": {
-    "placeholders": {
-      "feet": {
-        "type": "int"
-      },
-      "inches": {
-        "type": "int"
-      },
-      "cm": {
-        "type": "int"
-      }
-    }
-  },
-  "weightKg": "{kg} kg",
-  "@weightKg": {
-    "placeholders": {
-      "kg": {
-        "type": "int"
-      }
-    }
-  },
-  "locationsCount": "{count} locations",
-  "@locationsCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "locationPlusNearby": "{label} +{count} nearby",
-  "@locationPlusNearby": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      },
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "addressCountOne": "1 address",
-  "addressCountOther": "{count} addresses",
-  "@addressCountOther": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "childDetailCountOne": "1 child detail",
-  "childDetailCountOther": "{count} child details",
-  "@childDetailCountOther": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "relativeCountOne": "1 relative",
-  "relativeCountOther": "{count} relatives",
-  "@relativeCountOther": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "allianceFamilyCountOne": "1 alliance family",
-  "allianceFamilyCountOther": "{count} alliance families",
-  "@allianceFamilyCountOther": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "ageYearsRange": "{start} - {end} years",
-  "@ageYearsRange": {
-    "placeholders": {
-      "start": {
-        "type": "String"
-      },
-      "end": {
-        "type": "String"
-      }
-    }
-  },
-  "sectionProgressShort": "{label} {filled}/{total}",
-  "@sectionProgressShort": {
-    "placeholders": {
-      "label": {
-        "type": "String"
-      },
-      "filled": {
-        "type": "int"
-      },
-      "total": {
-        "type": "int"
-      }
-    }
-  },
-  "clearCharan": "Clear charan",
-  "heightPreferenceRange": "Height {min}-{max}",
-  "@heightPreferenceRange": {
-    "placeholders": {
-      "min": {
-        "type": "String"
-      },
-      "max": {
-        "type": "String"
-      }
-    }
-  },
-  "heightPreferenceMin": "Height {min}+",
-  "@heightPreferenceMin": {
-    "placeholders": {
-      "min": {
-        "type": "String"
-      }
-    }
-  },
-  "heightPreferenceMax": "Height up to {max}",
-  "@heightPreferenceMax": {
-    "placeholders": {
-      "max": {
-        "type": "String"
-      }
-    }
-  },
-  "biodataSourceFallback": "Biodata",
-  "fieldFallback": "Field",
-  "parsingFailedDetail": "Parsing failed: {detail}",
-  "@parsingFailedDetail": {
-    "placeholders": {
-      "detail": {
-        "type": "String"
-      }
-    }
-  },
-  "normalizedBiodataDraft": "Normalized Biodata Draft",
-  "rawNormalizedDraftJson": "Raw normalized draft JSON",
-  "missingOrReviewNeeded": "Missing / review needed",
-  "parsedJsonTitle": "Parsed JSON",
-  "ocrDiagnostics": "OCR preprocessing diagnostics",
-  "profileForWhomSelf": "For myself",
-  "profileForWhomSon": "For my son",
-  "profileForWhomDaughter": "For my daughter",
-  "profileForWhomBrother": "For my brother",
-  "profileForWhomSister": "For my sister",
-  "profileForWhomRelative": "For a relative",
-  "profileForWhomFriend": "For a friend",
-  "categoryIdOptional": "Category number (optional)"
 }

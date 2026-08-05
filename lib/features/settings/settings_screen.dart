@@ -449,6 +449,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.pushNamed(context, '/change-password'),
           ),
+          const Divider(height: 20),
+          // Google Play requires this to be readily discoverable, so it is a
+          // normal row in the account card rather than something buried. It is
+          // deliberately styled like every other row — no red, no emphasis, no
+          // larger type: nothing here should invite a member towards it. The
+          // guards against an accidental deletion live inside the flow (pause
+          // offered first, a reason, a typed confirmation, 30 days to undo),
+          // which is where they belong, not on the door.
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.person_off_outlined),
+            title: Text(appText.deleteAccountTitle),
+            subtitle: Text(appText.deleteAccountSettingsSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.pushNamed(context, '/delete-account'),
+          ),
         ],
       ),
     );

@@ -5149,4 +5149,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get categoryIdOptional => 'Category number (optional)';
+
+  @override
+  String get deleteAccountTitle => 'Delete account';
+
+  @override
+  String get deleteAccountSettingsSubtitle =>
+      'Pause your profile or delete your account permanently';
+
+  @override
+  String get deleteAccountIntro =>
+      'You can hide your profile for a while, or delete your account for good. Read what each one does before you choose.';
+
+  @override
+  String get deleteAccountPauseTitle => 'Pause my profile';
+
+  @override
+  String get deleteAccountPauseBody =>
+      'Your profile is hidden from everyone and the messages stop. Nothing is deleted. Come back whenever you like and everything is exactly where you left it.';
+
+  @override
+  String get deleteAccountPauseCta => 'Pause my profile';
+
+  @override
+  String get deleteAccountPausedBanner =>
+      'Your profile is paused. Nobody can see it right now.';
+
+  @override
+  String get deleteAccountResumeCta => 'Make my profile visible again';
+
+  @override
+  String get deleteAccountDeleteTitle => 'Delete my account';
+
+  @override
+  String deleteAccountDeleteBody(int days) {
+    return 'Your profile is hidden straight away. After $days days everything is erased for good — your photos, your details and your messages. Until then you can cancel and get it all back.';
+  }
+
+  @override
+  String get deleteAccountDeleteCta => 'Continue to delete';
+
+  @override
+  String get deleteAccountReasonPrompt => 'Why are you leaving?';
+
+  @override
+  String get deleteAccountReasonHint => 'This helps us improve. Choose one.';
+
+  @override
+  String get deleteAccountReasonNoteLabel => 'Tell us more (optional)';
+
+  @override
+  String get deleteAccountConfirmPrompt => 'Type delete to confirm';
+
+  @override
+  String get deleteAccountConfirmHint => 'delete';
+
+  @override
+  String get deleteAccountConfirmError => 'Type the word delete to confirm.';
+
+  @override
+  String get deleteAccountFinalCta => 'Delete my account';
+
+  @override
+  String get deleteAccountPendingTitle => 'Your account will be deleted';
+
+  @override
+  String deleteAccountPendingBody(int days) {
+    return '$days days left. Cancel any time before then and nothing is lost.';
+  }
+
+  @override
+  String get deleteAccountPendingCancelCta =>
+      'Cancel deletion, keep my account';
+
+  @override
+  String get deleteAccountWhatHappensTitle => 'What gets deleted';
+
+  @override
+  String get deleteAccountWhatHappensBody =>
+      'Your profile, photos, preferences, interests and biodata are erased. Payment records are kept because tax law requires it. Messages you sent stay in the other person\'s chat, but your name and photo are removed so you cannot be identified.';
+
+  @override
+  String get deleteAccountReadMore => 'Read the full policy';
+
+  @override
+  String get deleteAccountGenericError =>
+      'That did not go through. Please try again.';
+
+  @override
+  String get deleteAccountReasonNoSuitableMatches =>
+      'I did not find suitable matches';
+
+  @override
+  String get deleteAccountReasonFoundMatchElsewhere =>
+      'I found a match elsewhere';
+
+  @override
+  String get deleteAccountReasonTooManyMessages =>
+      'Too many messages or notifications';
+
+  @override
+  String get deleteAccountReasonPrivacyConcern =>
+      'I am concerned about my privacy';
+
+  @override
+  String get deleteAccountReasonHardToUse => 'The app was hard to use';
+
+  @override
+  String get deleteAccountReasonOther => 'Another reason';
 }
