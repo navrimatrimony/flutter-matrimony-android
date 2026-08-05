@@ -7166,6 +7166,36 @@ abstract class AppLocalizations {
   /// **'Could not confirm this meeting.'**
   String get couldNotConfirmSuchakMeeting;
 
+  /// No description provided for @suchakMeetingDisputeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispute meeting'**
+  String get suchakMeetingDisputeAction;
+
+  /// No description provided for @suchakMeetingDisputeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispute this meeting?'**
+  String get suchakMeetingDisputeTitle;
+
+  /// No description provided for @suchakMeetingDisputeReasonHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Say why the meeting claim is wrong.'**
+  String get suchakMeetingDisputeReasonHint;
+
+  /// No description provided for @suchakMeetingDisputed.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispute recorded.'**
+  String get suchakMeetingDisputed;
+
+  /// No description provided for @couldNotDisputeSuchakMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not dispute this meeting.'**
+  String get couldNotDisputeSuchakMeeting;
+
   /// No description provided for @notificationSettingsTitle.
   ///
   /// In en, this message translates to:

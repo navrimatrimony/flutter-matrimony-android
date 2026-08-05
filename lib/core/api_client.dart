@@ -3006,6 +3006,18 @@ class ApiClient {
     );
   }
 
+  /// Member disputes a claimed meeting (U11).
+  static Future<Map<String, dynamic>> disputeSuchakMeeting({
+    required int visitId,
+    required String disputeReason,
+  }) {
+    return _postJson(
+      ApiRoutes.suchakMeetingDispute(visitId),
+      <String, dynamic>{'dispute_reason': disputeReason},
+      authenticated: true,
+    );
+  }
+
   /// The candidate answering for themselves. The Suchak may answer the same
   /// request, so a 200 can still come back as `already_answered` — that is the
   /// race being settled server-side, not a failure.

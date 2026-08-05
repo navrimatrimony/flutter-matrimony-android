@@ -3848,6 +3848,21 @@ class AppLocalizationsMr extends AppLocalizations {
   String get couldNotConfirmSuchakMeeting => 'ही भेट पुष्टी करता आली नाही.';
 
   @override
+  String get suchakMeetingDisputeAction => 'भेट तक्रार करा';
+
+  @override
+  String get suchakMeetingDisputeTitle => 'ही भेट तक्रार करायची?';
+
+  @override
+  String get suchakMeetingDisputeReasonHint => 'भेट चुकीची का आहे ते लिहा.';
+
+  @override
+  String get suchakMeetingDisputed => 'तक्रार नोंदवली.';
+
+  @override
+  String get couldNotDisputeSuchakMeeting => 'ही भेट तक्रार करता आली नाही.';
+
+  @override
   String get notificationSettingsTitle => 'सूचना सेटिंग्ज';
 
   @override

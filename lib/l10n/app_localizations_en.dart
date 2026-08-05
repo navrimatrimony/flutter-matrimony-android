@@ -3866,6 +3866,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get couldNotConfirmSuchakMeeting => 'Could not confirm this meeting.';
 
   @override
+  String get suchakMeetingDisputeAction => 'Dispute meeting';
+
+  @override
+  String get suchakMeetingDisputeTitle => 'Dispute this meeting?';
+
+  @override
+  String get suchakMeetingDisputeReasonHint =>
+      'Say why the meeting claim is wrong.';
+
+  @override
+  String get suchakMeetingDisputed => 'Dispute recorded.';
+
+  @override
+  String get couldNotDisputeSuchakMeeting => 'Could not dispute this meeting.';
+
+  @override
   String get notificationSettingsTitle => 'Notification settings';
 
   @override

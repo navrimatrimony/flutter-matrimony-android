@@ -69,11 +69,17 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
 
   bool _canConfirm(String status) => status == 'completed';
 
+  bool _canDispute(String status) => status == 'completed';
+
   Future<void> _confirmMeeting(Map<String, dynamic> row) async {
     final visitId = _asInt(row['id']);
     if (visitId == null || _busyVisitIds.contains(visitId)) return;
 
-    final note = await _askConfirmationNote();
+    final note = await _askNoteDialog(
+      title: appText.suchakMeetingConfirmTitle,
+      hint: appText.suchakMeetingConfirmNoteHint,
+      actionLabel: appText.suchakMeetingConfirmAction,
+    );
     if (note == null || !mounted) return;
 
     setState(() {
@@ -116,21 +122,74 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
     }
   }
 
-  Future<String?> _askConfirmationNote() async {
+  Future<void> _disputeMeeting(Map<String, dynamic> row) async {
+    final visitId = _asInt(row['id']);
+    if (visitId == null || _busyVisitIds.contains(visitId)) return;
+
+    final reason = await _askNoteDialog(
+      title: appText.suchakMeetingDisputeTitle,
+      hint: appText.suchakMeetingDisputeReasonHint,
+      actionLabel: appText.suchakMeetingDisputeAction,
+    );
+    if (reason == null || !mounted) return;
+
+    setState(() {
+      _busyVisitIds.add(visitId);
+      _actionMessage = null;
+    });
+
+    try {
+      final response = await ApiClient.disputeSuchakMeeting(
+        visitId: visitId,
+        disputeReason: reason,
+      );
+      if (!mounted) return;
+
+      if (_responseSuccess(response)) {
+        setState(() {
+          _busyVisitIds.remove(visitId);
+          _actionMessage = _responseMessage(
+            response,
+            appText.suchakMeetingDisputed,
+          );
+        });
+        await _loadMeetings();
+        return;
+      }
+
+      setState(() {
+        _busyVisitIds.remove(visitId);
+        _actionMessage = _responseMessage(
+          response,
+          appText.couldNotDisputeSuchakMeeting,
+        );
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busyVisitIds.remove(visitId);
+        _actionMessage = appText.unexpectedErrorOccurred(e.toString());
+      });
+    }
+  }
+
+  Future<String?> _askNoteDialog({
+    required String title,
+    required String hint,
+    required String actionLabel,
+  }) async {
     final controller = TextEditingController();
     try {
       return await showDialog<String>(
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text(appText.suchakMeetingConfirmTitle),
+            title: Text(title),
             content: TextField(
               controller: controller,
               maxLines: 3,
               maxLength: 1000,
-              decoration: InputDecoration(
-                hintText: appText.suchakMeetingConfirmNoteHint,
-              ),
+              decoration: InputDecoration(hintText: hint),
             ),
             actions: [
               TextButton(
@@ -143,7 +202,7 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
                   if (text.isEmpty) return;
                   Navigator.of(context).pop(text);
                 },
-                child: Text(appText.suchakMeetingConfirmAction),
+                child: Text(actionLabel),
               ),
             ],
           );
@@ -299,21 +358,34 @@ class _SuchakMeetingsScreenState extends State<SuchakMeetingsScreen> {
               ),
             ),
           ],
-          if (_canConfirm(status)) ...[
+          if (_canConfirm(status) || _canDispute(status)) ...[
             const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: busy ? null : () => _confirmMeeting(row),
-                style: FilledButton.styleFrom(backgroundColor: _accent),
-                child: busy
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : Text(appText.suchakMeetingConfirmAction),
-              ),
+            Row(
+              children: [
+                if (_canConfirm(status))
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: busy ? null : () => _confirmMeeting(row),
+                      style: FilledButton.styleFrom(backgroundColor: _accent),
+                      child: busy
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(appText.suchakMeetingConfirmAction),
+                    ),
+                  ),
+                if (_canConfirm(status) && _canDispute(status))
+                  const SizedBox(width: 8),
+                if (_canDispute(status))
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: busy ? null : () => _disputeMeeting(row),
+                      child: Text(appText.suchakMeetingDisputeAction),
+                    ),
+                  ),
+              ],
             ),
           ],
         ],

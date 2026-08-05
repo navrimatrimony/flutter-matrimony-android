@@ -115,4 +115,55 @@ void main() {
     expect(posted, isNotNull);
     expect(posted!.jsonBody['confirmation_note'], 'We met on Sunday.');
   });
+
+  testWidgets('u11 dispute requires a reason and posts it', (tester) async {
+    http.onJson('/suchak-meetings', <String, dynamic>{
+      'success': true,
+      'data': <String, dynamic>{
+        'meetings': <Map<String, dynamic>>[
+          <String, dynamic>{
+            'id': 42,
+            'visit_status': 'completed',
+            'scheduled_for': '2026-08-01T10:00:00+05:30',
+            'suchak_display_name': 'Pawar Vivah Mandal',
+          },
+          <String, dynamic>{
+            'id': 43,
+            'visit_status': 'scheduled',
+            'scheduled_for': '2026-08-10T10:00:00+05:30',
+            'suchak_display_name': 'Later Meeting',
+          },
+        ],
+      },
+    });
+    http.onJson('/suchak-meetings/42/dispute', <String, dynamic>{
+      'success': true,
+      'message': 'Dispute recorded.',
+      'data': <String, dynamic>{'visit_status': 'disputed'},
+    });
+
+    await pumpScreen(tester);
+
+    expect(find.text(appText.suchakMeetingDisputeAction), findsOneWidget);
+
+    await tester.tap(find.text(appText.suchakMeetingDisputeAction));
+    await tester.pumpAndSettle();
+
+    // Empty reason must not submit.
+    await tester.tap(find.text(appText.suchakMeetingDisputeAction).last);
+    await tester.pump();
+    expect(http.requestFor('/suchak-meetings/42/dispute'), isNull);
+
+    await tester.enterText(
+      find.byType(TextField),
+      'No such meeting was arranged.',
+    );
+    await tester.tap(find.text(appText.suchakMeetingDisputeAction).last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
+
+    final posted = http.requestFor('/suchak-meetings/42/dispute');
+    expect(posted, isNotNull);
+    expect(posted!.jsonBody['dispute_reason'], 'No such meeting was arranged.');
+  });
 }
