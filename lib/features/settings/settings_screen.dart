@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'verify_contact_sheet.dart';
 
 import '../../core/api_error_text.dart';
 import '../../core/api_client.dart';
@@ -222,8 +223,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _readOnlyLine(AppStrings.name, _displayValue(account['name'])),
-          _readOnlyLine(appText.contactEmailLabel, _displayValue(account['email'])),
-          _readOnlyLine(appText.mobileLabel, _displayValue(account['mobile'])),
+          _verifiableLine(
+            appText.contactEmailLabel,
+            _displayValue(account['email']),
+            VerifiableContact.email,
+          ),
+          _verifiableLine(
+            appText.mobileLabel,
+            _displayValue(account['mobile']),
+            VerifiableContact.mobile,
+          ),
           _readOnlyLine(
             appText.accountProfileIdLabel,
             _displayValue(account['profile_id']),
@@ -374,8 +383,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: Text(appText.notificationSettingsManage),
             subtitle: Text(appText.notificationSettingsIntro),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () =>
-                Navigator.pushNamed(context, '/notification-settings'),
+            onTap: () => Navigator.pushNamed(context, '/notification-settings'),
           ),
           const Divider(height: 20),
           _buildNotificationFields(section),
@@ -584,6 +592,68 @@ class _SettingsScreenState extends State<SettingsScreen> {
       value: value,
       onChanged: editable ? (next) => onChanged(key, next) : null,
     );
+  }
+
+  /// An account contact detail with a way to claim a new one.
+  ///
+  /// Read-only was the honest default while there was no verified path to
+  /// change these — a bare edit box would have written an unproven number.
+  /// Now the row opens a sheet that sends a code to the value being claimed and
+  /// saves nothing until the code matches, so the field stays trustworthy.
+  Widget _verifiableLine(
+    String label,
+    String value,
+    VerifiableContact contact,
+  ) {
+    final mr = currentAppLanguage == AppLanguage.marathi;
+    final missing = value.trim().isEmpty || value.trim() == '-';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 4,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            flex: 5,
+            child: Text(
+              missing ? (mr ? 'जोडलेले नाही' : 'Not added') : value,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                color: missing ? Colors.black.withValues(alpha: 0.45) : null,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => _openVerifySheet(contact, missing ? null : value),
+            child: Text(
+              missing ? (mr ? 'जोडा' : 'Add') : (mr ? 'बदला' : 'Change'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openVerifySheet(
+    VerifiableContact contact,
+    String? currentValue,
+  ) async {
+    final saved = await VerifyContactSheet.show(
+      context,
+      contact: contact,
+      currentValue: currentValue,
+    );
+    if (saved == true && mounted) {
+      await _loadSettings();
+    }
   }
 
   Widget _readOnlyLine(String label, String value) {

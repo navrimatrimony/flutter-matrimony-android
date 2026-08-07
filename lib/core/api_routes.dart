@@ -17,6 +17,8 @@ class ApiRoutes {
   static const String accountResume = '/account/resume';
   static const String accountEmailGoogle = '/account/email/google';
   static const String accountEmailOtpSend = '/account/email-otp/send';
+  static const String accountMobileOtpSend = '/account/mobile-otp/send';
+  static const String accountMobileOtpVerify = '/account/mobile-otp/verify';
   static const String accountEmailOtpVerify = '/account/email-otp/verify';
   static const String locationSearch = '/location/search';
   static const String internalLocationStates = '/internal/location/states';

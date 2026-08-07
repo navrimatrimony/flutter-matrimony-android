@@ -1852,6 +1852,26 @@ class ApiClient {
     }, authenticated: true);
   }
 
+  /// OTP to a mobile number the member is claiming — never to the one on file.
+  static Future<Map<String, dynamic>> sendAccountMobileOtp({
+    required String mobile,
+  }) {
+    return _postJson(ApiRoutes.accountMobileOtpSend, {
+      'mobile': mobile,
+    }, authenticated: true);
+  }
+
+  /// Writes the claimed number only when the code checks out.
+  static Future<Map<String, dynamic>> verifyAccountMobileOtp({
+    required String challengeId,
+    required String otp,
+  }) {
+    return _postJson(ApiRoutes.accountMobileOtpVerify, {
+      'challenge_id': challengeId,
+      'otp': otp,
+    }, authenticated: true);
+  }
+
   static Future<Map<String, dynamic>> sendEmailOtp({required String email}) {
     return _postJson(ApiRoutes.accountEmailOtpSend, {
       'email': email,
