@@ -172,14 +172,20 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     return 0;
   }
 
+  /// Shared comparison checklist: prefer Laravel feature line order
+  /// (`PlanQuotaPolicyKeys::ordered()` via API). Walk richest plan first so
+  /// Basic/Silver/Gold keep the same row positions; do not invent client order.
   List<String> get _featureCatalogLabels {
     final labels = <String>[];
     final seen = <String>{};
     final ordered = List<Map<String, dynamic>>.from(_plans)
       ..sort((a, b) {
-        return _stringList(b['features']).length.compareTo(
+        final byLen = _stringList(b['features']).length.compareTo(
           _stringList(a['features']).length,
         );
+        if (byLen != 0) return byLen;
+        // Stable tie-break: keep API list order when feature counts match.
+        return _plans.indexOf(a).compareTo(_plans.indexOf(b));
       });
     for (final plan in ordered) {
       for (final line in _stringList(plan['features'])) {
