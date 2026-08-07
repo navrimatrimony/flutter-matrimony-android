@@ -69,7 +69,13 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
       ]);
       final currentResponse = responses[0];
       final plansResponse = responses[1];
-      final plans = _safeMapList(plansResponse['plans']);
+      // The free plan is not something a member buys — it is what they already
+      // have before buying anything — so it is left out of the catalog here.
+      // The header still names it as the current plan when it is theirs; that
+      // reads `current_plan` from its own response, not this list.
+      final plans = _safeMapList(
+        plansResponse['plans'],
+      ).where((plan) => !_isFreeCatalogPlan(plan)).toList();
 
       var planIndex = _selectedPlanIndex;
       if (plans.isEmpty) {
@@ -83,7 +89,9 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
         _safeMap(currentResponse['current_plan'])?['id'],
       );
       if (currentId != null) {
-        final currentIdx = plans.indexWhere((p) => _asInt(p['id']) == currentId);
+        final currentIdx = plans.indexWhere(
+          (p) => _asInt(p['id']) == currentId,
+        );
         if (currentIdx >= 0) planIndex = currentIdx;
       }
 
@@ -180,9 +188,9 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     final seen = <String>{};
     final ordered = List<Map<String, dynamic>>.from(_plans)
       ..sort((a, b) {
-        final byLen = _stringList(b['features']).length.compareTo(
-          _stringList(a['features']).length,
-        );
+        final byLen = _stringList(
+          b['features'],
+        ).length.compareTo(_stringList(a['features']).length);
         if (byLen != 0) return byLen;
         // Stable tie-break: keep API list order when feature counts match.
         return _plans.indexOf(a).compareTo(_plans.indexOf(b));
@@ -220,10 +228,7 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
       final completed = await Navigator.of(context).push<bool>(
         MaterialPageRoute(
           fullscreenDialog: true,
-          builder: (_) => PlanCouponScreen(
-            plan: plan,
-            planTermId: termId,
-          ),
+          builder: (_) => PlanCouponScreen(plan: plan, planTermId: termId),
         ),
       );
 
@@ -603,10 +608,8 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
                       : ListView.separated(
                           padding: EdgeInsets.zero,
                           itemCount: featureRows.length,
-                          separatorBuilder: (context, i) => Divider(
-                            height: 1,
-                            color: Colors.grey.shade200,
-                          ),
+                          separatorBuilder: (context, i) =>
+                              Divider(height: 1, color: Colors.grey.shade200),
                           itemBuilder: (context, i) {
                             final row = featureRows[i];
                             return _buildFeatureRow(row.text, row.included);
@@ -785,7 +788,8 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: plan == null ||
+                onPressed:
+                    plan == null ||
                         planId == null ||
                         isCheckoutLoading ||
                         isFree
