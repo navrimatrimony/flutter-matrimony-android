@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 
 import '../../core/api_client.dart';
 import '../../core/app_language.dart';
+import '../../core/email_hint_service.dart';
+import '../../core/phone_number_hint_service.dart';
 
 /// Which contact detail is being claimed.
 enum VerifiableContact { email, mobile }
@@ -51,6 +53,7 @@ class _VerifyContactSheetState extends State<VerifyContactSheet> {
   final TextEditingController _valueController = TextEditingController();
   final TextEditingController _otpController = TextEditingController();
 
+  bool _fetching = false;
   bool _sending = false;
   bool _verifying = false;
   String? _challengeId;
@@ -64,6 +67,49 @@ class _VerifyContactSheetState extends State<VerifyContactSheet> {
   void initState() {
     super.initState();
     _valueController.text = widget.currentValue ?? '';
+    if (_valueController.text.trim().isEmpty) {
+      // Same courtesy onboarding extends: ask the device, with the member's
+      // consent, rather than making them type what the phone already knows.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _fetchFromDevice());
+    }
+  }
+
+  /// Offer the value the phone already holds — the Google chooser for a number,
+  /// the Google account for an address.
+  ///
+  /// It only ever FILLS THE BOX. Nothing is claimed and nothing is saved until
+  /// the member sends a code and it comes back correct, so a wrong pick in the
+  /// chooser costs a retype, not a wrong number on the account.
+  Future<void> _fetchFromDevice() async {
+    if (_fetching || _challengeId != null) return;
+    setState(() => _fetching = true);
+
+    try {
+      String? picked;
+      if (_isEmail) {
+        final credential =
+            await EmailHintService.requestGoogleEmailVerification();
+        picked = credential?.email ?? await EmailHintService.requestEmailHint();
+      } else {
+        final raw = await PhoneNumberHintService.requestPhoneNumberHint();
+        // The chooser hands back +91XXXXXXXXXX; the field takes ten digits.
+        final digits = raw?.replaceAll(RegExp(r'[^0-9]'), '') ?? '';
+        picked = digits.length >= 10
+            ? digits.substring(digits.length - 10)
+            : null;
+      }
+
+      if (!mounted || picked == null || picked.isEmpty) return;
+      setState(() {
+        _valueController.text = picked!;
+        _error = null;
+      });
+    } catch (_) {
+      // Backing out of the chooser is a decision, not a failure. Stay quiet and
+      // let the member type instead.
+    } finally {
+      if (mounted) setState(() => _fetching = false);
+    }
   }
 
   @override
@@ -243,6 +289,24 @@ class _VerifyContactSheetState extends State<VerifyContactSheet> {
                 labelText: _fieldLabel,
                 border: const OutlineInputBorder(),
                 prefixIcon: Icon(_isEmail ? Icons.mail_outline : Icons.phone),
+                // The chooser is offered again rather than only on open: a
+                // member who dismissed it, or who keeps two accounts on one
+                // phone, needs a second way in that is not retyping.
+                suffixIcon: awaitingCode
+                    ? null
+                    : IconButton(
+                        tooltip: _mr ? 'फोनमधून घ्या' : 'Use from phone',
+                        icon: _fetching
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.phonelink_ring_outlined),
+                        onPressed: _fetching ? null : _fetchFromDevice,
+                      ),
               ),
             ),
             if (awaitingCode) ...[
