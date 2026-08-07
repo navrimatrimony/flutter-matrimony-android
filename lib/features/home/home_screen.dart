@@ -68,6 +68,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   int _receivedTotal = 0;
   int _receivedPending = 0;
 
+  List<Map<String, dynamic>> _viewTrendDays = const <Map<String, dynamic>>[];
+  int _viewTrendTotal = 0;
+  int _viewTrendPreviousTotal = 0;
+  bool _viewTrendLoaded = false;
+
   int _chatUnreadCount = 0;
   int _notificationUnreadCount = 0;
   int _contactPendingCount = 0;
@@ -249,9 +254,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         (_) => <String, dynamic>{},
       ),
       ApiClient.getContactInbox().catchError((_) => <String, dynamic>{}),
+      ApiClient.getProfileViewTrend().catchError((_) => <String, dynamic>{}),
     ]);
 
     if (!mounted || serial != _loadSerial) return;
+
+    final trend = _safeMap(results[3]['data']);
 
     final contactRows = _safeMapList(results[2]['received']);
     final pendingContacts = contactRows.where((row) {
@@ -260,6 +268,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     }).length;
 
     setState(() {
+      if (trend != null) {
+        _viewTrendDays = _safeMapList(trend['days']);
+        _viewTrendTotal = _intValue(trend['total']) ?? 0;
+        _viewTrendPreviousTotal = _intValue(trend['previous_total']) ?? 0;
+        _viewTrendLoaded = _viewTrendDays.isNotEmpty;
+      }
       _chatUnreadCount = _countFrom(results[0], 'unread_count');
       _notificationUnreadCount = _countFrom(results[1], 'unread_count');
       _contactPendingCount = pendingContacts;
@@ -494,9 +508,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   const SizedBox(height: 18),
                   _buildQuickActions(),
                   const SizedBox(height: 20),
-                  _buildReadinessChecklist(),
+                  _buildViewTrendCard(),
                   const SizedBox(height: 20),
                   _buildActivitySection(),
+                  const SizedBox(height: 20),
+                  _buildReadinessChecklist(),
                   const SizedBox(height: 20),
                   _buildAccountToolsGrid(),
                 ],
@@ -565,28 +581,32 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
+                _drawerSectionLabel(AppStrings.myProfile),
                 _drawerTile(
-                  icon: Icons.home,
-                  title: AppStrings.dashboard,
-                  selected: true,
-                  onTap: () => Navigator.pop(context),
-                ),
-                _drawerTile(
-                  icon: Icons.search,
-                  title: AppStrings.browseProfiles,
+                  icon: Icons.edit_outlined,
+                  title: AppStrings.editProfile,
                   onTap: () {
                     Navigator.pop(context);
-                    _safePushNamed('/matches');
+                    _openEditProfile();
                   },
                 ),
                 _drawerTile(
-                  icon: Icons.person,
-                  title: AppStrings.myProfile,
+                  icon: Icons.photo_camera_outlined,
+                  title: AppStrings.photosVerification,
                   onTap: () {
                     Navigator.pop(context);
-                    _safePushNamed('/view-profile');
+                    _safePushNamed('/photo-gallery');
                   },
                 ),
+                _drawerTile(
+                  icon: Icons.bookmarks_outlined,
+                  title: AppStrings.profileListsMenu,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _safePushNamed('/profile-lists');
+                  },
+                ),
+                _drawerSectionLabel(AppStrings.biodataExportMenu),
                 _drawerTile(
                   icon: Icons.article_outlined,
                   title: AppStrings.biodataExportMenu,
@@ -603,28 +623,13 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     _safePushNamed('/biodata-intake');
                   },
                 ),
+                _drawerSectionLabel(AppStrings.settingsTitle),
                 _drawerTile(
-                  icon: Icons.bookmarks_outlined,
-                  title: AppStrings.profileListsMenu,
+                  icon: Icons.settings_outlined,
+                  title: AppStrings.settingsTitle,
                   onTap: () {
                     Navigator.pop(context);
-                    _safePushNamed('/profile-lists');
-                  },
-                ),
-                _drawerTile(
-                  icon: Icons.chat_bubble_outline,
-                  title: AppStrings.chatMenu,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _safePushNamed('/chats');
-                  },
-                ),
-                _drawerTile(
-                  icon: Icons.workspace_premium,
-                  title: AppStrings.plansUpgradeMenu,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _safePushNamed('/plans');
+                    _safePushNamed('/settings');
                   },
                 ),
                 ListTile(
@@ -653,46 +658,6 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                       onChanged: _changeLanguage,
                     ),
                   ),
-                ),
-                _drawerTile(
-                  icon: Icons.settings,
-                  title: AppStrings.settingsTitle,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _safePushNamed('/settings');
-                  },
-                ),
-                _drawerTile(
-                  icon: Icons.edit,
-                  title: AppStrings.editProfile,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _openEditProfile();
-                  },
-                ),
-                _drawerTile(
-                  icon: Icons.photo_camera,
-                  title: AppStrings.photosVerification,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _safePushNamed('/photo-gallery');
-                  },
-                ),
-                _drawerTile(
-                  icon: Icons.send,
-                  title: AppStrings.sentInterests,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _openSentInterests();
-                  },
-                ),
-                _drawerTile(
-                  icon: Icons.inbox,
-                  title: AppStrings.receivedInterests,
-                  onTap: () {
-                    Navigator.pop(context);
-                    _openReceivedInterests();
-                  },
                 ),
                 const Divider(height: 1),
                 _drawerTile(
@@ -766,6 +731,177 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       dense: false,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       onTap: onTap,
+    );
+  }
+
+  /// Seven days of "who looked at your profile".
+  ///
+  /// The one number on this screen the member does not control. Everything
+  /// else — completeness, interests sent — moves only when they act; this moves
+  /// when the outside world does, which is the only real proof the profile is
+  /// reaching anyone. It is drawn as bars rather than a figure because the
+  /// shape carries the message: rising, flat, or gone quiet.
+  ///
+  /// Hidden entirely until it has data. An empty chart on a new member's first
+  /// day says "nobody is looking", which is both untrue and discouraging.
+  Widget _buildViewTrendCard() {
+    if (!_viewTrendLoaded) return const SizedBox.shrink();
+
+    final counts = _viewTrendDays
+        .map((day) => _intValue(day['count']) ?? 0)
+        .toList(growable: false);
+    final peak = counts.fold<int>(0, (a, b) => a > b ? a : b);
+    final mr = currentAppLanguage == AppLanguage.marathi;
+
+    String weekdayLabel(String? isoDate) {
+      final parsed = DateTime.tryParse(isoDate ?? '');
+      if (parsed == null) return '';
+      const en = ['सो', 'मं', 'बु', 'गु', 'शु', 'श', 'र'];
+      const enShort = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
+      final index = parsed.weekday - 1;
+      if (index < 0 || index > 6) return '';
+      return mr ? en[index] : enShort[index];
+    }
+
+    final delta = _viewTrendTotal - _viewTrendPreviousTotal;
+    final hasComparison = _viewTrendPreviousTotal > 0;
+    final percent = hasComparison
+        ? ((delta / _viewTrendPreviousTotal) * 100).round().abs()
+        : 0;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  mr
+                      ? 'तुमचे प्रोफाइल किती जणांनी पाहिले'
+                      : 'Who looked at your profile',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Text(
+                mr ? '7 दिवस' : '7 days',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Colors.black.withValues(alpha: 0.45),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 78,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                for (var i = 0; i < _viewTrendDays.length; i++)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          // A zero day still draws a sliver, so the row reads as
+                          // seven days rather than a gap in the week.
+                          Container(
+                            height: peak == 0
+                                ? 3
+                                : (3 + (counts[i] / peak) * 55),
+                            decoration: BoxDecoration(
+                              color: i == _viewTrendDays.length - 1
+                                  ? _brand
+                                  : _brand.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            weekdayLabel(
+                              _stringValue(_viewTrendDays[i]['date']),
+                            ),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.black.withValues(
+                                alpha: i == _viewTrendDays.length - 1
+                                    ? 0.75
+                                    : 0.40,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: Colors.black.withValues(alpha: 0.06)),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Icon(
+                delta >= 0 ? Icons.trending_up : Icons.trending_down,
+                size: 16,
+                color: delta >= 0
+                    ? const Color(0xFF15803D)
+                    : Colors.black.withValues(alpha: 0.45),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  hasComparison
+                      ? (mr
+                            ? 'या आठवड्यात $_viewTrendTotal जणांनी पाहिले · मागच्यापेक्षा $percent% ${delta >= 0 ? 'जास्त' : 'कमी'}'
+                            : '$_viewTrendTotal this week · $percent% ${delta >= 0 ? 'more' : 'less'} than last week')
+                      : (mr
+                            ? 'या आठवड्यात $_viewTrendTotal जणांनी पाहिले'
+                            : '$_viewTrendTotal people looked this week'),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.black.withValues(alpha: 0.65),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Quiet group heading in the drawer.
+  ///
+  /// The menu used to be one flat run of fifteen rows, over half of which were
+  /// a second door to the bottom navigation. With the duplicates gone, the rest
+  /// falls into groups, and a heading tells the member what kind of thing lives
+  /// under it before they read the rows.
+  Widget _drawerSectionLabel(String text) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 4),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.3,
+          color: Colors.black.withValues(alpha: 0.45),
+        ),
+      ),
     );
   }
 
@@ -1999,7 +2135,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         final profile = _effectiveProfile;
         final missing = !_hasPhoto(profile);
         return _DashboardAction(
-          title: missing ? AppStrings.uploadPhoto : AppStrings.photosVerification,
+          title: missing
+              ? AppStrings.uploadPhoto
+              : AppStrings.photosVerification,
           subtitle: missing
               ? AppStrings.dashboardUploadPhotoPrompt
               : AppStrings.dashboardPhotoPendingSubtitle,
@@ -2121,7 +2259,9 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         if (!_boolValue(item['complete'])) return item;
       }
       return {
-        'key': !_hasPhoto(_effectiveProfile) ? 'photo_uploaded' : 'photo_approved',
+        'key': !_hasPhoto(_effectiveProfile)
+            ? 'photo_uploaded'
+            : 'photo_approved',
         'blocking': true,
         'complete': false,
       };
@@ -2140,8 +2280,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   String _activationTitle(Map<String, dynamic> item) {
     final key = _stringValue(item['key']);
     return switch (key) {
-      'mobile_verified' =>
-        _mr ? 'मोबाइल पडताळा' : 'Verify mobile',
+      'mobile_verified' => _mr ? 'मोबाइल पडताळा' : 'Verify mobile',
       'account_details_complete' =>
         _mr ? 'खाते तपशील पूर्ण करा' : 'Complete account details',
       'required_fields_complete' => AppStrings.dashboardCompleteProfile,
@@ -2163,9 +2302,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
             ? 'मोबाइल पडताळणीशिवाय प्रोफाइल शोधात दिसत नाही.'
             : 'Your profile stays hidden until mobile is verified.',
       'account_details_complete' =>
-        _mr
-            ? 'निर्माता नाव पूर्ण करा.'
-            : 'Add the creator name to continue.',
+        _mr ? 'निर्माता नाव पूर्ण करा.' : 'Add the creator name to continue.',
       'required_fields_complete' =>
         _mr
             ? 'आवश्यक प्रोफाइल माहिती बाकी आहे.'
@@ -2520,9 +2657,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _photoPending(Map<String, dynamic>? profile) {
     if (profile == null) return false;
     final status = _stringValue(profile['photo_status'])?.toLowerCase();
-    if (status == 'pending' ||
-        status == 'review' ||
-        status == 'processing') {
+    if (status == 'pending' || status == 'review' || status == 'processing') {
       return true;
     }
     if (_boolValue(profile['photo_approved'])) return false;

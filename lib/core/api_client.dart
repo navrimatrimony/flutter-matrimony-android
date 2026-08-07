@@ -29,6 +29,7 @@ class ApiClient {
 
   static const String _siteBaseUrl = 'https://navrimilenavryala.com';
   static const String _profilePhotoStoragePath = 'storage/matrimony_photos';
+
   /// Ceiling on a single request made through the shared JSON helpers below.
   ///
   /// Nothing here used to bound a request at all. A stalled socket held
@@ -1126,9 +1127,9 @@ class ApiClient {
       fetch: () async {
         final url = Uri.parse(ApiRoutes.baseUrl + ApiRoutes.genders);
         final headers = <String, String>{
-      'Accept': 'application/json',
-      'Accept-Language': appLanguageCode(currentAppLanguage),
-    };
+          'Accept': 'application/json',
+          'Accept-Language': appLanguageCode(currentAppLanguage),
+        };
         final token = authToken;
         if (token != null && token.isNotEmpty) {
           headers['Authorization'] = 'Bearer $token';
@@ -1764,11 +1765,11 @@ class ApiClient {
     // "this member is verifying their own number" from "someone is signing in
     // with it". Without the header it only ever saw the second, and a member
     // finishing onboarding was moved onto a fresh empty account.
-    final data = await _postJson(ApiRoutes.mobileOtpVerify, {
-      'challenge_id': challengeId,
-      'mobile': mobile,
-      'otp': otp,
-    }, authenticated: authToken != null && authToken!.isNotEmpty);
+    final data = await _postJson(
+      ApiRoutes.mobileOtpVerify,
+      {'challenge_id': challengeId, 'mobile': mobile, 'otp': otp},
+      authenticated: authToken != null && authToken!.isNotEmpty,
+    );
 
     final token =
         data['token']?.toString() ??
@@ -2999,11 +3000,9 @@ class ApiClient {
     required int visitId,
     required String confirmationNote,
   }) {
-    return _postJson(
-      ApiRoutes.suchakMeetingConfirm(visitId),
-      <String, dynamic>{'confirmation_note': confirmationNote},
-      authenticated: true,
-    );
+    return _postJson(ApiRoutes.suchakMeetingConfirm(visitId), <String, dynamic>{
+      'confirmation_note': confirmationNote,
+    }, authenticated: true);
   }
 
   /// Member disputes a claimed meeting (U11).
@@ -3011,11 +3010,9 @@ class ApiClient {
     required int visitId,
     required String disputeReason,
   }) {
-    return _postJson(
-      ApiRoutes.suchakMeetingDispute(visitId),
-      <String, dynamic>{'dispute_reason': disputeReason},
-      authenticated: true,
-    );
+    return _postJson(ApiRoutes.suchakMeetingDispute(visitId), <String, dynamic>{
+      'dispute_reason': disputeReason,
+    }, authenticated: true);
   }
 
   /// The candidate answering for themselves. The Suchak may answer the same
@@ -3054,6 +3051,11 @@ class ApiClient {
       <String, dynamic>{},
       authenticated: true,
     );
+  }
+
+  /// Daily distinct viewers for the member's own profile, last 7 days.
+  static Future<Map<String, dynamic>> getProfileViewTrend() {
+    return _getJson(ApiRoutes.profileViewTrend, authenticated: true);
   }
 
   static Future<Map<String, dynamic>> getCurrentPlan() {

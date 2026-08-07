@@ -74,6 +74,7 @@ class ApiRoutes {
 
   // Matrimony Profile
   static const String matrimonyProfile = '/matrimony-profile';
+  static const String profileViewTrend = '/matrimony-profile/view-trend';
   static const String profilePhotos = '/matrimony-profile/photos';
   static const String profilePhotoUpload = '/matrimony-profile/photos';
   static const String profilePhotoReorder = '/matrimony-profile/photos/reorder';
