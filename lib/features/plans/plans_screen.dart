@@ -483,7 +483,7 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
       fallback: AppStrings.plansTitle,
     );
     final marketingLabel = _marketingBadgeLabel(plan, mr);
-    final featureRows = _featureRowsFor(plan);
+    final featureRows = _featureRowsFor(plan, term);
     final pricing = _pricingFor(plan, term);
 
     return Card(
@@ -837,10 +837,14 @@ class _PlansScreenState extends State<PlansScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// Display-only: prefers Laravel term-level final `features` (SSOT). No client multiplication.
   List<({String text, bool included})> _featureRowsFor(
     Map<String, dynamic> plan,
+    Map<String, dynamic> term,
   ) {
-    final lines = _stringList(plan['features']);
+    final lines = _stringList(term['features']).isNotEmpty
+        ? _stringList(term['features'])
+        : _stringList(plan['features']);
     final byLabel = <String, String>{};
     for (final line in lines) {
       final label = _featureLabelOf(line);

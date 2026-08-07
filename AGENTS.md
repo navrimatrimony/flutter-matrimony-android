@@ -65,6 +65,11 @@ Photo upload response returns:
 - `data.profile_photo`
 - `data.status`
 
+Plan catalog (`GET /api/v1/plans`):
+- Each `terms[]` item includes final `features: string[]` (Laravel SSOT; already scaled)
+- App must display selected term `features` as-is — never multiply client-side
+- Plan-level `features` remains default-term fallback only
+
 ## Mandatory verification
 
 Before and after every task, check Laravel status:
