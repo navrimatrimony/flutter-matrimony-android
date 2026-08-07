@@ -606,7 +606,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     VerifiableContact contact,
   ) {
     final mr = currentAppLanguage == AppLanguage.marathi;
-    final missing = value.trim().isEmpty || value.trim() == '-';
+    // `_displayValue` turns an absent field into a human placeholder such as
+    // "Not available". That is fine to read, but it must never be handed back
+    // as if it were the member's current email or number.
+    final raw = value.trim();
+    final missing =
+        raw.isEmpty ||
+        raw == '-' ||
+        raw == AppStrings.settingsNotAvailable ||
+        raw.toLowerCase() == 'not available';
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
