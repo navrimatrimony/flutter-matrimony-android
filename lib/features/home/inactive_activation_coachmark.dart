@@ -139,8 +139,9 @@ class _InactiveActivationCoachmarkState
       media.size.width - 32,
       160,
     );
+    final target = _targetRect ?? fallback;
     // Inflated enough that the ring drawn around it never sits ON the target.
-    final hole = (_targetRect ?? fallback).inflate(7);
+    final hole = target.inflate(7);
 
     final tipBelow =
         hole.bottom + 110 < media.size.height - media.padding.bottom - 56;
@@ -166,9 +167,10 @@ class _InactiveActivationCoachmarkState
             ),
           ),
 
-          // The target, redrawn at full opacity on top of the dim. Nothing can
-          // fade it now: it is a picture of the real card, not the real card
-          // seen through an overlay.
+          // Ring + glow around the hole, UNDER the snapshot: a BoxShadow is a
+          // blurred solid rect behind the box, so with a transparent interior
+          // its white core fills the hole too. The snapshot painted after it
+          // covers that core; only the halo outside the target survives.
           Positioned(
             left: hole.left,
             top: hole.top,
@@ -180,9 +182,6 @@ class _InactiveActivationCoachmarkState
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.white, width: 3),
-                  // Painted behind the box, which is see-through until the
-                  // snapshot arrives — so before then it washes out the very
-                  // thing it is meant to lift.
                   boxShadow: _targetImage == null
                       ? const []
                       : [
@@ -193,20 +192,31 @@ class _InactiveActivationCoachmarkState
                           ),
                         ],
                 ),
-                child: _targetImage == null
-                    ? const SizedBox.shrink()
-                    : ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: RawImage(
-                          image: _targetImage,
-                          scale: _targetScale,
-                          filterQuality: FilterQuality.high,
-                          fit: BoxFit.fill,
-                        ),
-                      ),
               ),
             ),
           ),
+
+          // The snapshot lands EXACTLY on the target, not on the inflated
+          // hole: the capture is partly transparent, so the real card stays
+          // visible through the cleared hole underneath it. Stretching the
+          // snapshot to the hole put its glyphs 7px off the real ones and
+          // every word read double. Same rect, same size — the two layers
+          // coincide and the eye sees one card.
+          if (_targetImage != null)
+            Positioned(
+              left: target.left,
+              top: target.top,
+              width: target.width,
+              height: target.height,
+              child: IgnorePointer(
+                child: RawImage(
+                  image: _targetImage,
+                  scale: _targetScale,
+                  filterQuality: FilterQuality.high,
+                  fit: BoxFit.fill,
+                ),
+              ),
+            ),
 
           AnimatedBuilder(
             animation: _pulse,
