@@ -1,6 +1,8 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 /// Spotlight coachmark for inactive / not-searchable members.
 ///
@@ -11,12 +13,16 @@ class InactiveActivationCoachmark extends StatefulWidget {
     super.key,
     required this.targetKey,
     required this.tip,
+    this.detail,
     required this.onAction,
     required this.onDismiss,
   });
 
   final GlobalKey targetKey;
+
+  /// One short line: what to do. [detail] is the quieter why, if there is one.
   final String tip;
+  final String? detail;
   final VoidCallback onAction;
   final VoidCallback onDismiss;
 
@@ -31,6 +37,22 @@ class _InactiveActivationCoachmarkState
   late final AnimationController _pulse;
   Rect? _targetRect;
 
+  /// A snapshot of the target, painted back inside the spotlight at full
+  /// opacity. Cutting a hole in the dim was not enough on a real device — the
+  /// target still read as faint against everything around it. Drawing the thing
+  /// itself is the only version where "highlighted" means brighter.
+  ui.Image? _targetImage;
+
+  /// The ratio the snapshot was taken at. RawImage treats an image's raw pixels
+  /// as LOGICAL pixels unless told otherwise, so a 3x capture shown without it
+  /// gets squashed to a third of its size — and the resampling averaged every
+  /// dark glyph stroke into the white around it. Measured on device: the
+  /// darkest pixel in the whole card came back (129,123,123) instead of near
+  /// black, and the gold circle came back pale. Nothing was dimming it; it was
+  /// being downscaled.
+  double _targetScale = 1;
+  bool _capturing = false;
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +60,13 @@ class _InactiveActivationCoachmarkState
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
+    // The target moves: the page scrolls it into view right after this opens,
+    // and cards above it finish loading at their own pace. Measuring once left
+    // the ring where the card USED to be — on this screen, two cards further
+    // down, so it circled the views chart while the words said "complete your
+    // profile". Following the pulse costs nothing, because the measurement
+    // returns early unless the rectangle actually moved.
+    _pulse.addListener(_measureTarget);
     WidgetsBinding.instance.addPostFrameCallback((_) => _measureTarget());
   }
 
@@ -49,7 +78,9 @@ class _InactiveActivationCoachmarkState
 
   @override
   void dispose() {
+    _pulse.removeListener(_measureTarget);
     _pulse.dispose();
+    _targetImage?.dispose();
     super.dispose();
   }
 
@@ -60,8 +91,43 @@ class _InactiveActivationCoachmarkState
     if (box == null || !box.hasSize) return;
     final offset = box.localToGlobal(Offset.zero);
     final rect = offset & box.size;
-    if (_targetRect == rect) return;
-    setState(() => _targetRect = rect);
+    if (_targetRect != rect) {
+      setState(() => _targetRect = rect);
+    }
+    _captureTarget();
+  }
+
+  Future<void> _captureTarget() async {
+    if (_capturing || !mounted) return;
+    final targetContext = widget.targetKey.currentContext;
+    final boundary =
+        targetContext?.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null || !boundary.hasSize) return;
+    // NOT debugNeedsPaint: that getter assigns its result inside an assert, so
+    // in a RELEASE build reading it throws LateInitializationError. The throw
+    // was swallowed by the catch below, the snapshot was never taken, and what
+    // looked like a faint image was the real card seen through the hole with
+    // the ring's white glow lying over it — measured on device at (129,123,123)
+    // where the same text on the DIMMED page measured (13,10,10).
+
+    _capturing = true;
+    try {
+      final ratio = MediaQuery.of(context).devicePixelRatio;
+      final image = await boundary.toImage(pixelRatio: ratio);
+      if (!mounted) {
+        image.dispose();
+        return;
+      }
+      setState(() {
+        _targetImage?.dispose();
+        _targetImage = image;
+        _targetScale = ratio;
+      });
+    } catch (_) {
+      // A frame where the boundary is not ready yet; the pulse tries again.
+    } finally {
+      _capturing = false;
+    }
   }
 
   @override
@@ -73,7 +139,8 @@ class _InactiveActivationCoachmarkState
       media.size.width - 32,
       160,
     );
-    final hole = (_targetRect ?? fallback).inflate(4);
+    // Inflated enough that the ring drawn around it never sits ON the target.
+    final hole = (_targetRect ?? fallback).inflate(7);
 
     final tipBelow =
         hole.bottom + 110 < media.size.height - media.padding.bottom - 56;
@@ -99,7 +166,9 @@ class _InactiveActivationCoachmarkState
             ),
           ),
 
-          // Spotlight ring — brand white, no cream glow.
+          // The target, redrawn at full opacity on top of the dim. Nothing can
+          // fade it now: it is a picture of the real card, not the real card
+          // seen through an overlay.
           Positioned(
             left: hole.left,
             top: hole.top,
@@ -111,13 +180,30 @@ class _InactiveActivationCoachmarkState
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: 10,
-                    ),
-                  ],
+                  // Painted behind the box, which is see-through until the
+                  // snapshot arrives — so before then it washes out the very
+                  // thing it is meant to lift.
+                  boxShadow: _targetImage == null
+                      ? const []
+                      : [
+                          BoxShadow(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            blurRadius: 22,
+                            spreadRadius: 3,
+                          ),
+                        ],
                 ),
+                child: _targetImage == null
+                    ? const SizedBox.shrink()
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: RawImage(
+                          image: _targetImage,
+                          scale: _targetScale,
+                          filterQuality: FilterQuality.high,
+                          fit: BoxFit.fill,
+                        ),
+                      ),
               ),
             ),
           ),
@@ -137,62 +223,96 @@ class _InactiveActivationCoachmarkState
             },
             child: Transform.rotate(
               angle: tipBelow ? 0 : math.pi,
-              child: CustomPaint(
-                size: const Size(68, 48),
-                painter: _BoldArrowPainter(),
+              child: Image.asset(
+                'assets/images/coachmark_arrow.png',
+                width: 52,
+                height: 62,
+                fit: BoxFit.contain,
               ),
             ),
           ),
 
-          // Plain tip text — no white box.
+          // The tip carries its own surface. As bare shadowed text it landed on
+          // whatever card happened to be behind it — on this screen, the credits
+          // row — and the two sets of words became one unreadable mix.
           Positioned(
-            left: 24,
-            right: 24,
+            left: 18,
+            right: 18,
             top: tipTop,
             child: GestureDetector(
               onTap: widget.onAction,
-              child: Text(
-                widget.tip,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  height: 1.35,
-                  fontWeight: FontWeight.w800,
-                  shadows: [
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.85),
-                      blurRadius: 8,
-                      offset: const Offset(0, 1),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(6, 10, 6, 10),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.tip,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        height: 1.3,
+                        fontWeight: FontWeight.w800,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.9),
+                            blurRadius: 10,
+                          ),
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.75),
+                            blurRadius: 3,
+                          ),
+                        ],
+                      ),
                     ),
-                    Shadow(
-                      color: Colors.black.withValues(alpha: 0.7),
-                      blurRadius: 2,
-                    ),
+                    if ((widget.detail ?? '').trim().isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.detail!,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontSize: 13.5,
+                          height: 1.35,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withValues(alpha: 0.9),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
           ),
 
+          // Deliberately the quietest thing here. It used to be the largest and
+          // easiest control on the screen, which told the member the way out of
+          // this was to leave rather than to finish.
           Positioned(
             left: 0,
             right: 0,
-            bottom: media.padding.bottom + 16,
+            bottom: media.padding.bottom + 14,
             child: Center(
               child: TextButton(
                 onPressed: widget.onDismiss,
                 style: TextButton.styleFrom(
-                  foregroundColor: Colors.white,
-                  backgroundColor: Colors.white.withValues(alpha: 0.14),
+                  foregroundColor: Colors.white.withValues(alpha: 0.72),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 8,
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                 ),
                 child: Text(
                   MaterialLocalizations.of(context).closeButtonLabel,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
             ),
@@ -201,48 +321,6 @@ class _InactiveActivationCoachmarkState
       ),
     );
   }
-}
-
-class _BoldArrowPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Dark outline first so the arrow stays visible on any backdrop.
-    final outline = Paint()
-      ..color = Colors.black.withValues(alpha: 0.75)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 9
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final fill = Paint()
-      ..color = const Color(0xFFFFE566)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 5.5
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final stem = Path()
-      ..moveTo(size.width * 0.5, size.height)
-      ..quadraticBezierTo(
-        size.width * 0.18,
-        size.height * 0.55,
-        size.width * 0.5,
-        8,
-      );
-
-    final head = Path()
-      ..moveTo(size.width * 0.5 - 14, 22)
-      ..lineTo(size.width * 0.5, 4)
-      ..lineTo(size.width * 0.5 + 14, 22);
-
-    for (final paint in [outline, fill]) {
-      canvas.drawPath(stem, paint);
-      canvas.drawPath(head, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _DimHolePainter extends CustomPainter {
@@ -256,10 +334,20 @@ class _DimHolePainter extends CustomPainter {
     final cut = Path()
       ..addRRect(RRect.fromRectAndRadius(hole, const Radius.circular(10)));
     final path = Path.combine(PathOperation.difference, overlay, cut);
+    // saveLayer + clear guarantees the target is left at full brightness even
+    // where something else has already painted into this layer. The point of a
+    // spotlight is that one thing is BRIGHTER than the rest; dimming it too,
+    // which is what a plain rect over the whole screen does, defeats it.
+    canvas.saveLayer(Offset.zero & size, Paint());
     canvas.drawPath(
       path,
-      Paint()..color = Colors.black.withValues(alpha: 0.78),
+      Paint()..color = Colors.black.withValues(alpha: 0.72),
     );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(hole, const Radius.circular(10)),
+      Paint()..blendMode = BlendMode.clear,
+    );
+    canvas.restore();
   }
 
   @override

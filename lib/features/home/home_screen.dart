@@ -375,12 +375,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   /// Spotlight the hero "Upload photo" CTA when photo is the live-search gap.
+  /// What the spotlight lands on. It follows the SAME blocker the tip names —
+  /// a ring around "Upload Photo" under the words "Complete Profile" is two
+  /// answers to one question, which is what the local photo preference here
+  /// used to produce the moment the server started naming the blocker.
   GlobalKey get _inactiveCoachmarkTargetKey {
-    if (_photoBlocksSearch) return _photoUploadCtaKey;
     final key = _stringValue(_firstBlockingActivationItem()?['key']);
     if (key == 'photo_uploaded' || key == 'photo_approved') {
       return _photoUploadCtaKey;
     }
+    if (key == null && _photoBlocksSearch) return _photoUploadCtaKey;
     return _nextBestActionKey;
   }
 
@@ -509,7 +513,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                   const SizedBox(height: 12),
                   _buildPlanStatusBand(),
                   const SizedBox(height: 16),
-                  KeyedSubtree(
+                  // RepaintBoundary, not KeyedSubtree: the coachmark paints a
+                  // real snapshot of this card inside its spotlight, which is
+                  // the only way the highlighted thing is genuinely brighter
+                  // than the dimmed page rather than merely ringed.
+                  RepaintBoundary(
                     key: _nextBestActionKey,
                     child: _buildNextBestActionCard(),
                   ),
@@ -531,14 +539,20 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
         if (_showInactiveCoachmark && !_isSearchable && !_profileMissing)
           InactiveActivationCoachmark(
             targetKey: _inactiveCoachmarkTargetKey,
+            // One instruction, once. It used to be two sentences that said the
+            // same thing, stacked over whatever card sat behind them.
             tip: () {
               final blocking = _firstBlockingActivationItem();
-              final reason = blocking == null
+              return blocking == null
                   ? AppStrings.dashboardFixToGoLive
-                  : _activationSubtitle(blocking);
-              return _mr
-                  ? 'इथे पूर्ण करा — प्रोफाइल सक्रिय होईल.\n$reason'
-                  : 'Complete this — your profile will go live.\n$reason';
+                  : _activationTitle(blocking);
+            }(),
+            detail: () {
+              final blocking = _firstBlockingActivationItem();
+              if (blocking == null) return null;
+              final waited = _waitingForHowLong;
+              final reason = _activationSubtitle(blocking);
+              return waited == null ? reason : '$reason · $waited';
             }(),
             onAction: _runInactiveCoachmarkAction,
             onDismiss: _dismissInactiveCoachmark,
@@ -996,8 +1010,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
                     : AppStrings.dashboardFreePlan,
                 hasPremium ? Icons.workspace_premium : Icons.lock_open,
               ),
-              if (_photoIssueLabel(profile) case final photoIssue?)
-                _heroPill(photoIssue, Icons.pending_actions_outlined),
+              // Only once the profile is otherwise live. While it is inactive
+              // the coachmark and the next-best-action card already name the
+              // photo, and a third copy in a chip is noise, not emphasis.
+              if (_isSearchable)
+                if (_photoIssueLabel(profile) case final photoIssue?)
+                  _heroPill(photoIssue, Icons.pending_actions_outlined),
               if (!_profileMissing && !_isSearchable)
                 _heroPill(
                   AppStrings.dashboardProfileInactive,
@@ -1032,7 +1050,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: KeyedSubtree(
+                child: RepaintBoundary(
                   key: _photoUploadCtaKey,
                   child: OutlinedButton.icon(
                     onPressed: _profileMissing
@@ -2136,10 +2154,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       );
     }
 
-    // Inactive / not searchable: photo CTA first (hero already shows it),
-    // never creator-name / account_details which do not gate search.
+    // Inactive / not searchable: whatever the server named, and only when it
+    // named nothing does the old local photo preference get a say. Otherwise
+    // this card contradicts the coachmark sitting directly above it.
     if (!_isSearchable) {
-      if (_photoBlocksSearch) {
+      if (_topBlocker == null && _photoBlocksSearch) {
         final profile = _effectiveProfile;
         final missing = !_hasPhoto(profile);
         return _DashboardAction(
@@ -2261,6 +2280,16 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   }
 
   Map<String, dynamic>? _firstBlockingActivationItem() {
+    // The server already answered this, and its answer is the only one that can
+    // also say whether the member may act. Deciding it a second time here is how
+    // one screen ended up naming two different blockers at once — the hero chip
+    // said photo, the server said account details.
+    final fromServer = _topBlocker;
+    if (fromServer != null && _stringValue(fromServer['key']) != null) {
+      return fromServer;
+    }
+
+    // Below runs only against an older server that does not send top_blocker.
     // Prefer photo when the dashboard already shows a photo gap — checklist
     // lists account_details before photo, but searchable ignores creator name.
     if (_photoBlocksSearch) {
