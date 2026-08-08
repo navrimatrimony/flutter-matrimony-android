@@ -48,6 +48,11 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
   bool _showInactiveCoachmark = false;
   bool _inactiveCoachmarkHandledThisVisit = false;
   List<Map<String, dynamic>> _activationChecklist = const [];
+
+  /// The server's answer to "what is the ONE thing keeping this member out of
+  /// search". It carries two facts the app cannot work out for itself: whether
+  /// the member can act at all, and how long a wait on us has already run.
+  Map<String, dynamic>? _topBlocker;
   final GlobalKey _nextBestActionKey = GlobalKey();
   final GlobalKey _photoUploadCtaKey = GlobalKey();
 
@@ -202,6 +207,7 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
 
       setState(() {
         _activationChecklist = checklist;
+        _topBlocker = _safeMap(response['top_blocker']);
         _isSearchable = searchable;
         if (!searchable && !_inactiveCoachmarkHandledThisVisit) {
           _showInactiveCoachmark = true;
@@ -399,10 +405,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
     });
   }
 
+  /// Closes the spotlight overlay only. The state it describes has not
+  /// changed, so it comes back on the next load — being unfindable is the
+  /// account's condition, not a tip that has been read.
   void _dismissInactiveCoachmark() {
     setState(() {
       _showInactiveCoachmark = false;
-      _inactiveCoachmarkHandledThisVisit = true;
     });
   }
 
@@ -2150,9 +2158,12 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       }
       final blocking = _firstBlockingActivationItem();
       if (blocking != null) {
+        final waited = _waitingForHowLong;
         return _DashboardAction(
           title: _activationTitle(blocking),
-          subtitle: _activationSubtitle(blocking),
+          subtitle: waited == null
+              ? _activationSubtitle(blocking)
+              : '${_activationSubtitle(blocking)} · $waited',
           icon: _activationIcon(blocking),
           color: _warning,
           onTap: () => _openActivationFix(blocking),
@@ -2359,9 +2370,33 @@ class _HomeScreenState extends State<HomeScreen> with RouteAware {
       case 'mobile_verified':
         _safePushNamed('/settings');
         return;
+      case 'governance_clear':
+        // Nothing for the member to open. Sending them to the edit page — which
+        // is what used to happen here — reads as "you left something blank" for
+        // a wait that is entirely ours.
+        return;
       default:
         _openEditProfile();
     }
+  }
+
+  /// True when the member has something to do. False means we owe them an
+  /// answer, and the card must not offer a button that leads nowhere.
+  bool get _blockerIsMine =>
+      _boolValue(_topBlocker?['actionable_by_member'] ?? true);
+
+  /// "2 दिवसांपासून" — only ever shown for a wait on us. Saying it about a step
+  /// the member has not done yet reads as a complaint about them.
+  String? get _waitingForHowLong {
+    final since = _stringValue(_topBlocker?['waiting_since']);
+    if (since == null || _blockerIsMine) return null;
+    final started = DateTime.tryParse(since);
+    if (started == null) return null;
+    final days = DateTime.now().difference(started).inDays;
+    if (days < 1) {
+      return _mr ? 'आजपासून प्रतीक्षेत' : 'Waiting since today';
+    }
+    return _mr ? '$days दिवसांपासून प्रतीक्षेत' : 'Waiting $days days';
   }
 
   bool get _mr => currentAppLanguage == AppLanguage.marathi;
