@@ -248,7 +248,6 @@ class ApiClient {
   static Map<String, String> _jsonHeaders({bool authenticated = false}) {
     final headers = <String, String>{
       'Accept': 'application/json',
-      'Accept-Language': appLanguageCode(currentAppLanguage),
       'Content-Type': 'application/json',
       // See _acceptHeaders — the server labels its responses in this language.
       'Accept-Language': appLanguageCode(currentAppLanguage),
@@ -264,7 +263,6 @@ class ApiClient {
   static Map<String, String> _acceptHeaders({bool authenticated = false}) {
     final headers = <String, String>{
       'Accept': 'application/json',
-      'Accept-Language': appLanguageCode(currentAppLanguage),
       // Master-data labels come back in whatever language this header names.
       // Without it the backend reads the phone's OS language, which is not the
       // language the member chose in the app — a member who picked Marathi on
@@ -1023,6 +1021,11 @@ class ApiClient {
     String? locale,
     String? type,
     bool useOnboardingEndpoint = false,
+    // Profile place fields (residence, birth place, work, addresses) may only
+    // offer saveable rows — village/city/suburb, never district/taluka/state.
+    // The server filters once deployed with `type=leaf`; the client-side
+    // filter below keeps the promise against older servers too.
+    bool leafOnly = false,
   }) async {
     final trimmedQuery = query.trim();
     if (trimmedQuery.length < 2) return <Map<String, dynamic>>[];
@@ -1034,9 +1037,13 @@ class ApiClient {
         limit: limit,
         locale: locale,
         preferredStateId: preferredStateId,
+        // 'leaf' is not sent here: the onboarding endpoint VALIDATES type and
+        // an old server would reject the whole request. The local filter is
+        // enough until every server knows the value.
         type: type,
       );
-      return _safeMapList(data);
+      final rows = _safeMapList(data);
+      return leafOnly ? rows.where(isLeafLocationRow).toList() : rows;
     }
 
     final safeLimit = limit.clamp(1, 50);
@@ -1046,6 +1053,7 @@ class ApiClient {
       preferredStateId?.toString() ?? '',
       normalizedPreferredName?.toLowerCase() ?? '',
       safeLimit.toString(),
+      if (leafOnly) 'leaf',
     ].join('|');
     final cachedAt = _locationSearchCacheTimes[cacheKey];
     final cached = _locationSearchCache[cacheKey];
@@ -1058,6 +1066,9 @@ class ApiClient {
     final queryParameters = <String, String>{
       'q': trimmedQuery,
       'limit': safeLimit.toString(),
+      // Ignored by servers that predate the filter; harmless there because
+      // /location/search does not validate its query parameters.
+      if (leafOnly) 'type': 'leaf',
     };
     if (preferredStateId != null && preferredStateId > 0) {
       queryParameters['preferred_state_id'] = preferredStateId.toString();
@@ -1080,7 +1091,10 @@ class ApiClient {
 
     try {
       final decoded = jsonDecode(response.body);
-      final results = _safeMapList(decoded);
+      var results = _safeMapList(decoded);
+      if (leafOnly) {
+        results = results.where(isLeafLocationRow).toList();
+      }
       _locationSearchCache[cacheKey] = results
           .map((row) => Map<String, dynamic>.from(row))
           .toList();
@@ -1089,6 +1103,24 @@ class ApiClient {
     } catch (_) {
       return <Map<String, dynamic>>[];
     }
+  }
+
+  /// True when the row is a saveable place — a village, city or suburb — and
+  /// not a rung of the geo ladder (district/taluka/state/country), which the
+  /// server stores under other hierarchy values and rejects on profile save.
+  static bool isLeafLocationRow(Map<String, dynamic> row) {
+    final isFinal = row['is_final_node'];
+    if (isFinal is bool) return isFinal;
+    final hierarchy = row['hierarchy']?.toString().trim().toLowerCase();
+    if (hierarchy != null && hierarchy.isNotEmpty) {
+      return hierarchy == 'village';
+    }
+    final type = row['type']?.toString().trim().toLowerCase();
+    return type == null ||
+        type.isEmpty ||
+        type == 'village' ||
+        type == 'city' ||
+        type == 'suburb';
   }
 
   static Future<List<Map<String, dynamic>>> getReligions() {

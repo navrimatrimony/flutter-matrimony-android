@@ -17,6 +17,14 @@ import '../../core/latin_date_picker.dart';
 /// key per field instead of two spellings of the same field name.
 String _optionalLabel(String label) => appText.optionalFieldLabel(label);
 
+/// The same marker, but only when the server agrees the field is optional.
+///
+/// Marital status was printed as "(Optional)" while being one of the fields
+/// that gates search — so the form invited members to skip the very thing that
+/// kept them invisible.
+String _optionalUnlessRequired(String fieldKey, String label) =>
+    MandatoryProfileFields.has(fieldKey) ? label : _optionalLabel(label);
+
 class EditFullProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? initialProfile;
   final bool openLocationDetails;
@@ -1632,6 +1640,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
           ? _defaultPreferredStateName
           : null,
       limit: 20,
+      leafOnly: true,
     );
   }
 
@@ -6429,7 +6438,7 @@ class _EditFullProfileScreenState extends State<EditFullProfileScreen> {
       icon: Icons.favorite_border,
       children: [
         _intDropdown(
-          labelText: _optionalLabel(appText.maritalStatus),
+          labelText: _optionalUnlessRequired('marital_status', appText.maritalStatus),
           icon: Icons.favorite_border,
           options: _maritalStatusOptions,
           selectedId: _selectedMaritalStatusId,

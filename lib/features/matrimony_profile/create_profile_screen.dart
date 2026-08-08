@@ -576,7 +576,7 @@ class _CreateMatrimonyProfileScreenState
 
     List<Map<String, dynamic>> results;
     try {
-      results = await ApiClient.searchLocations(trimmedQuery);
+      results = await ApiClient.searchLocations(trimmedQuery, leafOnly: true);
     } catch (_) {
       if (!mounted || requestId != _locationSearchRequest) return;
       setState(() {
